@@ -51,6 +51,16 @@
                 <th>Interval Period:</th>
                 <td><%= @certificate_configuration.formatted_duration %> per interval</td>
               </tr>
+              <tr>
+                <th>Eligible Criteria:</th>
+                <td>
+                  <% if @certificate_configuration.eligible_criteria.present? %>
+                    <%= number_with_precision(@certificate_configuration.eligible_criteria, precision: 2) %>%
+                  <% else %>
+                    <span class="text-muted">Not specified</span>
+                  <% end %>
+                </td>
+              </tr>
             </table>
           </div>
         </div>

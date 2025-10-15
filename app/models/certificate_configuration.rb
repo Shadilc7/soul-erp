@@ -13,6 +13,7 @@ class CertificateConfiguration < ApplicationRecord
   # Validations
   validates :name, presence: true
   validates :duration_period, presence: true, numericality: { greater_than: 0 }
+  validates :eligible_criteria, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
   
   # Scopes
   scope :active, -> { where(status: :active) }

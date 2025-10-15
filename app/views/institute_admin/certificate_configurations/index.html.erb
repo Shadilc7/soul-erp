@@ -17,6 +17,7 @@
                 <th>Name</th>
                 <th>Details</th>
                 <th>Interval Period</th>
+                <th>Eligible Criteria</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -27,6 +28,13 @@
                   <td><%= config.name %></td>
                   <td><%= config.details.present? ? config.details.truncate(50) : "N/A" %></td>
                   <td><%= config.formatted_duration %> per interval</td>
+                  <td>
+                    <% if config.eligible_criteria.present? %>
+                      <span class="badge bg-info"><%= number_with_precision(config.eligible_criteria, precision: 2) %>%</span>
+                    <% else %>
+                      <span class="text-muted">—</span>
+                    <% end %>
+                  </td>
                   <td>
                     <span class="badge bg-<%= config.active? ? 'success' : 'secondary' %>">
                       <%= config.status.titleize %>

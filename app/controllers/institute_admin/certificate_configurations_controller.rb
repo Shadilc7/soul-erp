@@ -46,7 +46,7 @@ class InstituteAdmin::CertificateConfigurationsController < InstituteAdmin::Base
   end
 
   def certificate_configuration_params
-    params.require(:certificate_configuration).permit(:name, :details, :duration_period, :status)
+    params.require(:certificate_configuration).permit(:name, :details, :duration_period, :status, :eligible_criteria)
   end
   
   def set_active_section

@@ -29,6 +29,15 @@
   </div>
 
   <div class="mb-3">
+    <%= form.label :eligible_criteria, "Eligible Criteria (%)", class: "form-label" %>
+    <div class="input-group">
+      <%= form.number_field :eligible_criteria, class: "form-control", min: 0, max: 100, step: 0.01, placeholder: "Enter percentage (e.g., 75.00)" %>
+      <span class="input-group-text">%</span>
+    </div>
+    <small class="form-text text-muted">Minimum percentage required to be eligible for this certificate (0-100)</small>
+  </div>
+
+  <div class="mb-3">
     <%= form.label :status, "Status", class: "form-label" %>
     <%= form.select :status, 
       CertificateConfiguration.statuses.keys.map { |status| [status.titleize, status] },
