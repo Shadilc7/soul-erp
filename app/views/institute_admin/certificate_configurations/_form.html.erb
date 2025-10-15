@@ -24,8 +24,8 @@
 
   <div class="mb-3">
     <%= form.label :duration_period, "Interval Period (days)", class: "form-label" %>
-    <%= form.number_field :duration_period, class: "form-control", min: 1, placeholder: "Enter interval period in days" %>
-    <small class="form-text text-muted">Number of days for each result interval on the certificate (e.g., 5 for 1st-5th day, 6th-10th day, etc.)</small>
+    <%= form.number_field :duration_period, class: "form-control", min: 5, max: 30, placeholder: "Enter interval period in days (5-30)" %>
+    <small class="form-text text-muted">Number of days for each result interval on the certificate. Must be between 5 and 30 days (e.g., 5 for 1st-5th day, 6th-10th day, etc.)</small>
   </div>
 
   <div class="mb-3">
