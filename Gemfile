@@ -76,3 +76,6 @@ gem "simple_calendar", "~> 2.4"
 gem "kaminari"
 
 gem "gruff"
+
+# Add csv gem to avoid deprecation warning in Ruby 3.4+
+gem "csv"
