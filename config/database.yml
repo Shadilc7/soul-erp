@@ -83,20 +83,5 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  primary: &primary_production
-    <<: *default
-    database: soul_erp_production
-    username: soul_erp
-    password: <%= ENV["SOUL_ERP_DATABASE_PASSWORD"] %>
-  cache:
-    <<: *primary_production
-    database: soul_erp_production_cache
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    database: soul_erp_production_queue
-    migrations_paths: db/queue_migrate
-  cable:
-    <<: *primary_production
-    database: soul_erp_production_cable
-    migrations_paths: db/cable_migrate
+  <<: *default
+  url: <%= ENV['DATABASE_URL'] %>
