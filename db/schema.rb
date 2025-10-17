@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_08_172400) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_15_180028) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_08_172400) do
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "eligible_criteria"
     t.index ["institute_id"], name: "index_certificate_configurations_on_institute_id"
   end
 
@@ -146,6 +147,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_08_172400) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "published"
+    t.text "chart_image_data"
     t.index ["assignment_id"], name: "index_individual_certificates_on_assignment_id"
     t.index ["certificate_configuration_id"], name: "index_individual_certificates_on_certificate_configuration_id"
     t.index ["institute_id"], name: "index_individual_certificates_on_institute_id"
