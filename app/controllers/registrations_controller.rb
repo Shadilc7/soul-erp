@@ -5,9 +5,12 @@ class RegistrationsController < Devise::RegistrationsController
   def new
     build_resource({})
     resource.build_participant
-    @institutes = Institute.active.where(
-      id: RegistrationSetting.instance.enabled_institutes
-    )
+
+    # Get registration setting, handle case when database is fresh
+    registration_setting = RegistrationSetting.instance
+    enabled_institute_ids = registration_setting&.enabled_institutes || []
+
+    @institutes = Institute.active.where(id: enabled_institute_ids)
     respond_with resource
   end
 
@@ -22,7 +25,7 @@ class RegistrationsController < Devise::RegistrationsController
 
     if resource.save
       # Since all new accounts are inactive, we'll always show the pending approval message
-      redirect_to new_user_session_path, 
+      redirect_to new_user_session_path,
         notice: "Registration successful! Your account is currently pending approval."
     else
       clean_up_passwords resource

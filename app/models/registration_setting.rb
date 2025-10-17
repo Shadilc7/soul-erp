@@ -9,8 +9,13 @@ class RegistrationSetting < ApplicationRecord
     first || begin
       # Get all active institute IDs for default value
       default_institutes = Institute.active.pluck(:id)
-      create!(enabled_institutes: default_institutes) if default_institutes.any?
+      # Create with empty array if no institutes exist yet
+      create!(enabled_institutes: default_institutes.presence || [])
     end
+  rescue ActiveRecord::RecordInvalid
+    # If creation fails, return a new instance with empty array
+    # This handles the case when database is fresh
+    new(enabled_institutes: [])
   end
 
   # Helper method to ensure we always work with integers

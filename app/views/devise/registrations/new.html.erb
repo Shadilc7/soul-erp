@@ -214,19 +214,26 @@
                     <div class="input-icon">
                       <i class="bi bi-bank"></i>
                     </div>
-                    <%= p.select :institute_id, 
-                        @institutes.map { |i| [i.name, i.id] }, 
-                        { prompt: "Select Institution" },
-                        { class: "form-select icon-input #{p.object.errors[:institute_id].any? ? 'is-invalid' : ''}", 
-                          required: true,
-                          data: { 
-                            sections_target: "instituteSelect",
-                            action: "change->sections#fetchSections"
-                          }
-                        } %>
-                    <%= p.label :institute_id, "Institution" %>
-                    <% if p.object.errors[:institute_id].any? %>
-                      <div class="invalid-feedback"><%= p.object.errors[:institute_id].first %></div>
+                    <% if @institutes.any? %>
+                      <%= p.select :institute_id, 
+                          @institutes.map { |i| [i.name, i.id] }, 
+                          { prompt: "Select Institution" },
+                          { class: "form-select icon-input #{p.object.errors[:institute_id].any? ? 'is-invalid' : ''}", 
+                            required: true,
+                            data: { 
+                              sections_target: "instituteSelect",
+                              action: "change->sections#fetchSections"
+                            }
+                          } %>
+                      <%= p.label :institute_id, "Institution" %>
+                      <% if p.object.errors[:institute_id].any? %>
+                        <div class="invalid-feedback"><%= p.object.errors[:institute_id].first %></div>
+                      <% end %>
+                    <% else %>
+                      <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        No institutions are currently available for registration. Please contact the administrator.
+                      </div>
                     <% end %>
                   </div>
 
