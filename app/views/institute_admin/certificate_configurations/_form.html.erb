@@ -38,6 +38,18 @@
   </div>
 
   <div class="mb-3">
+    <%= form.label :certificate_left_footer, "Certificate Left Footer", class: "form-label" %>
+    <%= form.text_field :certificate_left_footer, class: "form-control", placeholder: "Enter left footer text (optional)" %>
+    <small class="form-text text-muted">Text to appear at the bottom left of the certificate</small>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :certificate_right_footer, "Certificate Right Footer", class: "form-label" %>
+    <%= form.text_field :certificate_right_footer, class: "form-control", placeholder: "Enter right footer text (optional)" %>
+    <small class="form-text text-muted">Text to appear at the bottom right of the certificate</small>
+  </div>
+
+  <div class="mb-3">
     <%= form.label :status, "Status", class: "form-label" %>
     <%= form.select :status, 
       CertificateConfiguration.statuses.keys.map { |status| [status.titleize, status] },
