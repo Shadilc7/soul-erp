@@ -1883,19 +1883,19 @@ module InstituteAdmin
             t.cells.border_width = 0.4
             t.cells.border_color = border_color
             t.cells.padding = [ 6, 2 ] # Slightly smaller row height
+            t.cells.align = :center # Center align all cells by default
             (1...table_data.length).each do |i|
               t.row(i).background_color = i % 2 == 1 ? "F0F0F0" : "FFFFFF"
             end
             # SI.No column styling
             t.column(0).font_style = :bold
             t.column(0).width = 40 # Compact width for SI.No
-            t.column(0).align = :center
             # Question column styling
             t.column(1).font_style = :bold
             t.column(1).width = table_width * 0.28
+            t.column(1).align = :left # Keep question text left-aligned
             # Total column styling
             t.column(t.column_length - 1).width = 48 # Just enough to fit 'Total' label
-            t.column(t.column_length - 1).align = :center
           end
           pdf.move_down 20
         end
