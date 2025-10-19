@@ -1706,10 +1706,12 @@ module InstituteAdmin
       # Truncate question labels for x-axis to avoid overlap
       full_questions = (yes_no_questions + number_questions).map { |q| q.respond_to?(:title) ? q.title : "Question #{q.id}" }
       short_labels = full_questions.map.with_index { |q, i| q.length > 15 ? "Q#{i+1}: #{q[0, 12]}..." : "Q#{i+1}: #{q}" }
+      # Simple labels for x-axis: just Q1, Q2, Q3, etc.
+      simple_labels = full_questions.map.with_index { |q, i| "Q#{i+1}" }
       interval_names = intervals.each_with_index.map { |(_s, _e), idx| "#{(idx+1).ordinalize} #{config.duration_period} Days" }
 
-      # Prepare table header
-      header = [ "Question" ] + interval_names + [ "Total" ]
+      # Prepare table header with SI.No column
+      header = [ "SI.No", "Question" ] + interval_names + [ "Total" ]
       table_data << header
 
       # Prepare interval data: interval_bars[interval][question_index] = value
@@ -1717,7 +1719,7 @@ module InstituteAdmin
       total_per_question = Array.new(full_questions.size, 0)
 
       (yes_no_questions + number_questions).each_with_index do |question, q_idx|
-        row = [ full_questions[q_idx] ]
+        row = [ "Q#{q_idx + 1}", full_questions[q_idx] ]
         total = 0
         intervals.each_with_index do |(interval_start, interval_end), i_idx|
           value = 0
@@ -1884,8 +1886,14 @@ module InstituteAdmin
             (1...table_data.length).each do |i|
               t.row(i).background_color = i % 2 == 1 ? "F0F0F0" : "FFFFFF"
             end
+            # SI.No column styling
             t.column(0).font_style = :bold
-            t.column(0).width = table_width * 0.32
+            t.column(0).width = 40 # Compact width for SI.No
+            t.column(0).align = :center
+            # Question column styling
+            t.column(1).font_style = :bold
+            t.column(1).width = table_width * 0.28
+            # Total column styling
             t.column(t.column_length - 1).width = 48 # Just enough to fit 'Total' label
             t.column(t.column_length - 1).align = :center
           end
@@ -1895,39 +1903,56 @@ module InstituteAdmin
         # Calculate available height for the chart (space between here and the footer)
         available_height = pdf.bounds.bottom - pdf.cursor - 260 # 260 for footer and spacing
         chart_height = [ available_height, 250 ].max # Minimum height 250
-
-        # Regenerate the chart with the new height
         chart_width = pdf.bounds.width.to_i
-        g = Gruff::Bar.new("#{chart_width}x#{chart_height}")
+
+        # Create high-resolution chart (2.5x resolution for sharp, high-quality output)
+        # This will be scaled down in PDF for crisp rendering without font issues
+        resolution_multiplier = 2.5
+        high_res_width = (chart_width * resolution_multiplier).to_i
+        high_res_height = (chart_height * resolution_multiplier).to_i
+
+        g = Gruff::Bar.new("#{high_res_width}x#{high_res_height}")
         g.title = nil
         g.theme = {
           colors: [
-            "#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#6a5acd", "#20b2aa", "#ff6347", "#ffb347", "#4682b4"
+            "#4e73df",  # Blue
+            "#1cc88a",  # Green
+            "#36b9cc",  # Cyan
+            "#f6c23e",  # Yellow/Gold
+            "#e74a3b",  # Red
+            "#9b59b6",  # Purple (changed from similar blue)
+            "#ff8c00",  # Dark Orange
+            "#2ecc71",  # Emerald Green
+            "#e91e63",  # Pink
+            "#16a085"   # Teal
           ],
           marker_color: "#CCCCCC",
           background_colors: [ "#ffffff", "#ffffff" ]
         }
         g.hide_legend = false
+        # Increase legend text clarity with larger font size
         g.legend_font_size = 12
-        g.marker_font_size = 10
-        g.title_font_size = 14
-        g.x_axis_label_font_size = 12 if g.respond_to?(:x_axis_label_font_size=)
-        g.y_axis_label_font_size = 12 if g.respond_to?(:y_axis_label_font_size=)
+        g.legend_box_size = 14
+        g.marker_font_size = 14
+        g.title_font_size = 18
+        g.x_axis_label_font_size = 16 if g.respond_to?(:x_axis_label_font_size=)
+        g.y_axis_label_font_size = 16 if g.respond_to?(:y_axis_label_font_size=)
         g.bar_spacing = 0.5
-        g.group_spacing = 8
-        g.x_axis_label = "Questions"
-        g.y_axis_label = "Count"
+        g.group_spacing = 12
+        # Remove axis labels for cleaner look
+        g.x_axis_label = nil
+        g.y_axis_label = nil
         g.minimum_value = 0
         g.maximum_value = [ interval_bars.flatten.max, 10 ].max
         interval_names.each_with_index do |iname, i_idx|
           g.data(iname, interval_bars[i_idx])
         end
-        g.labels = short_labels.each_with_index.map { |lbl, idx| [ idx, lbl ] }.to_h
+        g.labels = simple_labels.each_with_index.map { |lbl, idx| [ idx, lbl ] }.to_h
         g.hide_line_markers = false
         graph_file = Tempfile.new([ "certificate_graph", ".png" ])
         g.write(graph_file.path)
 
-        # Draw chart below table, using all available space
+        # Draw chart below table at target size (high-res image will be scaled down for sharp quality)
         if File.exist?(graph_file.path)
           pdf.image graph_file.path, fit: [ pdf.bounds.width, chart_height ], position: :center
           pdf.move_down 10
