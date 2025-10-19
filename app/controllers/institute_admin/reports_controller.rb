@@ -1717,6 +1717,7 @@ module InstituteAdmin
       # Prepare interval data: interval_bars[interval][question_index] = value
       interval_bars = Array.new(intervals.size) { Array.new(full_questions.size, 0) }
       total_per_question = Array.new(full_questions.size, 0)
+      days_submitted_per_interval = Array.new(intervals.size, 0)
 
       (yes_no_questions + number_questions).each_with_index do |question, q_idx|
         row = [ "Q#{q_idx + 1}", full_questions[q_idx] ]
@@ -1742,6 +1743,201 @@ module InstituteAdmin
         total_per_question[q_idx] = total
         table_data << row
       end
+
+      # Calculate days submitted per interval
+      # Count unique days where at least one response was submitted for any question
+      intervals.each_with_index do |(interval_start, interval_end), i_idx|
+        unique_days = 0
+        (interval_start..interval_end).each do |date|
+          date_responses = responses_by_date[date]
+          # Check if there are any responses for this date for the questions we're tracking
+          if date_responses.present?
+            has_tracked_response = date_responses.any? do |r|
+              (yes_no_questions + number_questions).any? { |q| q.id == r.question_id }
+            end
+            unique_days += 1 if has_tracked_response
+          end
+        end
+        days_submitted_per_interval[i_idx] = unique_days
+      end
+
+      # Add "NUMBER OF DAYS SUBMITTED" row
+      days_row = [ "", "NUMBER OF DAYS SUBMITTED" ]
+      total_days_submitted = 0
+      days_submitted_per_interval.each do |days|
+        days_row << days
+        total_days_submitted += days
+      end
+      days_row << total_days_submitted
+      table_data << days_row
+
+      # Calculate total number of days per interval
+      # (considering assignment end date and current date)
+      total_days_per_interval = []
+      current_date = Date.current
+
+      intervals.each do |(interval_start, interval_end)|
+        # Find the actual end date (earliest of: interval_end, assignment end_date, or current_date)
+        actual_end = [ interval_end, assignment.end_date.to_date, current_date ].min
+
+        # Calculate number of days in this interval
+        if actual_end >= interval_start
+          num_days = (actual_end - interval_start).to_i + 1
+        else
+          num_days = 0
+        end
+
+        total_days_per_interval << num_days
+      end
+
+      # Add "TOTAL NUMBER OF DAYS" row
+      total_days_row = [ "", "TOTAL NUMBER OF DAYS" ]
+      total_all_days = 0
+      total_days_per_interval.each do |days|
+        total_days_row << days
+        total_all_days += days
+      end
+      total_days_row << total_all_days
+      table_data << total_days_row
+
+      # Calculate participation percentage per interval
+      # (Days Submitted / Total Days) * 100
+      participation_percentages = []
+
+      days_submitted_per_interval.each_with_index do |submitted, idx|
+        total = total_days_per_interval[idx]
+        if total > 0
+          percentage = ((submitted.to_f / total) * 100).round(0)
+        else
+          percentage = 0
+        end
+        participation_percentages << percentage
+      end
+
+      # Add "PARTICIPATION PERCENTAGE" row
+      percentage_row = [ "", "PARTICIPATION PERCENTAGE" ]
+      total_percentage = total_all_days > 0 ? ((total_days_submitted.to_f / total_all_days) * 100).round(0) : 0
+      participation_percentages.each do |percentage|
+        percentage_row << "#{percentage}%"
+      end
+      percentage_row << "#{total_percentage}%"
+      table_data << percentage_row
+
+      # Calculate RANK based on participation percentages
+      # Get all participants in the same section with certificates for this assignment and configuration
+      all_section_certificates = IndividualCertificate.joins(:participant)
+        .where(
+          assignment: assignment,
+          certificate_configuration: config,
+          participants: { section_id: participant.section_id }
+        )
+        .includes(:participant)
+
+      # Calculate percentages for all participants
+      all_participant_data = []
+
+      all_section_certificates.each do |cert|
+        cert_participant = cert.participant
+        cert_responses = AssignmentResponse.where(
+          participant: cert_participant,
+          assignment: assignment
+        ).includes(:question)
+
+        cert_responses_by_date = cert_responses.group_by { |r| r.response_date.to_date }
+
+        # Calculate days submitted and percentages for this participant
+        cert_days_submitted = []
+        cert_percentages = []
+
+        intervals.each_with_index do |(interval_start, interval_end), i_idx|
+          # Count days submitted
+          unique_days = 0
+          (interval_start..interval_end).each do |date|
+            date_responses = cert_responses_by_date[date]
+            if date_responses.present?
+              has_tracked_response = date_responses.any? do |r|
+                (yes_no_questions + number_questions).any? { |q| q.id == r.question_id }
+              end
+              unique_days += 1 if has_tracked_response
+            end
+          end
+          cert_days_submitted << unique_days
+
+          # Calculate percentage
+          total_days = total_days_per_interval[i_idx]
+          if total_days > 0
+            percentage = ((unique_days.to_f / total_days) * 100).round(0)
+          else
+            percentage = 0
+          end
+          cert_percentages << percentage
+        end
+
+        # Calculate total percentage
+        cert_total_days_submitted = cert_days_submitted.sum
+        cert_total_percentage = total_all_days > 0 ? ((cert_total_days_submitted.to_f / total_all_days) * 100).round(0) : 0
+
+        all_participant_data << {
+          participant_id: cert_participant.id,
+          percentages: cert_percentages,
+          total_percentage: cert_total_percentage
+        }
+      end
+
+      # Calculate ranks for each interval and total
+      ranks_per_interval = Array.new(intervals.size) { [] }
+      total_ranks = []
+
+      # For each interval, sort by percentage descending and assign ranks
+      intervals.each_with_index do |_, i_idx|
+        sorted_percentages = all_participant_data.map { |pd| pd[:percentages][i_idx] }.sort.reverse.uniq
+
+        all_participant_data.each do |pd|
+          percentage = pd[:percentages][i_idx]
+          rank = sorted_percentages.index(percentage) + 1
+          ranks_per_interval[i_idx] << { participant_id: pd[:participant_id], rank: rank }
+        end
+      end
+
+      # Calculate total rank
+      sorted_total_percentages = all_participant_data.map { |pd| pd[:total_percentage] }.sort.reverse.uniq
+
+      all_participant_data.each do |pd|
+        total_perc = pd[:total_percentage]
+        rank = sorted_total_percentages.index(total_perc) + 1
+        total_ranks << { participant_id: pd[:participant_id], rank: rank }
+      end
+
+      # Get current participant's ranks
+      current_participant_ranks = []
+      intervals.each_with_index do |_, i_idx|
+        rank_data = ranks_per_interval[i_idx].find { |r| r[:participant_id] == participant.id }
+        current_participant_ranks << (rank_data ? rank_data[:rank] : "-")
+      end
+
+      total_rank_data = total_ranks.find { |r| r[:participant_id] == participant.id }
+      current_total_rank = total_rank_data ? total_rank_data[:rank] : "-"
+
+      # Add "RANK" row
+      rank_row = [ "", "RANK" ]
+      current_participant_ranks.each do |rank|
+        rank_row << rank
+      end
+      rank_row << current_total_rank
+      table_data << rank_row
+
+      # Check eligibility based on total participation percentage
+      # Compare with eligible_criteria from certificate configuration
+      eligible_criteria = config.eligible_criteria || 0
+      is_eligible = total_percentage >= eligible_criteria
+      eligibility_status = is_eligible ? "Eligible" : "Not Eligible"
+
+      # Add "ELIGIBLE FOR NEXT SESSION" row
+      # This row will have merged cells for interval columns
+      eligibility_row = [ "", "ELIGIBLE FOR NEXT SESSION" ]
+      # Add a single merged cell for all intervals + total showing eligibility status
+      eligibility_row << { content: eligibility_status, colspan: intervals.size + 1 }
+      table_data << eligibility_row
 
       # Calculate available width and height for the chart
       chart_width = 535 # A4 width (595) - left/right margins (30 each)
@@ -1887,15 +2083,31 @@ module InstituteAdmin
             (1...table_data.length).each do |i|
               t.row(i).background_color = i % 2 == 1 ? "F0F0F0" : "FFFFFF"
             end
+            # Special styling for summary rows at the bottom
+            # "NUMBER OF DAYS SUBMITTED" row (fifth-to-last row)
+            t.row(table_data.length - 5).font_style = :bold
+            t.row(table_data.length - 5).background_color = "E8F4F8"
+            # "TOTAL NUMBER OF DAYS" row (fourth-to-last row)
+            t.row(table_data.length - 4).font_style = :bold
+            t.row(table_data.length - 4).background_color = "FFF4E6"
+            # "PARTICIPATION PERCENTAGE" row (third-to-last row)
+            t.row(table_data.length - 3).font_style = :bold
+            t.row(table_data.length - 3).background_color = "E8F8E8"
+            # "RANK" row (second-to-last row)
+            t.row(table_data.length - 2).font_style = :bold
+            t.row(table_data.length - 2).background_color = "FFE8E8"
+            # "ELIGIBLE FOR NEXT SESSION" row (last row)
+            t.row(table_data.length - 1).font_style = :bold
+            t.row(table_data.length - 1).background_color = "F0E8FF"
             # SI.No column styling
             t.column(0).font_style = :bold
             t.column(0).width = 40 # Compact width for SI.No
             # Question column styling
             t.column(1).font_style = :bold
-            t.column(1).width = table_width * 0.28
+            t.column(1).width = table_width * 0.35
             t.column(1).align = :left # Keep question text left-aligned
             # Total column styling
-            t.column(t.column_length - 1).width = 48 # Just enough to fit 'Total' label
+            t.column(t.column_length - 1).width = 70 # Wider to fit 'Eligible'/'Not Eligible'
           end
           pdf.move_down 20
         end
