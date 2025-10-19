@@ -1824,54 +1824,47 @@ module InstituteAdmin
 
         # Header
 
-
-        # Modern certificate title and subtitle
-        pdf.move_down 30
-        pdf.font_size 28
+        # Certificate configuration name at top
+        pdf.move_down 20
+        pdf.font_size 22
         pdf.fill_color primary_color
         pdf.text (config.name.present? ? config.name.upcase : "CERTIFICATE OF ACHIEVEMENT"), align: :center, style: :bold
         pdf.move_down 8
-        pdf.font_size 14
-        pdf.fill_color "555555"
-        pdf.text "This certificate is proudly presented to", align: :center, style: :italic
-        pdf.move_down 18
-        pdf.font_size 20
-        pdf.fill_color dark_color
-        pdf.text participant.user.full_name, align: :center, style: :bold
-        pdf.move_down 10
-        pdf.font_size 12
-        pdf.text "For successfully completing:", align: :center
-        pdf.move_down 4
-        pdf.font_size 14
-        pdf.text assignment.title, align: :center, style: :bold
-        pdf.move_down 6
-        pdf.font_size 10
-        pdf.text "Section: #{participant.section.name} | Date: #{assignment.start_date.strftime('%B %d, %Y')} - #{assignment.end_date.strftime('%B %d, %Y')}", align: :center
-        pdf.move_down 18
 
-        # Participant details
-        participant_data = [
-          [ "Name:", participant.user.full_name ],
-          [ "Section:", participant.section.name ],
-          [ "Assignment:", "#{assignment.title}" ],
-          [ "Date Range:", "#{assignment.start_date.strftime('%B %d, %Y')} - #{assignment.end_date.strftime('%B %d, %Y')}" ]
-        ]
-
-        pdf.table participant_data, width: 500, position: :left do |t|
-          t.cells.borders = []
-          t.cells.padding = [ 4, 8 ]
-          t.cells.inline_format = true
-          t.column(0).font_style = :bold
-          t.column(0).width = 80
-          t.column(0).align = :left
-          t.column(0).size = 10
-          t.column(1).align = :left
-          t.column(1).text_color = dark_color
-          t.column(1).size = 10
+        # Certificate details
+        if config.details.present?
+          pdf.font_size 10
+          pdf.fill_color "666666"
+          pdf.text config.details, align: :center, style: :italic
+          pdf.move_down 20
+        else
+          pdf.move_down 15
         end
 
-        # Add more space between border and table
-        pdf.move_down 40
+        # Participant name
+        pdf.font_size 18
+        pdf.fill_color dark_color
+        pdf.text participant.user.full_name, align: :center, style: :bold
+        pdf.move_down 5
+
+        # Section name below participant
+        pdf.font_size 11
+        pdf.fill_color "555555"
+        pdf.text "Section: #{participant.section.name}", align: :center
+        pdf.move_down 12
+
+        # Assignment completion details
+        pdf.font_size 11
+        pdf.fill_color dark_color
+        pdf.text "For successfully completing:", align: :center
+        pdf.move_down 4
+        pdf.font_size 13
+        pdf.text assignment.title, align: :center, style: :bold
+        pdf.move_down 5
+        pdf.font_size 9
+        pdf.fill_color "666666"
+        pdf.text "Date: #{assignment.start_date.strftime('%B %d, %Y')} - #{assignment.end_date.strftime('%B %d, %Y')}", align: :center
+        pdf.move_down 30
 
         # Draw table first
         if table_data.size > 1
@@ -1943,16 +1936,35 @@ module InstituteAdmin
         pdf.move_down 240
         # (Removed question key section)
 
-        # Footer
-
-        # Add footer note
+        # Footer - positioned at rock bottom of page
         pdf.go_to_page(pdf.page_count)
-        pdf.move_down 10
-        pdf.stroke_color border_color
-        pdf.horizontal_rule
-        pdf.move_down 5
-        pdf.fill_color dark_color
-        pdf.text "This is a system generated report.", align: :center, size: 9, color: dark_color
+
+        # Position footer at the absolute bottom (just above bottom margin)
+        # Bottom margin is typically 36, so position at y=28 for rock bottom
+        pdf.bounding_box([ 0, 28 ], width: pdf.bounds.width, height: 25) do
+          # Add horizontal line separator
+          pdf.stroke_color border_color
+          pdf.horizontal_rule
+          pdf.move_down 5
+
+          # Footer text from configuration
+          if config.certificate_left_footer.present? || config.certificate_right_footer.present?
+            footer_table_data = []
+
+            # Create a two-column layout for footer
+            left_footer = config.certificate_left_footer.present? ? config.certificate_left_footer : ""
+            right_footer = config.certificate_right_footer.present? ? config.certificate_right_footer : ""
+
+            footer_table_data << [ left_footer, right_footer ]
+
+            pdf.font_size 9
+            pdf.fill_color "555555"
+            pdf.table footer_table_data, width: pdf.bounds.width, cell_style: { borders: [], padding: [ 0, 5 ] } do |t|
+              t.column(0).align = :left
+              t.column(1).align = :right
+            end
+          end
+        end
       end
 
       # Clean up temp file
