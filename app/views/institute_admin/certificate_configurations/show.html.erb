@@ -61,6 +61,18 @@
                   <% end %>
                 </td>
               </tr>
+              <tr>
+                <th>Left Footer:</th>
+                <td>
+                  <%= @certificate_configuration.certificate_left_footer.presence || content_tag(:span, "Not specified", class: "text-muted") %>
+                </td>
+              </tr>
+              <tr>
+                <th>Right Footer:</th>
+                <td>
+                  <%= @certificate_configuration.certificate_right_footer.presence || content_tag(:span, "Not specified", class: "text-muted") %>
+                </td>
+              </tr>
             </table>
           </div>
         </div>
