@@ -12,17 +12,13 @@
     <div class="row justify-content-center min-vh-100 align-items-center py-5">
       <div class="col-12 col-md-10 col-lg-8 col-xl-7">
         <!-- Header Section -->
-        <div class="registration-header text-center mb-4">
-          <div class="logo-badge">
-            <i class="bi bi-person-plus-fill"></i>
-          </div>
-          <h1 class="registration-title">
-            Join <span class="gradient-text">SOUL</span>
+        <div class="registration-header mb-4 d-flex justify-content-center">
+          <h1 class="registration-title d-flex align-items-center">
+            <div class="logo-badge me-3">
+              <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <span>Join <span class="gradient-text">SOUL</span></span>
           </h1>
-          <p class="registration-subtitle">
-            <i class="bi bi-mortarboard-fill"></i>
-            Start your educational journey with us
-          </p>
         </div>
 
         <div class="registration-card">
@@ -268,7 +264,7 @@
                   <div class="password-wrapper">
                     <%= f.password_field :password, 
                         class: "form-control icon-input #{resource.errors[:password].any? ? 'is-invalid' : ''}", 
-                        placeholder: "Password",
+                        placeholder: " ",
                         id: "registration-password",
                         required: true %>
                     <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password', 'toggle-icon-1')">
@@ -294,7 +290,7 @@
                   <div class="password-wrapper">
                     <%= f.password_field :password_confirmation, 
                         class: "form-control icon-input #{resource.errors[:password_confirmation].any? ? 'is-invalid' : ''}", 
-                        placeholder: "Confirm Password",
+                        placeholder: " ",
                         id: "registration-password-confirmation",
                         required: true %>
                     <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password-confirmation', 'toggle-icon-2')">
