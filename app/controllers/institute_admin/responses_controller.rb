@@ -8,36 +8,36 @@ module InstituteAdmin
     def index
       # Always load sections
       @sections = current_institute.sections.active
-      
+
       # Ensure participants are loaded for the section if it exists
       if @section
         @participants = @section.participants
                               .includes(:user)
                               .where(status: :active)
-                              .where(participant_type: 'student')
+                              .where(participant_type: "student")
         Rails.logger.debug "Found #{@participants.count} participants for section #{@section.id}"
       end
-      
+
       # Log form submission details
       if params[:commit].present?
         Rails.logger.debug "Form submitted with date: #{@selected_date}, section_id: #{params[:section_id]}, participant_id: #{params[:participant_id]}"
       end
-      
+
       # Only proceed with fetching assignments if the form was submitted
-      if params[:commit].present? && @participant && @selected_date
-        @assignments = @participant.assignments_for_date(@selected_date)
-        Rails.logger.debug "Found #{@assignments.count} assignments for participant #{@participant.id} on date #{@selected_date}"
+      if params[:commit].present? && @participant && @start_date && @end_date
+        @assignments = @participant.assignments_for_date_range(@start_date, @end_date)
+        Rails.logger.debug "Found #{@assignments.count} assignments for participant #{@participant.id} from #{@start_date} to #{@end_date}"
 
         # If assignment_id is provided, fetch responses
         if @assignment
           @responses = @assignment.assignment_responses
             .where(participant: @participant)
-            .where(response_date: @selected_date)
-            .includes(:question)
-            .order("questions.title")
+            .where(response_date: @start_date..@end_date)
+            .joins(:question)
+            .order("assignment_responses.response_date DESC, questions.title")
 
           # Let's log some debug info
-          Rails.logger.debug "Selected Date: #{@selected_date}"
+          Rails.logger.debug "Date Range: #{@start_date} to #{@end_date}"
           Rails.logger.debug "Assignment ID: #{@assignment.id}"
           Rails.logger.debug "Participant ID: #{@participant.id}"
           Rails.logger.debug "Response Count: #{@responses.count}"
@@ -59,9 +59,43 @@ module InstituteAdmin
     private
 
     def set_date
-      @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
+      date_filter = params[:date_filter] || "today"
+
+      case date_filter
+      when "today"
+        @start_date = Date.current
+        @end_date = Date.current
+      when "yesterday"
+        @start_date = Date.yesterday
+        @end_date = Date.yesterday
+      when "last_7_days"
+        @start_date = 7.days.ago.to_date
+        @end_date = Date.current
+      when "last_month"
+        @start_date = 1.month.ago.to_date
+        @end_date = Date.current
+      when "custom"
+        if params[:start_date].present? && params[:end_date].present?
+          @start_date = Date.parse(params[:start_date])
+          @end_date = Date.parse(params[:end_date])
+        else
+          @start_date = Date.current
+          @end_date = Date.current
+        end
+      else
+        @start_date = Date.current
+        @end_date = Date.current
+      end
+
+      # Keep backward compatibility with old @selected_date
+      @selected_date = @start_date
+      @date_filter = date_filter
+
     rescue ArgumentError
+      @start_date = Date.current
+      @end_date = Date.current
       @selected_date = Date.current
+      @date_filter = "today"
     end
 
     def set_section
