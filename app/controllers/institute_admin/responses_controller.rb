@@ -35,13 +35,14 @@ module InstituteAdmin
             .where(response_date: @start_date..@end_date)
             .joins(:question)
             .order("assignment_responses.response_date DESC, questions.title")
+            .page(params[:page]).per(20)
 
           # Let's log some debug info
           Rails.logger.debug "Date Range: #{@start_date} to #{@end_date}"
           Rails.logger.debug "Assignment ID: #{@assignment.id}"
           Rails.logger.debug "Participant ID: #{@participant.id}"
-          Rails.logger.debug "Response Count: #{@responses.count}"
-          Rails.logger.debug "SQL Query: #{@responses.to_sql}"
+          Rails.logger.debug "Response Count: #{@responses.total_count}"
+          Rails.logger.debug "Current Page: #{params[:page] || 1}"
         end
       end
     end
