@@ -14,55 +14,147 @@
             <h6 class="mb-0">Filter Responses</h6>
           </div>
           <div class="card-body">
-            <%= form_tag institute_admin_responses_path, method: :get, class: "row g-3", data: { controller: "participant-select" } do %>
+            <%= form_tag institute_admin_responses_path, method: :get, class: "row g-3", data: { controller: "participant-select date-range" } do %>
               
-              <!-- Date Selection -->
-              <div class="col-md-4">
-                <label for="date" class="form-label">Select Date</label>
-                <%= date_field_tag :date, @selected_date, class: "form-control", required: true %>
+              <!-- Date Range Selection -->
+              <div class="col-md-12">
+                <div class="row align-items-center">
+                  <div class="col-md-3">
+                    <label for="date_filter" class="form-label mb-0">Date Filter</label>
+                  </div>
+                  <div class="col-md-9">
+                    <%= select_tag :date_filter,
+                        options_for_select([
+                          ['Today', 'today'],
+                          ['Yesterday', 'yesterday'],
+                          ['Last 7 Days', 'last_7_days'],
+                          ['Last Month', 'last_month'],
+                          ['Custom', 'custom']
+                        ], params[:date_filter] || 'today'),
+                        class: "form-select",
+                        id: "date_filter_select",
+                        onchange: "toggleCustomDateFields(this.value)",
+                        data: { 
+                          date_range_target: "filter",
+                          action: "change->date-range#toggleCustomDates"
+                        },
+                        required: true %>
+                  </div>
+                </div>
               </div>
               
+              <!-- Custom Date Range (Hidden by default) -->
+              <div class="col-md-12" id="custom_date_fields" data-date-range-target="customDates" style="display: none;">
+                <div class="row align-items-center">
+                  <div class="col-md-3">
+                    <!-- Empty space to align with dropdown -->
+                  </div>
+                  <div class="col-md-9">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="start_date" class="form-label mb-1">Start Date</label>
+                        <%= date_field_tag :start_date, params[:start_date], 
+                            class: "form-control",
+                            id: "start_date_field",
+                            data: { date_range_target: "startDate" } %>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="end_date" class="form-label mb-1">End Date</label>
+                        <%= date_field_tag :end_date, params[:end_date], 
+                            class: "form-control",
+                            id: "end_date_field",
+                            data: { date_range_target: "endDate" } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <script>
+                function toggleCustomDateFields(filterValue) {
+                  const customFields = document.getElementById('custom_date_fields');
+                  const startDateField = document.getElementById('start_date_field');
+                  const endDateField = document.getElementById('end_date_field');
+                  
+                  if (filterValue === 'custom') {
+                    customFields.style.display = 'block';
+                    startDateField.required = true;
+                    endDateField.required = true;
+                  } else {
+                    customFields.style.display = 'none';
+                    startDateField.required = false;
+                    endDateField.required = false;
+                  }
+                }
+                
+                // Call on page load to set initial state
+                document.addEventListener('DOMContentLoaded', function() {
+                  const filterSelect = document.getElementById('date_filter_select');
+                  if (filterSelect) {
+                    toggleCustomDateFields(filterSelect.value);
+                  }
+                });
+              </script>
+              
               <!-- Section Selection -->
-              <div class="col-md-4">
-                <label for="section_id" class="form-label">Select Section</label>
-                <%= select_tag :section_id, 
-                    options_from_collection_for_select(current_institute.sections.active, :id, :name, params[:section_id]),
-                    prompt: "Choose a section",
-                    class: "form-select",
-                    data: { 
-                      participant_select_target: "section",
-                      action: "change->participant-select#sectionChanged"
-                    },
-                    required: true %>
+              <div class="col-md-12">
+                <div class="row align-items-center">
+                  <div class="col-md-3">
+                    <label for="section_id" class="form-label mb-0">Select Section</label>
+                  </div>
+                  <div class="col-md-9">
+                    <%= select_tag :section_id, 
+                        options_from_collection_for_select(current_institute.sections.active, :id, :name, params[:section_id]),
+                        prompt: "Choose a section",
+                        class: "form-select",
+                        data: { 
+                          participant_select_target: "section",
+                          action: "change->participant-select#sectionChanged"
+                        },
+                        required: true %>
+                  </div>
+                </div>
               </div>
               
               <!-- Participant Selection -->
-              <div class="col-md-4">
-                <label for="participant_id" class="form-label">Select Participant</label>
-                <% if @participants&.any? %>
-                  <%= select_tag :participant_id,
-                      options_from_collection_for_select(@participants, :id, :full_name, params[:participant_id]),
-                      prompt: "Choose a participant",
-                      class: "form-select", 
-                      data: { participant_select_target: "participant" },
-                      required: true %>
-                <% else %>
-                  <%= select_tag :participant_id,
-                      options_for_select([]),
-                      prompt: "First select a section",
-                      class: "form-select",
-                      data: { participant_select_target: "participant" },
-                      disabled: params[:section_id].blank?,
-                      required: true %>
-                  <% if params[:section_id].present? && @participants.nil? %>
-                    <small class="text-muted">Loading participants for this section...</small>
-                  <% end %>
-                <% end %>
+              <div class="col-md-12">
+                <div class="row align-items-center">
+                  <div class="col-md-3">
+                    <label for="participant_id" class="form-label mb-0">Select Participant</label>
+                  </div>
+                  <div class="col-md-9">
+                    <% if @participants&.any? %>
+                      <%= select_tag :participant_id,
+                          options_from_collection_for_select(@participants, :id, :full_name, params[:participant_id]),
+                          prompt: "Choose a participant",
+                          class: "form-select", 
+                          data: { participant_select_target: "participant" },
+                          required: true %>
+                    <% else %>
+                      <%= select_tag :participant_id,
+                          options_for_select([]),
+                          prompt: "First select a section",
+                          class: "form-select",
+                          data: { participant_select_target: "participant" },
+                          disabled: params[:section_id].blank?,
+                          required: true %>
+                      <% if params[:section_id].present? && @participants.nil? %>
+                        <small class="text-muted">Loading participants for this section...</small>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </div>
               </div>
               
               <!-- Submit Button -->
-              <div class="col-12 mt-4">
-                <%= submit_tag "View Responses", class: "btn btn-primary" %>
+              <div class="col-md-12 mt-4">
+                <div class="row align-items-center">
+                  <div class="col-md-3">
+                  </div>
+                  <div class="col-md-9">
+                    <%= submit_tag "View Responses", class: "btn btn-primary" %>
+                  </div>
+                </div>
               </div>
             <% end %>
           </div>
@@ -83,7 +175,9 @@
                 <div class="list-group">
                   <% @assignments.each do |assignment| %>
                     <%= link_to institute_admin_responses_path(
-                          date: @selected_date,
+                          date_filter: @date_filter,
+                          start_date: @start_date,
+                          end_date: @end_date,
                           section_id: @section.id,
                           participant_id: @participant.id,
                           assignment_id: assignment.id,
@@ -96,7 +190,7 @@
                           <small><%= pluralize(assignment.questions.count, 'question') %></small>
                         </div>
                         <span class="badge bg-primary rounded-pill">
-                          <%= assignment.assignment_responses.where(participant: @participant).count %> responses
+                          <%= assignment.assignment_responses.where(participant: @participant, response_date: @start_date..@end_date).count %> responses
                         </span>
                       </div>
                     <% end %>
@@ -118,6 +212,10 @@
           <div class="card-header bg-light">
             <h6 class="mb-0">
               Responses for <%= @assignment.title %> by <%= @participant.full_name %>
+              <br>
+              <small class="text-muted">
+                <%= @start_date == @end_date ? @start_date.strftime('%B %d, %Y') : "#{@start_date.strftime('%B %d, %Y')} - #{@end_date.strftime('%B %d, %Y')}" %>
+              </small>
             </h6>
           </div>
           <div class="card-body">
@@ -125,6 +223,7 @@
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
+                    <th>Date</th>
                     <th>Question</th>
                     <th>Response</th>
                     <th>Submitted At</th>
@@ -135,6 +234,9 @@
                 <tbody>
                   <% @responses.each do |response| %>
                     <tr>
+                      <td>
+                        <small><%= response.response_date.strftime('%b %d, %Y') %></small>
+                      </td>
                       <td>
                         <div class="fw-medium"><%= response.question.title %></div>
                       </td>
@@ -147,10 +249,10 @@
                           <span class="text-muted">No response</span>
                         <% end %>
                       </td>
-                      <td><%= response.submitted_at&.strftime("%I:%M %p") || "Not submitted" %></td>
+                      <td><%= response.created_at&.strftime("%I:%M %p") || "Not submitted" %></td>
                       <td>
-                        <span class="badge bg-<%= response.submitted_at? ? 'success' : 'warning' %>">
-                          <%= response.submitted_at? ? 'Submitted' : 'Pending' %>
+                        <span class="badge bg-<%= response.answer.present? ? 'success' : 'warning' %>">
+                          <%= response.answer.present? ? 'Submitted' : 'Pending' %>
                         </span>
                       </td>
                       <td>
@@ -168,7 +270,7 @@
         </div>
       <% elsif @assignment.present? %>
         <div class="alert alert-warning">
-          No responses found for this assignment and participant on the selected date.
+          No responses found for this assignment and participant in the selected date range.
         </div>
       <% end %>
     <% end %>
@@ -188,6 +290,13 @@
     .list-group-item:hover {
       background-color: #f8f9fa;
       transform: translateX(5px);
+    }
+
+    /* Keep active item blue on hover */
+    .list-group-item.active:hover {
+      background-color: #0d6efd !important;
+      border-color: #0d6efd !important;
+      color: white !important;
     }
 
     .badge {
