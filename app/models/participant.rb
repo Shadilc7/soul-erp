@@ -4,14 +4,14 @@ class Participant < ApplicationRecord
   has_one :guardian, dependent: :destroy
   has_many :assignment_responses, dependent: :destroy
   has_many :assignment_response_logs, dependent: :destroy
-  belongs_to :guardian_for_participant, class_name: 'Participant', optional: true
-  has_many :guardians, class_name: 'Participant', foreign_key: 'guardian_for_participant_id'
+  belongs_to :guardian_for_participant, class_name: "Participant", optional: true
+  has_many :guardians, class_name: "Participant", foreign_key: "guardian_for_participant_id"
 
   # Get section through user
   has_one :section, through: :user
 
   # Update training program associations with dependent: :nullify
-  has_many :individual_training_programs, class_name: 'TrainingProgram', foreign_key: 'participant_id', dependent: :nullify
+  has_many :individual_training_programs, class_name: "TrainingProgram", foreign_key: "participant_id", dependent: :nullify
   has_many :section_training_programs, through: :section, source: :training_programs
 
   # Add the training_program_participants association with dependent: :destroy
@@ -23,10 +23,10 @@ class Participant < ApplicationRecord
   has_many :assignments, through: :assignment_participants
 
   # Enum for participant type
-  enum :participant_type, { 
-    student: 'student',
-    guardian: 'guardian',
-    employee: 'employee'
+  enum :participant_type, {
+    student: "student",
+    guardian: "guardian",
+    employee: "employee"
   }, default: :student
 
   # Simplified phone number validation
@@ -36,7 +36,7 @@ class Participant < ApplicationRecord
   validates :section_id, presence: true
   validates :user, presence: true
   validates :participant_type, presence: true
-  
+
 
   # Add callbacks for both create and update
   after_create :sync_user_associations
@@ -92,29 +92,45 @@ class Participant < ApplicationRecord
       .distinct
   end
 
+  def assignments_for_date_range(start_date, end_date)
+    individual_assignments = Assignment
+      .joins(:assignment_participants)
+      .where(assignment_participants: { participant_id: id })
+      .where("DATE(assignments.start_date) <= ? AND DATE(assignments.end_date) >= ?", end_date, start_date)
+
+    section_assignments = Assignment
+      .joins(:assignment_sections)
+      .where(assignment_sections: { section_id: section_id })
+      .where("DATE(assignments.start_date) <= ? AND DATE(assignments.end_date) >= ?", end_date, start_date)
+
+    Assignment.where(id: individual_assignments)
+      .or(Assignment.where(id: section_assignments))
+      .distinct
+  end
+
   # Helper methods to check participant type
   def student?
-    self[:participant_type] == 'student' || self[:participant_type].nil?
+    self[:participant_type] == "student" || self[:participant_type].nil?
   end
 
   def guardian?
-    self[:participant_type] == 'guardian'
+    self[:participant_type] == "guardian"
   end
 
   def employee?
-    self[:participant_type] == 'employee'
+    self[:participant_type] == "employee"
   end
 
   private
 
   def sync_user_associations
     return unless user.present?
-    
+
     # Only update the user's institute_id if it's different
     if user.institute_id != institute_id
       user.update_column(:institute_id, institute_id)
     end
-    
+
     # Get the section_id from the user if it's not set on the participant
     if section_id.nil? && user.section_id.present?
       update_column(:section_id, user.section_id)
