@@ -1,10 +1,18 @@
 <% if flash.any? %>
-  <div data-controller="flash">
+  <div class="flash-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; width: 90%; max-width: 600px;">
     <% flash.each do |name, msg| %>
       <% if msg.is_a?(String) %>
-        <div class="alert alert-<%= bootstrap_class_for_flash(name) %> alert-dismissible fade show" role="alert">
-          <%= msg.html_safe %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div style="background: white; padding: 1rem 3rem 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border-left: 4px solid <%= name.to_sym == :notice ? '#0dcaf0' : (name.to_sym == :success ? '#198754' : '#dc3545') %>; position: relative; margin-bottom: 1rem; display: block;">
+          <% case name.to_sym %>
+          <% when :notice %>
+            <i class="bi bi-info-circle-fill" style="color: #0dcaf0; margin-right: 0.5rem; font-size: 1.1rem;"></i>
+          <% when :success %>
+            <i class="bi bi-check-circle-fill" style="color: #198754; margin-right: 0.5rem; font-size: 1.1rem;"></i>
+          <% when :alert, :error %>
+            <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545; margin-right: 0.5rem; font-size: 1.1rem;"></i>
+          <% end %>
+          <span style="color: #212529; font-size: 0.95rem; display: inline;"><%= msg %></span>
+          <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'" aria-label="Close" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5;">×</button>
         </div>
       <% end %>
     <% end %>

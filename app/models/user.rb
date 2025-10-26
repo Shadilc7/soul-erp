@@ -25,11 +25,11 @@ class User < ApplicationRecord
     participant: 3,
     guardian: 4
   }, default: :participant
-  
+
   validates :username, uniqueness: true, allow_nil: true
   validates :email, presence: true, uniqueness: true
   validates :first_name, presence: true, length: { maximum: 50 }, if: :requires_first_name?
-  validates :phone, format: { with: /\A\d{10}\z/, message: "must be a valid 10-digit number" }, 
+  validates :phone, format: { with: /\A\d{10}\z/, message: "must be a valid 10-digit number" },
                    allow_blank: true,
                    uniqueness: { case_sensitive: false }
 
