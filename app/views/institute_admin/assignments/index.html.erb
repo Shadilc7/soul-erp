@@ -8,6 +8,106 @@
     </div>
   </div>
 
+<style>
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .action-btn:hover::before {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .action-btn i {
+    font-size: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .btn-view {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+  }
+  
+  .btn-view:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #5a3a7f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+  
+  .btn-edit {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(245, 87, 108, 0.3);
+  }
+  
+  .btn-edit:hover {
+    background: linear-gradient(135deg, #e082ea 0%, #e4465b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(245, 87, 108, 0.4);
+    color: white;
+  }
+  
+  .btn-delete {
+    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(255, 107, 107, 0.3);
+  }
+  
+  .btn-delete:hover {
+    background: linear-gradient(135deg, #ee5a5a 0%, #b81919 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 107, 107, 0.4);
+    color: white;
+  }
+  
+  .action-btn:active {
+    transform: translateY(0);
+  }
+  
+  /* Mobile optimization */
+  @media (max-width: 768px) {
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      margin: 2px;
+    }
+    
+    .action-btn i {
+      font-size: 14px;
+    }
+  }
+  
+  /* Ensure buttons don't wrap */
+  td:last-child {
+    white-space: nowrap;
+  }
+</style>
+
   <div class="card-body">
     <% if @assignments.any? %>
       <div class="table-responsive">
@@ -71,17 +171,18 @@
                 <td>
                   <div class="d-flex align-items-center gap-2">
                     <%= link_to institute_admin_assignment_path(assignment), 
-                        class: "btn btn-sm bg-primary-subtle text-primary-emphasis" do %>
+                        class: "btn action-btn btn-view", title: "View" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
                     <%= link_to edit_institute_admin_assignment_path(assignment), 
-                        class: "btn btn-sm bg-secondary-subtle text-secondary-emphasis" do %>
+                        class: "btn action-btn btn-edit", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
                     <%= button_to institute_admin_assignment_path(assignment),
                         method: :delete,
-                        class: "btn btn-sm bg-danger-subtle text-danger-emphasis",
+                        class: "btn action-btn btn-delete",
                         form: { class: 'd-inline-block' },
+                        title: "Delete",
                         data: { turbo_confirm: "Are you sure?" } do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
