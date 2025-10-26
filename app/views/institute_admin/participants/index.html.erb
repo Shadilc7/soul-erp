@@ -14,7 +14,7 @@
         <% if @participants.any? %>
           <%= button_to approve_all_institute_admin_participants_path, 
               method: :patch, 
-              class: "btn btn-success", 
+              class: "btn btn-approve", 
               data: { turbo_confirm: "Are you sure you want to approve all participants?" } do %>
             <i class="bi bi-check-circle"></i> Approve All
           <% end %>
@@ -27,6 +27,153 @@
     </div>
   </div>
 
+<style>
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .action-btn:hover::before {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .action-btn i {
+    font-size: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .btn-view {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+  }
+  
+  .btn-view:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #5a3a7f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+  
+  .btn-edit {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(245, 87, 108, 0.3);
+  }
+  
+  .btn-edit:hover {
+    background: linear-gradient(135deg, #e082ea 0%, #e4465b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(245, 87, 108, 0.4);
+    color: white;
+  }
+  
+  .btn-delete {
+    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(255, 107, 107, 0.3);
+  }
+  
+  .btn-delete:hover {
+    background: linear-gradient(135deg, #ee5a5a 0%, #b81919 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 107, 107, 0.4);
+    color: white;
+  }
+  
+  .btn-approve {
+    background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(74, 222, 128, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-approve::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .btn-approve:hover::before {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .btn-approve:hover {
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(74, 222, 128, 0.4);
+    color: white;
+  }
+  
+  .btn-approve i {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .action-btn:active {
+    transform: translateY(0);
+  }
+  
+  /* Mobile optimization */
+  @media (max-width: 768px) {
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      margin: 2px;
+    }
+    
+    .action-btn i {
+      font-size: 14px;
+    }
+    
+    .btn-approve {
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+  }
+  
+  /* Ensure buttons don't wrap */
+  td:last-child {
+    white-space: nowrap;
+  }
+</style>
+
   <% if params[:approved] == 'false' %>
     <!-- Not Approved Participants Section -->
     <div class="card-body">
@@ -36,7 +183,6 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Email</th>
                 <th>Type</th>
                 <th>Section</th>
                 <th>Actions</th>
@@ -46,7 +192,6 @@
               <% @participants.each do |participant| %>
                 <tr>
                   <td><%= participant.user.full_name %></td>
-                  <td><%= participant.user.email %></td>
                   <td>
                     <span class="badge bg-primary">
                       <%= participant.participant_type&.titleize || "Student" %>
@@ -66,22 +211,23 @@
                     <% end %>
                   </td>
                   <td>
-                    <%= link_to institute_admin_participant_path(participant.user), class: "btn btn-sm btn-custom-primary me-2" do %>
+                    <%= link_to institute_admin_participant_path(participant.user), class: "btn action-btn btn-view me-2", title: "View" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
-                    <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn btn-sm btn-outline-custom me-2" do %>
+                    <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
                     <%= button_to institute_admin_participant_path(participant.user), 
                         method: :delete, 
-                        class: "btn btn-sm btn-outline-danger",
+                        class: "btn action-btn btn-delete me-2",
                         form: { style: 'display: inline-block' },
+                        title: "Delete",
                         data: { turbo_confirm: "Are you sure you want to delete this participant?" } do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
                     <%= button_to toggle_status_institute_admin_participant_path(participant.user),
                         method: :patch,
-                        class: "btn btn-sm btn-success me-2",
+                        class: "btn btn-approve",
                         form: { style: 'display: inline-block' },
                         data: { turbo_confirm: "Are you sure you want to approve this participant?" } do %>
                       <i class="bi bi-check-circle"></i> Approve
@@ -120,7 +266,6 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Email</th>
                 <th>Type</th>
                 <th>Section</th>
                 <th>Actions</th>
@@ -130,7 +275,6 @@
               <% @participants.each do |participant| %>
                 <tr>
                   <td><%= participant.user.full_name %></td>
-                  <td><%= participant.user.email %></td>
                   <td>
                     <span class="badge bg-primary">
                       <%= participant.participant_type&.titleize || "Student" %>
@@ -150,16 +294,17 @@
                     <% end %>
                   </td>
                   <td>
-                    <%= link_to institute_admin_participant_path(participant.user), class: "btn btn-sm btn-custom-primary me-2" do %>
+                    <%= link_to institute_admin_participant_path(participant.user), class: "btn action-btn btn-view me-2", title: "View" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
-                    <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn btn-sm btn-outline-custom me-2" do %>
+                    <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
                     <%= button_to institute_admin_participant_path(participant.user), 
                         method: :delete, 
-                        class: "btn btn-sm btn-outline-danger",
+                        class: "btn action-btn btn-delete",
                         form: { style: 'display: inline-block' },
+                        title: "Delete",
                         data: { turbo_confirm: "Are you sure you want to delete this participant?" } do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
