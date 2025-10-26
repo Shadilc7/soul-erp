@@ -251,7 +251,66 @@ body {
   }
 }
 
-/* Hide alerts inside login container */
-.login-container .alert {
-  display: none;
+/* Flash Messages Styling */
+.flash-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999 !important;
+  width: 90%;
+  max-width: 600px;
+  pointer-events: none;
+}
+
+.flash-container .alert {
+  display: block !important;
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  pointer-events: auto;
+  margin-bottom: 1rem;
+}
+
+.flash-message-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.flash-message-content i,
+.flash-message-content span,
+.flash-message-content .btn-close {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Override hide alerts inside login container - only for flash messages */
+.login-container .flash-container .alert,
+.login-container .flash-container .alert *,
+.registration-wrapper .flash-container .alert,
+.registration-wrapper .flash-container .alert * {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.login-container .flash-container .alert,
+.registration-wrapper .flash-container .alert {
+  display: block !important;
 }
