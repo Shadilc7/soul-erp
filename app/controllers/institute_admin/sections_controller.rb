@@ -50,11 +50,11 @@ module InstituteAdmin
 
     def destroy
       @section = current_institute.sections.find(params[:id])
-      
+
       if @section.destroy
         redirect_to institute_admin_sections_path, notice: "Section was successfully deleted."
       else
-        redirect_to institute_admin_sections_path, 
+        redirect_to institute_admin_sections_path,
           alert: @section.errors.full_messages.first || "Unable to delete section."
       end
     end
@@ -63,14 +63,14 @@ module InstituteAdmin
       @section = current_institute.sections.find(params[:id])
       @users = @section.users
       @sections = current_institute.sections.where.not(id: @section.id).active
-      
+
       if request.post?
         action_type = params[:action_type]
-        
+
         if action_type == "reassign" && params[:target_section_id].present?
           # Update all users to the new section
           @users.update_all(section_id: params[:target_section_id])
-          
+
           # Now try to delete the section
           if @section.destroy
             redirect_to institute_admin_sections_path, notice: "Users reassigned and section was successfully deleted."
@@ -80,7 +80,7 @@ module InstituteAdmin
         elsif action_type == "remove"
           # Remove section association from all users
           @users.update_all(section_id: nil)
-          
+
           # Now try to delete the section
           if @section.destroy
             redirect_to institute_admin_sections_path, notice: "Users removed from section and section was successfully deleted."
@@ -110,19 +110,19 @@ module InstituteAdmin
     def participants
       begin
         @section = current_institute.sections.find(params[:id])
-        
+
         # Filter to include only active student participants using association
         @participants = @section.participants
                                 .includes(:user)
                                 .where(status: :active)
-        
+
         # If no participants found via association, try direct SQL query
         if @participants.empty?
           # Direct query to find participants through user's section_id
           @participants = Participant.joins(:user)
                                     .where(users: { section_id: @section.id })
                                     .where(participants: { status: :active })
-                                    .where(participants: { participant_type: 'student' })
+                                    .where(participants: { participant_type: "student" })
         end
 
         # Map participant data for the response
@@ -134,7 +134,7 @@ module InstituteAdmin
             email: p.user&.email
           }
         }
-        
+
         render json: result
       rescue => e
         Rails.logger.error "Error loading participants: #{e.message}"
