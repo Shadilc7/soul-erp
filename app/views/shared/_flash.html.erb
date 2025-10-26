@@ -2,19 +2,103 @@
   <div class="flash-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; width: 90%; max-width: 600px;">
     <% flash.each do |name, msg| %>
       <% if msg.is_a?(String) %>
-        <div style="background: white; padding: 1rem 3rem 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border-left: 4px solid <%= name.to_sym == :notice ? '#0dcaf0' : (name.to_sym == :success ? '#198754' : '#dc3545') %>; position: relative; margin-bottom: 1rem; display: block;">
-          <% case name.to_sym %>
-          <% when :notice %>
-            <i class="bi bi-info-circle-fill" style="color: #0dcaf0; margin-right: 0.5rem; font-size: 1.1rem;"></i>
-          <% when :success %>
-            <i class="bi bi-check-circle-fill" style="color: #198754; margin-right: 0.5rem; font-size: 1.1rem;"></i>
-          <% when :alert, :error %>
-            <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545; margin-right: 0.5rem; font-size: 1.1rem;"></i>
-          <% end %>
-          <span style="color: #212529; font-size: 0.95rem; display: inline;"><%= msg %></span>
-          <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'" aria-label="Close" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5;">×</button>
+        <% 
+          # Define colors and gradients for each message type
+          colors = case name.to_sym
+          when :notice
+            { border: '#0ea5e9', bg_gradient: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', icon_color: '#0ea5e9', icon: 'bi-info-circle-fill' }
+          when :success
+            { border: '#22c55e', bg_gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', icon_color: '#22c55e', icon: 'bi-check-circle-fill' }
+          when :alert, :error
+            { border: '#ef4444', bg_gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', icon_color: '#ef4444', icon: 'bi-exclamation-triangle-fill' }
+          else
+            { border: '#6366f1', bg_gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', icon_color: '#6366f1', icon: 'bi-bell-fill' }
+          end
+        %>
+        <div class="flash-message" style="background: linear-gradient(to right, #f8fafc 0%, #f1f5f9 100%); padding: 1.25rem 3.5rem 1.25rem 1rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05); border-left: 5px solid <%= colors[:border] %>; position: relative; margin-bottom: 1rem; display: flex; align-items: center; animation: slideDown 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); backdrop-filter: blur(10px);">
+          
+          <!-- Icon Container with Gradient Background -->
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: <%= colors[:bg_gradient] %>; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);">
+            <i class="bi <%= colors[:icon] %>" style="color: white; font-size: 1.2rem;"></i>
+          </div>
+          
+          <!-- Message Content -->
+          <div style="flex: 1; color: #1f2937; font-size: 0.95rem; line-height: 1.5; font-weight: 500;">
+            <%= msg %>
+          </div>
+          
+          <!-- Close Button -->
+          <button type="button" class="flash-close-btn" onclick="this.closest('.flash-message').remove()" aria-label="Close" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.05); border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; opacity: 0.6; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #6b7280;">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          
+          <!-- Progress Bar -->
+          <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(0, 0, 0, 0.05); border-radius: 0 0 12px 12px; overflow: hidden;">
+            <div class="flash-progress" style="height: 100%; background: <%= colors[:bg_gradient] %>; width: 100%; animation: shrinkProgress 7s linear forwards;"></div>
+          </div>
         </div>
       <% end %>
     <% end %>
   </div>
+
+  <style>
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    @keyframes shrinkProgress {
+      from {
+        width: 100%;
+      }
+      to {
+        width: 0%;
+      }
+    }
+    
+    .flash-close-btn:hover {
+      background: rgba(0, 0, 0, 0.1) !important;
+      opacity: 1 !important;
+      transform: translateY(-50%) scale(1.1) !important;
+    }
+    
+    .flash-close-btn:active {
+      transform: translateY(-50%) scale(0.95) !important;
+    }
+    
+    .flash-message:hover .flash-progress {
+      animation-play-state: paused;
+    }
+  </style>
+
+  <script>
+    // Auto-hide flash messages after 7 seconds
+    (function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        const autoHideTimer = setTimeout(function() {
+          // Add fade-out animation
+          message.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+          message.style.opacity = '0';
+          message.style.transform = 'translateY(-20px) scale(0.95)';
+          
+          // Remove from DOM after animation
+          setTimeout(function() {
+            message.remove();
+          }, 500);
+        }, 7000); // 7 seconds
+        
+        // Pause timer on hover
+        message.addEventListener('mouseenter', function() {
+          clearTimeout(autoHideTimer);
+        });
+      });
+    })();
+  </script>
 <% end %>

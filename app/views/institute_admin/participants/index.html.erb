@@ -12,12 +12,9 @@
       </div>
       <% if params[:approved] == 'false' %>
         <% if @participants.any? %>
-          <%= button_to approve_all_institute_admin_participants_path, 
-              method: :patch, 
-              class: "btn btn-approve", 
-              data: { turbo_confirm: "Are you sure you want to approve all participants?" } do %>
+          <button type="button" class="btn btn-approve" onclick="showApproveAllModal()">
             <i class="bi bi-check-circle"></i> Approve All
-          <% end %>
+          </button>
         <% end %>
       <% else %>
         <%= link_to new_institute_admin_participant_path, class: "btn btn-primary" do %>
@@ -217,21 +214,14 @@
                     <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
-                    <%= button_to institute_admin_participant_path(participant.user), 
-                        method: :delete, 
-                        class: "btn action-btn btn-delete me-2",
-                        form: { style: 'display: inline-block' },
-                        title: "Delete",
-                        data: { turbo_confirm: "Are you sure you want to delete this participant?" } do %>
+                    <button type="button" class="btn action-btn btn-delete me-2" title="Delete" 
+                            onclick="showDeleteModal('<%= participant.user.full_name %>', '<%= institute_admin_participant_path(participant.user) %>')">
                       <i class="bi bi-trash"></i>
-                    <% end %>
-                    <%= button_to toggle_status_institute_admin_participant_path(participant.user),
-                        method: :patch,
-                        class: "btn btn-approve",
-                        form: { style: 'display: inline-block' },
-                        data: { turbo_confirm: "Are you sure you want to approve this participant?" } do %>
+                    </button>
+                    <button type="button" class="btn btn-approve" 
+                            onclick="showApproveModal('<%= participant.user.full_name %>', '<%= toggle_status_institute_admin_participant_path(participant.user) %>')">
                       <i class="bi bi-check-circle"></i> Approve
-                    <% end %>
+                    </button>
                   </td>
                 </tr>
               <% end %>
@@ -300,14 +290,10 @@
                     <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
-                    <%= button_to institute_admin_participant_path(participant.user), 
-                        method: :delete, 
-                        class: "btn action-btn btn-delete",
-                        form: { style: 'display: inline-block' },
-                        title: "Delete",
-                        data: { turbo_confirm: "Are you sure you want to delete this participant?" } do %>
+                    <button type="button" class="btn action-btn btn-delete" title="Delete" 
+                            onclick="showDeleteModal('<%= participant.user.full_name %>', '<%= institute_admin_participant_path(participant.user) %>')">
                       <i class="bi bi-trash"></i>
-                    <% end %>
+                    </button>
                   </td>
                 </tr>
               <% end %>
@@ -331,7 +317,417 @@
           <i class="bi bi-people fs-1 text-muted mb-3"></i>
           <p class="text-muted mb-0">No approved participants found</p>
         </div>
-      <% end %>
+            <% end %>
     </div>
   <% end %>
-</div> 
+</div>
+
+<!-- Beautiful Delete Confirmation Modal -->
+<div id="deleteModal" class="custom-modal" style="display: none;">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-content">
+      <!-- Icon -->
+      <div class="modal-icon">
+        <div class="icon-circle">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <h3 class="modal-title">Delete Participant?</h3>
+      <p class="modal-message">
+        Are you sure you want to delete <strong id="participantName"></strong>? 
+        This action cannot be undone and all associated data will be permanently removed.
+      </p>
+      
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeDeleteModal()">
+          <i class="bi bi-x-circle me-2"></i>Cancel
+        </button>
+        <form id="deleteForm" method="post" style="display: inline-block;">
+          <input type="hidden" name="_method" value="delete">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <button type="submit" class="btn-modal btn-delete-confirm">
+            <i class="bi bi-trash me-2"></i>Yes, Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Beautiful Approve Confirmation Modal -->
+<div id="approveModal" class="custom-modal" style="display: none;">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-content">
+      <!-- Icon -->
+      <div class="modal-icon">
+        <div class="icon-circle-approve">
+          <i class="bi bi-check-circle"></i>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <h3 class="modal-title">Approve Participant?</h3>
+      <p class="modal-message">
+        Are you sure you want to approve <strong id="approveParticipantName"></strong>? 
+        They will be granted access to the system immediately.
+      </p>
+      
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeApproveModal()">
+          <i class="bi bi-x-circle me-2"></i>Cancel
+        </button>
+        <form id="approveForm" method="post" style="display: inline-block;">
+          <input type="hidden" name="_method" value="patch">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <button type="submit" class="btn-modal btn-approve-confirm">
+            <i class="bi bi-check-circle me-2"></i>Yes, Approve
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Beautiful Approve All Confirmation Modal -->
+<div id="approveAllModal" class="custom-modal" style="display: none;">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-content">
+      <!-- Icon -->
+      <div class="modal-icon">
+        <div class="icon-circle-approve">
+          <i class="bi bi-people-fill"></i>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <h3 class="modal-title">Approve All Participants?</h3>
+      <p class="modal-message">
+        Are you sure you want to approve <strong>all pending participants</strong>? 
+        All participants will be granted access to the system immediately.
+      </p>
+      
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-cancel" onclick="closeApproveAllModal()">
+          <i class="bi bi-x-circle me-2"></i>Cancel
+        </button>
+        <form action="<%= approve_all_institute_admin_participants_path %>" method="post" style="display: inline-block;">
+          <input type="hidden" name="_method" value="patch">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <button type="submit" class="btn-modal btn-approve-confirm">
+            <i class="bi bi-check-circle me-2"></i>Yes, Approve All
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .modal-container {
+    position: relative;
+    width: 90%;
+    max-width: 420px;
+    animation: slideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .modal-content {
+    background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  
+  .modal-icon {
+    margin-bottom: 1rem;
+  }
+  
+  .icon-circle {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+  }
+  
+  .icon-circle i {
+    font-size: 2rem;
+    color: #dc2626;
+  }
+  
+  .icon-circle-approve {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+  }
+  
+  .icon-circle-approve i {
+    font-size: 2rem;
+    color: #16a34a;
+  }
+  
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+  }
+  
+  .modal-message {
+    font-size: 0.9rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+  
+  .modal-message strong {
+    color: #dc2626;
+    font-weight: 600;
+  }
+  
+  #approveModal .modal-message strong,
+  #approveAllModal .modal-message strong {
+    color: #16a34a;
+    font-weight: 600;
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .btn-modal {
+    padding: 0.65rem 1.75rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 130px;
+  }
+  
+  .btn-cancel {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #4b5563;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-cancel:hover {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .btn-delete-confirm {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+  }
+  
+  .btn-delete-confirm:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+  }
+  
+  .btn-approve-confirm {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3);
+  }
+  
+  .btn-approve-confirm:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(34, 197, 94, 0.4);
+  }
+  
+  .btn-modal:active {
+    transform: translateY(0);
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+  
+  /* Mobile optimization */
+  @media (max-width: 768px) {
+    .modal-content {
+      padding: 1.25rem;
+    }
+    
+    .icon-circle {
+      width: 56px;
+      height: 56px;
+    }
+    
+    .icon-circle i {
+      font-size: 1.75rem;
+    }
+    
+    .icon-circle-approve {
+      width: 56px;
+      height: 56px;
+    }
+    
+    .icon-circle-approve i {
+      font-size: 1.75rem;
+    }
+    
+    .modal-title {
+      font-size: 1.1rem;
+    }
+    
+    .modal-message {
+      font-size: 0.85rem;
+    }
+    
+    .modal-actions {
+      flex-direction: column;
+    }
+    
+    .btn-modal {
+      width: 100%;
+      min-width: auto;
+      padding: 0.6rem 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  function showDeleteModal(participantName, deleteUrl) {
+    document.getElementById('participantName').textContent = participantName;
+    document.getElementById('deleteForm').action = deleteUrl;
+    document.getElementById('deleteModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+  
+  function showApproveModal(participantName, approveUrl) {
+    document.getElementById('approveParticipantName').textContent = participantName;
+    document.getElementById('approveForm').action = approveUrl;
+    document.getElementById('approveModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeApproveModal() {
+    document.getElementById('approveModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+  
+  function showApproveAllModal() {
+    document.getElementById('approveAllModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeApproveAllModal() {
+    document.getElementById('approveAllModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+  
+  // Close modal when clicking overlay
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteModal');
+    const approveModal = document.getElementById('approveModal');
+    const approveAllModal = document.getElementById('approveAllModal');
+    
+    if (deleteModal) {
+      deleteModal.querySelector('.modal-overlay').addEventListener('click', closeDeleteModal);
+    }
+    
+    if (approveModal) {
+      approveModal.querySelector('.modal-overlay').addEventListener('click', closeApproveModal);
+    }
+    
+    if (approveAllModal) {
+      approveAllModal.querySelector('.modal-overlay').addEventListener('click', closeApproveAllModal);
+    }
+  });
+  
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+      closeApproveModal();
+      closeApproveAllModal();
+    }
+  });
+</script>
+ 
