@@ -257,20 +257,18 @@
                   Security
                 </h5>
                 
-                <div class="form-floating mb-3">
+                <div class="form-floating mb-3 position-relative">
                   <div class="input-icon">
                     <i class="bi bi-lock"></i>
                   </div>
-                  <div class="password-wrapper">
-                    <%= f.password_field :password, 
-                        class: "form-control icon-input #{resource.errors[:password].any? ? 'is-invalid' : ''}", 
-                        placeholder: " ",
-                        id: "registration-password",
-                        required: true %>
-                    <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password', 'toggle-icon-1')">
-                      <i class="bi bi-eye-fill" id="toggle-icon-1"></i>
-                    </button>
-                  </div>
+                  <%= f.password_field :password, 
+                      class: "form-control icon-input #{resource.errors[:password].any? ? 'is-invalid' : ''}", 
+                      placeholder: "Password",
+                      id: "registration-password",
+                      required: true %>
+                  <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password', 'toggle-icon-1')">
+                    <i class="bi bi-eye-fill" id="toggle-icon-1"></i>
+                  </button>
                   <%= f.label :password, "Password" %>
                   <% if resource.errors[:password].any? %>
                     <div class="invalid-feedback"><%= resource.errors[:password].first %></div>
@@ -283,20 +281,18 @@
                   <% end %>
                 </div>
 
-                <div class="form-floating mb-4">
+                <div class="form-floating mb-4 position-relative">
                   <div class="input-icon">
                     <i class="bi bi-lock-fill"></i>
                   </div>
-                  <div class="password-wrapper">
-                    <%= f.password_field :password_confirmation, 
-                        class: "form-control icon-input #{resource.errors[:password_confirmation].any? ? 'is-invalid' : ''}", 
-                        placeholder: " ",
-                        id: "registration-password-confirmation",
-                        required: true %>
-                    <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password-confirmation', 'toggle-icon-2')">
-                      <i class="bi bi-eye-fill" id="toggle-icon-2"></i>
-                    </button>
-                  </div>
+                  <%= f.password_field :password_confirmation, 
+                      class: "form-control icon-input #{resource.errors[:password_confirmation].any? ? 'is-invalid' : ''}", 
+                      placeholder: "Confirm Password",
+                      id: "registration-password-confirmation",
+                      required: true %>
+                  <button type="button" class="password-toggle" onclick="toggleRegistrationPassword('registration-password-confirmation', 'toggle-icon-2')">
+                    <i class="bi bi-eye-fill" id="toggle-icon-2"></i>
+                  </button>
                   <%= f.label :password_confirmation, "Confirm Password" %>
                   <% if resource.errors[:password_confirmation].any? %>
                     <div class="invalid-feedback"><%= resource.errors[:password_confirmation].first %></div>
