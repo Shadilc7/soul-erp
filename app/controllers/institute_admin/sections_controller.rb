@@ -24,7 +24,7 @@ module InstituteAdmin
     end
 
     def new
-      @section = current_institute.sections.build
+      @section = current_institute.sections.build(status: :active)
     end
 
     def create
