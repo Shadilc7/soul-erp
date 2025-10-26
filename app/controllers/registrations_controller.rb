@@ -26,7 +26,7 @@ class RegistrationsController < Devise::RegistrationsController
     if resource.save
       # Since all new accounts are inactive, we'll always show the pending approval message
       redirect_to new_user_session_path,
-        notice: "Registration successful! Your account is currently pending approval."
+        notice: "Registration successful! Your account is pending for approval."
     else
       clean_up_passwords resource
       set_minimum_password_length
