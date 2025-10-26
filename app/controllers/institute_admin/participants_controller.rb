@@ -8,6 +8,7 @@ module InstituteAdmin
 
     def index
       @participants = current_institute.participants.includes(:user, :section).order(created_at: :desc)
+      @sections = current_institute.sections.order(:name)
 
       # Filter by approval status
       if params[:approved] == "false"
@@ -17,6 +18,22 @@ module InstituteAdmin
         # Default is to show approved participants
         @participants = @participants.joins(:user).where(users: { active: true })
         @approval_status = "approved"
+      end
+
+      # Filter by search (name)
+      if params[:search].present?
+        search_term = "%#{params[:search]}%"
+        @participants = @participants.joins(:user).where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", search_term, search_term, search_term)
+      end
+
+      # Filter by participant type
+      if params[:participant_type].present?
+        @participants = @participants.where(participant_type: params[:participant_type])
+      end
+
+      # Filter by section
+      if params[:section_id].present?
+        @participants = @participants.where(section_id: params[:section_id])
       end
 
       # Add pagination
@@ -167,6 +184,29 @@ module InstituteAdmin
       # Approve all participants
       count = 0
       not_approved_users.find_each do |user|
+        user.active = true
+        count += 1 if user.save
+      end
+
+      if count > 0
+        redirect_to institute_admin_participants_path(approved: true),
+          notice: "Successfully approved #{count} participant#{count > 1 ? 's' : ''}."
+      else
+        redirect_to institute_admin_participants_path(approved: false),
+          alert: "No participants were approved."
+      end
+    end
+
+    # Approve a selected list of participants (bulk approve)
+    def approve_selected
+      ids = params[:selected_ids].to_s.split(",").map(&:strip).reject(&:blank?)
+      if ids.empty?
+        redirect_to institute_admin_participants_path(approved: false), alert: "No participants selected." and return
+      end
+
+      users = current_institute.users.where(id: ids, role: :participant, active: false)
+      count = 0
+      users.find_each do |user|
         user.active = true
         count += 1 if user.save
       end

@@ -84,6 +84,7 @@ Rails.application.routes.draw do
         end
         collection do
           patch :approve_all
+          patch :approve_selected
         end
       end
       resources :questions do
