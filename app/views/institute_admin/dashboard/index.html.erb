@@ -8,12 +8,8 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="card-title text-muted mb-0">Total Participants</h6>
-              <h2 class="mt-2 mb-0"><%= @total_participants %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i> 
-                <small><%= @active_participants %> Active</small>
-              </p>
+              <h6 class="card-title text-muted mb-2">Total Participants</h6>
+              <h2 class="mb-0"><%= @total_participants %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
               <i class="bi bi-people fs-1 text-primary"></i>
@@ -29,12 +25,8 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="card-title text-muted mb-0">Total Questions</h6>
-              <h2 class="mt-2 mb-0"><%= @total_questions %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small>+12% from last month</small>
-              </p>
+              <h6 class="card-title text-muted mb-2">Total Questions</h6>
+              <h2 class="mb-0"><%= @total_questions %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
               <i class="bi bi-question-circle fs-1 text-success"></i>
@@ -44,42 +36,34 @@
       </div>
     </div>
 
-    <!-- Question Sets -->
+    <!-- Total Assignments -->
     <div class="col-xl-3 col-md-6">
       <div class="card card-custom h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="card-title text-muted mb-0">Question Sets</h6>
-              <h2 class="mt-2 mb-0"><%= @total_question_sets %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small>+8% from last month</small>
-              </p>
+              <h6 class="card-title text-muted mb-2">Total Assignments</h6>
+              <h2 class="mb-0"><%= @total_assignments %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
-              <i class="bi bi-collection fs-1 text-info"></i>
+              <i class="bi bi-clipboard-check fs-1 text-warning"></i>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Total Assignments -->
+    <!-- Total Sections -->
     <div class="col-xl-3 col-md-6">
       <div class="card card-custom h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-              <h6 class="card-title text-muted mb-0">Total Assignments</h6>
-              <h2 class="mt-2 mb-0"><%= @total_assignments %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small>+15% from last month</small>
-              </p>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="card-title text-muted mb-2">Total Sections</h6>
+              <h2 class="mb-0"><%= @total_sections %></h2>
             </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-clipboard-check fs-1 text-warning"></i>
+            <div class="icon-box  bg-opacity-10">
+              <i class="bi bi-grid fs-1 text-danger"></i>
             </div>
           </div>
         </div>
@@ -89,39 +73,14 @@
 
   <!-- KPI Cards Row 2 -->
   <div class="row g-4 mb-4">
-    <!-- Total Sections -->
+    <!-- Total Trainers -->
     <div class="col-xl-3 col-md-6">
       <div class="card card-custom h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="card-title text-muted mb-0">Total Sections</h6>
-              <h2 class="mt-2 mb-0"><%= @total_sections %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small><%= @active_sections %> Active</small>
-              </p>
-            </div>
-            <div class="icon-box  bg-opacity-10">
-              <i class="bi bi-grid fs-1 text-danger"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Total Trainers -->
-    <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-              <h6 class="card-title text-muted mb-0">Total Trainers</h6>
-              <h2 class="mt-2 mb-0"><%= @total_trainers %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small><%= @active_trainers %> Active</small>
-              </p>
+              <h6 class="card-title text-muted mb-2">Total Trainers</h6>
+              <h2 class="mb-0"><%= @total_trainers %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
               <i class="bi bi-person-workspace fs-1 text-primary"></i>
@@ -137,33 +96,25 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="card-title text-muted mb-0">Training Programs</h6>
-              <h2 class="mt-2 mb-0"><%= @total_training_programs %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small><%= @active_programs_count %> Active</small>
-              </p>
+              <h6 class="card-title text-muted mb-2">Training Programs</h6>
+              <h2 class="mb-0"><%= @total_training_programs %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
               <i class="bi bi-mortarboard fs-1 text-success"></i>
             </div>
           </div>
+        </div>
       </div>
     </div>
-  </div>
 
     <!-- Feedback Received -->
     <div class="col-xl-3 col-md-6">
       <div class="card card-custom h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-              <h6 class="card-title text-muted mb-0">Feedback Received</h6>
-              <h2 class="mt-2 mb-0"><%= @total_feedback_received || 0 %></h2>
-              <p class="text-success mb-0">
-                <i class="bi bi-arrow-up"></i>
-                <small>+5% from last month</small>
-              </p>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="card-title text-muted mb-2">Feedback Received</h6>
+              <h2 class="mb-0"><%= @total_feedback_received || 0 %></h2>
             </div>
             <div class="icon-box bg-opacity-10">
               <i class="bi bi-chat-square-text fs-1 text-info"></i>
