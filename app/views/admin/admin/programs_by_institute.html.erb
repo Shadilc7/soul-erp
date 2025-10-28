@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Programs by Institution</h4>
+  <div>
+    <%= link_to admin_root_path, class: 'btn btn-outline-secondary me-2' do %>
+      Back
+    <% end %>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Institution</th>
+            <th class="text-end">Active Programs</th>
+            <th class="text-end">Total Programs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @institutes_programs.each do |inst| %>
+            <tr>
+              <td><%= link_to inst[:name], admin_institute_path(inst[:id]) %></td>
+              <td class="text-end"><%= link_to inst[:active], "/admin/institutes/#{inst[:id]}/programs?status=active" %></td>
+              <td class="text-end"><%= link_to inst[:total], "/admin/institutes/#{inst[:id]}/programs" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
