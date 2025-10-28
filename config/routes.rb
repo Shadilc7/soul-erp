@@ -38,6 +38,11 @@ Rails.application.routes.draw do
   authenticate :user do
     namespace :admin do
       root "admin#dashboard"
+      # Per-institute drilldown pages (master admin)
+      get "institutes/:id/participants", to: "admin#institute_participants", as: "institute_participants"
+      get "institutes/:id/programs", to: "admin#institute_programs", as: "institute_programs"
+      get "participants_by_institute", to: "admin#participants_by_institute", as: "participants_by_institute"
+      get "programs_by_institute", to: "admin#programs_by_institute", as: "programs_by_institute"
       resources :institutes do
         member do
           post "assign_admin"
