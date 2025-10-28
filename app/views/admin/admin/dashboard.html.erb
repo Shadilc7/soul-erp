@@ -9,12 +9,12 @@
 <!-- Key Metrics -->
 <div class="row">
   <!-- Basic Stats -->
-  <div class="col-md-3 mb-4">
-    <div class="card card-custom">
-      <div class="card-body">
+  <div class="col-md-3 mb-4 d-flex">
+    <div class="card card-custom flex-fill kpi-card">
+      <div class="card-body d-flex flex-column justify-content-between">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0">Total Institutes</h6>
+            <h6 class="card-title mb-0">Institutes</h6>
             <h2 class="mt-2 mb-0"><%= @institutes_count %></h2>
           </div>
           <i class="bi bi-building fs-1 text-primary opacity-75"></i>
@@ -24,9 +24,9 @@
     </div>
   </div>
 
-  <div class="col-md-3 mb-4">
-    <div class="card card-custom">
-      <div class="card-body">
+  <div class="col-md-3 mb-4 d-flex">
+    <div class="card card-custom flex-fill kpi-card">
+      <div class="card-body d-flex flex-column justify-content-between">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="card-title mb-0">Institute Admins</h6>
@@ -39,32 +39,33 @@
     </div>
   </div>
 
-  <div class="col-md-3 mb-4">
-    <div class="card card-custom">
-      <div class="card-body">
+  <div class="col-md-3 mb-4 d-flex">
+    <div class="card card-custom flex-fill kpi-card">
+      <div class="card-body d-flex flex-column justify-content-between">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="card-title mb-0">Active Programs</h6>
             <h2 class="mt-2 mb-0"><%= @active_programs_count %></h2>
-            <p class="text-muted small mb-0">of <%= @total_programs %> total</p>
+            <!-- removed 'of X' for compactness -->
           </div>
           <i class="bi bi-journal-check fs-1 text-info opacity-75"></i>
         </div>
+        <%= link_to 'View Programs', '/admin/programs_by_institute', class: 'btn btn-custom-primary mt-3' %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4">
-    <div class="card card-custom">
-      <div class="card-body">
+  <div class="col-md-3 mb-4 d-flex">
+    <div class="card card-custom flex-fill kpi-card">
+      <div class="card-body d-flex flex-column justify-content-between">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0">Active Participants</h6>
-            <h2 class="mt-2 mb-0"><%= @active_participants %></h2>
-            <p class="text-muted small mb-0">of <%= @total_participants %> total</p>
+            <h6 class="card-title mb-0">Total Participants</h6>
+            <h2 class="mt-2 mb-0"><%= @total_participants %></h2>
           </div>
-          <i class="bi bi-person-check fs-1 text-warning opacity-75"></i>
+          <i class="bi bi-people-fill fs-1 text-primary opacity-75"></i>
         </div>
+        <%= link_to 'View Participants', '/admin/participants_by_institute', class: 'btn btn-custom-primary mt-3' %>
       </div>
     </div>
   </div>
@@ -92,6 +93,32 @@
       </div>
       <div class="card-body">
         <canvas id="programsChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approved / Not Approved Summary (separate from KPI cards) -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card card-custom">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="border rounded p-3 text-center">
+              <h6 class="mb-1">Approved Participants</h6>
+              <h3 class="mb-1"><%= @total_approved_participants %></h3>
+              <%= link_to 'View', '/admin/participants_by_institute?status=approved', class: 'btn btn-sm btn-custom-primary mt-2' %>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="border rounded p-3 text-center">
+              <h6 class="mb-1">Not Approved Participants</h6>
+              <h3 class="mb-1"><%= @total_not_approved_participants %></h3>
+              <%= link_to 'View', '/admin/participants_by_institute?status=not_approved', class: 'btn btn-sm btn-custom-primary mt-2' %>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -342,6 +369,44 @@
     .icon-primary {
       color: var(--bs-primary);
       opacity: 0.75;
+    }
+    /* KPI card consistent sizing and responsive tweaks */
+    .kpi-card {
+      min-height: 120px;
+      padding: 1rem 1.1rem 0.8rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat-block h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.125rem;
+    }
+    .stat-block small {
+      display: block;
+    }
+
+    @media (max-width: 767.98px) {
+      .kpi-card {
+        min-height: 70px;
+        padding: 0.75rem 0.9rem;
+      }
+      .stat-block h3 {
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .kpi-card {
+        min-height: auto;
+      }
+      .col-md-3.d-flex {
+        display: block !important;
+      }
+      .d-flex.flex-column.flex-fill.gap-3 {
+        gap: 0.75rem !important;
+      }
     }
   </style>
 <% end %>
