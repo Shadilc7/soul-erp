@@ -33,7 +33,8 @@ module Admin
             questions: institute.questions.count,
             question_sets: institute.question_sets.count,
             feedbacks: {
-              count: institute.training_programs.joins(:training_program_feedbacks).count
+              count: institute.training_programs.joins(:training_program_feedbacks).count,
+              average_rating: (TrainingProgramFeedback.joins(:training_program).where(training_programs: { institute_id: institute.id }).average(:rating) || 0).to_f.round(1)
             }
           }
         }
@@ -67,6 +68,21 @@ module Admin
       @recent_feedbacks = TrainingProgramFeedback.includes(:training_program, :participant)
                                                .order(created_at: :desc)
                                                .limit(5)
+
+  # Global totals for dashboard KPIs
+  @total_sections = Section.count
+  @active_sections = Section.active.count rescue Section.count
+
+  @total_assignments = Assignment.count
+  @active_assignments = Assignment.active.count rescue Assignment.count
+
+  @total_questions = Question.count
+  @total_question_sets = QuestionSet.count rescue 0
+
+  @total_feedbacks = TrainingProgramFeedback.count
+  @average_rating = (TrainingProgramFeedback.average(:rating) || 0).to_f.round(1)
+
+  @total_trainers = Trainer.count
     end
 
     # GET /admin/participants_by_institute
@@ -98,6 +114,21 @@ module Admin
           active: active
         }
       end
+    end
+
+    # GET /admin/questions
+    def questions
+      @questions = Question.includes(:institute).order(created_at: :desc).limit(200)
+    end
+
+    # GET /admin/assignments
+    def assignments
+      @assignments = Assignment.includes(:institute).order(created_at: :desc).limit(200)
+    end
+
+    # GET /admin/trainers
+    def trainers
+      @trainers = Trainer.includes(:user, :institute).order(created_at: :desc).limit(200)
     end
 
     # GET /admin/institutes/:id/participants

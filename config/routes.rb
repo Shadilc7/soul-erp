@@ -37,7 +37,11 @@ Rails.application.routes.draw do
   # Admin routes
   authenticate :user do
     namespace :admin do
-      root "admin#dashboard"
+  root "admin#dashboard"
+  # Admin-level quick lists for Questions / Assignments / Trainers
+  get "questions", to: "admin#questions", as: "questions"
+  get "assignments", to: "admin#assignments", as: "assignments"
+  get "trainers", to: "admin#trainers", as: "trainers"
       # Per-institute drilldown pages (master admin)
       get "institutes/:id/participants", to: "admin#institute_participants", as: "institute_participants"
       get "institutes/:id/programs", to: "admin#institute_programs", as: "institute_programs"

@@ -1,19 +1,57 @@
 <div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Institute Details</h5>
-    <div>
-      <%= button_to login_as_institute_admin_admin_institute_path(@institute), 
-          class: "btn btn-primary", 
-          form: { class: "d-inline-block me-2", data: { turbo: true } } do %>
-        <i class="bi bi-box-arrow-in-right"></i> Log in as Institute Admin
-      <% end %>
-      <%= link_to edit_admin_institute_path(@institute), class: "btn btn-outline-custom me-2" do %>
-        <i class="bi bi-pencil"></i> Edit
-      <% end %>
-      <%= link_to admin_institutes_path, class: "btn btn-outline-custom" do %>
-        <i class="bi bi-arrow-left"></i> Back
-      <% end %>
+  <div class="card-header card-header-custom">
+    <!-- Desktop header (md and up): keep original inline actions -->
+    <div class="d-none d-md-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Institute Details</h5>
+      <div>
+        <%= button_to login_as_institute_admin_admin_institute_path(@institute), 
+            class: "btn btn-primary", 
+            form: { class: "d-inline-block me-2", data: { turbo: true } } do %>
+          <i class="bi bi-box-arrow-in-right"></i> Log in as Institute Admin
+        <% end %>
+        <%= link_to edit_admin_institute_path(@institute), class: "btn btn-outline-custom me-2" do %>
+          <i class="bi bi-pencil"></i> Edit
+        <% end %>
+        <%= link_to admin_institutes_path, class: "btn btn-outline-custom" do %>
+          <i class="bi bi-arrow-left"></i> Back
+        <% end %>
+      </div>
     </div>
+
+    <!-- Mobile header (smaller screens): stacked, touch-friendly layout (always visible) -->
+    <div class="d-flex d-md-none flex-column gap-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fs-6">Institute Details</h5>
+      </div>
+
+      <div class="mb-2">
+        <%= button_to login_as_institute_admin_admin_institute_path(@institute), 
+            class: "btn btn-primary w-100", 
+            form: { class: "d-inline-block w-100", data: { turbo: true } } do %>
+          <i class="bi bi-box-arrow-in-right"></i> Log in as Institute Admin
+        <% end %>
+      </div>
+      <div class="d-flex gap-2">
+        <%= link_to edit_admin_institute_path(@institute), class: "btn btn-outline-custom flex-fill" do %>
+          <i class="bi bi-pencil"></i> Edit
+        <% end %>
+        <%= link_to '#', onclick: 'history.back(); return false;', class: "btn btn-outline-custom flex-fill" do %>
+          <i class="bi bi-arrow-left"></i> Back
+        <% end %>
+      </div>
+    </div>
+        <% content_for :styles do %>
+          <style>
+            /* Mobile header tweaks for admin/institutes/show */
+            @media (max-width: 767.98px) {
+              .card-header.card-header-custom { padding: 0.75rem 0.9rem; }
+              .card-header.card-header-custom h5 { font-size: 1rem; margin-bottom: 0; }
+              .btn-outline-custom { border-color: rgba(0,0,0,0.08); }
+              /* make collapse toggle subtle */
+              .card-header .btn-sm.btn-light { border: none; color: rgba(0,0,0,0.6); }
+            }
+          </style>
+        <% end %>
   </div>
 
   <div class="card-body">
