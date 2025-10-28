@@ -324,50 +324,7 @@
   </div>
 </div>
 
-<!-- Training Statistics (full width) -->
-<div class="row">
-  <div class="col-12 mb-4">
-    <div class="card card-custom">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Training Statistics</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-6">
-            <div class="border rounded p-3">
-              <h6 class="text-muted mb-2">Sections</h6>
-              <h3 class="mb-1"><%= @active_sections %></h3>
-              <p class="text-muted small mb-0">Active Sections</p>
-              <p class="text-muted small mb-0">Total: <%= @total_sections %></p>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="border rounded p-3">
-              <h6 class="text-muted mb-2">Assignments</h6>
-              <h3 class="mb-1"><%= @active_assignments %></h3>
-              <p class="text-muted small mb-0">Active Assignments</p>
-              <p class="text-muted small mb-0">Total: <%= @total_assignments %></p>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="border rounded p-3">
-              <h6 class="text-muted mb-2">Questions</h6>
-              <h3 class="mb-1"><%= @total_questions %></h3>
-              <p class="text-muted small mb-0">Question Sets: <%= @total_question_sets %></p>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="border rounded p-3">
-              <h6 class="text-muted mb-2">Feedback</h6>
-              <h3 class="mb-1"><%= @total_feedbacks %></h3>
-              <p class="text-muted small mb-0">Avg Rating: <%= @average_rating %>/5</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <% content_for :styles do %>
   <style>
@@ -401,13 +358,13 @@
       justify-content: space-between;
     }
 
-  /* Chart sizing and polish */
-  .chart-canvas { height: 360px !important; width: 100% !important; }
-  .chart-canvas.small { height: 320px !important; }
-  /* Taller variant for the resources and ratings charts */
-  .chart-canvas.chart-tall { height: 480px !important; }
-  /* Scrollable card body for lists */
-  .card-body.scrollable { max-height: 360px; overflow-y: auto; padding-right: 0.5rem; }
+    /* Chart sizing and polish */
+    .chart-canvas { height: 360px !important; width: 100% !important; }
+    .chart-canvas.small { height: 320px !important; }
+    /* Taller variant for the resources and ratings charts */
+    .chart-canvas.chart-tall { height: 480px !important; }
+    /* Scrollable card body for lists */
+    .card-body.scrollable { max-height: 360px; overflow-y: auto; padding-right: 0.5rem; }
     .card.card-custom.h-100 .card-body { padding: 1.25rem; }
     /* Subtle container background for charts */
     .card.card-custom .card-body { background: linear-gradient(180deg, #ffffff, #fbfdff); border-radius: 6px; }
