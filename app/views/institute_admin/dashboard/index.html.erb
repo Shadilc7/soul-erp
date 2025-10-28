@@ -101,7 +101,15 @@
       </div>
     </div>
     <div class="col-xl-6">
-      <!-- placeholder kept for layout balance; existing KPI row follows below -->
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3 d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Submissions by Section (Today)</h5>
+          <small class="text-muted">Top sections by distinct submissions</small>
+        </div>
+        <div class="card-body">
+          <div id="submissions-by-section-chart" style="height:360px;"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -205,61 +213,56 @@
     </div>
   </div>
 
-  <!-- Feedback Progress Row -->
-  <div class="row g-4 mb-4">
-    <div class="col-12">
-    <div class="card card-custom">
+  <!-- Feedback: Overview (left) and Training Program Chart (right) -->
+  <div class="row g-4 mb-4 align-items-stretch">
+    <div class="col-xl-4 col-md-6">
+      <div class="card card-custom h-100">
         <div class="card-header border-0 pt-3">
           <h5 class="card-title mb-0">Feedback Overview</h5>
         </div>
-      <div class="card-body">
-          <div class="row">
-            <div class="col-md-6 mb-4">
-              <h6 class="text-muted mb-3">Feedback Received</h6>
-              <div class="progress" style="height: 25px;">
-                <div class="progress-bar bg-success" role="progressbar" 
-                     style="width: <%= @feedback_received_percentage || 0 %>%;" 
-                     aria-valuenow="<%= @feedback_received_percentage || 0 %>" 
-                     aria-valuemin="0" aria-valuemax="100">
-                  <%= @feedback_received_percentage || 0 %>%
-                </div>
-              </div>
-              <div class="d-flex justify-content-between mt-2">
-                <small class="text-muted">Total: <%= @total_feedback_received || 0 %></small>
-                <small class="text-muted">Target: 100%</small>
+  <div class="card-body d-flex flex-column justify-content-center h-100">
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Feedback Received</h6>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar bg-success" role="progressbar"
+                   style="width: <%= @feedback_received_percentage || 0 %>%;"
+                   aria-valuenow="<%= @feedback_received_percentage || 0 %>"
+                   aria-valuemin="0" aria-valuemax="100">
+                <%= @feedback_received_percentage || 0 %>%
               </div>
             </div>
-            <div class="col-md-6 mb-4">
-              <h6 class="text-muted mb-3">Feedback Pending</h6>
-              <div class="progress" style="height: 25px;">
-                <div class="progress-bar bg-warning" role="progressbar" 
-                     style="width: <%= @feedback_pending_percentage || 0 %>%;" 
-                     aria-valuenow="<%= @feedback_pending_percentage || 0 %>" 
-                     aria-valuemin="0" aria-valuemax="100">
-                  <%= @feedback_pending_percentage || 0 %>%
-                </div>
+            <div class="d-flex justify-content-between mt-2">
+              <small class="text-muted">Total: <%= @total_feedback_received || 0 %></small>
+              <small class="text-muted">Target: 100%</small>
+            </div>
+          </div>
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Feedback Pending</h6>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar bg-warning" role="progressbar"
+                   style="width: <%= @feedback_pending_percentage || 0 %>%;"
+                   aria-valuenow="<%= @feedback_pending_percentage || 0 %>"
+                   aria-valuemin="0" aria-valuemax="100">
+                <%= @feedback_pending_percentage || 0 %>%
               </div>
-              <div class="d-flex justify-content-between mt-2">
-                <small class="text-muted">Total: <%= @total_feedback_pending || 0 %></small>
-                <small class="text-muted">Target: 0%</small>
-              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <small class="text-muted">Total: <%= @total_feedback_pending || 0 %></small>
+              <small class="text-muted">Target: 0%</small>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Feedback Trend Chart -->
-  <div class="row g-4 mb-4">
-    <div class="col-12">
-      <div class="card card-custom">
+    <div class="col-xl-8 col-md-6">
+      <div class="card card-custom h-100">
         <div class="card-header border-0 pt-3">
           <h5 class="card-title mb-0">Feedback by Training Program</h5>
         </div>
         <div class="card-body">
           <!-- Feedback by Training Program Chart Container -->
-          <div id="feedback-training-chart"></div>
+          <div id="feedback-training-chart" style="min-height:320px;"></div>
         </div>
       </div>
     </div>
@@ -597,7 +600,7 @@
       // Submissions by Assignment (bar)
       var byAssignmentContainer = document.querySelector('#submissions-by-assignment-chart');
       if (window.byAssignmentChart) { try { window.byAssignmentChart.destroy(); } catch(e) {} }
-      if (byAssignmentContainer) {
+  if (byAssignmentContainer) {
         // nicer visuals: gradient fill, rounded bars, adaptive label truncation
         var assignOptions = {
           chart: { type: 'bar', height: 360, toolbar: { show: true } },
@@ -606,7 +609,7 @@
             bar: { 
               horizontal: false, 
               columnWidth: '55%', 
-              borderRadius: 8, 
+              borderRadius: 0, 
               distributed: false 
             } 
           },
@@ -636,6 +639,28 @@
 
         window.byAssignmentChart = new ApexCharts(byAssignmentContainer, assignOptions);
         window.byAssignmentChart.render();
+      }
+
+      // Submissions by Section (today) - placed beside assignments
+      var bySectionContainer = document.querySelector('#submissions-by-section-chart');
+      if (window.bySectionChart) { try { window.bySectionChart.destroy(); } catch(e) {} }
+      if (bySectionContainer) {
+        var sectionOptions = {
+          chart: { type: 'bar', height: 360, toolbar: { show: true } },
+          series: [{ name: 'Submissions', data: <%= raw @submissions_section_data.to_json %> }],
+          plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 0 } },
+          dataLabels: { enabled: true, style: { fontSize: '12px' }, formatter: function(val){ return val; } },
+          xaxis: { categories: <%= raw @submissions_section_labels.to_json %>, labels: { rotate: -35, style: { fontSize: '12px' }, formatter: function(val){ return val.length > 24 ? val.substring(0,21) + '...' : val; } } },
+          yaxis: { title: { text: 'Submissions' }, min: 0 },
+          colors: ['#f97316'],
+          fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.6, gradientToColors: ['#fb923c'], inverseColors: false, opacityFrom: 0.95, opacityTo: 0.6, stops: [0, 100] } },
+          tooltip: { y: { formatter: function(val){ return val + ' submissions'; } } },
+          legend: { show: false },
+          responsive: [{ breakpoint: 768, options: { chart: { height: 300 }, xaxis: { labels: { rotate: -20 } } } }]
+        };
+
+        window.bySectionChart = new ApexCharts(bySectionContainer, sectionOptions);
+        window.bySectionChart.render();
       }
 
     if (typeChartContainer) {

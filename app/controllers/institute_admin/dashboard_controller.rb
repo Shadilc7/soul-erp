@@ -43,6 +43,23 @@ module InstituteAdmin
         @assignment_data = []
       end
 
+      # Submissions by Section (today) - count distinct (assignment_id, participant_id) per section
+      begin
+  section_counts = AssignmentResponse.joins(participant: :section)
+        .where(participants: { institute_id: current_institute.id }, response_date: Date.current)
+        .group("sections.id", "sections.name")
+        .order(Arel.sql("COUNT(DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id)) DESC"))
+        .limit(10)
+        .pluck("sections.name", Arel.sql("COUNT(DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id))"))
+
+        @submissions_section_labels = section_counts.map { |t, _| t || "No Section" }
+        @submissions_section_data = section_counts.map { |_, c| c }
+      rescue => e
+        Rails.logger.error "Error preparing submissions by section data: #{e.message}"
+        @submissions_section_labels = []
+        @submissions_section_data = []
+      end
+
       # Section-wise participant data
       section_data = current_institute.sections.active
         .select("sections.name, sections.capacity, COUNT(DISTINCT participants.id) as participant_count")
