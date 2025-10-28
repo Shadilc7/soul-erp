@@ -21,12 +21,12 @@ module InstituteAdmin
 
       # Section-wise participant data
       section_data = current_institute.sections.active
-        .select('sections.name, sections.capacity, COUNT(DISTINCT participants.id) as participant_count')
-        .joins('LEFT JOIN participants ON participants.section_id = sections.id')
-        .joins('LEFT JOIN users ON users.id = participants.user_id')
+        .select("sections.name, sections.capacity, COUNT(DISTINCT participants.id) as participant_count")
+        .joins("LEFT JOIN participants ON participants.section_id = sections.id")
+        .joins("LEFT JOIN users ON users.id = participants.user_id")
         .where(users: { active: true })
-        .group('sections.id, sections.name, sections.capacity')
-        .order('sections.name')
+        .group("sections.id, sections.name, sections.capacity")
+        .order("sections.name")
 
       @section_labels = section_data.map(&:name)
       @section_data = {
@@ -47,7 +47,7 @@ module InstituteAdmin
         .group(:participant_type)
         .count
 
-      @type_labels = ['Student', 'Guardian', 'Employee']
+      @type_labels = [ "Student", "Guardian", "Employee" ]
       @type_data = @type_labels.map { |type| participant_types[type.downcase] || 0 }
 
       # Training program statistics
@@ -56,7 +56,7 @@ module InstituteAdmin
 
       # Feedback statistics
       calculate_feedback_statistics
-      
+
       # Training program feedback data
       @program_feedback_data = get_program_feedback_data
 
@@ -69,15 +69,15 @@ module InstituteAdmin
           program.define_singleton_method(:feedback_percentage) do
             total_participants = self.participants.count
             return 0 if total_participants.zero?
-            
+
             received_feedback = self.training_program_feedbacks.count
             ((received_feedback.to_f / total_participants) * 100).round
           end
-          
+
           program.define_singleton_method(:participants_count) do
             self.participants.count
           end
-          
+
           program
         end
     end
@@ -90,7 +90,7 @@ module InstituteAdmin
         @total_feedback_received = TrainingProgramFeedback.joins(:training_program)
                                     .where(training_programs: { institute_id: current_institute.id })
                                     .count
-        
+
         total_possible_feedback = current_institute.training_programs.sum do |program|
           program.participants.count
         end
@@ -112,12 +112,12 @@ module InstituteAdmin
         programs = current_institute.training_programs
                     .includes(:participants, :training_program_feedbacks)
                     .limit(10)
-        
+
         result = programs.map do |program|
           total_participants = program.participants.count
           received_feedback = program.training_program_feedbacks.count
-          pending_feedback = [total_participants - received_feedback, 0].max
-          
+          pending_feedback = [ total_participants - received_feedback, 0 ].max
+
           {
             name: program.title || "Unnamed Program",
             received: received_feedback,
@@ -128,7 +128,7 @@ module InstituteAdmin
 
         # Return empty array if no programs with feedback
         return [] if result.all? { |r| r[:received] == 0 && r[:pending] == 0 }
-        
+
         result
       rescue => e
         Rails.logger.error "Error getting program feedback data: #{e.message}"
