@@ -5,7 +5,7 @@ module ParticipantPortal
 
     def index
       @selected_date = parse_date(params[:date])
-      
+
       # Direct SQL approach for PostgreSQL compatibility
       # This avoids the DISTINCT issues by explicitly selecting all columns we need to order by
       base_sql = <<-SQL
@@ -16,32 +16,32 @@ module ParticipantPortal
         WHERE assignments.active = true
         AND (assignment_participants.participant_id = :participant_id OR assignment_sections.section_id = :section_id)
       SQL
-      
+
       base_params = {
         participant_id: current_participant.id,
         section_id: current_participant.section_id
       }
-      
+
       # Today's assignments
       today_sql = base_sql + " AND DATE(assignments.start_date) <= :today AND DATE(assignments.end_date) >= :today ORDER BY assignments.id, assignments.created_at DESC"
-      @today_assignments = Assignment.find_by_sql([today_sql, base_params.merge(today: Date.current)])
-      
+      @today_assignments = Assignment.find_by_sql([ today_sql, base_params.merge(today: Date.current) ])
+
       # IDs of today's assignments to exclude from upcoming
       today_ids = @today_assignments.map(&:id)
-      
+
       # Upcoming assignments
       upcoming_sql = base_sql + " AND DATE(assignments.end_date) >= :today AND assignments.id NOT IN (:today_ids) ORDER BY assignments.id, assignments.start_date ASC"
-      upcoming_params = base_params.merge(today: Date.current, today_ids: today_ids.empty? ? [0] : today_ids)
-      @upcoming_assignments = Assignment.find_by_sql([upcoming_sql, upcoming_params])
-      
+      upcoming_params = base_params.merge(today: Date.current, today_ids: today_ids.empty? ? [ 0 ] : today_ids)
+      @upcoming_assignments = Assignment.find_by_sql([ upcoming_sql, upcoming_params ])
+
       # Past assignments
       past_sql = base_sql + " AND DATE(assignments.end_date) < :today ORDER BY assignments.id, assignments.end_date DESC"
-      @past_assignments = Assignment.find_by_sql([past_sql, base_params.merge(today: Date.current)])
-      
+      @past_assignments = Assignment.find_by_sql([ past_sql, base_params.merge(today: Date.current) ])
+
       # For the date selection in the view
       date_sql = base_sql + " AND DATE(assignments.start_date) <= :selected_date AND DATE(assignments.end_date) >= :selected_date ORDER BY assignments.id, assignments.created_at DESC"
-      date_assignments = Assignment.find_by_sql([date_sql, base_params.merge(selected_date: @selected_date)])
-      
+      date_assignments = Assignment.find_by_sql([ date_sql, base_params.merge(selected_date: @selected_date) ])
+
       # Also create a regular relation for all assignments
       @assignments = Assignment.select("assignments.*")
                                .active
@@ -51,7 +51,7 @@ module ParticipantPortal
                                  participant_id: current_participant.id,
                                  section_id: current_participant.section_id)
                                .distinct
-      
+
       respond_to do |format|
         format.html # Will render index.html.erb template
         format.turbo_stream {
@@ -114,13 +114,13 @@ module ParticipantPortal
 
             # Handle different question types
             case question.question_type
-            when 'checkboxes'
+            when "checkboxes"
               response.selected_options = response_data[:selected_options].presence || []
               response.answer = response.selected_options.join(", ")
-            when 'multiple_choice', 'dropdown', 'rating'
+            when "multiple_choice", "dropdown", "rating"
               response.answer = response_data[:answer]
-              response.selected_options = [response_data[:answer]].compact
-            when 'short_answer', 'paragraph', 'number', 'date', 'time'
+              response.selected_options = [ response_data[:answer] ].compact
+            when "short_answer", "paragraph", "number", "date", "time"
               response.answer = response_data[:answer]
               response.selected_options = []
             else
@@ -153,6 +153,18 @@ module ParticipantPortal
           else
             raise ActiveRecord::Rollback
           end
+        end
+      rescue ActiveRecord::RecordNotUnique => e
+        # Likely caused by a concurrent submission; handle gracefully and inform the user
+        Rails.logger.warn("Unique constraint violation when saving assignment responses: #{e.message}")
+
+        if @assignment.answered_by_on_date?(current_participant, @selected_date)
+          flash[:alert] = "It looks like you've already submitted this assignment for #{@selected_date.strftime('%B %d, %Y')}."
+          redirect_to participant_portal_root_path and return
+        else
+          flash.now[:alert] = "Some responses were already recorded by a concurrent submission. Please review and try again."
+          @questions = @assignment.all_questions
+          render :take_assignment, status: :conflict and return
         end
       rescue => e
         Rails.logger.error("Error in submit action: #{e.message}")

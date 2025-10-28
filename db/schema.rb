@@ -67,6 +67,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_140229) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.date "response_date"
+    t.index ["assignment_id", "participant_id", "question_id", "response_date"], name: "index_assignment_responses_unique", unique: true
     t.index ["assignment_id"], name: "index_assignment_responses_on_assignment_id"
     t.index ["participant_id"], name: "index_assignment_responses_on_participant_id"
     t.index ["question_id"], name: "index_assignment_responses_on_question_id"

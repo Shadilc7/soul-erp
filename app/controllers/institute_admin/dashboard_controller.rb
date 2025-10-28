@@ -3,6 +3,12 @@ module InstituteAdmin
     def index
       # Total counts
       @total_participants = current_institute.participants.count
+  # Today's assignment responses count for this institute
+  # Count distinct (assignment_id, participant_id) so multiple answers from same participant for
+  # the same assignment on the same day are counted once.
+  @today_responses_count = AssignmentResponse.joins(:participant)
+            .where(participants: { institute_id: current_institute.id }, response_date: Date.current)
+            .count("DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id)")
       @active_participants = current_institute.participants.active.count
       @total_trainers = current_institute.trainers.count
       @active_trainers = current_institute.active_trainers_count
