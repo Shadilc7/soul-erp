@@ -1,0 +1,39 @@
+  <div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Participants for <%= @institute.name %></h4>
+  <div>
+    <%= link_to 'Back', '#', onclick: 'history.back(); return false;', class: 'btn btn-outline-secondary me-2' %>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Section</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @participants.each do |p| %>
+            <tr>
+              <td><%= p[:name] %></td>
+              <td><%= p[:participant_type]&.titleize || 'Student' %></td>
+              <td><%= p[:section] || 'Not Assigned' %></td>
+              <td>
+                <% if p[:active] %>
+                  <span class="badge bg-success">Approved</span>
+                <% else %>
+                  <span class="badge bg-danger">Not Approved</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
