@@ -1,0 +1,40 @@
+  <div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Programs for <%= @institute.name %></h4>
+  <div>
+    <%= link_to 'Back', '#', onclick: 'history.back(); return false;', class: 'btn btn-outline-secondary me-2' %>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Program</th>
+            <th>Trainer</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @programs.each do |pr| %>
+            <tr>
+              <td><%= pr[:title] %></td>
+              <td><%= pr[:trainer] || '—' %></td>
+              <td>
+                <% case pr[:status].to_s %>
+                <% when 'ongoing', 'active' %>
+                  <span class="badge bg-success">Active</span>
+                <% when 'completed' %>
+                  <span class="badge bg-secondary">Completed</span>
+                <% else %>
+                  <span class="badge bg-info"><%= pr[:status].to_s.titleize %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
