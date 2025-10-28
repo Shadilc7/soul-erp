@@ -71,6 +71,40 @@
     </div>
   </div>
 
+  <!-- Submissions Over Time (14 days) -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3 d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Submissions Over Time (14 days)</h5>
+          <small class="text-muted">Distinct submissions per assignment & participant</small>
+        </div>
+        <div class="card-body">
+          <div id="submissions-over-time-chart" style="height: 320px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submissions by Assignment (Today) -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3 d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Submissions by Assignment (Today)</h5>
+          <small class="text-muted">Top 10 assignments by participants submitted</small>
+        </div>
+        <div class="card-body">
+          <div id="submissions-by-assignment-chart" style="height: 360px;"></div>
+          <!-- Chart UI cleaned: debug block removed -->
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <!-- placeholder kept for layout balance; existing KPI row follows below -->
+    </div>
+  </div>
+
   <!-- KPI Cards Row 2 -->
   <div class="row g-4 mb-4">
     <!-- Today Responses (moved to row 2 first column) -->
@@ -307,7 +341,7 @@
   function initializeDashboardCharts() {
     if (!isDashboardPage) return;
     
-    console.log('Initializing dashboard charts');
+  // initializing dashboard charts
     
     // Check if chart containers exist before initializing
     var sectionChartContainer = document.querySelector("#participants-section-chart");
@@ -316,20 +350,20 @@
 
     // Only destroy and recreate charts if we're on the dashboard page
     if (window.sectionChart) {
-      console.log('Destroying existing section chart');
+  // destroying existing section chart
       window.sectionChart.destroy();
     }
     if (window.typeChart) {
-      console.log('Destroying existing type chart');
+  // destroying existing type chart
       window.typeChart.destroy();
     }
     if (window.feedbackChart) {
-      console.log('Destroying existing feedback chart');
+  // destroying existing feedback chart
       window.feedbackChart.destroy();
     }
 
     if (sectionChartContainer) {
-      console.log('Initializing Participants by Section Chart');
+  // initializing Participants by Section Chart
       var sectionChartOptions = {
         chart: { 
           type: 'bar', 
@@ -531,9 +565,81 @@
       window.sectionChart = new ApexCharts(sectionChartContainer, sectionChartOptions);
       window.sectionChart.render();
     }
+      // Submissions over time chart (Apex)
+      var submissionsContainer = document.querySelector('#submissions-over-time-chart');
+      if (window.submissionsChart) {
+        try { window.submissionsChart.destroy(); } catch(e) { /* ignore */ }
+      }
+      if (submissionsContainer) {
+  // initializing Submissions Over Time Chart
+        var submissionsOptions = {
+          chart: { type: 'area', height: 320, toolbar: { show: true }, animations: { enabled: true, easing: 'easeinout', speed: 700 } },
+          series: [{ name: 'Submissions', data: <%= @submissions_time_data.to_json.html_safe %> }],
+          stroke: { curve: 'smooth', width: 3 },
+          markers: { size: 4, strokeColors: '#ffffff', hover: { sizeOffset: 2 } },
+          colors: ['#0d6efd'],
+          fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.04 } },
+          xaxis: { categories: <%= raw @submissions_time_labels.to_json %>, labels: { rotate: -35, style: { fontSize: '12px' } } },
+          yaxis: { title: { text: 'Submissions' }, min: 0 },
+          tooltip: { x: { format: 'dd MMM' }, y: { formatter: function(val){ return val + ' submissions'; } } },
+          legend: { show: false },
+          grid: { borderColor: '#eef2f6' },
+          responsive: [{
+            breakpoint: 768,
+            options: { chart: { height: 260 }, xaxis: { labels: { rotate: -20 } } }
+          }]
+        };
+
+        window.submissionsChart = new ApexCharts(submissionsContainer, submissionsOptions);
+        window.submissionsChart.render();
+      }
+
+      // Submissions by Assignment (bar)
+      var byAssignmentContainer = document.querySelector('#submissions-by-assignment-chart');
+      if (window.byAssignmentChart) { try { window.byAssignmentChart.destroy(); } catch(e) {} }
+      if (byAssignmentContainer) {
+        // nicer visuals: gradient fill, rounded bars, adaptive label truncation
+        var assignOptions = {
+          chart: { type: 'bar', height: 360, toolbar: { show: true } },
+          series: [{ name: 'Participants', data: <%= raw @assignment_data.to_json %> }],
+          plotOptions: { 
+            bar: { 
+              horizontal: false, 
+              columnWidth: '55%', 
+              borderRadius: 8, 
+              distributed: false 
+            } 
+          },
+          dataLabels: { enabled: true, formatter: function(val){ return val; }, style: { fontSize: '12px', colors: ['#243b53'] } },
+          xaxis: { 
+            categories: <%= raw @assignment_labels.to_json %>, 
+            labels: { 
+              rotate: -35, 
+              style: { fontSize: '12px' },
+              formatter: function(val) { return val.length > 24 ? val.substring(0,21) + '...' : val; }
+            } 
+          },
+          yaxis: { title: { text: 'Participants' }, min: 0 },
+          colors: [function({ value, seriesIndex, w }){ return '#06b6d4' }],
+          fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.6, gradientToColors: ['#06b6d4'], inverseColors: false, opacityFrom: 0.95, opacityTo: 0.6, stops: [0, 100] } },
+          tooltip: { y: { formatter: function(val){ return val + ' participants'; } }, x: { formatter: function(val){ return val; } } },
+          legend: { show: false },
+          responsive: [{
+            breakpoint: 768,
+            options: {
+              chart: { height: 300 },
+              plotOptions: { bar: { columnWidth: '70%' } },
+              xaxis: { labels: { rotate: -20 } }
+            }
+          }]
+        };
+
+        window.byAssignmentChart = new ApexCharts(byAssignmentContainer, assignOptions);
+        window.byAssignmentChart.render();
+      }
 
     if (typeChartContainer) {
-      console.log('Initializing Participants by Type Pie Chart');
+  // initializing Participants by Type Pie Chart
       var optionsType = {
         chart: { 
           type: 'pie', 
@@ -645,7 +751,7 @@
     }
 
     if (feedbackChartContainer) {
-      console.log('Initializing Feedback by Training Program Chart');
+  // initializing Feedback by Training Program Chart
       var feedbackChartOptions = {
         chart: { type: 'bar', height: 300 },
         series: [{
@@ -672,17 +778,17 @@
     isDashboardPage = document.querySelector("#participants-section-chart") !== null;
     
     if (isDashboardPage) {
-      console.log('Dashboard page detected, initializing charts');
+  // dashboard page detected, initializing charts
       initializeDashboardCharts();
     } else {
-      console.log('Not on dashboard page, skipping chart initialization');
+  // not on dashboard page, skipping chart initialization
     }
   });
 
   // Clean up only when leaving dashboard page
   document.addEventListener('turbo:before-visit', function() {
     if (isDashboardPage) {
-      console.log('Leaving dashboard page, cleaning up charts');
+  // leaving dashboard page, cleaning up charts
       if (window.sectionChart) {
         window.sectionChart.destroy();
         window.sectionChart = null;

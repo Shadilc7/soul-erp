@@ -18,6 +18,30 @@ module InstituteAdmin
       @total_question_sets = current_institute.question_sets.count
       @total_assignments = current_institute.assignments.count
       @total_training_programs = current_institute.training_programs.count
+      begin
+  # Use AssignmentResponse as the base and LEFT JOIN assignments so we include responses
+  # even if the assignment record is missing/soft-deleted. COALESCE the title for display.
+  # Use Arel.sql to safely include raw SQL expressions (COALESCE and COUNT DISTINCT)
+  assignment_counts = AssignmentResponse.joins(:participant)
+        .left_joins(:assignment)
+        .where(participants: { institute_id: current_institute.id }, response_date: Date.current)
+        .group("assignments.id", Arel.sql("COALESCE(assignments.title, 'Deleted Assignment')"))
+        .order(Arel.sql("COUNT(DISTINCT assignment_responses.participant_id) DESC"))
+        .limit(10)
+        .pluck(Arel.sql("COALESCE(assignments.title, 'Deleted Assignment')"), Arel.sql("COUNT(DISTINCT assignment_responses.participant_id)"))
+
+        @assignment_labels = assignment_counts.map { |t, _| t || "Untitled" }
+        @assignment_data = assignment_counts.map { |_, c| c }
+
+        # If no data found, log a helpful debug message
+        if @assignment_data.blank?
+          Rails.logger.info "Submissions by Assignment: no results for institute=#{current_institute.id} date=#{Date.current} (assignment_counts empty)"
+        end
+      rescue => e
+        Rails.logger.error "Error preparing submissions by assignment data: #{e.message}"
+        @assignment_labels = []
+        @assignment_data = []
+      end
 
       # Section-wise participant data
       section_data = current_institute.sections.active
@@ -53,6 +77,22 @@ module InstituteAdmin
       # Training program statistics
       @active_programs_count = current_institute.training_programs.where(status: :ongoing).count
       @active_programs_percentage = calculate_percentage(@active_programs_count, @total_training_programs)
+
+      # Submissions over time (last 14 days) - count distinct (assignment, participant) per day
+      begin
+        date_range = (Date.current - 13)..Date.current
+        submissions_by_date = AssignmentResponse.joins(:participant)
+                                .where(participants: { institute_id: current_institute.id }, response_date: date_range)
+                                .group(:response_date)
+                                .count("DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id)")
+
+        @submissions_time_labels = date_range.map { |d| d.strftime("%b %d") }
+        @submissions_time_data = date_range.map { |d| submissions_by_date[d] || 0 }
+      rescue => e
+        Rails.logger.error "Error preparing submissions over time data: #{e.message}"
+        @submissions_time_labels = []
+        @submissions_time_data = []
+      end
 
       # Feedback statistics
       calculate_feedback_statistics
