@@ -7,13 +7,23 @@
   </div>
 
   <div class="card-body">
+    <style>
+      .action-btn { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; transition:all .3s ease; border:none; position:relative; overflow:hidden; }
+      .action-btn::before { content:''; position:absolute; top:50%; left:50%; width:0; height:0; border-radius:50%; background:rgba(255,255,255,.2); transform:translate(-50%,-50%); transition:width .45s,height .45s; }
+      .action-btn:hover::before { width:100px; height:100px; }
+      .action-btn i { font-size:16px; position:relative; z-index:1; }
+      .btn-view{ background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; }
+      .btn-edit{ background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); color:#fff; }
+      td:last-child{ white-space:nowrap; }
+      /* force actions to be inline row */
+      .actions-cell { display: inline-flex; gap: .5rem; align-items: center; }
+    </style>
     <div class="table-responsive">
       <table class="table table-hover">
         <thead>
           <tr>
             <th>Name</th>
             <th>Code</th>
-            <th>Email</th>
             <th>Contact</th>
             <th>Status</th>
             <th>Actions</th>
@@ -24,16 +34,19 @@
             <tr>
               <td><%= institute.name %></td>
               <td><%= institute.code %></td>
-              <td><%= institute.email %></td>
               <td><%= institute.contact_number %></td>
               <td>
                 <span class="badge <%= institute.active? ? 'badge-success' : 'badge-danger' %>">
                   <%= institute.active? ? 'Active' : 'Inactive' %>
                 </span>
               </td>
-              <td>
-                <%= link_to "View", admin_institute_path(institute), class: "btn btn-sm btn-custom-primary" %>
-                <%= link_to "Edit", edit_admin_institute_path(institute), class: "btn btn-sm btn-outline-custom" %>
+              <td class="actions-cell">
+                <%= link_to admin_institute_path(institute), class: "btn action-btn btn-view", title: "View" do %>
+                  <i class="bi bi-eye"></i>
+                <% end %>
+                <%= link_to edit_admin_institute_path(institute), class: "btn action-btn btn-edit", title: "Edit" do %>
+                  <i class="bi bi-pencil"></i>
+                <% end %>
               </td>
             </tr>
           <% end %>
