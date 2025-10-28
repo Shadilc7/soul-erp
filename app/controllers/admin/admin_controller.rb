@@ -51,6 +51,14 @@ module Admin
         avg_ratings: @institutes.map { |i| i[:stats][:feedbacks][:average_rating] }
       }
 
+      # Global totals
+      @total_programs = TrainingProgram.count
+      @active_programs_count = TrainingProgram.where(status: :ongoing).count
+
+      @total_participants = Participant.count
+      @total_approved_participants = Participant.joins(:user).where(users: { active: true }).count
+      @total_not_approved_participants = Participant.joins(:user).where(users: { active: false }).count
+
       # Recent Data
       @recent_institutes = Institute.order(created_at: :desc).limit(5)
       @recent_programs = TrainingProgram.includes(:institute, :trainer)
@@ -59,6 +67,77 @@ module Admin
       @recent_feedbacks = TrainingProgramFeedback.includes(:training_program, :participant)
                                                .order(created_at: :desc)
                                                .limit(5)
+    end
+
+    # GET /admin/participants_by_institute
+    def participants_by_institute
+      @institutes_participants = Institute.includes(participants: :user).map do |institute|
+        total = institute.participants.count
+        approved = institute.participants.joins(:user).where(users: { active: true }).count
+        not_approved = total - approved
+        {
+          id: institute.id,
+          name: institute.name,
+          total: total,
+          approved: approved,
+          not_approved: not_approved
+        }
+      end
+      @status_filter = params[:status]
+    end
+
+    # GET /admin/programs_by_institute
+    def programs_by_institute
+      @institutes_programs = Institute.includes(:training_programs).map do |institute|
+        total = institute.training_programs.count
+        active = institute.training_programs.where(status: :ongoing).count
+        {
+          id: institute.id,
+          name: institute.name,
+          total: total,
+          active: active
+        }
+      end
+    end
+
+    # GET /admin/institutes/:id/participants
+    def institute_participants
+      @institute = Institute.find(params[:id])
+      participants = @institute.participants.includes(:user)
+      if params[:status].present?
+        case params[:status]
+        when "approved"
+          participants = participants.joins(:user).where(users: { active: true })
+        when "not_approved"
+          participants = participants.joins(:user).where(users: { active: false })
+        end
+      end
+      @participants = participants.order("users.first_name").map do |p|
+        {
+          id: p.id,
+          name: p.user.full_name,
+          participant_type: p.participant_type,
+          section: p.section&.name,
+          active: p.user.active?
+        }
+      end
+    end
+
+    # GET /admin/institutes/:id/programs
+    def institute_programs
+      @institute = Institute.find(params[:id])
+      programs = @institute.training_programs
+      if params[:status] == "active"
+        programs = programs.where(status: :ongoing)
+      end
+      @programs = programs.order(created_at: :desc).map do |pr|
+        {
+          id: pr.id,
+          title: pr.title,
+          trainer: pr.trainer&.user&.full_name,
+          status: pr.status
+        }
+      end
     end
 
     private
