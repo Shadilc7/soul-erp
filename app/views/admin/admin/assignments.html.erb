@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">All Assignments</h4>
+  <%= link_to admin_root_path, class: 'btn btn-outline-secondary' do %>
+    Back
+  <% end %>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Institute</th>
+            <th>End Date</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @assignments.each do |a| %>
+            <tr>
+              <td><%= truncate(a.title || a.name || 'Assignment', length: 80) %></td>
+              <td><%= a.institute&.name %></td>
+              <td><%= a.end_date.present? ? a.end_date.strftime('%b %d, %Y') : '—' %></td>
+              <td><%= time_ago_in_words(a.created_at) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

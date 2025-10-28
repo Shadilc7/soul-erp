@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">All Questions</h4>
+  <%= link_to admin_root_path, class: 'btn btn-outline-secondary' do %>
+    Back
+  <% end %>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Institute</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @questions.each do |q| %>
+            <tr>
+              <td><%= truncate(q.title, length: 80) %></td>
+              <td><%= q.question_type&.to_s&.titleize %></td>
+              <td><%= q.institute&.name %></td>
+              <td><%= time_ago_in_words(q.created_at) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">All Trainers</h4>
+  <%= link_to admin_root_path, class: 'btn btn-outline-secondary' do %>
+    Back
+  <% end %>
+</div>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Institute</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @trainers.each do |t| %>
+            <tr>
+              <td><%= t.user&.full_name || t.user&.username || '—' %></td>
+              <td><%= t.institute&.name %></td>
+              <td><%= t.user&.email %></td>
+              <td><span class="badge <%= t.active? ? 'bg-success' : 'bg-secondary' %>"><%= t.status&.to_s&.titleize %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
