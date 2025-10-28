@@ -114,6 +114,43 @@
   </div>
 
   <!-- KPI Cards Row 2 -->
+  <!-- Charts: Not-submitted (full width), Pending by Section (full width), Backlog Trend (full width) -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3">
+          <h5 class="card-title mb-0">Not Submitted by Assignment (Top 10)</h5>
+        </div>
+        <div class="card-body">
+          <div id="not-submitted-assignment-chart" style="height:320px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3">
+          <h5 class="card-title mb-0">Pending by Section (Top 10)</h5>
+        </div>
+        <div class="card-body">
+          <div id="pending-section-chart" style="height:320px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card card-custom h-100">
+        <div class="card-header border-0 pt-3">
+          <h5 class="card-title mb-0">Backlog Trend (14 days)</h5>
+        </div>
+        <div class="card-body">
+          <div id="backlog-trend-chart" style="height:320px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-4 mb-4">
     <!-- Today Responses (moved to row 2 first column) -->
     <div class="col-xl-3 col-md-6">
@@ -223,9 +260,9 @@
   <div class="card-body d-flex flex-column justify-content-center h-100">
           <div class="mb-3">
             <h6 class="text-muted mb-2">Feedback Received</h6>
-            <div class="progress" style="height: 25px;">
-              <div class="progress-bar bg-success" role="progressbar"
-                   style="width: <%= @feedback_received_percentage || 0 %>%;"
+            <div class="progress" style="height: 25px; background: #f1f5f9;">
+              <div class="progress-bar" role="progressbar"
+                   style="width: <%= @feedback_received_percentage || 0 %>%; background: linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%); color: #04263a; font-weight:600;"
                    aria-valuenow="<%= @feedback_received_percentage || 0 %>"
                    aria-valuemin="0" aria-valuemax="100">
                 <%= @feedback_received_percentage || 0 %>%
@@ -238,9 +275,9 @@
           </div>
           <div class="mb-3">
             <h6 class="text-muted mb-2">Feedback Pending</h6>
-            <div class="progress" style="height: 25px;">
-              <div class="progress-bar bg-warning" role="progressbar"
-                   style="width: <%= @feedback_pending_percentage || 0 %>%;"
+            <div class="progress" style="height: 25px; background: #f1f5f9;">
+              <div class="progress-bar" role="progressbar"
+                   style="width: <%= @feedback_pending_percentage || 0 %>%; background: linear-gradient(90deg, #fb7185 0%, #fb923c 100%); color: #4a2b00; font-weight:600;"
                    aria-valuenow="<%= @feedback_pending_percentage || 0 %>"
                    aria-valuemin="0" aria-valuemax="100">
                 <%= @feedback_pending_percentage || 0 %>%
@@ -787,10 +824,70 @@
           data: <%= @program_feedback_data.map { |d| d[:pending].to_i } %>
         }],
         xaxis: { categories: <%= raw @program_feedback_data.map { |d| d[:name] }.to_json %> },
-        colors: ['#22c55e', '#f59e0b']
+        colors: ['#8b5cf6', '#fb7185'],
+        fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.6, gradientToColors: ['#06b6d4', '#fb923c'], inverseColors: false, opacityFrom: 0.95, opacityTo: 0.6, stops: [0, 100] } },
+        tooltip: { y: { formatter: function(val){ return val + ' responses'; } } }
       };
       window.feedbackChart = new ApexCharts(feedbackChartContainer, feedbackChartOptions);
       window.feedbackChart.render();
+    }
+
+  // Completion chart removed
+
+    // Not-submitted by Assignment (Top 10) - bar
+    var notSubmittedContainer = document.querySelector('#not-submitted-assignment-chart');
+    if (window.notSubmittedChart) { try { window.notSubmittedChart.destroy(); } catch(e) {} }
+    if (notSubmittedContainer) {
+      var notSubmittedOptions = {
+        chart: { type: 'bar', height: 320 },
+        series: [{ name: 'Pending', data: <%= raw @not_submitted_assignment_data.to_json %> }],
+        xaxis: { categories: <%= raw @not_submitted_assignment_labels.to_json %>, labels: { rotate: -30, style: { fontSize: '12px' } } },
+        plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 4 } },
+        dataLabels: { enabled: true, style: { fontSize: '12px' } },
+  colors: ['#FF5E62'],
+  fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.6, gradientToColors: ['#FF2D95'], inverseColors: false, opacityFrom: 0.95, opacityTo: 0.6, stops: [0,100] } },
+        tooltip: { y: { formatter: function(val){ return val + ' pending'; } } },
+        legend: { show: false }
+      };
+      window.notSubmittedChart = new ApexCharts(notSubmittedContainer, notSubmittedOptions);
+      window.notSubmittedChart.render();
+    }
+
+    // Pending by Section (Top 10) - bar
+    var pendingSectionContainer = document.querySelector('#pending-section-chart');
+    if (window.pendingSectionChart) { try { window.pendingSectionChart.destroy(); } catch(e) {} }
+    if (pendingSectionContainer) {
+      var pendingSectionOptions = {
+        chart: { type: 'bar', height: 320 },
+        series: [{ name: 'Pending', data: <%= raw @pending_section_data.to_json %> }],
+        xaxis: { categories: <%= raw @pending_section_labels.to_json %>, labels: { rotate: -30, style: { fontSize: '12px' } } },
+        plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 4 } },
+        dataLabels: { enabled: true, style: { fontSize: '12px' } },
+        colors: ['#8b5cf6'],
+        fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.6, gradientToColors: ['#ec4899'], inverseColors: false, opacityFrom: 0.95, opacityTo: 0.6, stops: [0,100] } },
+        tooltip: { y: { formatter: function(val){ return val + ' pending'; } } },
+        legend: { show: false }
+      };
+      window.pendingSectionChart = new ApexCharts(pendingSectionContainer, pendingSectionOptions);
+      window.pendingSectionChart.render();
+    }
+
+    // Backlog Trend (14 days)
+    var backlogContainer = document.querySelector('#backlog-trend-chart');
+    if (window.backlogChart) { try { window.backlogChart.destroy(); } catch(e) {} }
+    if (backlogContainer) {
+      var backlogOptions = {
+        chart: { type: 'area', height: 220 },
+        series: [{ name: 'Backlog', data: <%= raw @backlog_data.to_json %> }],
+        xaxis: { categories: <%= raw @backlog_labels.to_json %>, labels: { rotate: -35, style: { fontSize: '11px' } } },
+        stroke: { curve: 'smooth', width: 2 },
+        colors: ['#ef4444'],
+        fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', opacityFrom: 0.45, opacityTo: 0.04 } },
+        tooltip: { y: { formatter: function(val){ return val + ' pending'; } } },
+        grid: { borderColor: '#eef2f6' }
+      };
+      window.backlogChart = new ApexCharts(backlogContainer, backlogOptions);
+      window.backlogChart.render();
     }
   }
 
