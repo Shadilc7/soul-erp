@@ -1,0 +1,42 @@
+<div class="container-fluid py-4">
+  <div class="card card-custom">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Responses Overview</h5>
+      <small class="text-muted">Distinct submissions (assignment × participant)</small>
+    </div>
+    <div class="card-body">
+      <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+          <h3 class="mb-0"><%= @total_responses %></h3>
+          <small class="text-muted">Total distinct responses across all institutes</small>
+        </div>
+        <div>
+          <%= link_to 'Export CSV', admin_responses_path(format: :csv), class: 'btn btn-sm btn-outline-secondary' %>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Institute</th>
+              <th>Responses</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @institutes_responses.each do |row| %>
+              <tr>
+                <td><%= row['institute_name'] %></td>
+                <td><%= row['responses_count'] %></td>
+                <td class="text-end">
+                  <%= link_to 'View', admin_institute_responses_path(row['institute_id']), class: 'btn btn-sm btn-primary' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
