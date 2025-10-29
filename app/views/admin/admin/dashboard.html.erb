@@ -112,8 +112,20 @@
   </div>
 
   <div class="col-md-3 mb-4 d-flex">
-    <!-- empty spacer to keep layout balanced on wide screens -->
-    <div class="card card-custom flex-fill kpi-card" style="visibility: hidden;"></div>
+    <!-- Responses KPI -->
+    <div class="card card-custom flex-fill kpi-card">
+      <div class="card-body d-flex flex-column justify-content-between">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title mb-0">Responses</h6>
+            <h2 class="mt-2 mb-0"><%= @total_responses || 0 %></h2>
+            <small class="text-muted">Distinct assignment-participant pairs</small>
+          </div>
+          <i class="bi bi-reply-all fs-1 text-danger opacity-75"></i>
+        </div>
+        <%= link_to 'View Responses', admin_responses_path, class: 'btn btn-custom-primary mt-3' %>
+      </div>
+    </div>
   </div>
 </div>
 
