@@ -458,14 +458,16 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx2d = canvas.getContext('2d');
 
-    // Create vertical gradients for nicer visuals
-    const gradPrimary = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
-    gradPrimary.addColorStop(0, '#2f80ed');
-    gradPrimary.addColorStop(1, '#2563eb');
+  // Create modern unique gradients for participants chart
+  const gradPrimary = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
+  // electric indigo -> soft violet
+  gradPrimary.addColorStop(0, '#5b21b6');
+  gradPrimary.addColorStop(1, '#8b5cf6');
 
-    const gradSuccess = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
-    gradSuccess.addColorStop(0, '#27ae60');
-    gradSuccess.addColorStop(1, '#15803d');
+  const gradSuccess = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
+  // teal -> cyan/mint
+  gradSuccess.addColorStop(0, '#0ea5a4');
+  gradSuccess.addColorStop(1, '#06b6d4');
 
     new Chart(canvas, {
       type: 'bar',
@@ -518,13 +520,16 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx2 = canvas.getContext('2d');
 
-    const gradInfo = ctx2.createLinearGradient(0, 0, 0, canvas.height);
-    gradInfo.addColorStop(0, '#06b6d4');
-    gradInfo.addColorStop(1, '#06b6d4');
+  // Modern program palette: warm sunset -> coral, and ocean teal
+  const gradInfo = ctx2.createLinearGradient(0, 0, 0, canvas.height);
+  // sunset coral -> warm pink
+  gradInfo.addColorStop(0, '#ff7a59');
+  gradInfo.addColorStop(1, '#ff416c');
 
-    const gradActive = ctx2.createLinearGradient(0, 0, 0, canvas.height);
-    gradActive.addColorStop(0, '#0ea5a4');
-    gradActive.addColorStop(1, '#0f766e');
+  const gradActive = ctx2.createLinearGradient(0, 0, 0, canvas.height);
+  // ocean teal -> deep sea
+  gradActive.addColorStop(0, '#00c2ff');
+  gradActive.addColorStop(1, '#007ea7');
 
     new Chart(canvas, {
       type: 'bar',
@@ -570,14 +575,16 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Create gradients for modern look
-    const gradSections = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradSections.addColorStop(0, '#60a5fa');
-    gradSections.addColorStop(1, '#2563eb');
+  // Create modern gradients for a unique palette
+  const gradSections = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  // violet -> magenta
+  gradSections.addColorStop(0, '#7c3aed');
+  gradSections.addColorStop(1, '#ec4899');
 
-    const gradAssignments = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradAssignments.addColorStop(0, '#34d399');
-    gradAssignments.addColorStop(1, '#059669');
+  const gradAssignments = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  // cyan -> mint
+  gradAssignments.addColorStop(0, '#06b6d4');
+  gradAssignments.addColorStop(1, '#06f7a6');
 
     new Chart(canvas, {
       type: 'bar',
