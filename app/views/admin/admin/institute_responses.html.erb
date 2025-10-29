@@ -1,0 +1,76 @@
+<div class="container-fluid py-4">
+  <div class="card card-custom">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="card-title mb-0">Responses for <%= @institute.name %></h5>
+        <small class="text-muted">Showing recent responses (assignment × participant)</small>
+      </div>
+      <div>
+        <%= link_to 'Back', admin_responses_path, class: 'btn btn-sm btn-light' %>
+      </div>
+    </div>
+      <div class="card-body">
+          <div class="mb-3">
+            <%= form_with url: admin_institute_responses_path(@institute), method: :get, local: true, class: 'row g-2' do |f| %>
+              <div class="col-auto">
+                <%= f.label :assignment_id, 'Assignment', class: 'form-label small' %>
+                <%= f.select :assignment_id, options_for_select([['All', '']] + @assignments.map { |a| [a.title, a.id] }, params[:assignment_id]), {}, class: 'form-select form-select-sm' %>
+              </div>
+              <div class="col-auto">
+                <%= f.label :participant_id, 'Participant', class: 'form-label small' %>
+                <%= f.select :participant_id, options_for_select([['All', '']] + @participants.map { |id, name| [name, id] }, params[:participant_id]), {}, class: 'form-select form-select-sm' %>
+              </div>
+              <div class="col-auto">
+                <%= f.label :status, 'Status', class: 'form-label small' %>
+                <%= f.select :status, options_for_select([['Any', ''], ['Answered', 'answered'], ['Unanswered', 'unanswered']], params[:status]), {}, class: 'form-select form-select-sm' %>
+              </div>
+              <div class="col-auto">
+                <%= f.label :from, 'From', class: 'form-label small' %>
+                <%= f.date_field :from, value: params[:from], class: 'form-control form-control-sm' %>
+              </div>
+              <div class="col-auto">
+                <%= f.label :to, 'To', class: 'form-label small' %>
+                <%= f.date_field :to, value: params[:to], class: 'form-control form-control-sm' %>
+              </div>
+              <div class="col-auto align-self-end">
+                <%= f.submit 'Filter', class: 'btn btn-sm btn-primary' %>
+                <%= link_to 'Clear', admin_institute_responses_path(@institute), class: 'btn btn-sm btn-outline-secondary ms-1' %>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @grouped_responses.present? %>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Assignment</th>
+                  <th>Participant</th>
+                  <th class="text-center">Responses</th>
+                  <th class="text-center">Last Response</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @grouped_responses.each do |group| %>
+                  <% responses_count = group[:responses].size %>
+                  <% last_date = group[:responses].map { |r| r[:response_date] }.compact.max %>
+                  <tr>
+                    <td><strong><%= group[:assignment_title] || '—' %></strong></td>
+                    <td><%= group[:participant_name] || group[:participant_id] %></td>
+                    <td class="text-center"><%= responses_count %></td>
+                    <td class="text-center"><%= last_date || '—' %></td>
+                    <td class="text-end">
+                      <%= link_to 'Details', admin_institute_response_detail_path(@institute, group[:responses].first[:id], assignment_id: group[:assignment_id], participant_id: group[:participant_id]), class: 'btn btn-sm btn-outline-primary' %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-muted">No responses found for this institute.</div>
+        <% end %>
+      </div>
+  </div>
+</div>
