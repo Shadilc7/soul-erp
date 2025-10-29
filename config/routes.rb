@@ -47,6 +47,10 @@ Rails.application.routes.draw do
       get "institutes/:id/programs", to: "admin#institute_programs", as: "institute_programs"
       get "participants_by_institute", to: "admin#participants_by_institute", as: "participants_by_institute"
       get "programs_by_institute", to: "admin#programs_by_institute", as: "programs_by_institute"
+  # Responses overview and per-institute responses
+  get "responses", to: "admin#responses", as: "responses"
+  get "institutes/:id/responses", to: "admin#institute_responses", as: "institute_responses"
+  get "institutes/:institute_id/responses/:id", to: "admin#response_detail", as: "institute_response_detail"
       resources :institutes do
         member do
           post "assign_admin"
