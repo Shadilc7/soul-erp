@@ -134,28 +134,24 @@ module Admin
         responses = responses.where(participant_id: params[:participant_id])
       end
 
-      if params[:status].present?
-        case params[:status]
-        when "answered"
-          responses = responses.where("(assignment_responses.answer IS NOT NULL AND assignment_responses.answer <> '') OR (assignment_responses.selected_options IS NOT NULL)")
-        when "unanswered"
-          responses = responses.where("(assignment_responses.answer IS NULL OR assignment_responses.answer = '') AND (assignment_responses.selected_options IS NULL)")
-        end
-      end
+      # Note: status filter removed — we no longer allow answered/unanswered filtering here
 
+      # Date filters: use timezone-aware day bounds so 'To' includes the whole day
       if params[:from].present?
         begin
-          from = Date.parse(params[:from])
+          from = Time.zone.parse(params[:from]).beginning_of_day
           responses = responses.where("assignment_responses.response_date >= ?", from)
-        rescue ArgumentError
+        rescue StandardError
+          # ignore invalid dates
         end
       end
 
       if params[:to].present?
         begin
-          to = Date.parse(params[:to])
+          to = Time.zone.parse(params[:to]).end_of_day
           responses = responses.where("assignment_responses.response_date <= ?", to)
-        rescue ArgumentError
+        rescue StandardError
+          # ignore invalid dates
         end
       end
 
