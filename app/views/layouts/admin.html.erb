@@ -29,6 +29,18 @@
         --text-secondary: #94a3b8;
       }
 
+      /* Light red button variant */
+      .btn-light-danger {
+        background-color: rgba(239, 68, 68, 0.08); /* subtle red tint */
+        border: 1px solid rgba(239, 68, 68, 0.18);
+        color: var(--danger-color);
+      }
+      .btn-light-danger:hover {
+        background-color: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.28);
+        color: #fff;
+      }
+
       body {
         min-height: 100vh;
         background: var(--body-bg);
@@ -338,7 +350,7 @@
 
         <div class="mt-auto p-3">
           <%= button_to destroy_user_session_path, method: :delete, 
-              class: "btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" do %>
+              class: "btn btn-light-danger w-100 d-flex align-items-center justify-content-center gap-2" do %>
             <i class="bi bi-box-arrow-right"></i>
             <span>Sign Out</span>
           <% end %>
