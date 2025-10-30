@@ -57,10 +57,7 @@
                       <%= f.select :participant_id, options_for_select([['All', '']] + @participants.map { |id, name| [name, id] }, params[:participant_id]), {}, class: 'form-select' %>
                     </div>
 
-                    <div class="flex-fill">
-                      <label class="form-label small mb-0">Status</label>
-                      <%= f.select :status, options_for_select([['Any', ''], ['Answered', 'answered'], ['Unanswered', 'unanswered']], params[:status]), {}, class: 'form-select' %>
-                    </div>
+                    <%# Status filter removed per UX request - keep the UI compact %>
 
                     <div class="d-flex" style="min-width:220px; gap:.5rem;">
                       <div style="flex:1">
@@ -82,21 +79,9 @@
                   </div>
                 </div>
 
+                <!-- Advanced filters area (kept for future use). Duplicate date inputs removed to avoid multiple `from`/`to` params being submitted. -->
                 <div class="collapse mt-3" id="advancedFilters">
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <label class="form-label small mb-0">Status</label>
-                      <%= f.select :status, options_for_select([['Any', ''], ['Answered', 'answered'], ['Unanswered', 'unanswered']], params[:status]), {}, class: 'form-select' %>
-                    </div>
-                    <div class="col-3">
-                      <label class="form-label small mb-0">From</label>
-                      <%= f.date_field :from, value: params[:from], class: 'form-control' %>
-                    </div>
-                    <div class="col-3">
-                      <label class="form-label small mb-0">To</label>
-                      <%= f.date_field :to, value: params[:to], class: 'form-control' %>
-                    </div>
-                  </div>
+                  <div class="p-2 text-muted small">No additional filters. Use the visible From/To fields above to filter by date.</div>
                 </div>
               <% end %>
             </div>
