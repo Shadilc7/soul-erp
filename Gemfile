@@ -71,7 +71,7 @@ gem "prawn-table"
 
 gem "combine_pdf"
 
-gem "simple_calendar", "~> 2.4"
+gem "simple_calendar", "~> 3.1"
 
 gem "kaminari"
 
