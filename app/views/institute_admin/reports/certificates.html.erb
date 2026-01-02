@@ -1,121 +1,182 @@
-<div class="container-fluid">
-  <%= render 'certificate_breadcrumb', current_page: nil %>
-
-  <div class="d-flex justify-content-between align-items-center mb-1 mt-4">
-  </div>
-
-  <div class="row g-3">
-    <div class="col-12 col-md-6">
-      <!-- Generate Certificates Card -->
-      <div class="mini-card">
-        <div class="icon-box bg-primary-soft">
-          <i class="bi bi-plus-circle-fill text-primary"></i>
-        </div>
-        <div class="content">
-          <h6>Generate Individual Certificate</h6>
-        </div>
-        <%= link_to "", generate_certificate_institute_admin_reports_path, class: "card-link" %>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6">
-      <!-- Generate Section-Wise Certificates Card -->
-      <div class="mini-card">
-        <div class="icon-box bg-primary-soft">
-          <i class="bi bi-file-earmark-medical text-primary"></i>
-        </div>
-        <div class="content">
-          <h6>Generate Section-Wise Certificate</h6>
-        </div>
-        <%= link_to "", generate_section_certificate_institute_admin_reports_path, class: "card-link" %>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6">
-      <!-- View Certificates Card -->
-      <div class="mini-card">
-        <div class="icon-box bg-success-soft">
-          <i class="bi bi-eye-fill text-success"></i>
-        </div>
-        <div class="content">
-          <h6>View Certificate</h6>
-        </div>
-        <%= link_to "", view_certificates_institute_admin_reports_path, class: "card-link" %>
-      </div>
-    </div>
-    
-    <div class="col-12 col-md-6">
-      <!-- Certificate Stats Card -->
-      <div class="mini-card">
-        <div class="icon-box bg-warning-soft">
-          <i class="bi bi-bar-chart-fill text-warning"></i>
-        </div>
-        <div class="content">
-          <h6>Statistics</h6>
-        </div>
-        <%= link_to "", certificate_stats_institute_admin_reports_path, class: "card-link" %>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6">
-      <!-- Certificate Configurations Card -->
-      <div class="mini-card">
-        <div class="icon-box bg-info-soft">
-          <i class="bi bi-gear-fill text-info"></i>
-        </div>
-        <div class="content">
-          <h6>Configurations</h6>
-        </div>
-        <%= link_to "", institute_admin_certificate_configurations_path, class: "card-link" %>
-      </div>
-    </div>
-  </div>
-</div>
-
+<% content_for :styles do %>
 <style>
-  .mini-card {
+  .certificates-menu-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+  
+  .certificates-menu-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
     position: relative;
-    background-color: white;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
     overflow: hidden;
-    height: 72px;
   }
   
-  .mini-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    background-color: #fcfcfc;
+  .certificates-menu-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
   }
   
-  .icon-box {
+  .certificates-menu-header h3 {
+    color: white;
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .certificates-menu-header .subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .certificate-action-card {
+    position: relative;
+    background: white;
+    border-radius: 18px;
+    padding: 2rem;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .certificate-action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  
+  .certificate-action-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .certificate-action-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .certificate-action-card.generate-card {
+    --gradient-start: #667eea;
+    --gradient-end: #764ba2;
+  }
+  
+  .certificate-action-card.section-card {
+    --gradient-start: #f093fb;
+    --gradient-end: #f5576c;
+  }
+  
+  .certificate-action-card.view-card {
+    --gradient-start: #11998e;
+    --gradient-end: #38ef7d;
+  }
+  
+  .certificate-action-card.stats-card {
+    --gradient-start: #ffd89b;
+    --gradient-end: #19547b;
+  }
+  
+  .certificate-action-card.config-card {
+    --gradient-start: #a8edea;
+    --gradient-end: #fed6e3;
+  }
+  
+  .action-icon-container {
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    margin-right: 16px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .certificate-action-card:hover .action-icon-container {
+    transform: scale(1.15) rotate(-5deg);
+  }
+  
+  .generate-card .action-icon-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+  }
+  
+  .section-card .action-icon-container {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    box-shadow: 0 6px 18px rgba(240, 147, 251, 0.4);
+  }
+  
+  .view-card .action-icon-container {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    box-shadow: 0 6px 18px rgba(17, 153, 142, 0.4);
+  }
+  
+  .stats-card .action-icon-container {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    box-shadow: 0 6px 18px rgba(255, 216, 155, 0.4);
+  }
+  
+  .config-card .action-icon-container {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    box-shadow: 0 6px 18px rgba(168, 237, 234, 0.4);
+  }
+  
+  .action-icon-container i {
+    font-size: 2rem;
+    color: white;
+  }
+  
+  .certificate-action-card h6 {
+    font-weight: 700;
     font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
   }
   
-  .content {
-    flex: 1;
-    overflow: hidden;
+  .certificate-action-card .card-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
   }
   
-  .mini-card h6 {
-    font-weight: 500;
-    font-size: 1rem;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #333;
+  .action-arrow {
+    color: #667eea;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    align-self: flex-end;
+    opacity: 0.7;
+  }
+  
+  .certificate-action-card:hover .action-arrow {
+    transform: translateX(8px);
+    opacity: 1;
   }
   
   .card-link {
@@ -127,38 +188,141 @@
     z-index: 1;
   }
   
-  .mini-card:focus-within {
-    box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.25);
-    outline: 0;
+  .certificates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.75rem;
   }
   
-  .bg-primary-soft {
-    background-color: rgba(13, 110, 253, 0.15);
-  }
-  
-  .bg-success-soft {
-    background-color: rgba(25, 135, 84, 0.15);
-  }
-  
-  .bg-info-soft {
-    background-color: rgba(13, 202, 240, 0.15);
-  }
-  
-  .bg-warning-soft {
-    background-color: rgba(255, 193, 7, 0.15);
+  @media (max-width: 768px) {
+    .certificates-menu-header {
+      padding: 2rem 1.5rem;
+    }
+    
+    .certificates-menu-header h3 {
+      font-size: 1.8rem;
+    }
+    
+    .certificate-action-card {
+      padding: 1.75rem;
+    }
+    
+    .action-icon-container {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .action-icon-container i {
+      font-size: 1.75rem;
+    }
+    
+    .certificate-action-card h6 {
+      font-size: 1.1rem;
+    }
+    
+    .certificates-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
   }
   
   @media (max-width: 576px) {
-    .mini-card {
-      padding: 12px;
-      height: 64px;
+    .certificates-menu-page {
+      padding: 1rem 0;
     }
     
-    .icon-box {
-      min-width: 36px;
-      height: 36px;
-      margin-right: 12px;
-      font-size: 1rem;
+    .certificates-menu-header {
+      border-radius: 16px;
+      padding: 1.5rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .certificates-menu-header h3 {
+      font-size: 1.5rem;
+    }
+    
+    .certificate-action-card {
+      padding: 1.5rem;
+    }
+    
+    .action-icon-container {
+      width: 55px;
+      height: 55px;
+    }
+    
+    .action-icon-container i {
+      font-size: 1.5rem;
     }
   }
 </style>
+<% end %>
+
+<div class="certificates-menu-page">
+  <%= render 'certificate_breadcrumb', current_page: nil %>
+
+  <div class="container-fluid px-4">
+    <!-- Premium Header -->
+    <div class="certificates-menu-header">
+      <h3><i class="bi bi-award me-3"></i>Certificate Management</h3>
+      <div class="subtitle">Generate, view, and manage certificates for your participants</div>
+    </div>
+
+    <!-- Certificates Grid -->
+    <div class="certificates-grid">
+      <!-- Generate Individual Certificate Card -->
+      <div class="certificate-action-card generate-card">
+        <div class="action-icon-container">
+          <i class="bi bi-plus-circle-fill"></i>
+        </div>
+        <h6>Generate Individual Certificate</h6>
+        <p class="card-description">Create certificates for individual participants based on their assignment performance and scores.</p>
+        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
+        <%= link_to "", generate_certificate_institute_admin_reports_path, class: "card-link" %>
+      </div>
+
+      <!-- Generate Section-Wise Certificate Card -->
+      <div class="certificate-action-card section-card">
+        <div class="action-icon-container">
+          <i class="bi bi-file-earmark-medical"></i>
+        </div>
+        <h6>Generate Section-Wise Certificate</h6>
+        <p class="card-description">Bulk generate certificates for all participants within a specific section or group.</p>
+        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
+        <%= link_to "", generate_section_certificate_institute_admin_reports_path, class: "card-link" %>
+      </div>
+
+      <!-- View Certificates Card -->
+      <div class="certificate-action-card view-card">
+        <div class="action-icon-container">
+          <i class="bi bi-eye-fill"></i>
+        </div>
+        <h6>View Certificates</h6>
+        <p class="card-description">Browse, filter, and manage all generated certificates. Publish or regenerate as needed.</p>
+        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
+        <%= link_to "", view_certificates_institute_admin_reports_path, class: "card-link" %>
+      </div>
+      
+      <!-- Certificate Statistics Card -->
+      <div class="certificate-action-card stats-card">
+        <div class="action-icon-container">
+          <i class="bi bi-bar-chart-fill"></i>
+        </div>
+        <h6>Certificate Statistics</h6>
+        <p class="card-description">View comprehensive statistics and analytics about certificate generation and distribution.</p>
+        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
+        <%= link_to "", certificate_stats_institute_admin_reports_path, class: "card-link" %>
+      </div>
+
+      <!-- Certificate Configurations Card -->
+      <div class="certificate-action-card config-card">
+        <div class="action-icon-container">
+          <i class="bi bi-gear-fill"></i>
+        </div>
+        <h6>Certificate Configurations</h6>
+        <p class="card-description">Manage certificate templates, layouts, and configuration settings for different certificate types.</p>
+        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
+        <%= link_to "", institute_admin_certificate_configurations_path, class: "card-link" %>
+      </div>
+    </div>
+  </div>
+</div>
