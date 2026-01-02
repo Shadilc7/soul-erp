@@ -5,6 +5,21 @@
   <% end %>
 </div>
 
+<!-- Institute Filter -->
+<div class="mb-3 p-3 bg-white rounded-3 shadow-sm border">
+  <%= form_with url: admin_assignments_path, method: :get, local: true, class: 'd-flex align-items-center gap-3' do |f| %>
+    <label for="instituteFilter" class="mb-0 text-muted small me-2">Institute:</label>
+    <%= f.select :institute_id, 
+        options_for_select([['All Institutes', '']] + @institutes.map { |i| [i.name, i.id] }, params[:institute_id]), 
+        {}, 
+        class: 'form-select form-select-sm', 
+        id: 'instituteFilter', 
+        onchange: 'this.form.submit()', 
+        style: 'max-width: 300px;' %>
+    <%= link_to 'Clear', admin_assignments_path, class: 'btn btn-sm btn-outline-secondary ms-2' %>
+  <% end %>
+</div>
+
 <div class="card card-custom">
   <div class="card-body">
     <div class="table-responsive">

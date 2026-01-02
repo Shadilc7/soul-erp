@@ -255,17 +255,41 @@ module Admin
 
     # GET /admin/questions
     def questions
-      @questions = Question.includes(:institute).order(created_at: :desc).limit(200)
+      @institutes = Institute.all.order(:name)
+
+      questions = Question.includes(:institute).order(created_at: :desc)
+
+      if params[:institute_id].present?
+        questions = questions.where(institute_id: params[:institute_id])
+      end
+
+      @questions = questions.limit(200)
     end
 
     # GET /admin/assignments
     def assignments
-      @assignments = Assignment.includes(:institute).order(created_at: :desc).limit(200)
+      @institutes = Institute.all.order(:name)
+
+      assignments = Assignment.includes(:institute).order(created_at: :desc)
+
+      if params[:institute_id].present?
+        assignments = assignments.where(institute_id: params[:institute_id])
+      end
+
+      @assignments = assignments.limit(200)
     end
 
     # GET /admin/trainers
     def trainers
-      @trainers = Trainer.includes(:user, :institute).order(created_at: :desc).limit(200)
+      @institutes = Institute.all.order(:name)
+
+      trainers = Trainer.includes(:user, :institute).order(created_at: :desc)
+
+      if params[:institute_id].present?
+        trainers = trainers.where(institute_id: params[:institute_id])
+      end
+
+      @trainers = trainers.limit(200)
     end
 
     # GET /admin/institutes/:id/participants
