@@ -1,173 +1,472 @@
-<div class="container-fluid py-4" data-controller="certificate-publisher">
+<% content_for :styles do %>
+<style>
+  .certificates-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+  .certificates-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .certificates-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .certificates-header h3 {
+    color: white;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .certificates-header .subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  .filter-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  .filter-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+  .filter-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+  .form-select-enhanced {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+  }
+  .form-select-enhanced:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    background-color: white;
+  }
+  .btn-reset {
+    background: linear-gradient(135deg, #f5f7fa 0%, #b8c6db 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    color: #495057;
+    transition: all 0.3s ease;
+  }
+  .btn-reset:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: #495057;
+  }
+  .bulk-actions-card {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(252, 182, 159, 0.3);
+    border: none;
+  }
+  .bulk-actions-title {
+    color: #8b4513;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  .bulk-actions-subtitle {
+    color: rgba(139, 69, 19, 0.7);
+    font-size: 0.85rem;
+  }
+  .bulk-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  .bulk-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .bulk-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .bulk-btn i {
+    font-size: 16px;
+    display: inline-block;
+    color: black;
+  }
+  .certificates-table-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+  .certificates-table {
+    margin: 0;
+  }
+  .certificates-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  .certificates-table thead th {
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    padding: 1.25rem 1.5rem;
+    border: none;
+  }
+  .certificates-table tbody td {
+    padding: 1.25rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .certificates-table tbody tr {
+    transition: all 0.3s ease;
+  }
+  .certificates-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    transform: scale(1.002);
+  }
+  .certificate-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 2px solid #dee2e6;
+  }
+  .form-check-input {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 2px solid #dee2e6;
+  }
+  .form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+  }
+  .assignment-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+  }
+  .participant-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  .participant-link:hover {
+    color: #764ba2;
+    text-decoration: underline;
+  }
+  .certificate-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  .config-badge {
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    color: #495057;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .action-btn-modern {
+    border: none;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+  .action-btn-modern:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .action-btn-modern i {
+    font-size: 14px;
+  }
+  .btn-publish {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+  }
+  .btn-unpublish {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    color: white;
+  }
+  .btn-view-cert {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+  .btn-regenerate {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #495057;
+  }
+  .btn-download-cert {
+    background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+    color: #495057;
+  }
+  .btn-delete-cert {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    color: white;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+  }
+  .empty-state i {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+  }
+  .empty-state h5 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  @media (max-width: 768px) {
+    .certificates-header {
+      padding: 2rem 1.5rem;
+    }
+    .certificates-header h3 {
+      font-size: 1.5rem;
+    }
+    .filter-card {
+      padding: 1.25rem;
+    }
+    .bulk-actions-card {
+      padding: 1.25rem;
+    }
+    .action-btn-modern {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>
+<% end %>
+
+<div class="certificates-page" data-controller="certificate-publisher">
   <%= render 'certificate_breadcrumb', current_page: "View Certificates" %>
 
-  <div class="card card-custom mt-3">
-    <div class="card-header card-header-custom py-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Generated Certificates</h5>
-        <div></div>
+  <div class="container-fluid px-4">
+    <!-- Modern Header -->
+    <div class="certificates-header">
+      <h3><i class="bi bi-award me-3"></i>Certificate Management</h3>
+      <div class="subtitle">View, manage, and publish certificates for participants</div>
+    </div>
+
+    <!-- Enhanced Filters -->
+    <div class="filter-card">
+      <%= form_with url: view_certificates_institute_admin_reports_path, method: :get, local: true, class: 'd-flex flex-column flex-md-row align-items-center gap-3' do |f| %>
+        <div class="d-flex flex-column flex-md-row align-items-center gap-3 w-100">
+          <div class="flex-fill">
+            <label for="sectionFilter" class="filter-label mb-2"><i class="bi bi-collection me-2"></i>Section</label>
+            <%= select_tag :section_id, 
+                options_for_select([['All Sections', '']] + current_institute.sections.active.map { |s| [s.name, s.id] }, @section_id), 
+                class: 'form-select form-select-enhanced', 
+                id: 'sectionFilter', 
+                onchange: 'this.form.submit()' %>
+          </div>
+
+          <div class="flex-fill">
+            <label for="configFilter" class="filter-label mb-2"><i class="bi bi-gear me-2"></i>Configuration</label>
+            <%= select_tag :certificate_configuration_id, 
+                options_for_select([['All Configurations', '']] + (@certificate_configurations || []).map { |c| [c.name, c.id] }, @certificate_configuration_id), 
+                class: 'form-select form-select-enhanced', 
+                id: 'configFilter', 
+                onchange: 'this.form.submit()' %>
+          </div>
+
+          <div class="align-self-end">
+            <%= link_to view_certificates_institute_admin_reports_path, class: 'btn btn-reset' do %>
+              <i class="bi bi-arrow-clockwise me-2"></i>Reset
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Modern Bulk Actions -->
+    <div class="bulk-actions-card">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <div>
+          <div class="bulk-actions-title"><i class="bi bi-check2-square me-2"></i>Bulk Actions</div>
+          <div class="bulk-actions-subtitle">Select certificates to perform actions</div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <%= button_tag type: 'button', class: 'bulk-btn btn-success', id: 'publishSelected', disabled: true, title: 'Publish selected' do %>
+            <i class="bi bi-check2-all me-1"></i><span class="d-none d-sm-inline">Publish</span>
+          <% end %>
+          <%= button_tag type: 'button', class: 'bulk-btn btn-warning', id: 'unpublishSelected', disabled: true, title: 'Unpublish selected' do %>
+            <i class="bi bi-eye-slash me-1"></i><span class="d-none d-sm-inline">Unpublish</span>
+          <% end %>
+          <%= button_tag type: 'button', class: 'bulk-btn btn-secondary', id: 'downloadSelected', disabled: true, title: 'Download selected' do %>
+            <i class="bi bi-download"></i>
+          <% end %>
+          <%= button_tag type: 'button', class: 'bulk-btn btn-info text-white', id: 'regenerateSelected', disabled: true, title: 'Regenerate selected' do %>
+            <i class="bi bi-arrow-clockwise"></i>
+          <% end %>
+          <%= button_tag type: 'button', class: 'bulk-btn btn-danger', id: 'deleteSelected', disabled: true, title: 'Delete selected' do %>
+            <i class="bi bi-trash"></i>
+          <% end %>
+        </div>
       </div>
     </div>
 
-    <div class="card-body">
-
-        <style>
-          /* Nudge filter labels slightly upward for better vertical alignment with selects */
-          .filters .filter-label { display: inline-flex; align-items: center; transform: translateY(-3px); }
-          @media (max-width: 767px) {
-            .filters .filter-label { transform: translateY(-1px); }
-          }
-        </style>
-
-        <!-- Filters (responsive for mobile) -->
-        <div class="filters mb-3 p-3 bg-white rounded-3 shadow-sm border">
-          <%= form_with url: view_certificates_institute_admin_reports_path, method: :get, local: true, class: 'd-flex flex-column flex-md-row align-items-center gap-3', html: { style: 'gap: 1rem' } do |f| %>
-
-            <div class="d-flex flex-column flex-md-row align-items-center gap-2 me-md-3" style="min-width: 0;">
-              <label for="sectionFilter" class="d-flex align-items-center mb-0 text-muted small me-3 filter-label">Section</label>
-              <%= select_tag :section_id, options_for_select([['All Sections', '']] + current_institute.sections.active.map { |s| [s.name, s.id] }, @section_id), class: 'form-select form-select-sm flex-fill', id: 'sectionFilter', onchange: 'this.form.submit()', style: 'min-width: 180px; max-width: 320px;' %>
-            </div>
-
-            <div class="d-flex flex-column flex-md-row align-items-center gap-2 me-md-3" style="min-width: 0;">
-              <label for="configFilter" class="d-flex align-items-center mb-0 text-muted small me-3 filter-label">Configuration</label>
-              <%= select_tag :certificate_configuration_id, options_for_select([['All Configurations', '']] + (@certificate_configurations || []).map { |c| [c.name, c.id] }, @certificate_configuration_id), class: 'form-select form-select-sm flex-fill', id: 'configFilter', onchange: 'this.form.submit()', style: 'min-width: 200px; max-width: 360px;' %>
-            </div>
-
-            <div class="ms-md-auto d-block mt-2 mt-md-0">
-              <%= link_to 'Reset', view_certificates_institute_admin_reports_path, class: 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center form-select-sm py-1 px-3' %>
-            </div>
-
-          <% end %>
-        </div>
-
-        <!-- Bulk actions (separate section) -->
-        <div class="bulk-actions mb-4 p-3 bg-white rounded-3 shadow-sm border">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <strong class="me-2">Bulk actions</strong>
-              <small class="text-muted">Select certificates to apply</small>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <%= button_tag type: 'button', class: 'btn btn-sm btn-success shadow-sm', id: 'publishSelected', disabled: true, title: 'Publish selected certificates' do %>
-                <i class="bi bi-check2-all me-1"></i> Publish
-              <% end %>
-              <%= button_tag type: 'button', class: 'btn btn-sm btn-warning text-dark shadow-sm', id: 'unpublishSelected', disabled: true, title: 'Unpublish selected certificates' do %>
-                <i class="bi bi-eye-slash me-1"></i> Unpublish
-              <% end %>
-              <%= button_tag type: 'button', class: 'btn btn-sm btn-secondary shadow-sm', id: 'downloadSelected', disabled: true, title: 'Download selected certificates' do %>
-                <i class="bi bi-download"></i>
-              <% end %>
-              <%= button_tag type: 'button', class: 'btn btn-sm btn-info text-white shadow-sm', id: 'regenerateSelected', disabled: true, title: 'Regenerate selected certificates' do %>
-                <i class="bi bi-arrow-clockwise"></i>
-              <% end %>
-              <%= button_tag type: 'button', class: 'btn btn-sm btn-danger shadow-sm', id: 'deleteSelected', disabled: true, title: 'Delete selected certificates' do %>
-                <i class="bi bi-trash"></i>
-              <% end %>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="table align-middle">
-            <thead>
-              <tr>
-                <th width="40">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="selectAll">
-                  </div>
-                </th>
-                <th>Assignment</th>
-                <th>Participant</th>
-                <th>Generated</th>
-                <th>Configuration</th>
-                <th class="text-end" style="white-space: nowrap; width: 1%;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+    <!-- Premium Table -->
+    <div class="certificates-table-card">
+      <div class="table-responsive">
+        <table class="table certificates-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="selectAll">
+                </div>
+              </th>
+              <th>Assignment</th>
+              <th>Participant</th>
+              <th>Generated</th>
+              <th>Configuration</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @certificates.any? %>
               <% @certificates.each do |certificate| %>
-                <tr class="certificate-row" 
-                    data-section="<%= certificate.participant&.section&.id || '' %>">
+                <tr class="certificate-row" data-section="<%= certificate.participant&.section&.id || '' %>">
                   <td>
                     <div class="form-check">
-                      <input class="form-check-input certificate-checkbox" type="checkbox" 
+                      <input class="form-check-input certificate-checkbox" 
+                             type="checkbox" 
                              value="<%= certificate.id %>"
                              data-published="<%= certificate.published? %>"
                              <%= 'checked' if certificate.published? %>>
                     </div>
                   </td>
                   <td>
-                    <%= certificate.assignment.title %>
+                    <div class="assignment-title"><i class="bi bi-file-earmark-text me-2 text-muted"></i><%= certificate.assignment.title %></div>
                   </td>
                   <td>
                     <% if certificate.participant && certificate.participant.user %>
-                      <%= link_to certificate.participant.user.full_name, institute_admin_participant_path(certificate.participant.user), class: 'text-decoration-none' %>
+                      <%= link_to certificate.participant.user.full_name, 
+                          institute_admin_participant_path(certificate.participant.user), 
+                          class: 'participant-link' %>
                     <% else %>
-                      <%= certificate.participant&.user&.full_name || 'Unknown Participant' %>
+                      <span class="text-muted"><%= certificate.participant&.user&.full_name || 'Unknown' %></span>
                     <% end %>
                   </td>
-                  <td><%= certificate.generated_at.strftime("%b %d, %Y") %></td>
                   <td>
-                    <%= certificate.certificate_configuration&.name || '—' %>
+                    <div class="certificate-date">
+                      <i class="bi bi-calendar3 me-2"></i><%= certificate.generated_at.strftime("%b %d, %Y") %>
+                    </div>
                   </td>
-                  <td style="white-space: nowrap;">
-                    <div class="d-flex flex-row flex-nowrap gap-1 justify-content-end align-items-center" style="min-width: 220px;">
-
+                  <td>
+                    <span class="config-badge">
+                      <%= certificate.certificate_configuration&.name || '—' %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
                       <%= link_to toggle_publish_certificate_institute_admin_report_path(certificate),
-                          class: "btn btn-sm #{certificate.published? ? 'btn-warning text-dark shadow-sm' : 'btn-success shadow-sm'} fw-bold px-3",
+                          class: "action-btn-modern #{certificate.published? ? 'btn-unpublish' : 'btn-publish'}",
                           title: certificate.published? ? "Unpublish" : "Publish",
-                          data: { turbo_method: :post, turbo_confirm: "Are you sure you want to #{certificate.published? ? 'unpublish' : 'publish'} this certificate?" } do %>
+                          data: { turbo_method: :post, turbo_confirm: "Are you sure?" } do %>
                         <i class="bi <%= certificate.published? ? 'bi-eye-slash' : 'bi-eye' %>"></i>
-                        <%= certificate.published? ? 'Unpublish' : 'Publish' %>
+                        <span class="d-none d-lg-inline"><%= certificate.published? ? 'Unpublish' : 'Publish' %></span>
                       <% end %>
+                      
                       <%= link_to view_certificate_institute_admin_reports_path(certificate, format: :pdf),
-                          class: "btn btn-sm btn-primary shadow-sm",
+                          class: "action-btn-modern btn-view-cert",
                           title: "View Certificate",
                           target: "_blank" do %>
                         <i class="bi bi-eye"></i>
                       <% end %>
+                      
                       <%= button_to regenerate_certificate_institute_admin_reports_path(certificate),
                           method: :post,
-                          class: "btn btn-sm btn-info text-white shadow-sm #{'disabled' if certificate.published?}",
+                          class: "action-btn-modern btn-regenerate #{'disabled' if certificate.published?}",
                           form: { style: 'display: inline-block' },
                           disabled: certificate.published?,
-                          title: (certificate.published? ? 'Cannot regenerate a published certificate' : 'Regenerate Certificate'),
-                          data: { turbo_confirm: "Are you sure you want to regenerate this certificate?" } do %>
+                          title: certificate.published? ? 'Cannot regenerate published' : 'Regenerate',
+                          data: { turbo_confirm: "Regenerate this certificate?" } do %>
                         <i class="bi bi-arrow-clockwise"></i>
                       <% end %>
+                      
                       <%= link_to download_certificate_on_demand_institute_admin_report_path(certificate),
-                          class: "btn btn-sm btn-secondary shadow-sm",
-                          title: "Download Certificate",
+                          class: "action-btn-modern btn-download-cert",
+                          title: "Download",
                           download: "certificate-#{certificate.id}.pdf" do %>
                         <i class="bi bi-download"></i>
                       <% end %>
+                      
                       <%= button_to delete_certificate_institute_admin_reports_path(certificate),
                           method: :delete,
-                          class: "btn btn-sm btn-danger shadow-sm #{'disabled' if certificate.published?}",
+                          class: "action-btn-modern btn-delete-cert #{'disabled' if certificate.published?}",
                           form: { style: 'display: inline-block' },
                           disabled: certificate.published?,
-                          title: (certificate.published? ? 'Cannot delete a published certificate' : 'Delete Certificate'),
-                          data: { turbo_confirm: "Are you sure you want to delete this certificate?" } do %>
+                          title: certificate.published? ? 'Cannot delete published' : 'Delete',
+                          data: { turbo_confirm: "Delete this certificate?" } do %>
                         <i class="bi bi-trash"></i>
                       <% end %>
                     </div>
                   </td>
                 </tr>
               <% end %>
-              <% if @certificates.empty? %>
-                <tr>
-                  <td colspan="6" class="text-center py-3">No certificates found.</td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+            <% else %>
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5>No Certificates Found</h5>
+                    <p class="text-muted">Generate certificates to see them here</p>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-
-        <!-- Pagination -->
-        <!-- ...existing code... -->
-
-      <!-- JavaScript behavior moved to Stimulus controller: app/javascript/controllers/certificate_publisher_controller.js -->
-
-    </div> <!-- .card-body -->
-  </div> <!-- .card -->
-</div> <!-- .container-fluid -->
+  </div>
+</div>
