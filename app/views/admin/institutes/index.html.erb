@@ -1,52 +1,217 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Institutes</h5>
-    <%= link_to new_admin_institute_path, class: "btn btn-custom-primary" do %>
-      <i class="bi bi-plus-lg"></i> Add Institute
-    <% end %>
+<% content_for :styles do %>
+  <style>
+    .institutes-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .institutes-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .institutes-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .btn-add-institute {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-add-institute:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+    .institutes-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .institutes-table {
+      margin: 0;
+    }
+    .institutes-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .institutes-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .institutes-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .institutes-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.005);
+    }
+    .institute-name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1rem;
+    }
+    .institute-code {
+      font-family: 'Courier New', monospace;
+      background: #f8f9fa;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #667eea;
+      font-weight: 600;
+    }
+    .institute-contact {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
+    }
+    .status-active {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+    .status-inactive {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      color: white;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .action-btn {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    .action-btn:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+    .action-btn i {
+      font-size: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .btn-view {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-view:hover {
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      transform: translateY(-2px);
+      color: white;
+    }
+    .btn-edit {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    .btn-edit:hover {
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+      transform: translateY(-2px);
+      color: white;
+    }
+  </style>
+<% end %>
+
+<div class="institutes-card">
+  <div class="institutes-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">Institutes Management</h4>
+        <div class="subtitle"><i class="bi bi-buildings me-2"></i>Manage all institutes in the system</div>
+      </div>
+      <%= link_to new_admin_institute_path, class: "btn btn-add-institute" do %>
+        <i class="bi bi-plus-lg me-2"></i> Add New Institute
+      <% end %>
+    </div>
   </div>
 
-  <div class="card-body">
-    <style>
-      .action-btn { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; transition:all .3s ease; border:none; position:relative; overflow:hidden; }
-      .action-btn::before { content:''; position:absolute; top:50%; left:50%; width:0; height:0; border-radius:50%; background:rgba(255,255,255,.2); transform:translate(-50%,-50%); transition:width .45s,height .45s; }
-      .action-btn:hover::before { width:100px; height:100px; }
-      .action-btn i { font-size:16px; position:relative; z-index:1; }
-      .btn-view{ background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; }
-      .btn-edit{ background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); color:#fff; }
-      td:last-child{ white-space:nowrap; }
-      /* force actions to be inline row */
-      .actions-cell { display: inline-flex; gap: .5rem; align-items: center; }
-    </style>
+  <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table institutes-table">
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Institute Name</th>
             <th>Code</th>
             <th>Contact</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% @institutes.each do |institute| %>
             <tr>
-              <td><%= institute.name %></td>
-              <td><%= institute.code %></td>
-              <td><%= institute.contact_number %></td>
               <td>
-                <span class="badge <%= institute.active? ? 'badge-success' : 'badge-danger' %>">
+                <div class="institute-name">
+                  <i class="bi bi-building me-2 text-muted"></i><%= institute.name %>
+                </div>
+              </td>
+              <td>
+                <span class="institute-code"><%= institute.code %></span>
+              </td>
+              <td>
+                <div class="institute-contact">
+                  <i class="bi bi-telephone me-2"></i><%= institute.contact_number %>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge <%= institute.active? ? 'status-active' : 'status-inactive' %>">
+                  <i class="bi <%= institute.active? ? 'bi-check-circle' : 'bi-x-circle' %> me-1"></i>
                   <%= institute.active? ? 'Active' : 'Inactive' %>
                 </span>
               </td>
-              <td class="actions-cell">
-                <%= link_to admin_institute_path(institute), class: "btn action-btn btn-view", title: "View" do %>
-                  <i class="bi bi-eye"></i>
-                <% end %>
-                <%= link_to edit_admin_institute_path(institute), class: "btn action-btn btn-edit", title: "Edit" do %>
-                  <i class="bi bi-pencil"></i>
-                <% end %>
+              <td>
+                <div class="action-buttons justify-content-center">
+                  <%= link_to admin_institute_path(institute), class: "action-btn btn-view", title: "View Details" do %>
+                    <i class="bi bi-eye"></i>
+                  <% end %>
+                  <%= link_to edit_admin_institute_path(institute), class: "action-btn btn-edit", title: "Edit Institute" do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
