@@ -10,8 +10,14 @@
       <% end %>
     </ol>
   </nav>
-  <%= link_to certificates_institute_admin_reports_path, class: "btn btn-sm btn-outline-secondary" do %>
-    <i class="bi bi-arrow-left me-1"></i> Back
+  <% if current_page.present? %>
+    <%= link_to certificates_institute_admin_reports_path, class: "btn btn-sm btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-1"></i> Back
+    <% end %>
+  <% else %>
+    <%= link_to institute_admin_reports_path, class: "btn btn-sm btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-1"></i> Back
+    <% end %>
   <% end %>
 </div>
 
