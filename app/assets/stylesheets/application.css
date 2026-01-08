@@ -40,12 +40,14 @@ body {
 .login-container {
   display: flex;
   min-height: 100vh;
+  background: linear-gradient(135deg, #0a0f0d 0%, #1a3d2e 50%, #0a0f0d 100%) !important;
 }
 
 /* Left Panel Styles */
 .left-panel {
   flex: 1;
-  background-color: #1C1F25;
+  background-color: transparent !important;
+  background: transparent !important;
   color: white;
   padding: clamp(1rem, 5vw, 3rem);
   display: flex;
@@ -137,7 +139,8 @@ body {
 /* Right Panel Styles */
 .right-panel {
   flex: 1;
-  background-color: #00B67A;
+  background-color: transparent !important;
+  background: transparent !important;
   display: flex;
   align-items: center;
   justify-content: center;

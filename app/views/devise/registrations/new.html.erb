@@ -1,11 +1,18 @@
-<div class="registration-wrapper">
+<div class="registration-wrapper" style="background: linear-gradient(135deg, #0a0f0d 0%, #1a3d2e 50%, #0a0f0d 100%) !important;">
   <!-- Animated Background -->
   <div class="animated-bg">
-    <div class="circle circle-1"></div>
-    <div class="circle circle-2"></div>
-    <div class="circle circle-3"></div>
-    <div class="circle circle-4"></div>
-    <div class="circle circle-5"></div>
+    <div class="geometric-shape shape-1"></div>
+    <div class="geometric-shape shape-2"></div>
+    <div class="geometric-shape shape-3"></div>
+    <div class="geometric-shape shape-4"></div>
+    <div class="light-beam beam-1"></div>
+    <div class="light-beam beam-2"></div>
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+    <div class="particle particle-3"></div>
+    <div class="particle particle-4"></div>
+    <div class="particle particle-5"></div>
+    <div class="particle particle-6"></div>
   </div>
 
   <div class="container">
@@ -366,64 +373,134 @@ document.addEventListener('DOMContentLoaded', function() {
       height: 100%;
       z-index: 0;
       overflow: hidden;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background: transparent !important;
     }
 
     .circle {
       position: absolute;
       border-radius: 50%;
-      background: linear-gradient(135deg, rgba(0, 182, 122, 0.1), rgba(152, 216, 170, 0.15));
-      animation: float 25s infinite ease-in-out;
+      background: radial-gradient(circle at 30% 30%, rgba(0, 214, 143, 0.15), rgba(0, 182, 122, 0.08));
+      filter: blur(40px);
+      animation: float 20s infinite ease-in-out;
     }
 
     .circle-1 {
-      width: 400px;
-      height: 400px;
-      top: 5%;
-      left: 5%;
-      animation-delay: 0s;
+      width: 500px;
+      height: 500px;
+      top: -10%;
+      left: -5%;
+      animation: float1 18s infinite ease-in-out;
+      background: radial-gradient(circle at 40% 40%, rgba(0, 214, 143, 0.2), rgba(0, 182, 122, 0.05));
     }
 
     .circle-2 {
-      width: 300px;
-      height: 300px;
-      top: 50%;
-      right: 5%;
-      animation-delay: 3s;
+      width: 350px;
+      height: 350px;
+      top: 40%;
+      right: -5%;
+      animation: float2 22s infinite ease-in-out;
+      background: radial-gradient(circle at 60% 40%, rgba(152, 216, 170, 0.18), rgba(0, 182, 122, 0.08));
     }
 
     .circle-3 {
-      width: 200px;
-      height: 200px;
-      bottom: 10%;
-      left: 15%;
-      animation-delay: 6s;
+      width: 280px;
+      height: 280px;
+      bottom: -5%;
+      left: 20%;
+      animation: float3 25s infinite ease-in-out;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 214, 143, 0.16), rgba(0, 182, 122, 0.06));
     }
 
     .circle-4 {
-      width: 250px;
-      height: 250px;
-      top: 30%;
-      right: 20%;
-      animation-delay: 9s;
+      width: 320px;
+      height: 320px;
+      top: 20%;
+      right: 25%;
+      animation: float4 20s infinite ease-in-out;
+      background: radial-gradient(circle at 35% 65%, rgba(0, 182, 122, 0.14), rgba(152, 216, 170, 0.07));
     }
 
     .circle-5 {
-      width: 180px;
-      height: 180px;
-      bottom: 20%;
-      right: 10%;
-      animation-delay: 12s;
+      width: 220px;
+      height: 220px;
+      bottom: 15%;
+      right: 5%;
+      animation: float5 19s infinite ease-in-out;
+      background: radial-gradient(circle at 70% 30%, rgba(0, 214, 143, 0.17), rgba(0, 182, 122, 0.09));
     }
 
-    @keyframes float {
+    @keyframes float1 {
       0%, 100% {
-        transform: translate(0, 0) scale(1);
-        opacity: 0.3;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 0.4;
       }
-      50% {
-        transform: translate(40px, -40px) scale(1.15);
+      33% {
+        transform: translate(80px, 60px) scale(1.2) rotate(120deg);
+        opacity: 0.6;
+      }
+      66% {
+        transform: translate(-40px, 100px) scale(0.9) rotate(240deg);
         opacity: 0.5;
+      }
+    }
+
+    @keyframes float2 {
+      0%, 100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 0.35;
+      }
+      33% {
+        transform: translate(-70px, -50px) scale(1.15) rotate(-120deg);
+        opacity: 0.55;
+      }
+      66% {
+        transform: translate(50px, -80px) scale(0.95) rotate(-240deg);
+        opacity: 0.45;
+      }
+    }
+
+    @keyframes float3 {
+      0%, 100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 0.4;
+      }
+      33% {
+        transform: translate(60px, -70px) scale(1.1) rotate(150deg);
+        opacity: 0.6;
+      }
+      66% {
+        transform: translate(-80px, -30px) scale(1.05) rotate(300deg);
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes float4 {
+      0%, 100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 0.38;
+      }
+      33% {
+        transform: translate(-60px, 80px) scale(0.9) rotate(-140deg);
+        opacity: 0.58;
+      }
+      66% {
+        transform: translate(70px, -60px) scale(1.12) rotate(-280deg);
+        opacity: 0.48;
+      }
+    }
+
+    @keyframes float5 {
+      0%, 100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 0.42;
+      }
+      33% {
+        transform: translate(-50px, -60px) scale(1.08) rotate(130deg);
+        opacity: 0.62;
+      }
+      66% {
+        transform: translate(60px, 50px) scale(0.92) rotate(260deg);
+        opacity: 0.52;
       }
     }
 
@@ -431,6 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
       position: relative;
       min-height: 100vh;
       padding: 2rem 0;
+      background: linear-gradient(135deg, #0a0f0d 0%, #1a3d2e 50%, #0a0f0d 100%) !important;
     }
 
     .registration-header {
@@ -471,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .registration-title {
       font-size: 2.5rem;
       font-weight: 700;
-      color: #2d3238;
+      color: #ffffff;
       margin-bottom: 0.5rem;
     }
 
