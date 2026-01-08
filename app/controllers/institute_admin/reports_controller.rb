@@ -1073,7 +1073,7 @@ module InstituteAdmin
           Title: options[:report_title],
           Author: current_institute.name,
           Subject: "Assignment Report",
-          Creator: "Soul ERP",
+          Creator: "BeYa",
           CreationDate: Time.now
         }
       )
@@ -1283,7 +1283,7 @@ module InstituteAdmin
           Title: options[:report_title],
           Author: current_institute.name,
           Subject: "Individual Assignment Report",
-          Creator: "Soul ERP",
+          Creator: "BeYa",
           CreationDate: Time.now
         }
       )
@@ -1477,7 +1477,7 @@ module InstituteAdmin
           Title: options[:report_title],
           Author: current_institute.name,
           Subject: "Section Feedback Report",
-          Creator: "Soul ERP",
+          Creator: "BeYa",
           CreationDate: Time.now
         }
       )
