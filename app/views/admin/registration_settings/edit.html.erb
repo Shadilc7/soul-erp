@@ -1,68 +1,214 @@
-<div class="container-fluid">
-  <div class="card">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Manage Registration</h5>
-    </div>
-    
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-8 mx-auto">
-          <%= form_with(model: [:admin, @registration_setting], local: true) do |f| %>
-            <% if @registration_setting.errors.any? %>
-              <div class="alert alert-danger">
-                <h6>Please fix the following errors:</h6>
-                <ul class="mb-0">
-                  <% @registration_setting.errors.full_messages.each do |message| %>
-                    <li><%= message %></li>
-                  <% end %>
-                </ul>
-              </div>
-            <% end %>
+<% content_for :styles do %>
+  <style>
+    .registration-settings-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .registration-settings-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .registration-settings-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .registration-settings-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .settings-body {
+      padding: 2.5rem;
+    }
+    .form-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .form-label-custom {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .institute-selection-container {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: 450px;
+      overflow-y: auto;
+    }
+    .institute-selection-container::-webkit-scrollbar {
+      width: 8px;
+    }
+    .institute-selection-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .institute-selection-container::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+    }
+    .institute-check-item {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .institute-check-item:hover {
+      background: #ffffff;
+      border-color: #667eea;
+      transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+    .form-check-input-custom {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #ced4da;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+    .form-check-input-custom:checked {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      border-color: #11998e;
+    }
+    .form-check-input-custom:focus {
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .form-check-label-custom {
+      font-size: 0.95rem;
+      color: #495057;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      flex-grow: 1;
+    }
+    .institute-check-item:hover .form-check-label-custom {
+      color: #667eea;
+    }
+    .help-text {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    .btn-save-settings {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem 2.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-save-settings:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+      color: white;
+    }
+    .alert-custom-danger {
+      background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+      border: 2px solid #ff6b6b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .alert-custom-danger h6 {
+      color: #c92a2a;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .alert-custom-danger ul {
+      margin-bottom: 0;
+      padding-left: 1.5rem;
+    }
+    .alert-custom-danger li {
+      color: #d63031;
+      margin-bottom: 0.25rem;
+    }
+  </style>
+<% end %>
 
-            <div class="form-group mb-4">
-              <label class="form-label">Select Institutes for Registration</label>
-              <div class="institute-selection border rounded p-3" style="max-height: 400px; overflow-y: auto;">
-                <% @institutes.each do |institute| %>
-                  <div class="form-check mb-2">
-                    <%= check_box_tag 'registration_setting[enabled_institutes][]',
-                        institute.id,
-                        @registration_setting.enabled_institute_ids.include?(institute.id),
-                        class: 'form-check-input',
-                        id: "institute_#{institute.id}" %>
-                    <%= label_tag "institute_#{institute.id}", 
-                        institute.name, 
-                        class: 'form-check-label' %>
-                  </div>
-                <% end %>
-              </div>
-              <small class="form-text text-muted">
-                Select the institutes that should appear in the registration form
-              </small>
-            </div>
-
-            <div class="d-flex justify-content-between">
-              <%= f.submit "Save Settings", class: "btn btn-primary" %>
-            </div>
-          <% end if @registration_setting.present? %>
-        </div>
+<div class="registration-settings-card">
+  <div class="registration-settings-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">Registration Settings</h4>
+        <div class="subtitle"><i class="bi bi-gear me-2"></i>Configure institute registration options</div>
       </div>
     </div>
   </div>
-</div>
 
-<% content_for :styles do %>
-  <style>
-    .institute-selection {
-      background: #f8f9fa;
-    }
+  <div class="settings-body">
+    <div class="row">
+      <div class="col-md-10 col-lg-9 mx-auto">
+        <%= form_with(model: [:admin, @registration_setting], local: true) do |f| %>
+          <% if @registration_setting.errors.any? %>
+            <div class="alert-custom-danger">
+              <h6><i class="bi bi-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+              <ul>
+                <% @registration_setting.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
 
-    .form-check-input:checked {
-      background-color: #198754;
-      border-color: #198754;
-    }
+          <div class="form-section">
+            <label class="form-label-custom">
+              <i class="bi bi-buildings"></i>
+              Select Institutes for Registration
+            </label>
+            
+            <div class="institute-selection-container">
+              <% @institutes.each do |institute| %>
+                <div class="institute-check-item">
+                  <%= check_box_tag 'registration_setting[enabled_institutes][]',
+                      institute.id,
+                      @registration_setting.enabled_institute_ids.include?(institute.id),
+                      class: 'form-check-input-custom',
+                      id: "institute_#{institute.id}" %>
+                  <%= label_tag "institute_#{institute.id}", 
+                      institute.name, 
+                      class: 'form-check-label-custom' %>
+                </div>
+              <% end %>
+            </div>
+            
+            <div class="help-text">
+              <i class="bi bi-info-circle me-2"></i>
+              Select the institutes that should appear in the registration form for new users
+            </div>
+          </div>
 
-    .form-check-label {
-      user-select: none;
-    }
-  </style>
-<% end %> 
+          <div class="d-flex justify-content-end">
+            <%= f.submit "Save Settings", class: "btn btn-save-settings" %>
+          </div>
+        <% end if @registration_setting.present? %>
+      </div>
+    </div>
+  </div>
+</div> 

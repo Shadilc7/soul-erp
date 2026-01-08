@@ -8,10 +8,13 @@ module Admin
     def update
       @registration_setting = RegistrationSetting.instance
 
-      # Convert enabled_institutes to integers
-      if params[:registration_setting][:enabled_institutes].present?
+      # Convert enabled_institutes to integers or set to empty array if none selected
+      if params[:registration_setting] && params[:registration_setting][:enabled_institutes].present?
         params[:registration_setting][:enabled_institutes].reject!(&:blank?)
         params[:registration_setting][:enabled_institutes].map!(&:to_i)
+      else
+        params[:registration_setting] ||= {}
+        params[:registration_setting][:enabled_institutes] = []
       end
 
       if @registration_setting.update(registration_setting_params)
