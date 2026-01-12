@@ -5,11 +5,12 @@ import { Controller } from "@hotwired/stimulus"
  * 
  * Handles sidebar behavior including:
  * - Mobile sidebar toggle
+ * - Desktop sidebar collapse/expand
  * - Submenu toggling
  * - Scroll position preservation
  */
 export default class extends Controller {
-  static targets = ["content", "backdrop"]
+  static targets = ["sidebar", "mainContent", "backdrop"]
 
   connect() {
     // Handle initial mobile state
@@ -23,6 +24,9 @@ export default class extends Controller {
     
     // Add direct event listeners to all submenu toggles to ensure they work
     this.initializeSubmenuToggles()
+    
+    // Check if sidebar should be collapsed (from localStorage)
+    this.loadSidebarState()
   }
   
   /**
@@ -74,14 +78,39 @@ export default class extends Controller {
   }
 
   /**
-   * Toggle mobile sidebar visibility
+   * Toggle sidebar visibility (mobile) or collapse state (desktop)
    */
   toggle() {
-    const sidebar = document.getElementById('sidebar')
-    if (sidebar) {
+    const sidebar = this.sidebarTarget
+    const mainContent = this.mainContentTarget
+    const isMobile = window.innerWidth < 992
+    
+    if (isMobile) {
+      // Mobile: show/hide sidebar
       sidebar.classList.toggle('show')
       this.backdropTarget.classList.toggle('show')
       document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : ''
+    } else {
+      // Desktop: collapse/expand sidebar
+      const isCollapsed = sidebar.classList.toggle('collapsed')
+      mainContent.classList.toggle('collapsed', isCollapsed)
+      
+      // Save state to localStorage
+      localStorage.setItem('sidebarCollapsed', isCollapsed)
+    }
+  }
+  
+  /**
+   * Load sidebar state from localStorage
+   */
+  loadSidebarState() {
+    const sidebar = this.sidebarTarget
+    const mainContent = this.mainContentTarget
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'
+    
+    if (isCollapsed && window.innerWidth >= 992) {
+      sidebar.classList.add('collapsed')
+      mainContent.classList.add('collapsed')
     }
   }
 
@@ -89,7 +118,7 @@ export default class extends Controller {
    * Hide mobile sidebar
    */
   hide() {
-    const sidebar = document.getElementById('sidebar')
+    const sidebar = this.sidebarTarget
     if (sidebar) {
       sidebar.classList.remove('show')
       this.backdropTarget.classList.remove('show')
@@ -103,6 +132,8 @@ export default class extends Controller {
   checkMobileState() {
     if (window.innerWidth >= 992) {
       this.hide()
+      // Restore collapsed state for desktop
+      this.loadSidebarState()
     }
   }
   
