@@ -162,6 +162,118 @@
       transform: translateY(-2px);
       color: white;
     }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .users-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .users-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .users-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .users-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-add-user {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      /* Card view for mobile */
+      .users-table thead {
+        display: none;
+      }
+      
+      .users-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .users-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .users-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .users-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .users-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .users-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .user-name {
+        font-size: 1.1rem;
+        margin-top: 0.25rem;
+      }
+      
+      .user-institute,
+      .user-date,
+      .status-badge {
+        display: inline-block;
+        margin-top: 0.25rem;
+      }
+      
+      .action-buttons {
+        justify-content: flex-start !important;
+        margin-top: 0.5rem;
+      }
+      
+      .action-btn {
+        width: 44px;
+        height: 44px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .users-header {
+        padding: 1rem;
+      }
+      
+      .users-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .users-card {
+        border-radius: 12px;
+      }
+    }
   </style>
 <% end %>
 
@@ -193,26 +305,26 @@
         <tbody>
           <% @users.each do |user| %>
             <tr>
-              <td>
+              <td data-label="Username">
                 <div class="user-name">
                   <i class="bi bi-person me-2 text-muted"></i><%= user.username %>
                 </div>
               </td>
-              <td>
+              <td data-label="Institute">
                 <span class="user-institute"><%= user.institute&.name || 'Not Assigned' %></span>
               </td>
-              <td>
+              <td data-label="Status">
                 <span class="status-badge <%= user.active? ? 'status-active' : 'status-inactive' %>">
                   <i class="bi <%= user.active? ? 'bi-check-circle' : 'bi-x-circle' %> me-1"></i>
                   <%= user.active? ? 'Active' : 'Inactive' %>
                 </span>
               </td>
-              <td>
+              <td data-label="Created At">
                 <div class="user-date">
                   <i class="bi bi-calendar3 me-2"></i><%= user.created_at.strftime("%b %d, %Y") %>
                 </div>
               </td>
-              <td>
+              <td data-label="Actions">
                 <div class="action-buttons justify-content-center">
                   <%= link_to admin_user_path(user), class: "action-btn btn-view", title: "View Details" do %>
                     <i class="bi bi-eye"></i>
