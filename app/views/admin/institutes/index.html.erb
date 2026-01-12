@@ -153,6 +153,126 @@
       transform: translateY(-2px);
       color: white;
     }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .institutes-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .institutes-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .institutes-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .institutes-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-add-institute {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      /* Card view for mobile instead of table */
+      .institutes-table thead {
+        display: none;
+      }
+      
+      .institutes-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .institutes-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .institutes-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .institutes-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .institutes-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .institutes-table tbody td:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      
+      .institute-name {
+        font-size: 1.1rem;
+        margin-top: 0.25rem;
+      }
+      
+      .institute-code {
+        display: inline-block;
+        margin-top: 0.25rem;
+      }
+      
+      .institute-contact {
+        margin-top: 0.25rem;
+      }
+      
+      .status-badge {
+        display: inline-block;
+        margin-top: 0.25rem;
+      }
+      
+      .action-buttons {
+        justify-content: flex-start !important;
+        margin-top: 0.5rem;
+      }
+      
+      .action-btn {
+        width: 44px;
+        height: 44px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .institutes-header {
+        padding: 1rem;
+      }
+      
+      .institutes-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .institutes-card {
+        border-radius: 12px;
+      }
+    }
   </style>
 <% end %>
 
@@ -184,26 +304,26 @@
         <tbody>
           <% @institutes.each do |institute| %>
             <tr>
-              <td>
+              <td data-label="Institute Name">
                 <div class="institute-name">
                   <i class="bi bi-building me-2 text-muted"></i><%= institute.name %>
                 </div>
               </td>
-              <td>
+              <td data-label="Code">
                 <span class="institute-code"><%= institute.code %></span>
               </td>
-              <td>
+              <td data-label="Contact">
                 <div class="institute-contact">
                   <i class="bi bi-telephone me-2"></i><%= institute.contact_number %>
                 </div>
               </td>
-              <td>
+              <td data-label="Status">
                 <span class="status-badge <%= institute.active? ? 'status-active' : 'status-inactive' %>">
                   <i class="bi <%= institute.active? ? 'bi-check-circle' : 'bi-x-circle' %> me-1"></i>
                   <%= institute.active? ? 'Active' : 'Inactive' %>
                 </span>
               </td>
-              <td>
+              <td data-label="Actions">
                 <div class="action-buttons justify-content-center">
                   <%= link_to admin_institute_path(institute), class: "action-btn btn-view", title: "View Details" do %>
                     <i class="bi bi-eye"></i>
