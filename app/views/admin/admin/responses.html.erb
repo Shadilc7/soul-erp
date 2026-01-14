@@ -1,38 +1,288 @@
-<div class="container-fluid py-4">
-  <div class="card card-custom">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">Responses Overview</h5>
-      <small class="text-muted">Distinct submissions (assignment × participant)</small>
-    </div>
-    <div class="card-body">
-      <div class="mb-3 d-flex justify-content-between align-items-center">
-        <div>
-          <h3 class="mb-0"><%= @total_responses %></h3>
-        </div>
-      </div>
+<% content_for :styles do %>
+  <style>
+    .responses-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .responses-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .responses-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .responses-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .total-responses-banner {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border: 2px solid rgba(102, 126, 234, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .total-responses-banner .icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+    }
+    .total-responses-banner .content h3 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+    .total-responses-banner .content p {
+      margin: 0;
+      color: #6c757d;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .responses-table {
+      margin: 0;
+    }
+    .responses-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .responses-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .responses-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .responses-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.005);
+    }
+    .institute-name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1rem;
+    }
+    .response-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+    }
+    .btn-view-responses {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+    .btn-view-responses:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      color: white;
+    }
 
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .responses-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .responses-header h4 {
+        font-size: 1.25rem;
+      }
+      
+      .responses-header .subtitle {
+        font-size: 0.85rem;
+      }
+      
+      .total-responses-banner {
+        flex-direction: column;
+        text-align: center;
+        margin: 1rem;
+        padding: 1.25rem;
+      }
+      
+      .total-responses-banner .icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+      }
+      
+      .total-responses-banner .content h3 {
+        font-size: 2rem;
+      }
+      
+      /* Card view for mobile */
+      .responses-table thead {
+        display: none;
+      }
+      
+      .responses-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .responses-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .responses-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .responses-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .responses-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .responses-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .institute-name {
+        font-size: 1.1rem;
+        margin-top: 0.25rem;
+      }
+      
+      .response-count {
+        margin-top: 0.5rem;
+      }
+      
+      .btn-view-responses {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .responses-header {
+        padding: 1rem;
+      }
+      
+      .responses-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .responses-card {
+        border-radius: 12px;
+      }
+      
+      .total-responses-banner {
+        padding: 1rem;
+      }
+      
+      .total-responses-banner .content h3 {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+<% end %>
+
+<div class="responses-card">
+  <div class="responses-header">
+    <div>
+      <h4 class="mb-1">Responses Overview</h4>
+      <div class="subtitle"><i class="bi bi-file-text me-2"></i>Distinct submissions (assignment × participant)</div>
+    </div>
+  </div>
+
+  <div class="total-responses-banner">
+    <div class="icon">
+      <i class="bi bi-bar-chart-fill"></i>
+    </div>
+    <div class="content">
+      <h3><%= @total_responses %></h3>
+      <p>Total Responses Across All Institutions</p>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table responses-table">
+        <thead>
+          <tr>
+            <th>Institute</th>
+            <th>Responses</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @institutes_responses.each do |row| %>
             <tr>
-              <th>Institute</th>
-              <th>Responses</th>
-              <th></th>
+              <td data-label="Institute">
+                <div class="institute-name">
+                  <i class="bi bi-building me-2 text-muted"></i><%= row['institute_name'] %>
+                </div>
+              </td>
+              <td data-label="Responses">
+                <span class="response-count">
+                  <i class="bi bi-file-earmark-text me-1"></i><%= row['responses_count'] %>
+                </span>
+              </td>
+              <td data-label="Actions" class="text-end">
+                <%= link_to admin_institute_responses_path(row['institute_id']), class: 'btn btn-view-responses' do %>
+                  <i class="bi bi-eye me-2"></i>View Details
+                <% end %>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            <% @institutes_responses.each do |row| %>
-              <tr>
-                <td><%= row['institute_name'] %></td>
-                <td><%= row['responses_count'] %></td>
-                <td class="text-end">
-                  <%= link_to 'View', admin_institute_responses_path(row['institute_id']), class: 'btn btn-sm btn-primary' %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+          <% end %>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
