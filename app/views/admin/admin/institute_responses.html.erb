@@ -1,123 +1,435 @@
-<div class="container-fluid py-4">
-  <div class="card card-custom">
-    <div class="card-header d-flex justify-content-between align-items-center">
+<% content_for :styles do %>
+  <style>
+    .institute-responses-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .institute-responses-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .institute-responses-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+    .institute-responses-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .filter-bar {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      border: 2px solid rgba(102, 126, 234, 0.15);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem;
+    }
+    .filter-bar .form-label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 0.8rem;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .filter-bar .form-select,
+    .filter-bar .form-control {
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .filter-bar .form-select:focus,
+    .filter-bar .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+    .filter-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .filter-actions .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .filter-actions .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .filter-actions .btn-outline-secondary {
+      border: 2px solid #e9ecef;
+      color: #6c757d;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .filter-actions .btn-outline-secondary:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
+    .institute-responses-table {
+      margin: 0;
+    }
+    .institute-responses-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .institute-responses-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .institute-responses-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .institute-responses-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.002);
+    }
+    .assignment-title {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+    .participant-name {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .response-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      padding: 0.4rem 0.875rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+    }
+    .last-response-date {
+      color: #95a5a6;
+      font-size: 0.85rem;
+    }
+    .btn-details {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+    .btn-details:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      color: white;
+    }
+    .no-responses {
+      text-align: center;
+      padding: 3rem;
+      color: #95a5a6;
+    }
+    .no-responses i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #dee2e6;
+    }
+    .no-responses p {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .institute-responses-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .institute-responses-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .institute-responses-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .institute-responses-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      .filter-bar {
+        padding: 1rem;
+        margin: 1rem;
+      }
+      
+      .filter-bar .d-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
+      
+      .filter-bar .flex-fill {
+        width: 100% !important;
+        margin-bottom: 0.75rem;
+      }
+      
+      .filter-bar .d-flex[style*="min-width"] {
+        min-width: 100% !important;
+        flex-direction: column !important;
+      }
+      
+      .filter-bar .d-flex[style*="min-width"] > div {
+        width: 100% !important;
+      }
+      
+      .filter-actions {
+        width: 100%;
+        flex-direction: column;
+        margin-top: 0.5rem !important;
+        align-self: stretch !important;
+      }
+      
+      .filter-actions .btn {
+        width: 100%;
+      }
+      
+      /* Card view for mobile */
+      .institute-responses-table thead {
+        display: none;
+      }
+      
+      .institute-responses-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .institute-responses-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .institute-responses-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .institute-responses-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .institute-responses-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .institute-responses-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .assignment-title,
+      .participant-name,
+      .response-count,
+      .last-response-date {
+        margin-top: 0.25rem;
+      }
+      
+      .btn-details {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      
+      .no-responses {
+        padding: 2rem 1rem;
+      }
+      
+      .no-responses i {
+        font-size: 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .institute-responses-header {
+        padding: 1rem;
+      }
+      
+      .institute-responses-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .institute-responses-card {
+        border-radius: 12px;
+      }
+    }
+  </style>
+<% end %>
+
+<div class="institute-responses-card">
+  <div class="institute-responses-header">
+    <div class="d-flex justify-content-between align-items-center">
       <div>
-        <h5 class="card-title mb-0">Responses for <%= @institute.name %></h5>
-        <small class="text-muted">Showing recent responses (assignment × participant)</small>
+        <h4 class="mb-1">Responses for <%= @institute.name %></h4>
+        <div class="subtitle">
+          <i class="bi bi-file-earmark-text me-2"></i>Showing recent responses (assignment × participant)
+        </div>
       </div>
-      <div>
-        <%= link_to 'Back', admin_responses_path, class: 'btn btn-sm btn-light' %>
-      </div>
+      <%= link_to admin_responses_path, class: "btn btn-back" do %>
+        <i class="bi bi-arrow-left me-2"></i> Back
+      <% end %>
     </div>
-      <div class="card-body">
-            <%# Modern full-width responsive filter bar: desktop inline, mobile stacked with collapse for advanced filters %>
-            <% content_for :styles do %>
-              <style>
-                .filter-bar { background: linear-gradient(180deg,#ffffff,#fbfdff); border-radius: .5rem; padding: .75rem; box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
-                /* Use standard slightly-rounded inputs instead of pill-shaped */
-                .filter-bar .form-select, .filter-bar .form-control { border-radius: .375rem; padding: .35rem .6rem; }
-                .filter-bar .form-label { font-size: .8rem; margin-bottom: .25rem; }
-                .filter-actions { display:flex; gap:.5rem; align-items:center; }
+  </div>
 
-                /* Make Filter / Clear buttons larger and aligned with inputs */
-                .filter-actions .btn { min-width: 130px; padding: .45rem .9rem; font-weight: 600; }
-                .filter-actions .btn.btn-primary { min-width: 150px; }
-
-                /* On small screens keep buttons visible but allow them to share the row space */
-                @media (max-width: 767px) {
-                  .filter-bar { padding: .65rem; }
-                  /* Stack the main row on mobile so controls are full width */
-                  .filter-bar .d-flex { flex-direction: column !important; align-items: stretch !important; }
-                  .filter-bar .flex-fill { width: 100% !important; }
-                  .filter-bar .d-flex > div[style] { width: 100% !important; display:flex; gap:.5rem; }
-                  .filter-bar label.form-label { margin-bottom: .35rem; }
-
-                  /* Make filter buttons full width and stack them */
-                  .filter-actions { justify-content: flex-start; width: 100%; display:flex; flex-direction:column; gap:.5rem; }
-                  .filter-actions .btn { width: 100%; min-width: 0; }
-                  .filter-actions .btn.btn-primary { order: 1; }
-                  .filter-actions .btn.btn-outline-secondary { order: 2; }
-
-                  /* Ensure collapse area spans full width */
-                  #advancedFilters { width: 100%; }
-                }
-              </style>
-            <% end %>
-
-                <div class="filter-bar mb-3">
-              <%= form_with url: admin_institute_responses_path(@institute), method: :get, local: true do |f| %>
-                <div class="d-flex flex-column flex-md-row align-items-center gap-2">
-                  <div class="flex-fill">
-                    <label class="form-label small mb-0">Assignment</label>
-                    <%= f.select :assignment_id, options_for_select([['All', '']] + @assignments.map { |a| [a.title, a.id] }, params[:assignment_id]), {}, class: 'form-select' %>
-                  </div>
-
-                    <div class="flex-fill">
-                      <label class="form-label small mb-0">Participant</label>
-                      <%= f.select :participant_id, options_for_select([['All', '']] + @participants.map { |id, name| [name, id] }, params[:participant_id]), {}, class: 'form-select' %>
-                    </div>
-
-                    <%# Status filter removed per UX request - keep the UI compact %>
-
-                    <div class="d-flex" style="min-width:220px; gap:.5rem;">
-                      <div style="flex:1">
-                        <label class="form-label small mb-0">From</label>
-                        <%= f.date_field :from, value: params[:from], class: 'form-control' %>
-                      </div>
-                      <div style="flex:1">
-                        <label class="form-label small mb-0">To</label>
-                        <%= f.date_field :to, value: params[:to], class: 'form-control' %>
-                      </div>
-                    </div>
-
-                  <div class="filter-actions ms-auto" style="align-self: flex-end; margin-top: .25rem;">
-                    <%= f.submit 'Filter', class: 'btn btn-primary btn-sm px-3' %>
-                    <%= link_to 'Clear', admin_institute_responses_path(@institute), class: 'btn btn-outline-secondary btn-sm' %>
-                    <button class="btn btn-light btn-sm d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false" aria-controls="advancedFilters">
-                      <i class="bi bi-sliders"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Advanced filters area (kept for future use). Duplicate date inputs removed to avoid multiple `from`/`to` params being submitted. -->
-                <div class="collapse mt-3" id="advancedFilters">
-                  <div class="p-2 text-muted small">No additional filters. Use the visible From/To fields above to filter by date.</div>
-                </div>
-              <% end %>
-            </div>
-
-          <% if @grouped_responses.present? %>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Assignment</th>
-                  <th>Participant</th>
-                  <th class="text-center">Responses</th>
-                  <th class="text-center">Last Response</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @grouped_responses.each do |group| %>
-                  <% responses_count = group[:responses].size %>
-                  <% last_date = group[:responses].map { |r| r[:response_date] }.compact.max %>
-                  <tr>
-                    <td><strong><%= group[:assignment_title] || '—' %></strong></td>
-                    <td><%= group[:participant_name] || group[:participant_id] %></td>
-                    <td class="text-center"><%= responses_count %></td>
-                    <td class="text-center"><%= last_date || '—' %></td>
-                    <td class="text-end">
-                      <%= link_to 'Details', admin_institute_response_detail_path(@institute, group[:responses].first[:id], assignment_id: group[:assignment_id], participant_id: group[:participant_id]), class: 'btn btn-sm btn-outline-primary' %>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+  <div class="card-body p-0">
+    <div class="filter-bar">
+      <%= form_with url: admin_institute_responses_path(@institute), method: :get, local: true do |f| %>
+        <div class="d-flex flex-column flex-md-row align-items-center gap-2">
+          <div class="flex-fill">
+            <label class="form-label"><i class="bi bi-clipboard-check me-1"></i>Assignment</label>
+            <%= f.select :assignment_id, options_for_select([['All', '']] + @assignments.map { |a| [a.title, a.id] }, params[:assignment_id]), {}, class: 'form-select' %>
           </div>
-        <% else %>
-          <div class="text-muted">No responses found for this institute.</div>
-        <% end %>
+
+          <div class="flex-fill">
+            <label class="form-label"><i class="bi bi-person me-1"></i>Participant</label>
+            <%= f.select :participant_id, options_for_select([['All', '']] + @participants.map { |id, name| [name, id] }, params[:participant_id]), {}, class: 'form-select' %>
+          </div>
+
+          <div class="d-flex" style="min-width:220px; gap:.5rem;">
+            <div style="flex:1">
+              <label class="form-label"><i class="bi bi-calendar-event me-1"></i>From</label>
+              <%= f.date_field :from, value: params[:from], class: 'form-control' %>
+            </div>
+            <div style="flex:1">
+              <label class="form-label"><i class="bi bi-calendar-event me-1"></i>To</label>
+              <%= f.date_field :to, value: params[:to], class: 'form-control' %>
+            </div>
+          </div>
+
+          <div class="filter-actions ms-auto" style="align-self: flex-end; margin-top: .25rem;">
+            <%= f.submit 'Filter', class: 'btn btn-primary' %>
+            <%= link_to admin_institute_responses_path(@institute), class: 'btn btn-outline-secondary' do %>
+              <i class="bi bi-x-circle me-1"></i>Clear
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @grouped_responses.present? %>
+      <div class="table-responsive">
+        <table class="table institute-responses-table">
+          <thead>
+            <tr>
+              <th>Assignment</th>
+              <th>Participant</th>
+              <th class="text-center">Responses</th>
+              <th class="text-center">Last Response</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @grouped_responses.each do |group| %>
+              <% responses_count = group[:responses].size %>
+              <% last_date = group[:responses].map { |r| r[:response_date] }.compact.max %>
+              <tr>
+                <td data-label="Assignment">
+                  <div class="assignment-title">
+                    <i class="bi bi-file-text me-2 text-muted"></i><%= group[:assignment_title] || '—' %>
+                  </div>
+                </td>
+                <td data-label="Participant">
+                  <div class="participant-name">
+                    <i class="bi bi-person-circle me-2"></i><%= group[:participant_name] || group[:participant_id] %>
+                  </div>
+                </td>
+                <td data-label="Responses" class="text-center">
+                  <span class="response-count">
+                    <i class="bi bi-chat-left-text me-1"></i><%= responses_count %>
+                  </span>
+                </td>
+                <td data-label="Last Response" class="text-center">
+                  <div class="last-response-date">
+                    <i class="bi bi-clock me-2"></i><%= last_date ? last_date.strftime("%b %d, %Y") : '—' %>
+                  </div>
+                </td>
+                <td data-label="Actions" class="text-end">
+                  <%= link_to admin_institute_response_detail_path(@institute, group[:responses].first[:id], assignment_id: group[:assignment_id], participant_id: group[:participant_id]), class: 'btn btn-details' do %>
+                    <i class="bi bi-eye me-2"></i>View Details
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
+    <% else %>
+      <div class="no-responses">
+        <i class="bi bi-inbox"></i>
+        <p>No responses found for this institute.</p>
+      </div>
+    <% end %>
   </div>
 </div>
