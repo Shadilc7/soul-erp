@@ -1,74 +1,395 @@
-<div class="container-fluid py-4">
-  <div class="card card-custom">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <div>
-        <h5 class="card-title mb-0">Responses — <%= @assignment&.title || 'Assignment' %></h5>
-        <small class="text-muted">Participant: <%= @participant&.user&.full_name || @participant&.id %></small>
-      </div>
-      <div>
-        <%= link_to 'Back', admin_institute_responses_path(@institute), class: 'btn btn-sm btn-light' %>
-      </div>
-    </div>
-    <div class="card-body">
-        <% if @responses.present? %>
-          <div class="row mb-3">
-            <div class="col-sm-3">
-              <div class="card p-3">
-                <h6 class="mb-1">Total Responses</h6>
-                <div class="h4 mb-0"><%= @stats[:total] %></div>
-              </div>
-            </div>
-            <div class="col-sm-3">
-              <div class="card p-3">
-                <h6 class="mb-1">Answered</h6>
-                <div class="h4 mb-0"><%= @stats[:answered] %></div>
-              </div>
-            </div>
-            <div class="col-sm-3">
-              <div class="card p-3">
-                <h6 class="mb-1">Unanswered</h6>
-                <div class="h4 mb-0"><%= @stats[:unanswered] %></div>
-              </div>
-            </div>
-            <div class="col-sm-3">
-              <div class="card p-3">
-                <h6 class="mb-1">Date Range</h6>
-                <div class="small text-muted"><%= @stats[:first_response_date] || '-' %> — <%= @stats[:last_response_date] || '-' %></div>
-              </div>
-            </div>
-          </div>
+<% content_for :styles do %>
+  <style>
+    .response-group-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .response-group-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .response-group-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+    .response-group-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .stats-container {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+    }
+    .stat-card {
+      background: white;
+      border: 2px solid rgba(102, 126, 234, 0.15);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+    .stat-card .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .stat-card.total .icon {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      color: #667eea;
+    }
+    .stat-card.answered .icon {
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%);
+      color: #11998e;
+    }
+    .stat-card.unanswered .icon {
+      background: linear-gradient(135deg, rgba(235, 51, 73, 0.1) 0%, rgba(244, 92, 67, 0.1) 100%);
+      color: #eb3349;
+    }
+    .stat-card.date-range .icon {
+      background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+      color: #f093fb;
+    }
+    .stat-card h6 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6c757d;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .stat-card .date-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin: 0;
+    }
+    .responses-table {
+      margin: 0;
+    }
+    .responses-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .responses-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .responses-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .responses-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.002);
+    }
+    .question-text {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+    .answer-text {
+      color: #495057;
+      font-size: 0.9rem;
+    }
+    .submitted-time {
+      color: #95a5a6;
+      font-size: 0.85rem;
+    }
+    .no-responses {
+      text-align: center;
+      padding: 3rem;
+      color: #95a5a6;
+    }
+    .no-responses i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #dee2e6;
+    }
+    .no-responses p {
+      font-size: 1rem;
+      margin: 0;
+    }
 
-          <div class="table-responsive">
-            <table class="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Question</th>
-                  <th>Answer / Selected Options</th>
-                  <th class="w-25">Submitted At</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @responses.each do |r| %>
-                  <tr>
-                    <td><%= r.question&.title || '—' %></td>
-                    <td>
-                      <% if r.answer.present? %>
-                        <%= r.answer %>
-                      <% elsif r.selected_options.present? %>
-                        <%= Array(r.selected_options).join(', ') %>
-                      <% else %>
-                        —
-                      <% end %>
-                    </td>
-                    <td><%= r.created_at %></td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        <% else %>
-          <div class="text-muted">No responses found for this assignment / participant.</div>
-        <% end %>
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .response-group-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .response-group-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .response-group-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .response-group-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      .stats-container {
+        padding: 1rem;
+      }
+      
+      .stat-card {
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+      }
+      
+      .stat-card .icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      .stat-card .value {
+        font-size: 1.5rem;
+      }
+      
+      /* Card view for mobile */
+      .responses-table thead {
+        display: none;
+      }
+      
+      .responses-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .responses-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .responses-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .responses-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .responses-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .responses-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .question-text,
+      .answer-text,
+      .submitted-time {
+        margin-top: 0.25rem;
+      }
+      
+      .no-responses {
+        padding: 2rem 1rem;
+      }
+      
+      .no-responses i {
+        font-size: 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .response-group-header {
+        padding: 1rem;
+      }
+      
+      .response-group-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .response-group-card {
+        border-radius: 12px;
+      }
+      
+      .stat-card .value {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+<% end %>
+
+<div class="response-group-card">
+  <div class="response-group-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1"><%= @assignment&.title || 'Assignment' %></h4>
+        <div class="subtitle">
+          <i class="bi bi-person-circle me-2"></i>Participant: <%= @participant&.user&.full_name || @participant&.id %>
+        </div>
+      </div>
+      <%= link_to admin_institute_responses_path(@institute), class: "btn btn-back" do %>
+        <i class="bi bi-arrow-left me-2"></i> Back
+      <% end %>
     </div>
+  </div>
+
+  <div class="card-body p-0">
+    <% if @responses.present? %>
+      <div class="stats-container">
+        <div class="row">
+          <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+            <div class="stat-card total">
+              <div class="icon">
+                <i class="bi bi-file-text-fill"></i>
+              </div>
+              <h6>Total Responses</h6>
+              <div class="value"><%= @stats[:total] %></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+            <div class="stat-card answered">
+              <div class="icon">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <h6>Answered</h6>
+              <div class="value"><%= @stats[:answered] %></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+            <div class="stat-card unanswered">
+              <div class="icon">
+                <i class="bi bi-x-circle-fill"></i>
+              </div>
+              <h6>Unanswered</h6>
+              <div class="value"><%= @stats[:unanswered] %></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card date-range">
+              <div class="icon">
+                <i class="bi bi-calendar-range-fill"></i>
+              </div>
+              <h6>Date Range</h6>
+              <p class="date-text">
+                <%= @stats[:first_response_date] || '-' %><br>
+                <i class="bi bi-arrow-down"></i><br>
+                <%= @stats[:last_response_date] || '-' %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table responses-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Answer / Selected Options</th>
+              <th>Submitted At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @responses.each do |r| %>
+              <tr>
+                <td data-label="Question">
+                  <div class="question-text">
+                    <i class="bi bi-question-circle me-2 text-muted"></i><%= r.question&.title || '—' %>
+                  </div>
+                </td>
+                <td data-label="Answer / Selected Options">
+                  <div class="answer-text">
+                    <% if r.answer.present? %>
+                      <%= r.answer %>
+                    <% elsif r.selected_options.present? %>
+                      <%= Array(r.selected_options).join(', ') %>
+                    <% else %>
+                      <span class="text-muted">—</span>
+                    <% end %>
+                  </div>
+                </td>
+                <td data-label="Submitted At">
+                  <div class="submitted-time">
+                    <i class="bi bi-clock me-2"></i><%= r.created_at.strftime("%b %d, %Y at %I:%M %p") %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="no-responses">
+        <i class="bi bi-inbox"></i>
+        <p>No responses found for this assignment / participant.</p>
+      </div>
+    <% end %>
   </div>
 </div>
