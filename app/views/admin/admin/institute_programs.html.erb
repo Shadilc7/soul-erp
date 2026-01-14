@@ -1,40 +1,288 @@
-  <div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Programs for <%= @institute.name %></h4>
-  <div>
-    <%= link_to 'Back', '#', onclick: 'history.back(); return false;', class: 'btn btn-outline-secondary me-2' %>
-  </div>
-</div>
+<% content_for :styles do %>
+  <style>
+    .institute-programs-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .institute-programs-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .institute-programs-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+    .institute-programs-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .institute-programs-table {
+      margin: 0;
+    }
+    .institute-programs-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .institute-programs-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .institute-programs-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .institute-programs-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.005);
+    }
+    .program-title {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+    .trainer-name {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .status-active {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+    .status-completed {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+    }
+    .status-other {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+    }
+    .no-programs {
+      text-align: center;
+      padding: 3rem;
+      color: #95a5a6;
+    }
+    .no-programs i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #dee2e6;
+    }
+    .no-programs p {
+      font-size: 1rem;
+      margin: 0;
+    }
 
-<div class="card card-custom">
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Program</th>
-            <th>Trainer</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @programs.each do |pr| %>
-            <tr>
-              <td><%= pr[:title] %></td>
-              <td><%= pr[:trainer] || '—' %></td>
-              <td>
-                <% case pr[:status].to_s %>
-                <% when 'ongoing', 'active' %>
-                  <span class="badge bg-success">Active</span>
-                <% when 'completed' %>
-                  <span class="badge bg-secondary">Completed</span>
-                <% else %>
-                  <span class="badge bg-info"><%= pr[:status].to_s.titleize %></span>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .institute-programs-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .institute-programs-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .institute-programs-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .institute-programs-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      /* Card view for mobile */
+      .institute-programs-table thead {
+        display: none;
+      }
+      
+      .institute-programs-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .institute-programs-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .institute-programs-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .institute-programs-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .institute-programs-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .institute-programs-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .program-title,
+      .trainer-name,
+      .status-badge {
+        margin-top: 0.25rem;
+      }
+      
+      .no-programs {
+        padding: 2rem 1rem;
+      }
+      
+      .no-programs i {
+        font-size: 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .institute-programs-header {
+        padding: 1rem;
+      }
+      
+      .institute-programs-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .institute-programs-card {
+        border-radius: 12px;
+      }
+    }
+  </style>
+<% end %>
+
+<div class="institute-programs-card">
+  <div class="institute-programs-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">Programs for <%= @institute.name %></h4>
+        <div class="subtitle">
+          <i class="bi bi-mortarboard me-2"></i>Training programs offered by this institution
+        </div>
+      </div>
+      <%= link_to '#', onclick: 'history.back(); return false;', class: "btn btn-back" do %>
+        <i class="bi bi-arrow-left me-2"></i> Back
+      <% end %>
     </div>
+  </div>
+
+  <div class="card-body p-0">
+    <% if @programs.present? %>
+      <div class="table-responsive">
+        <table class="table institute-programs-table">
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Trainer</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @programs.each do |pr| %>
+              <tr>
+                <td data-label="Program">
+                  <div class="program-title">
+                    <i class="bi bi-book me-2 text-muted"></i><%= pr[:title] %>
+                  </div>
+                </td>
+                <td data-label="Trainer">
+                  <div class="trainer-name">
+                    <i class="bi bi-person-badge me-2"></i><%= pr[:trainer] || '—' %>
+                  </div>
+                </td>
+                <td data-label="Status">
+                  <% case pr[:status].to_s %>
+                  <% when 'ongoing', 'active' %>
+                    <span class="status-badge status-active">
+                      <i class="bi bi-play-circle"></i>Active
+                    </span>
+                  <% when 'completed' %>
+                    <span class="status-badge status-completed">
+                      <i class="bi bi-check-circle"></i>Completed
+                    </span>
+                  <% else %>
+                    <span class="status-badge status-other">
+                      <i class="bi bi-info-circle"></i><%= pr[:status].to_s.titleize %>
+                    </span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="no-programs">
+        <i class="bi bi-inbox"></i>
+        <p>No programs found for this institution.</p>
+      </div>
+    <% end %>
   </div>
 </div>
