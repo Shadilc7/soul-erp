@@ -1,29 +1,292 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">All Trainers</h4>
-  <%= link_to admin_root_path, class: 'btn btn-outline-secondary' do %>
-    Back
-  <% end %>
-</div>
+<% content_for :styles do %>
+  <style>
+    .trainers-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    }
+    .trainers-header h4 {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    .trainers-header .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+      padding: 0.625rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+    .filter-section {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      border: 2px solid rgba(102, 126, 234, 0.15);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .filter-section label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+    .filter-section .form-select {
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .filter-section .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+    .btn-clear-filter {
+      background: white;
+      border: 2px solid #e9ecef;
+      color: #6c757d;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+    .btn-clear-filter:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
+    .trainers-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .trainers-table {
+      margin: 0;
+    }
+    .trainers-table thead th {
+      background: #f8f9fa;
+      border: none;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+    }
+    .trainers-table tbody td {
+      padding: 1.25rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .trainers-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .trainers-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+      transform: scale(1.005);
+    }
+    .trainer-name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+    .institute-name {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .trainer-email {
+      color: #667eea;
+      font-size: 0.85rem;
+    }
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
+    }
+    .status-active {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+    .status-inactive {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+    }
 
-<!-- Institute Filter -->
-<div class="mb-3 p-3 bg-white rounded-3 shadow-sm border">
-  <%= form_with url: admin_trainers_path, method: :get, local: true, class: 'd-flex align-items-center gap-3' do |f| %>
-    <label for="instituteFilter" class="mb-0 text-muted small me-2">Institute:</label>
-    <%= f.select :institute_id, 
-        options_for_select([['All Institutes', '']] + @institutes.map { |i| [i.name, i.id] }, params[:institute_id]), 
-        {}, 
-        class: 'form-select form-select-sm', 
-        id: 'instituteFilter', 
-        onchange: 'this.form.submit()', 
-        style: 'max-width: 300px;' %>
-    <%= link_to 'Clear', admin_trainers_path, class: 'btn btn-sm btn-outline-secondary ms-2' %>
-  <% end %>
-</div>
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .trainers-header {
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      .trainers-header h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .trainers-header .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      
+      .trainers-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+      
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+      }
+      
+      .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+        margin: 1rem;
+        padding: 1rem;
+      }
+      
+      .filter-section .form-select {
+        width: 100%;
+      }
+      
+      .btn-clear-filter {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      
+      /* Card view for mobile */
+      .trainers-table thead {
+        display: none;
+      }
+      
+      .trainers-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      
+      .trainers-table tbody tr:hover {
+        transform: none;
+        background: white;
+      }
+      
+      .trainers-table tbody td {
+        display: block;
+        padding: 0.5rem 0;
+        border: none;
+        text-align: left !important;
+      }
+      
+      .trainers-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+      
+      .trainers-table tbody td:first-child {
+        padding-top: 0;
+      }
+      
+      .trainers-table tbody td:last-child {
+        padding-bottom: 0;
+      }
+      
+      .trainer-name {
+        margin-top: 0.25rem;
+      }
+      
+      .trainer-email,
+      .institute-name,
+      .status-badge {
+        display: inline-block;
+        margin-top: 0.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .trainers-header {
+        padding: 1rem;
+      }
+      
+      .trainers-header h4 {
+        font-size: 1.1rem;
+      }
+      
+      .trainers-card {
+        border-radius: 12px;
+      }
+    }
+  </style>
+<% end %>
 
-<div class="card card-custom">
-  <div class="card-body">
+<div class="trainers-card">
+  <div class="trainers-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">All Trainers</h4>
+        <div class="subtitle"><i class="bi bi-person-badge me-2"></i>Overview of trainers across all institutions</div>
+      </div>
+      <%= link_to admin_root_path, class: "btn btn-back" do %>
+        <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Institute Filter -->
+  <div class="filter-section">
+    <%= form_with url: admin_trainers_path, method: :get, local: true, class: 'd-flex align-items-center gap-3 flex-grow-1' do |f| %>
+      <label for="instituteFilter"><i class="bi bi-funnel me-2"></i>Filter by Institute:</label>
+      <%= f.select :institute_id, 
+          options_for_select([['All Institutes', '']] + @institutes.map { |i| [i.name, i.id] }, params[:institute_id]), 
+          {}, 
+          class: 'form-select', 
+          id: 'instituteFilter', 
+          onchange: 'this.form.submit()' %>
+      <%= link_to admin_trainers_path, class: 'btn btn-clear-filter' do %>
+        <i class="bi bi-x-circle me-1"></i>Clear
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table trainers-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -35,10 +298,27 @@
         <tbody>
           <% @trainers.each do |t| %>
             <tr>
-              <td><%= t.user&.full_name || t.user&.username || '—' %></td>
-              <td><%= t.institute&.name %></td>
-              <td><%= t.user&.email %></td>
-              <td><span class="badge <%= t.active? ? 'bg-success' : 'bg-secondary' %>"><%= t.status&.to_s&.titleize %></span></td>
+              <td data-label="Name">
+                <div class="trainer-name">
+                  <i class="bi bi-person-circle me-2 text-muted"></i><%= t.user&.full_name || t.user&.username || '—' %>
+                </div>
+              </td>
+              <td data-label="Institute">
+                <div class="institute-name">
+                  <i class="bi bi-building me-2"></i><%= t.institute&.name %>
+                </div>
+              </td>
+              <td data-label="Email">
+                <div class="trainer-email">
+                  <i class="bi bi-envelope me-2"></i><%= t.user&.email %>
+                </div>
+              </td>
+              <td data-label="Status">
+                <span class="status-badge <%= t.active? ? 'status-active' : 'status-inactive' %>">
+                  <i class="bi <%= t.active? ? 'bi-check-circle' : 'bi-dash-circle' %> me-1"></i>
+                  <%= t.status&.to_s&.titleize %>
+                </span>
+              </td>
             </tr>
           <% end %>
         </tbody>
