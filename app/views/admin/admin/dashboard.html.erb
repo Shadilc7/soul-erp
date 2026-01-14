@@ -132,11 +132,17 @@
 <div class="row">
   <!-- Participants Chart -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Institution-wise Participants</h5>
+    <div class="chart-card-modern h-100">
+      <div class="chart-header-modern">
+        <div class="chart-icon-float">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="chart-title-modern">
+          <h5>Institution-wise Participants</h5>
+          <span class="chart-subtitle">Active & Total Enrollment</span>
+        </div>
       </div>
-      <div class="card-body">
+      <div class="chart-body-modern">
         <canvas id="participantsChart" class="chart-canvas"></canvas>
       </div>
     </div>
@@ -144,11 +150,17 @@
 
   <!-- Programs Chart -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Institution-wise Programs</h5>
+    <div class="chart-card-modern h-100">
+      <div class="chart-header-modern">
+        <div class="chart-icon-float">
+          <i class="bi bi-journal-check"></i>
+        </div>
+        <div class="chart-title-modern">
+          <h5>Institution-wise Programs</h5>
+          <span class="chart-subtitle">Program Overview</span>
+        </div>
       </div>
-      <div class="card-body">
+      <div class="chart-body-modern">
         <canvas id="programsChart" class="chart-canvas small"></canvas>
       </div>
     </div>
@@ -160,24 +172,36 @@
 <div class="row">
   <!-- Training Resources -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Training Resources by Institution</h5>
+    <div class="chart-card-modern h-100">
+      <div class="chart-header-modern">
+        <div class="chart-icon-float">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="chart-title-modern">
+          <h5>Training Resources</h5>
+          <span class="chart-subtitle">Sections & Assignments</span>
+        </div>
       </div>
-      <div class="card-body">
-  <canvas id="resourcesChart" class="chart-canvas chart-tall"></canvas>
+      <div class="chart-body-modern">
+        <canvas id="resourcesChart" class="chart-canvas chart-tall"></canvas>
       </div>
     </div>
   </div>
 
   <!-- Feedback Ratings -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Average Feedback Ratings</h5>
+    <div class="chart-card-modern h-100">
+      <div class="chart-header-modern">
+        <div class="chart-icon-float">
+          <i class="bi bi-star-fill"></i>
+        </div>
+        <div class="chart-title-modern">
+          <h5>Feedback Ratings</h5>
+          <span class="chart-subtitle">Average Scores</span>
+        </div>
       </div>
-      <div class="card-body">
-  <canvas id="ratingsChart" class="chart-canvas chart-tall"></canvas>
+      <div class="chart-body-modern">
+        <canvas id="ratingsChart" class="chart-canvas chart-tall"></canvas>
       </div>
     </div>
   </div>
@@ -186,9 +210,17 @@
 <!-- Institution Details Table -->
 <div class="row">
   <div class="col-12 mb-4">
-    <div class="card card-custom">
-      <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Institution Statistics</h5>
+    <div class="modern-table-card">
+      <div class="modern-table-header">
+        <div class="d-flex align-items-center gap-2">
+          <div class="header-icon">
+            <i class="bi bi-table"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">Institution Statistics</h5>
+            <span class="header-subtitle">Comprehensive overview</span>
+          </div>
+        </div>
         <div class="btn-group">
           <button type="button" id="downloadCsvBtn" class="btn btn-sm btn-export csv" title="Download CSV">
             <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -200,10 +232,10 @@
           </button>
         </div>
       </div>
-      <div class="card-body p-0">
+      <div class="modern-table-body">
         <div class="table-responsive">
-          <table class="table mb-0" id="institutions-stats-table">
-            <thead class="table-light">
+          <table class="table modern-table mb-0" id="institutions-stats-table">
+            <thead>
               <tr>
                 <th>Institution</th>
                 <th>Programs</th>
@@ -216,22 +248,26 @@
             <tbody>
               <% @institutes.each do |institute| %>
                 <tr>
-                  <td><%= institute[:name] %></td>
                   <td>
-                    <span class="d-block"><%= institute[:stats][:programs][:active] %> active</span>
-                    <small class="text-muted">of <%= institute[:stats][:programs][:total] %> total</small>
+                    <div class="institute-name">
+                      <i class="bi bi-building-fill me-2 text-primary"></i>
+                      <%= institute[:name] %>
+                    </div>
                   </td>
                   <td>
-                    <span class="d-block"><%= institute[:stats][:participants][:active] %> active</span>
-                    <small class="text-muted">of <%= institute[:stats][:participants][:total] %> total</small>
+                    <span class="stat-value"><%= institute[:stats][:programs][:active] %> active</span>
+                    <small class="stat-label">of <%= institute[:stats][:programs][:total] %> total</small>
                   </td>
                   <td>
-                    <span class="d-block"><%= institute[:stats][:sections][:active] %> active</span>
-                    <small class="text-muted">of <%= institute[:stats][:sections][:total] %> total</small>
+                    <span class="stat-value"><%= institute[:stats][:participants][:active] %> active</span>
+                    <small class="stat-label">of <%= institute[:stats][:participants][:total] %> total</small>
                   </td>
-                  <td><%= institute[:stats][:assignments][:total] %></td>
-                  <td><%= institute[:stats][:questions] %></td>
-                  <%# Actions column removed — downloads available in header %>
+                  <td>
+                    <span class="stat-value"><%= institute[:stats][:sections][:active] %> active</span>
+                    <small class="stat-label">of <%= institute[:stats][:sections][:total] %> total</small>
+                  </td>
+                  <td><span class="badge stat-badge"><%= institute[:stats][:assignments][:total] %></span></td>
+                  <td><span class="badge stat-badge"><%= institute[:stats][:questions] %></span></td>
                 </tr>
               <% end %>
             </tbody>
@@ -246,24 +282,29 @@
 <div class="row">
   <!-- Recent Activity -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Recent Activity</h5>
+    <div class="activity-card h-100">
+      <div class="activity-card-header">
+        <div class="header-icon">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <div>
+          <h5 class="mb-0">Recent Activity</h5>
+          <span class="header-subtitle">Latest additions</span>
+        </div>
       </div>
-      <div class="card-body scrollable">
-        <div class="list-group list-group-flush">
+      <div class="activity-card-body">
+        <div class="activity-list">
           <% @recent_institutes.each do |institute| %>
-            <div class="list-group-item border-0 px-0">
-              <div class="d-flex align-items-center">
-                <div class="flex-shrink-0">
-                  <div class="bg-light rounded p-2">
-                    <i class="bi bi-building text-primary"></i>
-                  </div>
-                </div>
-                <div class="flex-grow-1 ms-3">
-                  <h6 class="mb-1"><%= institute.name %></h6>
-                  <p class="text-muted small mb-0">Added <%= time_ago_in_words(institute.created_at) %> ago</p>
-                </div>
+            <div class="activity-item">
+              <div class="activity-icon-wrapper">
+                <i class="bi bi-building"></i>
+              </div>
+              <div class="activity-content">
+                <h6 class="activity-title"><%= institute.name %></h6>
+                <p class="activity-time">
+                  <i class="bi bi-clock me-1"></i>
+                  Added <%= time_ago_in_words(institute.created_at) %> ago
+                </p>
               </div>
             </div>
           <% end %>
@@ -274,26 +315,35 @@
 
   <!-- Recent Feedback -->
   <div class="col-md-6 mb-4">
-    <div class="card card-custom h-100">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Recent Feedback</h5>
+    <div class="feedback-card h-100">
+      <div class="feedback-card-header">
+        <div class="header-icon">
+          <i class="bi bi-chat-square-text"></i>
+        </div>
+        <div>
+          <h5 class="mb-0">Recent Feedback</h5>
+          <span class="header-subtitle">User reviews</span>
+        </div>
       </div>
-      <div class="card-body scrollable">
+      <div class="feedback-card-body">
         <% @recent_feedbacks.each do |feedback| %>
-          <div class="border-bottom pb-3 mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="mb-0"><%= feedback.training_program.title %></h6>
-              <div class="text-warning">
+          <div class="feedback-item">
+            <div class="feedback-header">
+              <h6 class="feedback-title"><%= feedback.training_program.title %></h6>
+              <div class="rating-stars">
                 <% feedback.rating.times do %>
                   <i class="bi bi-star-fill"></i>
                 <% end %>
               </div>
             </div>
-            <p class="text-muted small mb-1"><%= truncate(feedback.content, length: 100) %></p>
-            <p class="text-muted small mb-0">
-              By <%= feedback.participant.user.full_name %> • 
+            <p class="feedback-content"><%= truncate(feedback.content, length: 100) %></p>
+            <div class="feedback-meta">
+              <i class="bi bi-person-circle me-1"></i>
+              <%= feedback.participant.user.full_name %>
+              <span class="meta-divider">•</span>
+              <i class="bi bi-clock me-1"></i>
               <%= time_ago_in_words(feedback.created_at) %> ago
-            </p>
+            </div>
           </div>
         <% end %>
       </div>
@@ -304,14 +354,22 @@
 <!-- Recent Training Programs (full width) -->
 <div class="row">
   <div class="col-12 mb-4">
-    <div class="card card-custom">
-      <div class="card-header bg-light py-3">
-        <h5 class="card-title mb-0">Recent Training Programs</h5>
+    <div class="programs-card">
+      <div class="programs-card-header">
+        <div class="d-flex align-items-center gap-2">
+          <div class="header-icon">
+            <i class="bi bi-mortarboard"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">Recent Training Programs</h5>
+            <span class="header-subtitle">Latest program activities</span>
+          </div>
+        </div>
       </div>
-      <div class="card-body p-0">
+      <div class="programs-card-body">
         <div class="table-responsive">
-          <table class="table mb-0">
-            <thead class="table-light">
+          <table class="table modern-programs-table mb-0">
+            <thead>
               <tr>
                 <th>Program</th>
                 <th>Institute</th>
@@ -322,11 +380,22 @@
             <tbody>
               <% @recent_programs.each do |program| %>
                 <tr>
-                  <td><%= program.title %></td>
-                  <td><%= program.institute.name %></td>
-                  <td><%= program.trainer.user.full_name %></td>
                   <td>
-                    <span class="badge bg-<%= program.status == 'ongoing' ? 'success' : 'secondary' %>">
+                    <div class="program-name">
+                      <i class="bi bi-book me-2 text-info"></i>
+                      <%= program.title %>
+                    </div>
+                  </td>
+                  <td class="institute-cell"><%= program.institute.name %></td>
+                  <td>
+                    <div class="trainer-info">
+                      <i class="bi bi-person-badge me-1"></i>
+                      <%= program.trainer.user.full_name %>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-badge status-<%= program.status == 'ongoing' ? 'active' : 'completed' %>">
+                      <i class="bi bi-<%= program.status == 'ongoing' ? 'play-circle' : 'check-circle' %> me-1"></i>
                       <%= program.status.titleize %>
                     </span>
                   </td>
@@ -394,6 +463,134 @@
     .btn-export.pdf:hover { filter: brightness(.98); }
     .btn-export i { font-size: 1rem; line-height: 1; }
 
+    /* Modern Clean Chart Cards */
+    @keyframes floatSoft {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .chart-card-modern {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: fadeInScale 0.5s ease-out;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .chart-card-modern:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .chart-card-modern::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    .chart-header-modern {
+      padding: 2rem 2rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+    
+    .chart-icon-float {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      animation: floatSoft 3.5s ease-in-out infinite;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+    
+    .chart-icon-float::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    
+    .chart-card-modern:hover .chart-icon-float {
+      transform: scale(1.1) rotate(-5deg);
+    }
+    
+    .chart-card-modern:hover .chart-icon-float::before {
+      opacity: 1;
+    }
+    
+    .chart-icon-float i {
+      font-size: 1.4rem;
+      color: #667eea;
+      transition: all 0.35s ease;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .chart-card-modern:hover .chart-icon-float i {
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .chart-title-modern {
+      flex: 1;
+    }
+    
+    .chart-title-modern h5 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+    }
+    
+    .chart-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-weight: 500;
+      display: block;
+      margin-top: 0.3rem;
+      letter-spacing: 0.01em;
+    }
+    
+    .chart-body-modern {
+      padding: 0 2rem 2rem;
+    }
+    
     /* Chart sizing and polish */
     .chart-canvas { height: 360px !important; width: 100% !important; }
     .chart-canvas.small { height: 320px !important; }
@@ -404,6 +601,263 @@
     .card.card-custom.h-100 .card-body { padding: 1.25rem; }
     /* Subtle container background for charts */
     .card.card-custom .card-body { background: linear-gradient(180deg, #ffffff, #fbfdff); border-radius: 6px; }
+
+    /* Modern Table Card and Other Sections */
+    .modern-table-card, .activity-card, .feedback-card, .programs-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      position: relative;
+    }
+    .modern-table-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+    .activity-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #11998e, #38ef7d);
+    }
+    .feedback-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+    .programs-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #a855f7, #ec4899, #f093fb, #a855f7);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+    .modern-table-header, .activity-card-header, .feedback-card-header, .programs-card-header {
+      padding: 1.75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .activity-card-header, .feedback-card-header, .programs-card-header {
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .modern-table-header {
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .modern-table-header .header-icon, .activity-card-header .header-icon, .feedback-card-header .header-icon, .programs-card-header .header-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #667eea;
+      font-size: 1.25rem;
+    }
+    .modern-table-header h5, .activity-card-header h5, .feedback-card-header h5, .programs-card-header h5 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .header-subtitle {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 500;
+      display: block;
+      margin-top: 0.2rem;
+    }
+    .modern-table-body, .programs-card-body {
+      padding: 0;
+    }
+    .modern-table thead th, .modern-programs-table thead th {
+      background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+      border: none;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.5rem;
+    }
+    .modern-table tbody td, .modern-programs-table tbody td {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      vertical-align: middle;
+    }
+    .modern-table tbody tr, .modern-programs-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .modern-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+    }
+    .modern-programs-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.02), rgba(236, 72, 153, 0.02));
+    }
+    .institute-name, .program-name {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+    }
+    .stat-value {
+      display: block;
+      font-weight: 600;
+      color: #334155;
+      font-size: 0.9rem;
+    }
+    .stat-label {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      margin-top: 0.2rem;
+    }
+    .stat-badge {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      color: #667eea;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+    .activity-card-body, .feedback-card-body {
+      padding: 0 2rem 2rem;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.03), rgba(56, 239, 125, 0.03));
+      transition: all 0.3s ease;
+    }
+    .activity-item:hover {
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.08), rgba(56, 239, 125, 0.08));
+      transform: translateX(4px);
+    }
+    .activity-icon-wrapper {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .activity-content {
+      flex: 1;
+    }
+    .activity-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .activity-time {
+      margin: 0.25rem 0 0;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+    }
+    .feedback-item {
+      padding: 1.25rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.03), rgba(245, 158, 11, 0.03));
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+    .feedback-item:hover {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.08));
+      transform: translateY(-2px);
+    }
+    .feedback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .feedback-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .rating-stars {
+      color: #fbbf24;
+      font-size: 0.9rem;
+    }
+    .feedback-content {
+      margin: 0 0 0.75rem;
+      font-size: 0.85rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .feedback-meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+    }
+    .meta-divider {
+      margin: 0 0.5rem;
+    }
+    .institute-cell, .trainer-info {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .trainer-info {
+      display: flex;
+      align-items: center;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .status-active {
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.15), rgba(56, 239, 125, 0.15));
+      color: #059669;
+    }
+    .status-completed {
+      background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(100, 116, 139, 0.15));
+      color: #64748b;
+    }
 
     .stat-block h3 {
       font-size: 1.5rem;
@@ -457,16 +911,15 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx2d = canvas.getContext('2d');
 
-  // Create modern unique gradients for participants chart
-  const gradPrimary = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
-  // electric indigo -> soft violet
-  gradPrimary.addColorStop(0, '#5b21b6');
-  gradPrimary.addColorStop(1, '#8b5cf6');
+    // Create modern gradients with multiple color stops
+    const gradPrimary = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
+    gradPrimary.addColorStop(0, '#667eea');
+    gradPrimary.addColorStop(0.5, '#764ba2');
+    gradPrimary.addColorStop(1, '#667eea');
 
-  const gradSuccess = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
-  // teal -> cyan/mint
-  gradSuccess.addColorStop(0, '#0ea5a4');
-  gradSuccess.addColorStop(1, '#06b6d4');
+    const gradSuccess = ctx2d.createLinearGradient(0, 0, 0, canvas.height);
+    gradSuccess.addColorStop(0, '#11998e');
+    gradSuccess.addColorStop(1, '#38ef7d');
 
     new Chart(canvas, {
       type: 'bar',
@@ -476,39 +929,88 @@ document.addEventListener('turbo:load', function() {
           label: 'Total Participants',
           data: stats.participants,
           backgroundColor: gradPrimary,
-          borderRadius: {topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0},
-          barPercentage: 0.45,
-          categoryPercentage: 0.45,
-          maxBarThickness: 28
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }, {
           label: 'Active Participants',
           data: stats.active_participants,
           backgroundColor: gradSuccess,
-          borderRadius: {topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0},
-          barPercentage: 0.45,
-          categoryPercentage: 0.45,
-          maxBarThickness: 28
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }]
       },
       options: {
-        animation: { duration: 900, easing: 'easeOutQuart' },
+        animation: {
+          duration: 1200,
+          easing: 'easeInOutQuart',
+          delay: (context) => context.dataIndex * 80
+        },
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', align: 'start', labels: { usePointStyle: true, padding: 16, boxWidth: 10, boxHeight: 6 } },
-          tooltip: { padding: 10, backgroundColor: 'rgba(33,37,41,0.95)', titleFont: { size: 13, weight: '600' }, bodyFont: { size: 13 }, cornerRadius: 6 }
+          legend: {
+            position: 'bottom',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 20,
+              boxWidth: 8,
+              boxHeight: 8,
+              font: { size: 13, weight: '600' },
+              color: '#64748b'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 14,
+            cornerRadius: 10,
+            titleFont: { size: 14, weight: '700' },
+            bodyFont: { size: 13, weight: '500' },
+            displayColors: true,
+            boxWidth: 12,
+            boxHeight: 12,
+            boxPadding: 6,
+            borderColor: 'rgba(102, 126, 234, 0.2)',
+            borderWidth: 1
+          }
         },
-        layout: { padding: { top: 8, right: 8, bottom: 8, left: 8 } },
+        layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
         scales: {
           x: {
             grid: { display: false },
-            ticks: { maxRotation: 0, autoSkip: false }
+            border: { display: false },
+            ticks: {
+              color: '#64748b',
+              font: { size: 12, weight: '500' },
+              maxRotation: 0,
+              autoSkip: false,
+              padding: 8
+            }
           },
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(15, 23, 42, 0.04)' },
-            ticks: { precision: 0 }
+            border: { display: false, dash: [5, 5] },
+            grid: {
+              color: 'rgba(148, 163, 184, 0.08)',
+              lineWidth: 1.5,
+              drawTicks: false
+            },
+            ticks: {
+              color: '#94a3b8',
+              font: { size: 12, weight: '500' },
+              precision: 0,
+              padding: 12
+            }
           }
         }
       }
@@ -519,16 +1021,13 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx2 = canvas.getContext('2d');
 
-  // Modern program palette: warm sunset -> coral, and ocean teal
-  const gradInfo = ctx2.createLinearGradient(0, 0, 0, canvas.height);
-  // sunset coral -> warm pink
-  gradInfo.addColorStop(0, '#ff7a59');
-  gradInfo.addColorStop(1, '#ff416c');
+    const gradInfo = ctx2.createLinearGradient(0, 0, 0, canvas.height);
+    gradInfo.addColorStop(0, '#f093fb');
+    gradInfo.addColorStop(1, '#f5576c');
 
-  const gradActive = ctx2.createLinearGradient(0, 0, 0, canvas.height);
-  // ocean teal -> deep sea
-  gradActive.addColorStop(0, '#00c2ff');
-  gradActive.addColorStop(1, '#007ea7');
+    const gradActive = ctx2.createLinearGradient(0, 0, 0, canvas.height);
+    gradActive.addColorStop(0, '#4facfe');
+    gradActive.addColorStop(1, '#00f2fe');
 
     new Chart(canvas, {
       type: 'bar',
@@ -538,33 +1037,88 @@ document.addEventListener('turbo:load', function() {
           label: 'Total Programs',
           data: stats.programs,
           backgroundColor: gradInfo,
-          borderRadius: {topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0},
-          barPercentage: 0.45,
-          categoryPercentage: 0.45,
-          maxBarThickness: 28
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }, {
           label: 'Active Programs',
           data: stats.active_programs,
           backgroundColor: gradActive,
-          borderRadius: {topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0},
-          barPercentage: 0.45,
-          categoryPercentage: 0.45,
-          maxBarThickness: 28
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }]
       },
       options: {
-        animation: { duration: 800, easing: 'easeOutQuart' },
+        animation: {
+          duration: 1100,
+          easing: 'easeInOutQuart',
+          delay: (context) => context.dataIndex * 70
+        },
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', align: 'start', labels: { usePointStyle: true, padding: 16, boxWidth: 10, boxHeight: 6 } },
-          tooltip: { padding: 10, backgroundColor: 'rgba(33,37,41,0.95)', titleFont: { size: 13, weight: '600' }, bodyFont: { size: 13 }, cornerRadius: 6 }
+          legend: {
+            position: 'bottom',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 20,
+              boxWidth: 8,
+              boxHeight: 8,
+              font: { size: 13, weight: '600' },
+              color: '#64748b'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 14,
+            cornerRadius: 10,
+            titleFont: { size: 14, weight: '700' },
+            bodyFont: { size: 13, weight: '500' },
+            displayColors: true,
+            boxWidth: 12,
+            boxHeight: 12,
+            boxPadding: 6,
+            borderColor: 'rgba(102, 126, 234, 0.2)',
+            borderWidth: 1
+          }
         },
-        layout: { padding: { top: 8, right: 8, bottom: 8, left: 8 } },
+        layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
         scales: {
-          x: { grid: { display: false }, ticks: { maxRotation: 0 } },
-          y: { beginAtZero: true, grid: { color: 'rgba(15, 23, 42, 0.04)' } }
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              color: '#64748b',
+              font: { size: 12, weight: '500' },
+              maxRotation: 0,
+              padding: 8
+            }
+          },
+          y: {
+            beginAtZero: true,
+            border: { display: false },
+            grid: {
+              color: 'rgba(148, 163, 184, 0.08)',
+              lineWidth: 1.5,
+              drawTicks: false
+            },
+            ticks: {
+              color: '#94a3b8',
+              font: { size: 12, weight: '500' },
+              precision: 0,
+              padding: 12
+            }
+          }
         }
       }
     });
@@ -574,16 +1128,13 @@ document.addEventListener('turbo:load', function() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-  // Create modern gradients for a unique palette
-  const gradSections = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  // violet -> magenta
-  gradSections.addColorStop(0, '#7c3aed');
-  gradSections.addColorStop(1, '#ec4899');
+    const gradSections = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradSections.addColorStop(0, '#a855f7');
+    gradSections.addColorStop(1, '#ec4899');
 
-  const gradAssignments = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  // cyan -> mint
-  gradAssignments.addColorStop(0, '#06b6d4');
-  gradAssignments.addColorStop(1, '#06f7a6');
+    const gradAssignments = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradAssignments.addColorStop(0, '#3b82f6');
+    gradAssignments.addColorStop(1, '#06b6d4');
 
     new Chart(canvas, {
       type: 'bar',
@@ -593,68 +1144,196 @@ document.addEventListener('turbo:load', function() {
           label: 'Sections',
           data: stats.sections,
           backgroundColor: gradSections,
-          borderRadius: 6,
-          barPercentage: 0.6,
-          categoryPercentage: 0.6,
-          maxBarThickness: 36
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }, {
           label: 'Assignments',
           data: stats.assignments,
           backgroundColor: gradAssignments,
-          borderRadius: 6,
-          barPercentage: 0.6,
-          categoryPercentage: 0.6,
-          maxBarThickness: 36
+          borderRadius: 12,
+          borderSkipped: false,
+          barPercentage: 0.65,
+          categoryPercentage: 0.7,
+          maxBarThickness: 40
         }]
       },
       options: {
-        animation: { duration: 700, easing: 'easeOutQuart' },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart',
+          delay: (context) => context.dataIndex * 90
+        },
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', align: 'start', labels: { usePointStyle: true, padding: 12, boxWidth: 10, boxHeight: 6 } },
-          tooltip: { padding: 10, backgroundColor: 'rgba(33,37,41,0.95)', titleFont: { size: 13, weight: '600' }, bodyFont: { size: 13 }, cornerRadius: 6 }
+          legend: {
+            position: 'bottom',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 20,
+              boxWidth: 8,
+              boxHeight: 8,
+              font: { size: 13, weight: '600' },
+              color: '#64748b'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 14,
+            cornerRadius: 10,
+            titleFont: { size: 14, weight: '700' },
+            bodyFont: { size: 13, weight: '500' },
+            displayColors: true,
+            boxWidth: 12,
+            boxHeight: 12,
+            boxPadding: 6,
+            borderColor: 'rgba(102, 126, 234, 0.2)',
+            borderWidth: 1
+          }
         },
-        layout: { padding: { top: 6, right: 8, bottom: 6, left: 8 } },
+        layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
         scales: {
-          x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } },
-          y: { beginAtZero: true, title: { display: true, text: 'Count' }, ticks: { precision: 0 }, grid: { color: 'rgba(15, 23, 42, 0.04)' } }
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              color: '#64748b',
+              font: { size: 12, weight: '500' },
+              maxRotation: 0,
+              autoSkip: true,
+              padding: 8
+            }
+          },
+          y: {
+            beginAtZero: true,
+            border: { display: false },
+            grid: {
+              color: 'rgba(148, 163, 184, 0.08)',
+              lineWidth: 1.5,
+              drawTicks: false
+            },
+            ticks: {
+              color: '#94a3b8',
+              font: { size: 12, weight: '500' },
+              precision: 0,
+              padding: 12
+            }
+          }
         }
       }
     });
   }
   function initRatingsChart() {
-    const ctx = document.getElementById('ratingsChart');
-    if (!ctx) return;
-    new Chart(ctx, {
+    const canvas = document.getElementById('ratingsChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(251, 191, 36, 0.35)');
+    gradient.addColorStop(1, 'rgba(251, 191, 36, 0.02)');
+
+    new Chart(canvas, {
       type: 'line',
       data: {
         labels: stats.labels,
         datasets: [{
           label: 'Average Rating',
           data: stats.avg_ratings,
-          borderColor: colors.warning,
-          backgroundColor: `${colors.warning}33`,
+          borderColor: '#fbbf24',
+          backgroundColor: gradient,
           fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: colors.warning
+          tension: 0.45,
+          borderWidth: 3,
+          pointRadius: 6,
+          pointHoverRadius: 9,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#fbbf24',
+          pointBorderWidth: 3,
+          pointHoverBackgroundColor: '#fbbf24',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 3
         }]
       },
       options: {
+        animation: {
+          duration: 1500,
+          easing: 'easeInOutQuart'
+        },
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 12, boxWidth: 10, boxHeight: 6 } }
+          legend: {
+            position: 'bottom',
+            align: 'center',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 20,
+              boxWidth: 8,
+              boxHeight: 8,
+              font: { size: 13, weight: '600' },
+              color: '#64748b'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 14,
+            cornerRadius: 10,
+            titleFont: { size: 14, weight: '700' },
+            bodyFont: { size: 13, weight: '500' },
+            displayColors: true,
+            boxWidth: 12,
+            boxHeight: 12,
+            boxPadding: 6,
+            borderColor: 'rgba(251, 191, 36, 0.3)',
+            borderWidth: 2,
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' ⭐';
+              }
+            }
+          }
         },
+        layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
         scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              color: '#64748b',
+              font: { size: 12, weight: '500' },
+              maxRotation: 0,
+              padding: 8
+            }
+          },
           y: {
             min: 0,
             max: 5,
+            border: { display: false },
+            grid: {
+              color: 'rgba(148, 163, 184, 0.08)',
+              lineWidth: 1.5,
+              drawTicks: false
+            },
             ticks: {
-              stepSize: 1
+              stepSize: 1,
+              color: '#94a3b8',
+              font: { size: 12, weight: '500' },
+              padding: 12,
+              callback: function(value) {
+                return value + ' ⭐';
+              }
             }
           }
         }
