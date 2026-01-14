@@ -690,8 +690,8 @@
     .modern-table-body, .programs-card-body {
       padding: 0;
     }
-    .modern-table thead th, .modern-programs-table thead th {
-      background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    .modern-table thead th {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.12), rgba(240, 147, 251, 0.08));
       border: none;
       color: #475569;
       font-weight: 600;
@@ -699,6 +699,46 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       padding: 1rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .modern-table thead th::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .modern-table thead:hover th::before {
+      left: 100%;
+    }
+    .modern-programs-table thead th {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.12), rgba(240, 147, 251, 0.08));
+      border: none;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .modern-programs-table thead th::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .modern-programs-table thead:hover th::before {
+      left: 100%;
     }
     .modern-table tbody td, .modern-programs-table tbody td {
       padding: 1.25rem 1.5rem;
@@ -923,6 +963,41 @@ document.addEventListener('turbo:load', function() {
 
     new Chart(canvas, {
       type: 'bar',
+      plugins: [{
+        id: 'customCanvasBackgroundImage',
+        beforeDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          
+          // Create radial gradient background
+          const gradient = ctx.createRadialGradient(
+            chartArea.left + (chartArea.right - chartArea.left) / 2,
+            chartArea.top + (chartArea.bottom - chartArea.top) / 2,
+            0,
+            chartArea.left + (chartArea.right - chartArea.left) / 2,
+            chartArea.top + (chartArea.bottom - chartArea.top) / 2,
+            Math.max(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 1.5
+          );
+          gradient.addColorStop(0, 'rgba(102, 126, 234, 0.02)');
+          gradient.addColorStop(0.5, 'rgba(118, 75, 162, 0.04)');
+          gradient.addColorStop(1, 'rgba(102, 126, 234, 0.01)');
+          
+          ctx.save();
+          ctx.fillStyle = gradient;
+          ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+          
+          // Add decorative dots pattern
+          ctx.fillStyle = 'rgba(102, 126, 234, 0.06)';
+          for (let x = chartArea.left; x < chartArea.right; x += 60) {
+            for (let y = chartArea.top; y < chartArea.bottom; y += 60) {
+              ctx.beginPath();
+              ctx.arc(x, y, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        }
+      }],
       data: {
         labels: stats.labels,
         datasets: [{
@@ -1031,6 +1106,34 @@ document.addEventListener('turbo:load', function() {
 
     new Chart(canvas, {
       type: 'bar',
+      plugins: [{
+        id: 'customCanvasBackgroundStripes',
+        beforeDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          
+          // Create base gradient background
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(240, 147, 251, 0.02)');
+          gradient.addColorStop(0.5, 'rgba(245, 87, 108, 0.03)');
+          gradient.addColorStop(1, 'rgba(240, 147, 251, 0.02)');
+          
+          ctx.save();
+          ctx.fillStyle = gradient;
+          ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+          
+          // Add diagonal lines
+          ctx.strokeStyle = 'rgba(240, 147, 251, 0.08)';
+          ctx.lineWidth = 1;
+          for (let i = chartArea.left - chartArea.bottom; i < chartArea.right; i += 40) {
+            ctx.beginPath();
+            ctx.moveTo(i, chartArea.bottom);
+            ctx.lineTo(i + (chartArea.bottom - chartArea.top), chartArea.top);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }],
       data: {
         labels: stats.labels,
         datasets: [{
@@ -1138,6 +1241,46 @@ document.addEventListener('turbo:load', function() {
 
     new Chart(canvas, {
       type: 'bar',
+      plugins: [{
+        id: 'customCanvasBackgroundCircles',
+        beforeDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          
+          // Create smooth gradient background
+          const gradient = ctx.createLinearGradient(chartArea.left, chartArea.top, chartArea.right, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(59, 130, 246, 0.02)');
+          gradient.addColorStop(0.5, 'rgba(6, 182, 212, 0.03)');
+          gradient.addColorStop(1, 'rgba(168, 85, 247, 0.02)');
+          
+          ctx.save();
+          ctx.fillStyle = gradient;
+          ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+          
+          // Add floating circles pattern
+          const circles = [
+            { x: 0.2, y: 0.3, r: 40, opacity: 0.04 },
+            { x: 0.6, y: 0.2, r: 30, opacity: 0.05 },
+            { x: 0.8, y: 0.6, r: 50, opacity: 0.03 },
+            { x: 0.3, y: 0.8, r: 35, opacity: 0.04 },
+            { x: 0.9, y: 0.9, r: 25, opacity: 0.05 }
+          ];
+          
+          circles.forEach(circle => {
+            const x = chartArea.left + (chartArea.right - chartArea.left) * circle.x;
+            const y = chartArea.top + (chartArea.bottom - chartArea.top) * circle.y;
+            const circleGrad = ctx.createRadialGradient(x, y, 0, x, y, circle.r);
+            circleGrad.addColorStop(0, `rgba(168, 85, 247, ${circle.opacity})`);
+            circleGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+            
+            ctx.fillStyle = circleGrad;
+            ctx.beginPath();
+            ctx.arc(x, y, circle.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+      }],
       data: {
         labels: stats.labels,
         datasets: [{
@@ -1242,6 +1385,51 @@ document.addEventListener('turbo:load', function() {
 
     new Chart(canvas, {
       type: 'line',
+      plugins: [{
+        id: 'customCanvasBackgroundStars',
+        beforeDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          
+          // Create warm gradient background
+          const gradient = ctx.createLinearGradient(chartArea.left, chartArea.top, chartArea.right, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(251, 191, 36, 0.02)');
+          gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.03)');
+          gradient.addColorStop(1, 'rgba(251, 191, 36, 0.02)');
+          
+          ctx.save();
+          ctx.fillStyle = gradient;
+          ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+          
+          // Add sparkle/star pattern
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+          const stars = [
+            { x: 0.15, y: 0.2 }, { x: 0.3, y: 0.4 }, { x: 0.5, y: 0.15 },
+            { x: 0.65, y: 0.6 }, { x: 0.8, y: 0.3 }, { x: 0.9, y: 0.7 },
+            { x: 0.25, y: 0.75 }, { x: 0.45, y: 0.85 }, { x: 0.7, y: 0.5 }
+          ];
+          
+          stars.forEach(star => {
+            const x = chartArea.left + (chartArea.right - chartArea.left) * star.x;
+            const y = chartArea.top + (chartArea.bottom - chartArea.top) * star.y;
+            const size = 3;
+            
+            // Draw star shape
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+              const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+              const radius = i % 2 === 0 ? size : size / 2;
+              const px = x + Math.cos(angle) * radius;
+              const py = y + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+      }],
       data: {
         labels: stats.labels,
         datasets: [{
