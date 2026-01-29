@@ -1,16 +1,12 @@
 <!-- Header -->
 <div class="container py-4">
-  <div class="card card-custom shadow-sm mb-4">
-    <div class="card-header card-header-custom py-3">
-      <div class="d-flex align-items-center">
-        <div class="me-3">
-          <i class="bi bi-mortarboard fs-4 text-primary"></i>
-        </div>
-        <div>
-          <h4 class="mb-1">Training Programs</h4>
-          <p class="text-muted mb-0">View all your training programs and their details</p>
-        </div>
-      </div>
+  <div class="page-header-card mb-4">
+    <div class="header-icon">
+      <i class="bi bi-mortarboard"></i>
+    </div>
+    <div>
+      <h4 class="header-title">Training Programs</h4>
+      <p class="header-subtitle">View all your training programs and their details</p>
     </div>
   </div>
 
@@ -18,69 +14,65 @@
   <div class="row g-4">
     <% @training_programs.each do |program| %>
       <div class="col-12 col-md-6 col-xl-4">
-        <div class="card card-custom shadow-sm h-100">
-          <!-- Card Header -->
-          <div class="card-header card-header-custom py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0 text-truncate" title="<%= program.title %>">
-                <%= program.title %>
-              </h5>
-              <span class="badge bg-<%= program.status == 'completed' ? 'success' : 'primary' %>">
-                <%= program.status.titleize %>
-              </span>
-            </div>
+        <div class="program-card h-100">
+          <div class="card-header-modern">
+            <h5 class="program-title" title="<%= program.title %>">
+              <%= program.title %>
+            </h5>
+            <span class="status-badge status-<%= program.status == 'completed' ? 'completed' : 'active' %>">
+              <i class="bi bi-<%= program.status == 'completed' ? 'check-circle-fill' : 'play-circle-fill' %> me-1"></i>
+              <%= program.status.titleize %>
+            </span>
           </div>
 
-          <!-- Card Body -->
-          <div class="card-body">
-            <!-- Program Details -->
-            <div class="mb-4">
-              <p class="text-muted mb-3"><%= truncate(program.description, length: 100) %></p>
-              
-              <div class="list-group list-group-flush">
-                <!-- Trainer -->
-                <div class="list-group-item px-0">
-                  <small class="text-muted d-block">Trainer</small>
-                  <span class="fw-medium">
-                    <i class="bi bi-person-workspace me-1"></i>
-                    <%= program.trainer.user.full_name %>
-                  </span>
+          <div class="card-body-modern">
+            <p class="program-description"><%= truncate(program.description, length: 100) %></p>
+            
+            <div class="info-list">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-person-workspace"></i>
                 </div>
-
-                <!-- Dates -->
-                <div class="list-group-item px-0">
-                  <small class="text-muted d-block">Duration</small>
-                  <span class="fw-medium">
-                    <i class="bi bi-calendar-range me-1"></i>
-                    <%= program.start_date.strftime("%b %d") %> - <%= program.end_date.strftime("%b %d, %Y") %>
-                  </span>
+                <div class="info-content">
+                  <small class="info-label">Trainer</small>
+                  <span class="info-value"><%= program.trainer.user.full_name %></span>
                 </div>
+              </div>
 
-                <!-- Type -->
-                <div class="list-group-item px-0">
-                  <small class="text-muted d-block">Type</small>
-                  <span class="fw-medium">
-                    <i class="bi bi-people me-1"></i>
-                    <%= program.program_type.titleize %>
-                  </span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-calendar-range"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Duration</small>
+                  <span class="info-value"><%= program.start_date.strftime("%b %d") %> - <%= program.end_date.strftime("%b %d, %Y") %></span>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Type</small>
+                  <span class="info-value"><%= program.program_type.titleize %></span>
                 </div>
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="d-flex gap-2">
-              <%= link_to participant_portal_training_program_path(program), class: "btn btn-outline-primary flex-grow-1" do %>
+            <div class="action-buttons">
+              <%= link_to participant_portal_training_program_path(program), class: "btn-view" do %>
                 <i class="bi bi-eye me-1"></i> View Details
               <% end %>
 
               <% participant_feedback = program.feedbacks.find_by(participant: current_participant) %>
               <% if participant_feedback.present? %>
-                <button class="btn btn-success" disabled>
-                  <i class="bi bi-check-circle me-1"></i> Feedback Submitted
+                <button class="btn-feedback-done" disabled>
+                  <i class="bi bi-check-circle-fill me-1"></i> Feedback Submitted
                 </button>
               <% else %>
-                <%= link_to new_participant_portal_training_program_feedback_path(program), class: "btn btn-primary" do %>
-                  <i class="bi bi-star me-1"></i> Give Feedback
+                <%= link_to new_participant_portal_training_program_feedback_path(program), class: "btn-feedback" do %>
+                  <i class="bi bi-star-fill me-1"></i> Give Feedback
                 <% end %>
               <% end %>
             </div>
@@ -91,14 +83,12 @@
 
     <% if @training_programs.empty? %>
       <div class="col-12">
-        <div class="card card-custom shadow-sm">
-          <div class="card-body py-5">
-            <div class="text-center">
-              <i class="bi bi-mortarboard display-1 text-muted mb-3"></i>
-              <h5>No Training Programs Found</h5>
-              <p class="text-muted mb-0">You are not enrolled in any training programs yet.</p>
-            </div>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-mortarboard"></i>
           </div>
+          <h5 class="empty-title">No Training Programs Found</h5>
+          <p class="empty-text">You are not enrolled in any training programs yet.</p>
         </div>
       </div>
     <% end %>
@@ -107,40 +97,290 @@
 
 <% content_for :styles do %>
 <style>
-  .card-custom {
-    border: none;
-    border-radius: 0.5rem;
-    transition: transform 0.2s;
+  /* Page Header Card */
+  .page-header-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+  .header-subtitle {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin: 0.25rem 0 0;
   }
 
-  .card-custom:hover {
-    transform: translateY(-2px);
+  /* Program Cards */
+  .program-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .program-card:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+  }
+  .card-header-modern {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+  }
+  .program-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .card-body-modern {
+    padding: 1.5rem;
+  }
+  .program-description {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
   }
 
-  .card-header-custom {
-    background-color: transparent;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+  /* Status Badge */
+  .status-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .status-completed {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+    color: #059669;
+  }
+  .status-active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
+    color: #2563eb;
   }
 
-  .list-group-item {
-    border: none;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+  /* Info List */
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
-
-  .list-group-item:last-child {
-    border-bottom: none;
+  .info-item {
+    display: flex;
+    align-items: start;
+    gap: 0.875rem;
+    padding: 0.875rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+    border: 1px solid rgba(148, 163, 184, 0.06);
+    transition: all 0.3s ease;
   }
-
-  .badge {
-    padding: 0.5em 0.8em;
+  .info-item:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    border-color: rgba(99, 102, 241, 0.15);
+    transform: translateX(4px);
+  }
+  .info-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .info-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .info-label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.7rem;
     font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .info-value {
+    display: block;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Action Buttons */
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .btn-view {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #6366f1;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+  .btn-view:hover {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border-color: #6366f1;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+  }
+  .btn-feedback {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-feedback:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    color: white;
+  }
+  .btn-feedback-done {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #059669;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    cursor: not-allowed;
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  /* Empty State */
+  .empty-state {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+  .empty-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+  .empty-icon i {
+    font-size: 3rem;
+    color: #94a3b8;
+  }
+  .empty-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+  .empty-text {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.95rem;
   }
 
   @media (max-width: 768px) {
-    .card-custom {
-      margin-bottom: 1rem;
+    .header-title {
+      font-size: 1.5rem;
+    }
+    .page-header-card {
+      padding: 1.5rem;
+    }
+    .action-buttons {
+      flex-direction: column;
+    }
+    .btn-view {
+      flex: none;
+      width: 100%;
     }
   }
 </style>
