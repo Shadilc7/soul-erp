@@ -2,8 +2,9 @@
   <!-- Welcome Section -->
   <div class="row mb-4">
     <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-body py-4">
+      <div class="welcome-card">
+        <div class="welcome-gradient"></div>
+        <div class="card-body py-4 position-relative">
           <div class="d-flex align-items-center">
             <div class="avatar-circle me-3">
               <span class="avatar-text">
@@ -11,8 +12,8 @@
               </span>
             </div>
             <div>
-              <h4 class="mb-1">Welcome, <%= current_user.first_name || "Participant" %>!</h4>
-              <p class="text-muted mb-0">
+              <h4 class="mb-1 welcome-title">Welcome, <%= current_user.first_name || "Participant" %>!</h4>
+              <p class="text-muted mb-0 welcome-info">
                 <i class="bi bi-building me-2"></i><%= current_institute.name %>
                 <% if current_participant.section %>
                   <span class="mx-2">|</span>
@@ -29,49 +30,37 @@
   <!-- Stats Overview -->
   <div class="row mb-4">
     <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card card-custom h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="icon-box bg-primary-subtle rounded-3 p-3 me-3">
-              <i class="bi bi-mortarboard fs-4 text-primary"></i>
-            </div>
-            <div>
-              <h6 class="text-muted mb-1">Training Programs</h6>
-              <h3 class="mb-0"><%= @training_programs.count %></h3>
-            </div>
-          </div>
+      <div class="stat-card stat-card-purple h-100">
+        <div class="stat-icon-wrapper">
+          <i class="bi bi-mortarboard"></i>
+        </div>
+        <div class="stat-content">
+          <h6 class="stat-label">Training Programs</h6>
+          <h2 class="stat-value"><%= @training_programs.count %></h2>
         </div>
       </div>
     </div>
     
     <div class="col-md-4 mb-3 mb-md-0">
-      <div class="card card-custom h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="icon-box bg-success-subtle rounded-3 p-3 me-3">
-              <i class="bi bi-check-circle fs-4 text-success"></i>
-            </div>
-            <div>
-              <h6 class="text-muted mb-1">Completed Assignments</h6>
-              <h3 class="mb-0"><%= current_participant.assignment_response_logs.count %></h3>
-            </div>
-          </div>
+      <div class="stat-card stat-card-green h-100">
+        <div class="stat-icon-wrapper">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h6 class="stat-label">Completed Assignments</h6>
+          <h2 class="stat-value"><%= current_participant.assignment_response_logs.count %></h2>
         </div>
       </div>
     </div>
     
     <div class="col-md-4">
-      <div class="card card-custom h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="icon-box bg-info-subtle rounded-3 p-3 me-3">
-              <i class="bi bi-clipboard-check fs-4 text-info"></i>
-            </div>
-            <div>
-              <h6 class="text-muted mb-1">Today's Assignments</h6>
-              <h3 class="mb-0"><%= @assignments.count %></h3>
-            </div>
-          </div>
+      <div class="stat-card stat-card-blue h-100">
+        <div class="stat-icon-wrapper">
+          <i class="bi bi-clipboard-check"></i>
+        </div>
+        <div class="stat-content">
+          <h6 class="stat-label">Today's Assignments</h6>
+          <h2 class="stat-value"><%= @assignments.count %></h2>
         </div>
       </div>
     </div>
@@ -80,13 +69,21 @@
   <!-- Daily Assignments Section -->
   <div class="row mb-4">
     <div class="col-12">
-      <div class="card card-custom" data-controller="assignment-date">
-        <div class="card-header card-header-custom">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Daily Assignments</h5>
+      <div class="modern-card" data-controller="assignment-date">
+        <div class="modern-card-header">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="header-icon">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+              <div>
+                <h5 class="mb-0">Daily Assignments</h5>
+                <span class="header-subtitle">Track your daily progress</span>
+              </div>
+            </div>
             <div class="date-navigation d-flex align-items-center">
               <button type="button" 
-                      class="btn btn-outline-secondary btn-sm me-2" 
+                      class="btn btn-date-nav me-2" 
                       data-action="click->assignment-date#previousDay">
                 <i class="bi bi-chevron-left"></i>
               </button>
@@ -94,7 +91,7 @@
               <div class="date-picker">
                 <%= date_field_tag :selected_date, 
                     @selected_date,
-                    class: "form-control",
+                    class: "form-control date-input",
                     max: Date.current,
                     data: {
                       assignment_date_target: "dateInput",
@@ -103,7 +100,7 @@
               </div>
               
               <button type="button" 
-                      class="btn btn-outline-secondary btn-sm ms-2" 
+                      class="btn btn-date-nav ms-2" 
                       data-action="click->assignment-date#nextDay"
                       <%= @selected_date > Date.current ? 'disabled' : '' %>>
                 <i class="bi bi-chevron-right"></i>
@@ -113,67 +110,69 @@
         </div>
 
         <%= turbo_frame_tag "assignment_content" do %>
-          <div class="card-body">
+          <div class="modern-card-body">
             <% if @assignments.any? %>
               <div class="assignments-list">
                 <% @assignments.each do |assignment| %>
-                  <div class="card assignment-card mb-3">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                          <h6 class="card-title mb-1"><%= assignment.title %></h6>
-                          <p class="text-muted small mb-0"><%= assignment.description %></p>
-                        </div>
-                        <% if assignment.answered_by_on_date?(current_participant, @selected_date) %>
-                          <span class="badge bg-success">Completed</span>
-                        <% else %>
-                          <% if @selected_date <= Date.current %>
-                            <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: @selected_date),
-                                class: "btn btn-custom-primary btn-sm",
-                                data: { turbo_frame: "_top" } do %>
-                              <i class="bi bi-play-fill me-1"></i>Start Assignment
-                            <% end %>
-                          <% else %>
-                            <span class="badge bg-warning">Upcoming</span>
+                  <div class="assignment-item">
+                    <div class="assignment-header">
+                      <div>
+                        <h6 class="assignment-title"><%= assignment.title %></h6>
+                        <p class="assignment-description"><%= assignment.description %></p>
+                      </div>
+                      <% if assignment.answered_by_on_date?(current_participant, @selected_date) %>
+                        <span class="badge status-completed">
+                          <i class="bi bi-check-circle-fill me-1"></i>Completed
+                        </span>
+                      <% else %>
+                        <% if @selected_date <= Date.current %>
+                          <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: @selected_date),
+                              class: "btn btn-start-assignment",
+                              data: { turbo_frame: "_top" } do %>
+                            <i class="bi bi-play-fill me-1"></i>Start Assignment
                           <% end %>
+                        <% else %>
+                          <span class="badge status-upcoming">
+                            <i class="bi bi-clock-fill me-1"></i>Upcoming
+                          </span>
                         <% end %>
-                      </div>
+                      <% end %>
+                    </div>
 
-                      <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                          <div class="d-flex align-items-center">
-                            <i class="bi bi-calendar-range text-primary me-2"></i>
-                            <small>
-                              <%= assignment.start_date.strftime("%b %d") %> - 
-                              <%= assignment.end_date.strftime("%b %d, %Y") %>
-                            </small>
-                          </div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="d-flex align-items-center">
-                            <i class="bi bi-question-circle text-primary me-2"></i>
-                            <small>
-                              <%= pluralize(
-                                assignment.questions.count + 
-                                assignment.question_sets.sum { |qs| qs.questions.count },
-                                'question'
-                              ) %>
-                            </small>
-                          </div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="d-flex align-items-center">
-                            <i class="bi bi-check2-circle text-primary me-2"></i>
-                            <small>
-                              <%= assignment.completed_days(current_participant) %> of 
-                              <%= assignment.total_days %> days completed
-                            </small>
-                          </div>
-                        </div>
+                    <div class="assignment-meta">
+                      <div class="meta-item">
+                        <i class="bi bi-calendar-range"></i>
+                        <span>
+                          <%= assignment.start_date.strftime("%b %d") %> - 
+                          <%= assignment.end_date.strftime("%b %d, %Y") %>
+                        </span>
                       </div>
+                      <div class="meta-item">
+                        <i class="bi bi-question-circle"></i>
+                        <span>
+                          <%= pluralize(
+                            assignment.questions.count + 
+                            assignment.question_sets.sum { |qs| qs.questions.count },
+                            'question'
+                          ) %>
+                        </span>
+                      </div>
+                      <div class="meta-item">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>
+                          <%= assignment.completed_days(current_participant) %> of 
+                          <%= assignment.total_days %> days completed
+                        </span>
+                      </div>
+                    </div>
 
-                      <div class="progress-indicator mb-3">
-                        <div class="progress-bar bg-success" 
+                    <div class="progress-wrapper">
+                      <div class="progress-info">
+                        <span class="progress-label">Progress</span>
+                        <span class="progress-percent"><%= assignment.completion_percentage(current_participant) %>%</span>
+                      </div>
+                      <div class="progress-bar-modern">
+                        <div class="progress-fill" 
                              style="width: <%= assignment.completion_percentage(current_participant) %>%">
                         </div>
                       </div>
@@ -182,9 +181,11 @@
                 <% end %>
               </div>
             <% else %>
-              <div class="text-center py-5">
-                <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
-                <p class="text-muted mb-0">No assignments available for <%= @selected_date.strftime("%B %d, %Y") %></p>
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <i class="bi bi-calendar-x"></i>
+                </div>
+                <p class="empty-text">No assignments available for <%= @selected_date.strftime("%B %d, %Y") %></p>
               </div>
             <% end %>
           </div>
@@ -196,19 +197,27 @@
   <!-- Training Programs Section -->
   <div class="row">
     <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-header card-header-custom">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">My Training Programs</h5>
-            <%= link_to participant_portal_training_programs_path, class: "btn btn-sm btn-outline-custom" do %>
+      <div class="modern-card training-programs-card">
+        <div class="modern-card-header">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="header-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+              </div>
+              <div>
+                <h5 class="mb-0">My Training Programs</h5>
+                <span class="header-subtitle">Active and completed programs</span>
+              </div>
+            </div>
+            <%= link_to participant_portal_training_programs_path, class: "btn btn-view-all" do %>
               <i class="bi bi-eye me-1"></i>View All
             <% end %>
           </div>
         </div>
-        <div class="card-body">
+        <div class="modern-card-body p-0">
           <% if @training_programs.any? %>
             <div class="table-responsive">
-              <table class="table table-hover align-middle">
+              <table class="table modern-table mb-0">
                 <thead>
                   <tr>
                     <th>Program</th>
@@ -221,34 +230,41 @@
                   <% @training_programs.each do |program| %>
                     <tr>
                       <td>
-                        <strong><%= program.title %></strong>
-                        <br>
-                        <small class="text-muted"><%= program.description&.truncate(50) %></small>
+                        <div class="program-info">
+                          <strong class="program-title"><%= program.title %></strong>
+                          <small class="program-description"><%= program.description&.truncate(50) %></small>
+                        </div>
                       </td>
-                      <td><%= program.trainer.user.full_name %></td>
                       <td>
-                        <span class="badge <%= program.status == 'completed' ? 'bg-success' : 'bg-primary' %>">
+                        <div class="trainer-info">
+                          <i class="bi bi-person-badge me-1"></i>
+                          <%= program.trainer.user.full_name %>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge status-badge <%= program.status == 'completed' ? 'status-completed' : 'status-active' %>">
+                          <i class="bi bi-<%= program.status == 'completed' ? 'check-circle-fill' : 'play-circle-fill' %> me-1"></i>
                           <%= program.status.titleize %>
                         </span>
                       </td>
                       <td>
                         <% participant_feedback = program.feedbacks.find_by(participant: current_participant) %>
                         <% if participant_feedback.present? %>
-                          <span class="badge bg-success">
-                            <i class="bi bi-check-circle me-1"></i>Feedback Submitted
+                          <span class="badge feedback-submitted">
+                            <i class="bi bi-check-circle-fill me-1"></i>Feedback Submitted
                           </span>
                         <% else %>
                           <% if program.completed? && program.has_registered_attendance?(current_participant) %>
                             <%= link_to new_participant_portal_training_program_feedback_path(program), 
-                                class: "btn btn-sm btn-outline-custom" do %>
+                                class: "btn btn-feedback" do %>
                               <i class="bi bi-chat-square-text me-1"></i>Submit Feedback
                             <% end %>
                           <% elsif program.completed? %>
-                            <span class="badge bg-warning">
-                              <i class="bi bi-info-circle me-1"></i>Attendance Required
+                            <span class="badge feedback-warning">
+                              <i class="bi bi-info-circle-fill me-1"></i>Attendance Required
                             </span>
                           <% else %>
-                            <span class="text-muted">Not available</span>
+                            <span class="text-muted small">Not available</span>
                           <% end %>
                         <% end %>
                       </td>
@@ -258,8 +274,11 @@
               </table>
             </div>
           <% else %>
-            <div class="alert alert-info mb-0" role="alert">
-              <i class="bi bi-info-circle me-2"></i>No training programs found.
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="bi bi-mortarboard"></i>
+              </div>
+              <p class="empty-text">No training programs found.</p>
             </div>
           <% end %>
         </div>
@@ -270,93 +289,475 @@
 
 <% content_for :styles do %>
   <style>
-    .card-custom {
-      border-radius: 0.5rem;
-      border: 1px solid rgba(0,0,0,.1);
+    /* Welcome Card */
+    .welcome-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(148, 163, 184, 0.1);
     }
-
-    .card-header-custom {
-      background-color: white;
-      border-bottom: 1px solid rgba(0,0,0,.1);
-      padding: 1rem;
+    .welcome-gradient {
+      display: none;
     }
-
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
     .avatar-circle {
-      width: 60px;
-      height: 60px;
-      background-color: var(--bs-primary);
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      animation: floatAvatar 3s ease-in-out infinite;
     }
-
+    @keyframes floatAvatar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
     .avatar-text {
       color: white;
-      font-size: 1.5rem;
-      font-weight: 500;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+    .welcome-title {
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: -0.02em;
+    }
+    .welcome-info {
+      font-size: 0.95rem;
     }
 
-    .icon-box {
-      width: 50px;
-      height: 50px;
+    /* Stat Cards */
+    .stat-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .stat-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+    .stat-icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    .stat-card-purple .stat-icon-wrapper {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+      color: #6366f1;
+    }
+    .stat-card-green .stat-icon-wrapper {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1));
+      color: #22c55e;
+    }
+    .stat-card-blue .stat-icon-wrapper {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.1));
+      color: #3b82f6;
+    }
+    .stat-card:hover .stat-icon-wrapper {
+      transform: scale(1.1) rotate(-5deg);
+    }
+    .stat-label {
+      color: #64748b;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      color: #1e293b;
+      font-size: 2.25rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0;
     }
 
-    .date-picker {
-      width: 150px;
+    /* Modern Card */
+    .modern-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      position: relative;
+    }
+    .modern-card.training-programs-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+    .modern-card-header {
+      padding: 1.75rem 2rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .modern-card-header .header-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      font-size: 1.25rem;
+    }
+    .modern-card-header h5 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+    .header-subtitle {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 500;
+      display: block;
+      margin-top: 0.2rem;
+    }
+    .modern-card-body {
+      padding: 2rem;
     }
 
-    .assignment-card {
-      border: 1px solid rgba(0,0,0,.1);
-      border-radius: 0.5rem;
-      transition: all 0.2s ease;
+    /* Date Navigation */
+    .btn-date-nav {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(129, 140, 248, 0.05));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      transition: all 0.3s ease;
+      padding: 0;
+    }
+    .btn-date-nav:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.1));
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+    .btn-date-nav:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .date-input {
+      width: 160px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .date-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      outline: none;
     }
 
-    .assignment-card:hover {
-      box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.1);
+    /* Assignment Item */
+    .assignments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
-
+    .assignment-item {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .assignment-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+    .assignment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+    }
+    .assignment-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+    }
+    .assignment-description {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .assignment-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
     .meta-item {
       display: flex;
       align-items: center;
-      margin-right: 1rem;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    .meta-item i {
+      color: #6366f1;
+      font-size: 1rem;
     }
 
-    .progress-indicator {
-      height: 6px;
-      background-color: #e9ecef;
-      border-radius: 3px;
+    /* Progress Bar */
+    .progress-wrapper {
+      margin-top: 1rem;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .progress-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .progress-percent {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #22c55e;
+    }
+    .progress-bar-modern {
+      height: 8px;
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 10px;
       overflow: hidden;
     }
-
-    .progress-bar {
+    .progress-fill {
       height: 100%;
-      border-radius: 3px;
-      transition: width 0.3s ease;
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: progressShine 2s infinite;
+    }
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
 
-    .btn-custom-primary {
-      background-color: var(--bs-primary);
-      border-color: var(--bs-primary);
+    /* Badges */
+    .badge {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .status-completed {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+      color: #059669;
+    }
+    .status-upcoming {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+      color: #d97706;
+    }
+    .status-active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
+      color: #2563eb;
+    }
+    .feedback-submitted {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+      color: #059669;
+    }
+    .feedback-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+      color: #d97706;
+    }
+    .status-badge {
+      font-size: 0.8rem;
+    }
+
+    /* Buttons */
+    .btn-start-assignment {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: white;
+      padding: 0.6rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-start-assignment:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
       color: white;
     }
-
-    .btn-custom-primary:hover {
-      background-color: #0056b3;
-      border-color: #0056b3;
+    .btn-view-all, .btn-feedback {
+      background: transparent;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #6366f1;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
     }
-
-    .btn-outline-custom {
-      border-color: var(--bs-primary);
-      color: var(--bs-primary);
-    }
-
-    .btn-outline-custom:hover {
-      background-color: var(--bs-primary);
+    .btn-view-all:hover, .btn-feedback:hover {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border-color: transparent;
       color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Modern Table */
+    .modern-table {
+      margin: 0;
+    }
+    .modern-table thead th {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(129, 140, 248, 0.12), rgba(168, 85, 247, 0.08));
+      border: none;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .modern-table thead th::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .modern-table thead:hover th::before {
+      left: 100%;
+    }
+    .modern-table tbody td {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      vertical-align: middle;
+    }
+    .modern-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .modern-table tbody tr:hover {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+    }
+    .program-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .program-title {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
+    }
+    .program-description {
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+    .trainer-info {
+      color: #64748b;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .empty-icon i {
+      font-size: 2.5rem;
+      color: #94a3b8;
+    }
+    .empty-text {
+      color: #64748b;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .date-navigation {
+        width: 100%;
+        justify-content: center;
+      }
+      .assignment-header {
+        flex-direction: column;
+      }
+      .assignment-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
     }
   </style>
 <% end %>
