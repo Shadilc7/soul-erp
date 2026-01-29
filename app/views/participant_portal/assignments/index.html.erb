@@ -1,280 +1,669 @@
 <div class="container py-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="card card-custom mb-4">
-        <div class="card-header card-header-custom">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">My Assignments</h5>
-            <div>
-              <a href="#" onclick="history.back()" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Back
-              </a>
-            </div>
-          </div>
-        </div>
+  <div class="page-header-card mb-4">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+      <div class="header-icon">
+        <i class="bi bi-journal-check"></i>
+      </div>
+      <div>
+        <h4 class="header-title">My Assignments</h4>
+        <p class="header-subtitle">Track and complete your daily assignments</p>
       </div>
     </div>
+    <a href="#" onclick="history.back()" class="btn-back">
+      <i class="bi bi-arrow-left"></i>
+    </a>
   </div>
 
   <!-- Today's Assignments -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-header card-header-custom">
-          <h5 class="mb-0">
-            <i class="bi bi-calendar-day me-2 text-primary"></i>Today's Assignments
-          </h5>
-        </div>
-        <div class="card-body">
-          <% if @today_assignments.any? %>
-            <div class="assignments-list">
-              <% @today_assignments.each do |assignment| %>
-                <div class="card assignment-card mb-3">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <div>
-                        <h6 class="card-title mb-1"><%= assignment.title %></h6>
-                        <p class="text-muted small mb-0"><%= assignment.description %></p>
-                      </div>
-                      <% if assignment.answered_by_on_date?(current_participant, Date.current) %>
-                        <span class="badge bg-success">Completed</span>
-                      <% else %>
-                        <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: Date.current),
-                            class: "btn btn-custom-primary btn-sm",
-                            data: { turbo_frame: "_top" } do %>
-                          <i class="bi bi-play-fill me-1"></i>Start Assignment
-                        <% end %>
-                      <% end %>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                      <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-calendar-range text-primary me-2"></i>
-                          <small>
-                            <%= assignment.start_date.strftime("%b %d") %> - 
-                            <%= assignment.end_date.strftime("%b %d, %Y") %>
-                          </small>
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-question-circle text-primary me-2"></i>
-                          <small>
-                            <%= pluralize(
-                              assignment.questions.count + 
-                              assignment.question_sets.sum { |qs| qs.questions.count },
-                              'question'
-                            ) %>
-                          </small>
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-check2-circle text-primary me-2"></i>
-                          <small>
-                            <%= assignment.completed_days(current_participant) %> of 
-                            <%= assignment.total_days %> days completed
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="progress" style="height: 6px;">
-                      <div class="progress-bar bg-success" 
-                           style="width: <%= assignment.completion_percentage(current_participant) %>%">
-                      </div>
-                    </div>
-                  </div>
+  <div class="section-card mb-4">
+    <div class="section-header">
+      <div class="section-icon today">
+        <i class="bi bi-calendar-day"></i>
+      </div>
+      <h5 class="section-title">Today's Assignments</h5>
+    </div>
+    <div class="section-body">
+      <% if @today_assignments.any? %>
+        <div class="assignments-grid">
+          <% @today_assignments.each do |assignment| %>
+            <div class="assignment-card">
+              <div class="assignment-header">
+                <div>
+                  <h6 class="assignment-title"><%= assignment.title %></h6>
+                  <p class="assignment-description"><%= assignment.description %></p>
                 </div>
-              <% end %>
-            </div>
-          <% else %>
-            <div class="text-center py-4">
-              <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
-              <p class="text-muted mb-0">No assignments for today</p>
+                <% if assignment.answered_by_on_date?(current_participant, Date.current) %>
+                  <span class="status-badge status-completed">
+                    <i class="bi bi-check-circle-fill me-1"></i>Completed
+                  </span>
+                <% else %>
+                  <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: Date.current),
+                      class: "btn-start",
+                      data: { turbo_frame: "_top" } do %>
+                    <i class="bi bi-play-fill me-1"></i>Start Assignment
+                  <% end %>
+                <% end %>
+              </div>
+
+              <div class="assignment-meta">
+                <div class="meta-item">
+                  <div class="meta-icon">
+                    <i class="bi bi-calendar-range"></i>
+                  </div>
+                  <span><%= assignment.start_date.strftime("%b %d") %> - <%= assignment.end_date.strftime("%b %d, %Y") %></span>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-icon">
+                    <i class="bi bi-question-circle"></i>
+                  </div>
+                  <span>
+                    <%= pluralize(
+                      assignment.questions.count + 
+                      assignment.question_sets.sum { |qs| qs.questions.count },
+                      'question'
+                    ) %>
+                  </span>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-icon">
+                    <i class="bi bi-check2-circle"></i>
+                  </div>
+                  <span><%= assignment.completed_days(current_participant) %>/<%= assignment.total_days %> days</span>
+                </div>
+              </div>
+
+              <div class="progress-wrapper">
+                <div class="progress-info">
+                  <span class="progress-label">Progress</span>
+                  <span class="progress-value"><%= assignment.completion_percentage(current_participant) %>%</span>
+                </div>
+                <div class="progress-bar-modern">
+                  <div class="progress-fill" style="width: <%= assignment.completion_percentage(current_participant) %>%"></div>
+                </div>
+              </div>
             </div>
           <% end %>
         </div>
-      </div>
+      <% else %>
+        <div class="empty-state-small">
+          <i class="bi bi-calendar-x"></i>
+          <p>No assignments for today</p>
+        </div>
+      <% end %>
     </div>
   </div>
 
   <!-- Upcoming Assignments -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-header card-header-custom">
-          <h5 class="mb-0">
-            <i class="bi bi-calendar-plus me-2 text-primary"></i>Upcoming Assignments
-          </h5>
-        </div>
-        <div class="card-body">
-          <% if @upcoming_assignments.any? %>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Assignment</th>
-                    <th>Period</th>
-                    <th>Questions</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @upcoming_assignments.each do |assignment| %>
-                    <tr>
-                      <td>
-                        <strong><%= assignment.title %></strong>
-                        <% if assignment.description.present? %>
-                          <br><small class="text-muted"><%= assignment.description.truncate(80) %></small>
-                        <% end %>
-                      </td>
-                      <td>
-                        <%= assignment.start_date.strftime("%b %d") %> - 
-                        <%= assignment.end_date.strftime("%b %d, %Y") %>
-                      </td>
-                      <td>
-                        <%= assignment.questions.count + 
-                           assignment.question_sets.sum { |qs| qs.questions.count } %>
-                      </td>
-                      <td>
-                        <% completion = assignment.completion_percentage(current_participant) %>
-                        <% if completion > 0 %>
-                          <div class="d-flex align-items-center">
-                            <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                              <div class="progress-bar bg-success" style="width: <%= completion %>%"></div>
-                            </div>
-                            <span><%= completion %>%</span>
-                          </div>
-                        <% else %>
-                          <span class="badge bg-light text-dark">Not Started</span>
-                        <% end %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
-            <div class="text-center py-4">
-              <i class="bi bi-calendar-plus fs-1 text-muted mb-3"></i>
-              <p class="text-muted mb-0">No upcoming assignments</p>
-            </div>
-          <% end %>
-        </div>
+  <div class="section-card mb-4">
+    <div class="section-header">
+      <div class="section-icon upcoming">
+        <i class="bi bi-calendar-plus"></i>
       </div>
+      <h5 class="section-title">Upcoming Assignments</h5>
+    </div>
+    <div class="section-body">
+      <% if @upcoming_assignments.any? %>
+        <div class="table-modern">
+          <table>
+            <thead>
+              <tr>
+                <th>Assignment</th>
+                <th>Period</th>
+                <th>Questions</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @upcoming_assignments.each do |assignment| %>
+                <tr>
+                  <td>
+                    <div class="table-content">
+                      <strong class="assignment-title-table"><%= assignment.title %></strong>
+                      <% if assignment.description.present? %>
+                        <small class="assignment-desc-table"><%= assignment.description.truncate(80) %></small>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-value"><%= assignment.start_date.strftime("%b %d") %> - <%= assignment.end_date.strftime("%b %d, %Y") %></span>
+                  </td>
+                  <td>
+                    <span class="text-value">
+                      <%= assignment.questions.count + assignment.question_sets.sum { |qs| qs.questions.count } %>
+                    </span>
+                  </td>
+                  <td>
+                    <% completion = assignment.completion_percentage(current_participant) %>
+                    <% if completion > 0 %>
+                      <div class="table-progress">
+                        <div class="progress-bar-table">
+                          <div class="progress-fill-table" style="width: <%= completion %>%"></div>
+                        </div>
+                        <span class="progress-text"><%= completion %>%</span>
+                      </div>
+                    <% else %>
+                      <span class="status-badge status-pending">Not Started</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty-state-small">
+          <i class="bi bi-calendar-plus"></i>
+          <p>No upcoming assignments</p>
+        </div>
+      <% end %>
     </div>
   </div>
 
   <!-- Past Assignments -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card card-custom">
-        <div class="card-header card-header-custom">
-          <h5 class="mb-0">
-            <i class="bi bi-calendar-check me-2 text-primary"></i>Past Assignments
-          </h5>
-        </div>
-        <div class="card-body">
-          <% if @past_assignments.any? %>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Assignment</th>
-                    <th>Period</th>
-                    <th>Completion</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @past_assignments.each do |assignment| %>
-                    <tr>
-                      <td>
-                        <strong><%= assignment.title %></strong>
-                        <% if assignment.description.present? %>
-                          <br><small class="text-muted"><%= assignment.description.truncate(80) %></small>
-                        <% end %>
-                      </td>
-                      <td>
-                        <%= assignment.start_date.strftime("%b %d") %> - 
-                        <%= assignment.end_date.strftime("%b %d, %Y") %>
-                      </td>
-                      <td>
-                        <% completion = assignment.completion_percentage(current_participant) %>
-                        <div class="d-flex align-items-center">
-                          <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                            <div class="progress-bar <%= completion == 100 ? 'bg-success' : 'bg-warning' %>" 
-                                 style="width: <%= completion %>%"></div>
-                          </div>
-                          <span><%= completion %>%</span>
-                        </div>
-                      </td>
-                      <td class="text-end">
-                        <% if assignment.assignment_response_logs.where(participant: current_participant).exists? %>
-                          <%= link_to participant_portal_assignment_path(assignment),
-                              class: "btn btn-sm btn-outline-primary" do %>
-                            <i class="bi bi-eye"></i> View
-                          <% end %>
-                        <% else %>
-                          <span class="badge bg-danger">Missed</span>
-                        <% end %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
-            <div class="text-center py-4">
-              <i class="bi bi-calendar-check fs-1 text-muted mb-3"></i>
-              <p class="text-muted mb-0">No past assignments</p>
-            </div>
-          <% end %>
-        </div>
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon past">
+        <i class="bi bi-calendar-check"></i>
       </div>
+      <h5 class="section-title">Past Assignments</h5>
+    </div>
+    <div class="section-body">
+      <% if @past_assignments.any? %>
+        <div class="table-modern">
+          <table>
+            <thead>
+              <tr>
+                <th>Assignment</th>
+                <th>Period</th>
+                <th>Completion</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @past_assignments.each do |assignment| %>
+                <tr>
+                  <td>
+                    <div class="table-content">
+                      <strong class="assignment-title-table"><%= assignment.title %></strong>
+                      <% if assignment.description.present? %>
+                        <small class="assignment-desc-table"><%= assignment.description.truncate(80) %></small>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-value"><%= assignment.start_date.strftime("%b %d") %> - <%= assignment.end_date.strftime("%b %d, %Y") %></span>
+                  </td>
+                  <td>
+                    <% completion = assignment.completion_percentage(current_participant) %>
+                    <div class="table-progress">
+                      <div class="progress-bar-table <%= completion == 100 ? 'complete' : 'incomplete' %>">
+                        <div class="progress-fill-table" style="width: <%= completion %>%"></div>
+                      </div>
+                      <span class="progress-text"><%= completion %>%</span>
+                    </div>
+                  </td>
+                  <td class="text-end">
+                    <% if assignment.assignment_response_logs.where(participant: current_participant).exists? %>
+                      <%= link_to participant_portal_assignment_path(assignment), class: "btn-table-action" do %>
+                        <i class="bi bi-eye me-1"></i> View
+                      <% end %>
+                    <% else %>
+                      <span class="status-badge status-missed">
+                        <i class="bi bi-x-circle-fill me-1"></i>Missed
+                      </span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty-state-small">
+          <i class="bi bi-calendar-check"></i>
+          <p>No past assignments</p>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
 
 <% content_for :styles do %>
   <style>
-    .assignment-card {
-      border: none;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease;
-    }
-    
-    .assignment-card:hover {
-      transform: translateY(-3px);
-    }
-    
-    .progress {
-      background-color: #e9ecef;
+    /* Page Header Card */
+    .page-header-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 1.75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.25rem;
+      position: relative;
       overflow: hidden;
-      border-radius: 0.25rem;
     }
-    
-    .icon-box {
-      width: 48px;
-      height: 48px;
+    .page-header-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #6366f1;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
+    }
+    .btn-back {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(129, 140, 248, 0.05));
       border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      flex-shrink: 0;
     }
-    
-    .bg-primary-subtle {
-      background-color: rgba(99, 102, 241, 0.1);
+    .btn-back:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.1));
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      color: #6366f1;
     }
-    
-    .bg-success-subtle {
-      background-color: rgba(46, 125, 50, 0.1);
+
+    /* Section Card */
+    .section-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      overflow: hidden;
     }
-    
-    .bg-info-subtle {
-      background-color: rgba(25, 118, 210, 0.1);
+    .section-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+    }
+    .section-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .section-icon.today {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.15));
+      color: #6366f1;
+    }
+    .section-icon.upcoming {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
+      color: #2563eb;
+    }
+    .section-icon.past {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+      color: #059669;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+    .section-body {
+      padding: 2rem;
+    }
+
+    /* Assignment Cards (for Today's section) */
+    .assignments-grid {
+      display: grid;
+      gap: 1.25rem;
+    }
+    .assignment-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .assignment-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+    .assignment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .assignment-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+    }
+    .assignment-description {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .assignment-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #475569;
+    }
+    .meta-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+    }
+
+    /* Progress Bars */
+    .progress-wrapper {
+      margin-top: 1rem;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .progress-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .progress-value {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .progress-bar-modern {
+      height: 8px;
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: progressShine 2s infinite;
+    }
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .status-completed {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+      color: #059669;
+    }
+    .status-pending {
+      background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(100, 116, 139, 0.15));
+      color: #475569;
+    }
+    .status-missed {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+      color: #dc2626;
+    }
+
+    /* Buttons */
+    .btn-start {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      color: white;
+    }
+
+    /* Modern Table */
+    .table-modern {
+      overflow-x: auto;
+    }
+    .table-modern table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-modern thead {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    }
+    .table-modern thead th {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid rgba(148, 163, 184, 0.1);
+    }
+    .table-modern tbody tr {
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      transition: all 0.2s ease;
+    }
+    .table-modern tbody tr:hover {
+      background: rgba(99, 102, 241, 0.02);
+    }
+    .table-modern tbody td {
+      padding: 1.25rem 1.5rem;
+      vertical-align: middle;
+    }
+    .table-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .assignment-title-table {
+      color: #1e293b;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .assignment-desc-table {
+      color: #64748b;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .text-value {
+      color: #475569;
+      font-size: 0.875rem;
+    }
+    .table-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .progress-bar-table {
+      flex: 1;
+      height: 6px;
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .progress-bar-table.complete .progress-fill-table {
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+    .progress-bar-table.incomplete .progress-fill-table {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    .progress-fill-table {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .progress-text {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      min-width: 45px;
+      text-align: right;
+    }
+    .btn-table-action {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      color: #6366f1;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    .btn-table-action:hover {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border-color: #6366f1;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state-small {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+    .empty-state-small i {
+      font-size: 3rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .empty-state-small p {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 1.5rem;
+      }
+      .page-header-card {
+        padding: 1.5rem;
+        flex-direction: column;
+        align-items: start;
+      }
+      .btn-back {
+        align-self: flex-end;
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+      }
+      .section-body {
+        padding: 1.25rem;
+      }
+      .assignment-header {
+        flex-direction: column;
+        align-items: start;
+      }
+      .assignment-meta {
+        flex-direction: column;
+        gap: 0.875rem;
+      }
+      .table-modern {
+        font-size: 0.875rem;
+      }
+      .table-modern thead th,
+      .table-modern tbody td {
+        padding: 1rem;
+      }
     }
   </style>
 <% end %> 
