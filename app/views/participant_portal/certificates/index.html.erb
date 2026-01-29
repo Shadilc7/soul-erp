@@ -1,137 +1,376 @@
 <div class="container py-4">
   <!-- Header -->
-  <div class="card card-custom shadow-sm mb-4">
-    <div class="card-header card-header-custom py-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <i class="bi bi-award fs-4 text-primary me-2"></i>
-          <div>
-            <h4 class="mb-1">My Certificates</h4>
-            <p class="text-muted mb-0">View and download your achievement certificates</p>
-          </div>
-        </div>
-      </div>
+  <div class="page-header-card mb-4">
+    <div class="header-icon">
+      <i class="bi bi-award"></i>
+    </div>
+    <div>
+      <h4 class="header-title">My Certificates</h4>
+      <p class="header-subtitle">View and download your achievement certificates</p>
     </div>
   </div>
 
   <!-- Certificates List -->
-  <div class="card card-custom shadow-sm">
-    <div class="card-body">
-      <% if @certificates.any? %>
-        <div class="table-responsive">
-          <table class="table align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Certificate</th>
-                <th>Assignment</th>
-                <th>Generated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @certificates.each do |certificate| %>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="icon-box bg-primary-subtle rounded-3 p-2 me-3">
-                        <i class="bi bi-award text-primary"></i>
-                      </div>
-                      <div>
-                        <h6 class="mb-1"><%= certificate.certificate_configuration.name %></h6>
-                        <p class="text-muted small mb-0">
-                          <%= certificate.assignment.title %>
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <p class="mb-1">
-                        <i class="bi bi-calendar-range me-1 text-primary"></i>
-                        <%= certificate.assignment.start_date.strftime("%b %d") %> - 
-                        <%= certificate.assignment.end_date.strftime("%b %d, %Y") %>
-                      </p>
-                    </div>
-                  </td>
-                  <td>
-                    <p class="mb-0">
-                      <i class="bi bi-clock-history me-1 text-primary"></i>
-                      <%= certificate.generated_at.strftime("%b %d, %Y") %>
-                    </p>
-                  </td>
-                  <td>
-                    <div class="d-flex gap-2">
-                      <%= link_to participant_portal_certificate_path(certificate, format: :pdf),
-                          class: "btn btn-sm btn-outline-primary",
-                          title: "View Certificate",
-                          target: "_blank" do %>
-                        <i class="bi bi-eye me-1"></i>View
-                      <% end %>
-                      
-                      <%= link_to participant_portal_certificate_path(certificate, format: :pdf, download: true),
-                          class: "btn btn-sm btn-outline-secondary",
-                          title: "Download Certificate" do %>
-                        <i class="bi bi-download me-1"></i>Download
-                      <% end %>
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+  <div class="certificates-card">
+    <% if @certificates.any? %>
+      <div class="certificates-grid">
+        <% @certificates.each do |certificate| %>
+          <div class="certificate-item">
+            <div class="certificate-icon-wrapper">
+              <div class="certificate-icon">
+                <i class="bi bi-award"></i>
+              </div>
+            </div>
+            <div class="certificate-content">
+              <h6 class="certificate-name"><%= certificate.certificate_configuration.name %></h6>
+              <p class="certificate-assignment"><%= certificate.assignment.title %></p>
+              
+              <div class="certificate-meta">
+                <div class="meta-item">
+                  <i class="bi bi-calendar-range"></i>
+                  <span><%= certificate.assignment.start_date.strftime("%b %d") %> - <%= certificate.assignment.end_date.strftime("%b %d, %Y") %></span>
+                </div>
+                <div class="meta-item">
+                  <i class="bi bi-clock-history"></i>
+                  <span>Generated <%= certificate.generated_at.strftime("%b %d, %Y") %></span>
+                </div>
+              </div>
 
-        <!-- Pagination -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div class="text-muted small">
-            Showing <%= @certificates.offset_value + 1 %> to <%= @certificates.offset_value + @certificates.length %> of <%= @certificates.total_count %> certificates
+              <div class="certificate-actions">
+                <%= link_to participant_portal_certificate_path(certificate, format: :pdf),
+                    class: "btn-view",
+                    title: "View Certificate",
+                    target: "_blank" do %>
+                  <i class="bi bi-eye me-1"></i>View
+                <% end %>
+                
+                <%= link_to participant_portal_certificate_path(certificate, format: :pdf, download: true),
+                    class: "btn-download",
+                    title: "Download Certificate" do %>
+                  <i class="bi bi-download me-1"></i>Download
+                <% end %>
+              </div>
+            </div>
           </div>
-          <%= paginate @certificates %>
-        </div>
-      <% else %>
-        <div class="text-center py-5">
-          <div class="mb-3">
-            <i class="bi bi-award text-secondary" style="font-size: 4rem;"></i>
+        <% end %>
+      </div>
+
+      <!-- Pagination -->
+      <% if @certificates.total_pages > 1 %>
+        <div class="pagination-wrapper">
+          <div class="pagination-info">
+            <span>Showing <%= @certificates.offset_value + 1 %> to <%= @certificates.offset_value + @certificates.length %> of <%= @certificates.total_count %> certificates</span>
           </div>
-          <h5 class="text-secondary">No certificates available</h5>
-          <p class="text-muted">Your certificates will appear here once they are published by the institute.</p>
+          <div class="pagination-links">
+            <%= paginate @certificates %>
+          </div>
         </div>
       <% end %>
-    </div>
+    <% else %>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="bi bi-award"></i>
+        </div>
+        <h5 class="empty-title">No certificates available</h5>
+        <p class="empty-text">Your certificates will appear here once they are published by the institute.</p>
+      </div>
+    <% end %>
   </div>
 </div>
 
 <% content_for :styles do %>
   <style>
-    .card-custom {
-      border: none;
-      border-radius: 0.5rem;
+    /* Page Header Card */
+    .page-header-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      position: relative;
+      overflow: hidden;
     }
-    
-    .card-header-custom {
-      background-color: transparent;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
+    .page-header-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+      background-size: 200% auto;
+      animation: shimmer 3s linear infinite;
     }
-    
-    .icon-box {
-      width: 40px;
-      height: 40px;
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #f59e0b;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
     }
 
-    .bg-primary-subtle {
-      background-color: rgba(99, 102, 241, 0.1);
-    }
-    
-    .table td {
-      padding: 1rem;
-      vertical-align: middle;
+    /* Certificates Card */
+    .certificates-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 2rem;
     }
 
-    .table td:first-child {
-      min-width: 300px;
+    /* Certificates Grid */
+    .certificates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Certificate Item */
+    .certificate-item {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.02), rgba(251, 191, 36, 0.02));
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      gap: 1.25rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .certificate-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .certificate-item:hover {
+      box-shadow: 0 12px 32px rgba(245, 158, 11, 0.15);
+      transform: translateY(-4px);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .certificate-item:hover::before {
+      opacity: 1;
+    }
+    .certificate-icon-wrapper {
+      flex-shrink: 0;
+    }
+    .certificate-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f59e0b;
+      font-size: 2rem;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+      animation: floatBadge 3s ease-in-out infinite;
+    }
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .certificate-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .certificate-name {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+    }
+    .certificate-assignment {
+      color: #64748b;
+      margin: 0 0 1rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .certificate-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .meta-item i {
+      color: #f59e0b;
+      font-size: 0.9rem;
+    }
+    .certificate-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .btn-view {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      color: #d97706;
+      padding: 0.625rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .btn-view:hover {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      border-color: #f59e0b;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+    }
+    .btn-download {
+      flex: 1;
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: white;
+      padding: 0.625rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      color: white;
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .pagination-info {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    .pagination-links {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      animation: floatBadge 3s ease-in-out infinite;
+    }
+    .empty-icon i {
+      font-size: 4rem;
+      color: #cbd5e1;
+    }
+    .empty-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+    }
+    .empty-text {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.95rem;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 1.5rem;
+      }
+      .page-header-card {
+        padding: 1.5rem;
+      }
+      .certificates-card {
+        padding: 1.25rem;
+      }
+      .certificates-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      .certificate-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .certificate-meta {
+        align-items: center;
+      }
+      .certificate-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+      .btn-view,
+      .btn-download {
+        width: 100%;
+      }
+      .pagination-wrapper {
+        flex-direction: column;
+        text-align: center;
+      }
     }
   </style>
 <% end %>
