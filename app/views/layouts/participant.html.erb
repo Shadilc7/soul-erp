@@ -13,27 +13,28 @@
 
     <style>
       :root {
+        --sidebar-width: 280px;
+        --sidebar-collapsed-width: 80px;
+        --header-height: 70px;
         --primary-color: #6366f1;
-        --primary-hover: #4f46e5;
-        --primary-dark: #4338ca;
-        --secondary-color: #455a64;
-        --success-color: #2e7d32;
-        --warning-color: #ed6c02;
-        --danger-color: #d32f2f;
-        --body-bg: #f5f5f5;
-        --topbar-bg: #1e293b;
-        --sidebar-bg: #1e293b;
-        --card-border: #e0e0e0;
-        --text-primary: #212121;
-        --text-secondary: #757575;
-        --link-color: #1976d2;
-        --sidebar-width: 260px;
-        --header-height: 60px;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+        --secondary-color: #64748b;
+        --success-color: #22c55e;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --info-color: #3b82f6;
+        --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        --topbar-bg: #ffffff;
+        --body-bg: #f8fafc;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: rgba(148, 163, 184, 0.1);
       }
 
       body {
         min-height: 100vh;
-        background-color: var(--body-bg) !important;
+        background: var(--body-bg) !important;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
 
@@ -45,13 +46,41 @@
         bottom: 0;
         width: var(--sidebar-width);
         background: var(--sidebar-bg);
-        border-right: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(255,255,255,0.08);
         transform: translateX(0);
-        transition: all 0.3s ease-in-out;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1045;
         overflow-y: auto;
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.collapsed {
+        width: var(--sidebar-collapsed-width);
+      }
+
+      .sidebar.collapsed .sidebar-header h5,
+      .sidebar.collapsed .sidebar-header i.bi-book,
+      .sidebar.collapsed .nav-link span,
+      .sidebar.collapsed .signout-btn span {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding: 0.8rem;
+      }
+
+      .sidebar.collapsed .nav-link i {
+        margin-right: 0;
+      }
+
+      .sidebar.collapsed .signout-btn {
+        padding: 0.8rem;
+        justify-content: center;
       }
 
       .sidebar-header {
@@ -59,46 +88,151 @@
         padding: 0 1.5rem;
         display: flex;
         align-items: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        justify-content: center;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
       }
 
       .sidebar-header a {
-        color: white;
+        color: var(--text-primary);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar-header a:hover {
+        transform: scale(1.05);
+      }
+
+      .sidebar-header h5 {
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: opacity 0.3s ease;
+      }
+
+      .sidebar-header i {
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .nav-link {
-        padding: 0.8rem 1.5rem;
-        color: rgba(255,255,255,0.7);
+        padding: 0.9rem 1.2rem;
+        color: var(--text-secondary);
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        transition: all 0.2s;
-        border-radius: 0.5rem;
-        margin: 0.25rem 0.75rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 12px;
+        margin: 0.3rem 0.75rem;
+        position: relative;
+        overflow: hidden;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        transform: translateX(-4px);
+        transition: transform 0.3s ease;
+        border-radius: 0 4px 4px 0;
       }
 
       .nav-link:hover {
-        color: white;
-        background: rgba(255,255,255,0.1);
+        color: var(--text-primary);
+        background: rgba(255,255,255,0.08);
+        transform: translateX(4px);
+      }
+
+      .nav-link:hover::before {
+        transform: translateX(0);
       }
 
       .nav-link.active {
-        color: white;
-        background: var(--primary-color);
-        font-weight: 500;
-        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.15);
+        color: var(--text-primary);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.1) 100%);
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      }
+
+      .nav-link.active::before {
+        transform: translateX(0);
       }
 
       .nav-link i {
-        margin-right: 0.5rem;
-        width: 1.5rem;
+        width: 1.3rem;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-link:hover i {
+        transform: scale(1.1);
+      }
+
+      .nav-link span {
+        transition: opacity 0.3s ease;
+      }
+
+      .signout-btn {
+        border: none;
+        padding: 0.9rem 1.2rem;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+        color: #ef4444;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .signout-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .signout-btn:hover {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+
+      .signout-btn:hover::before {
+        left: 100%;
+      }
+
+      .signout-btn i {
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+      }
+
+      .signout-btn:hover i {
+        transform: translateX(3px);
       }
 
       /* Main Content Styles */
       #main-content {
         margin-left: var(--sidebar-width);
         min-height: 100vh;
-        transition: margin 0.3s ease;
+        transition: margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         background: var(--body-bg);
       }
 
@@ -106,12 +240,65 @@
         margin-left: 0;
       }
 
+      #main-content.collapsed {
+        margin-left: var(--sidebar-collapsed-width);
+      }
+
       .topbar {
         height: var(--header-height);
         background: var(--topbar-bg);
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-        padding: 0 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+
+      .topbar::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1 0%, #818cf8 50%, #6366f1 100%);
+        background-size: 200% 100%;
+        animation: gradient-shift 3s ease infinite;
+      }
+
+      @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+
+      .hamburger-btn {
+        width: 44px;
+        height: 44px;
+        border: none;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(129, 140, 248, 0.05) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--primary-color);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+      }
+
+      .hamburger-btn:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.1) 100%);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      }
+
+      .hamburger-btn i {
+        font-size: 1.3rem;
+        transition: transform 0.3s ease;
+      }
+
+      .hamburger-btn:hover i {
+        transform: rotate(90deg);
       }
 
       .content-wrapper {
@@ -120,66 +307,100 @@
 
       /* Card Styles */
       .card-custom {
-        border: none;
-        border-radius: 10px;
-        background-color: #fff;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .card-custom:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+        transform: translateY(-2px);
       }
 
       .card-header-custom {
-        background-color: transparent;
-        border-bottom: none;
-        padding: 1.5rem 1.5rem 0.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem;
+        border-radius: 16px 16px 0 0;
+        backdrop-filter: blur(10px);
       }
 
       /* Button Styles */
       .btn-custom-primary {
-        background-color: var(--primary-color);
+        background: var(--primary-color);
         border-color: var(--primary-color);
         color: #ffffff;
+        transition: all 0.3s ease;
       }
 
       .btn-custom-primary:hover {
-        background-color: var(--primary-hover);
-        border-color: var(--primary-hover);
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
         color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
       }
 
       .btn-outline-custom {
         border-color: var(--primary-color);
         color: var(--primary-color);
+        transition: all 0.3s ease;
       }
 
       .btn-outline-custom:hover {
         background-color: var(--primary-color);
         color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
       }
 
       /* Badge Styles */
       .badge-success {
-        background-color: var(--success-color) !important;
-        color: #fff;
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--success-color) !important;
+        font-weight: 600;
       }
 
       .badge-warning {
-        background-color: var(--warning-color) !important;
-        color: #fff;
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color) !important;
+        font-weight: 600;
       }
 
       .badge-danger {
-        background-color: var(--danger-color) !important;
-        color: #fff;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color) !important;
+        font-weight: 600;
       }
 
       /* Progress Bar */
       .progress {
         background-color: #e9ecef;
         border-radius: 0.5rem;
+        height: 0.75rem;
       }
 
       .progress-bar {
         border-radius: 0.5rem;
-        background-color: var(--primary-color);
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        transition: width 0.6s ease;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--secondary-color);
+        border-radius: 3px;
       }
 
       /* Mobile Sidebar */
@@ -189,20 +410,27 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
         z-index: 1040;
         opacity: 0;
         visibility: hidden;
-        transition: all 0.3s;
+        transition: all 0.3s ease-in-out;
       }
 
       @media (max-width: 991.98px) {
         .sidebar {
           transform: translateX(-100%);
+          box-shadow: none;
         }
 
         .sidebar.show {
           transform: translateX(0);
+          box-shadow: 8px 0 24px rgba(0,0,0,0.3);
+        }
+
+        .sidebar.collapsed {
+          width: var(--sidebar-width);
         }
 
         .sidebar-backdrop.show {
@@ -261,7 +489,7 @@
 
         <div class="mt-auto p-3">
           <%= button_to destroy_user_session_path, method: :delete, 
-              class: "btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" do %>
+              class: "signout-btn w-100 d-flex align-items-center justify-content-center gap-2" do %>
             <i class="bi bi-box-arrow-right"></i>
             <span>Sign Out</span>
           <% end %>
@@ -275,10 +503,12 @@
       <div id="main-content">
         <!-- Topbar -->
         <div class="topbar d-flex align-items-center justify-content-between">
-          <button class="btn btn-link text-white d-lg-none" data-action="sidebar#toggle">
-            <i class="bi bi-list fs-4"></i>
+          <button class="hamburger-btn d-lg-none" data-action="sidebar#toggle">
+            <i class="bi bi-list"></i>
           </button>
-          
+          <div class="d-flex align-items-center gap-3 ms-auto">
+            <span class="text-secondary small fw-500">Welcome back!</span>
+          </div>
         </div>
 
         <!-- Content -->
