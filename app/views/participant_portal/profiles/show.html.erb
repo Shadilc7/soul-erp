@@ -1,56 +1,85 @@
 <!-- Profile Header -->
 <div class="container py-4">
-  <div class="row">
-    <div class="col-12 mb-4">
-      <div class="card card-custom shadow-sm">
-        <div class="card-header card-header-custom">
-          <h5 class="mb-0">My Profile</h5>
-        </div>
-      </div>
+  <div class="page-header-card mb-4">
+    <div class="header-icon">
+      <i class="bi bi-person-circle"></i>
+    </div>
+    <div>
+      <h4 class="header-title">My Profile</h4>
+      <p class="header-subtitle">View your personal information and training history</p>
     </div>
   </div>
 
   <div class="row g-4">
     <!-- Personal Information -->
     <div class="col-12 col-lg-6">
-      <div class="card card-custom shadow-sm h-100">
-        <div class="card-header card-header-custom py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-person me-2"></i>
-            Personal Information
-          </h5>
+      <div class="profile-card h-100">
+        <div class="card-header-modern">
+          <div class="header-icon-small">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <h5 class="card-title-modern">Personal Information</h5>
         </div>
-        <div class="card-body">
-          <div class="list-group list-group-flush">
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Full Name</small>
-              <span class="fw-medium"><%= @participant.user.full_name %></span>
+        <div class="card-body-modern">
+          <div class="info-list">
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Full Name</small>
+                <span class="info-value"><%= @participant.user.full_name %></span>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Email</small>
-              <span class="fw-medium"><%= @participant.user.email %></span>
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-envelope-fill"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Email</small>
+                <span class="info-value"><%= @participant.user.email %></span>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Date of Birth</small>
-              <span class="fw-medium">
-                <%= @participant.date_of_birth&.strftime("%B %d, %Y") || "Not provided" %>
-              </span>
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-calendar-heart"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Date of Birth</small>
+                <span class="info-value"><%= @participant.date_of_birth&.strftime("%B %d, %Y") || "Not provided" %></span>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Phone Number</small>
-              <span class="fw-medium">+91 <%= @participant.phone_number %></span>
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-telephone-fill"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Phone Number</small>
+                <span class="info-value">+91 <%= @participant.phone_number %></span>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Participant Type</small>
-              <span class="badge bg-primary">
-                <%= @participant.participant_type.titleize %>
-              </span>
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Participant Type</small>
+                <span class="status-badge status-type">
+                  <%= @participant.participant_type.titleize %>
+                </span>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Status</small>
-              <span class="badge bg-<%= @participant.active? ? 'success' : 'warning' %>">
-                <%= @participant.status.titleize %>
-              </span>
+            <div class="info-item">
+              <div class="info-icon">
+                <i class="bi bi-shield-check"></i>
+              </div>
+              <div class="info-content">
+                <small class="info-label">Status</small>
+                <span class="status-badge <%= @participant.active? ? 'status-active' : 'status-inactive' %>">
+                  <i class="bi bi-<%= @participant.active? ? 'check-circle-fill' : 'pause-circle-fill' %> me-1"></i>
+                  <%= @participant.status.titleize %>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -60,39 +89,59 @@
     <!-- Guardian Information (shown only for guardians) -->
     <% if @participant.guardian? %>
       <div class="col-12 col-lg-6">
-        <div class="card card-custom shadow-sm h-100">
-          <div class="card-header card-header-custom py-3">
-            <h5 class="mb-0">
-              <i class="bi bi-people me-2"></i>
-              Guardian Information
-            </h5>
+        <div class="profile-card h-100">
+          <div class="card-header-modern">
+            <div class="header-icon-small">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <h5 class="card-title-modern">Guardian Information</h5>
           </div>
-          <div class="card-body">
-            <div class="list-group list-group-flush">
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Student Name</small>
-                <span class="fw-medium">
-                  <%= @participant.guardian_for_participant&.user&.full_name || "Not assigned" %>
-                </span>
+          <div class="card-body-modern">
+            <div class="info-list">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-person"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Student Name</small>
+                  <span class="info-value">
+                    <%= @participant.guardian_for_participant&.user&.full_name || "Not assigned" %>
+                  </span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Student's Section</small>
-                <span class="fw-medium">
-                  <%= @participant.guardian_for_participant&.section&.name || "Not assigned" %>
-                </span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-grid-3x3-gap-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Student's Section</small>
+                  <span class="info-value">
+                    <%= @participant.guardian_for_participant&.section&.name || "Not assigned" %>
+                  </span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Relationship</small>
-                <span class="fw-medium">Guardian</span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-heart-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Relationship</small>
+                  <span class="info-value">Guardian</span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Enrollment Date</small>
-                <span class="fw-medium">
-                  <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
-                </span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Enrollment Date</small>
+                  <span class="info-value">
+                    <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
+                  </span>
+                </div>
               </div>
-              <div class="list-group-item px-0 border-bottom-0">
-                <%= link_to participant_portal_student_info_path, class: "btn btn-primary w-100" do %>
+              <div class="info-item full-width">
+                <%= link_to participant_portal_student_info_path, class: "btn-view-info" do %>
                   <i class="bi bi-mortarboard me-2"></i>
                   View Complete Student Information
                 <% end %>
@@ -106,42 +155,67 @@
     <!-- Employee Information (shown only for employees) -->
     <% if @participant.employee? %>
       <div class="col-12 col-lg-6">
-        <div class="card card-custom shadow-sm h-100">
-          <div class="card-header card-header-custom py-3">
-            <h5 class="mb-0">
-              <i class="bi bi-briefcase me-2"></i>
-              Employee Information
-            </h5>
+        <div class="profile-card h-100">
+          <div class="card-header-modern">
+            <div class="header-icon-small">
+              <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <h5 class="card-title-modern">Employee Information</h5>
           </div>
-          <div class="card-body">
-            <div class="list-group list-group-flush">
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Job Role</small>
-                <span class="fw-medium"><%= @participant.job_role || "Not specified" %></span>
+          <div class="card-body-modern">
+            <div class="info-list">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-person-workspace"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Job Role</small>
+                  <span class="info-value"><%= @participant.job_role || "Not specified" %></span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Qualification</small>
-                <span class="fw-medium"><%= @participant.qualification || "Not specified" %></span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Qualification</small>
+                  <span class="info-value"><%= @participant.qualification || "Not specified" %></span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Years of Experience</small>
-                <span class="fw-medium">
-                  <% if @participant.years_of_experience %>
-                    <%= pluralize(@participant.years_of_experience, 'year') %>
-                  <% else %>
-                    Not specified
-                  <% end %>
-                </span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Years of Experience</small>
+                  <span class="info-value">
+                    <% if @participant.years_of_experience %>
+                      <%= pluralize(@participant.years_of_experience, 'year') %>
+                    <% else %>
+                      Not specified
+                    <% end %>
+                  </span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Section</small>
-                <span class="fw-medium"><%= @participant.section&.name || "Not Assigned" %></span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-grid-3x3-gap-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Section</small>
+                  <span class="info-value"><%= @participant.section&.name || "Not Assigned" %></span>
+                </div>
               </div>
-              <div class="list-group-item px-0">
-                <small class="text-muted d-block">Enrollment Date</small>
-                <span class="fw-medium">
-                  <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
-                </span>
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Enrollment Date</small>
+                  <span class="info-value">
+                    <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -151,30 +225,58 @@
 
     <!-- Address Information -->
     <div class="col-12">
-      <div class="card card-custom shadow-sm">
-        <div class="card-header card-header-custom py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-geo-alt me-2"></i>
-            Address Information
-          </h5>
+      <div class="profile-card">
+        <div class="card-header-modern">
+          <div class="header-icon-small">
+            <i class="bi bi-geo-alt-fill"></i>
+          </div>
+          <h5 class="card-title-modern">Address Information</h5>
         </div>
-        <div class="card-body">
-          <div class="list-group list-group-flush">
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">Address</small>
-              <span class="fw-medium"><%= @participant.address || "Not provided" %></span>
+        <div class="card-body-modern">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-house-fill"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">Address</small>
+                  <span class="info-value"><%= @participant.address || "Not provided" %></span>
+                </div>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">PIN Code</small>
-              <span class="fw-medium"><%= @participant.pin_code || "Not provided" %></span>
+            <div class="col-md-6">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-mailbox"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">PIN Code</small>
+                  <span class="info-value"><%= @participant.pin_code || "Not provided" %></span>
+                </div>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">District</small>
-              <span class="fw-medium"><%= @participant.district || "Not provided" %></span>
+            <div class="col-md-6">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-building"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">District</small>
+                  <span class="info-value"><%= @participant.district || "Not provided" %></span>
+                </div>
+              </div>
             </div>
-            <div class="list-group-item px-0">
-              <small class="text-muted d-block">State</small>
-              <span class="fw-medium"><%= @participant.state || "Not provided" %></span>
+            <div class="col-md-6">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="bi bi-map"></i>
+                </div>
+                <div class="info-content">
+                  <small class="info-label">State</small>
+                  <span class="info-value"><%= @participant.state || "Not provided" %></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -183,16 +285,16 @@
 
     <!-- Training Programs -->
     <div class="col-12">
-      <div class="card card-custom shadow-sm">
-        <div class="card-header card-header-custom py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-journal-text me-2"></i>
-            Training Programs
-          </h5>
+      <div class="profile-card">
+        <div class="card-header-modern">
+          <div class="header-icon-small">
+            <i class="bi bi-journal-text"></i>
+          </div>
+          <h5 class="card-title-modern">Training Programs</h5>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table mb-0">
+        <div class="card-body-modern p-0">
+          <div class="table-modern">
+            <table>
               <thead>
                 <tr>
                   <th>Program</th>
@@ -205,12 +307,13 @@
               <tbody>
                 <% @participant.all_training_programs.each do |program| %>
                   <tr>
-                    <td><%= program.title %></td>
-                    <td><%= program.trainer.user.full_name %></td>
-                    <td><%= program.start_date.strftime("%b %d, %Y") %></td>
-                    <td><%= program.end_date.strftime("%b %d, %Y") %></td>
+                    <td><span class="program-name"><%= program.title %></span></td>
+                    <td><span class="text-value"><%= program.trainer.user.full_name %></span></td>
+                    <td><span class="text-value"><%= program.start_date.strftime("%b %d, %Y") %></span></td>
+                    <td><span class="text-value"><%= program.end_date.strftime("%b %d, %Y") %></span></td>
                     <td>
-                      <span class="badge bg-<%= program.status == 'completed' ? 'success' : 'primary' %>">
+                      <span class="status-badge <%= program.status == 'completed' ? 'status-completed' : 'status-active' %>">
+                        <i class="bi bi-<%= program.status == 'completed' ? 'check-circle-fill' : 'play-circle-fill' %> me-1"></i>
                         <%= program.status.titleize %>
                       </span>
                     </td>
@@ -227,55 +330,270 @@
 
 <% content_for :styles do %>
 <style>
-  .profile-avatar {
-    width: 100px;
-    height: 100px;
-    font-size: 2.5rem;
+  /* Page Header Card */
+  .page-header-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--bs-primary);
+    color: #6366f1;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+  .header-subtitle {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin: 0.25rem 0 0;
+  }
+
+  /* Profile Cards */
+  .profile-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .profile-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+  .card-header-modern {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+  }
+  .header-icon-small {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 1.25rem;
+  }
+  .card-title-modern {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+  .card-body-modern {
+    padding: 2rem;
+  }
+
+  /* Info List */
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .info-item {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+    border: 1px solid rgba(148, 163, 184, 0.06);
+    transition: all 0.3s ease;
+  }
+  .info-item:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    border-color: rgba(99, 102, 241, 0.15);
+    transform: translateX(4px);
+  }
+  .info-item.full-width {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+  .info-item.full-width:hover {
+    transform: none;
+  }
+  .info-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .info-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .info-label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .info-value {
+    display: block;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  /* Status Badges */
+  .status-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .status-type {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.15));
+    color: #6366f1;
+  }
+  .status-active {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+    color: #059669;
+  }
+  .status-inactive {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+    color: #d97706;
+  }
+  .status-completed {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+    color: #059669;
+  }
+
+  /* Button */
+  .btn-view-info {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border: none;
+    color: white;
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    width: 100%;
+  }
+  .btn-view-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     color: white;
   }
 
-  .list-group-item {
-    border: none;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+  /* Modern Table */
+  .table-modern {
+    overflow-x: auto;
   }
-
-  .list-group-item:last-child {
-    border-bottom: none;
+  .table-modern table {
+    width: 100%;
+    border-collapse: collapse;
   }
-
-  .card-custom {
-    border: none;
-    border-radius: 0.5rem;
+  .table-modern thead {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
   }
-
-  .card-header-custom {
-    background-color: transparent;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-
-  .table > :not(caption) > * > * {
+  .table-modern thead th {
     padding: 1rem 1.5rem;
-  }
-
-  .table thead th {
-    background-color: #f8f9fa;
-    font-weight: 500;
-    text-transform: uppercase;
+    text-align: left;
     font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.1);
+  }
+  .table-modern tbody tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    transition: all 0.2s ease;
+  }
+  .table-modern tbody tr:hover {
+    background: rgba(99, 102, 241, 0.02);
+  }
+  .table-modern tbody td {
+    padding: 1.25rem 1.5rem;
+    vertical-align: middle;
+  }
+  .program-name {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .text-value {
+    color: #475569;
+    font-size: 0.875rem;
   }
 
   @media (max-width: 768px) {
-    .profile-avatar {
-      width: 80px;
-      height: 80px;
-      font-size: 2rem;
+    .header-title {
+      font-size: 1.5rem;
+    }
+    .page-header-card {
+      padding: 1.5rem;
+    }
+    .card-body-modern {
+      padding: 1.5rem;
+    }
+    .table-modern {
+      font-size: 0.875rem;
+    }
+    .table-modern thead th,
+    .table-modern tbody td {
+      padding: 1rem;
     }
   }
 </style>
