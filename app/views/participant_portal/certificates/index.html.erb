@@ -80,6 +80,12 @@
 
 <% content_for :styles do %>
   <style>
+    /* Container stability */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
     /* Page Header Card */
     .page-header-card {
       background: #ffffff;
@@ -90,23 +96,6 @@
       display: flex;
       align-items: center;
       gap: 1.25rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .page-header-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
-      background-size: 200% auto;
-      animation: shimmer 3s linear infinite;
-    }
-    @keyframes shimmer {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
     }
     .header-icon {
       width: 56px;
@@ -339,10 +328,19 @@
 
     @media (max-width: 768px) {
       .header-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
       }
       .page-header-card {
         padding: 1.5rem;
+        gap: 0.875rem;
+      }
+      .header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+      }
+      .header-subtitle {
+        font-size: 0.85rem;
       }
       .certificates-card {
         padding: 1.25rem;
