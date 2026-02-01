@@ -38,20 +38,23 @@
 
     <style>
       :root {
-        --sidebar-width: 290px;
-        --topbar-height: 60px;
+        --sidebar-width: 280px;
+        --sidebar-collapsed-width: 80px;
+        --header-height: 70px;
         --primary-color: #6366f1;
         --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
         --secondary-color: #64748b;
         --success-color: #22c55e;
         --danger-color: #ef4444;
         --warning-color: #f59e0b;
         --info-color: #3b82f6;
-        --sidebar-bg: #1e293b;
+        --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
         --topbar-bg: #ffffff;
-        --body-bg: #f1f5f9;
+        --body-bg: #f8fafc;
         --text-primary: #f8fafc;
         --text-secondary: #94a3b8;
+        --border-color: rgba(148, 163, 184, 0.1);
       }
 
       body {
@@ -68,84 +71,205 @@
         bottom: 0;
         width: var(--sidebar-width);
         background: var(--sidebar-bg);
-        border-right: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(255,255,255,0.08);
         transform: translateX(0);
-        transition: all 0.3s ease-in-out;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1045;
         overflow-y: auto;
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
       }
 
       #sidebar.collapsed {
-        transform: translateX(-100%);
+        width: var(--sidebar-collapsed-width);
+      }
+
+      #sidebar.collapsed .sidebar-header h5,
+      #sidebar.collapsed .sidebar-header .hamburger-btn,
+      #sidebar.collapsed .sidebar-header i.bi-building-fill,
+      #sidebar.collapsed .nav-link span,
+      #sidebar.collapsed .btn span,
+      #sidebar.collapsed .submenu-toggle-icon {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      #sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding: 0.8rem;
+      }
+
+      #sidebar.collapsed .nav-link i {
+        margin-right: 0;
+      }
+
+      #sidebar.collapsed .sidebar-submenu-container {
+        display: none;
+      }
+
+      #sidebar.collapsed .sidebar-submenu-container .nav-link {
+        pointer-events: none;
+      }
+
+      #sidebar.collapsed .collapse {
+        display: none !important;
       }
 
       .sidebar-header {
-        height: var(--topbar-height);
+        height: var(--header-height);
         padding: 0 1.5rem;
         display: flex;
         align-items: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        justify-content: center;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
       }
 
       .sidebar-header a {
         color: var(--text-primary);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
+        transition: transform 0.3s ease;
       }
-      
+
+      .sidebar-header a:hover {
+        transform: scale(1.05);
+      }
+
       .sidebar-header h5 {
-        font-weight: 600;
-        margin-bottom: 0;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: opacity 0.3s ease;
+      }
+
+      .sidebar-header i {
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .nav-link {
-        padding: 0.8rem 1.5rem;
+        padding: 0.9rem 1.2rem;
         color: var(--text-secondary);
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        transition: all 0.2s;
-        border-radius: 0.5rem;
-        margin: 0.25rem 0.75rem;
-      }
-      
-      .nav-link.d-flex {
-        justify-content: space-between;
-      }
-      
-      .nav-link.d-flex > div {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 12px;
+        margin: 0.3rem 0.75rem;
+        position: relative;
         overflow: hidden;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-decoration: none;
       }
-      
-      .nav-link.d-flex > div span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+
+      .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        transform: translateX(-4px);
+        transition: transform 0.3s ease;
+        border-radius: 0 4px 4px 0;
       }
 
       .nav-link:hover {
         color: var(--text-primary);
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.08);
+        transform: translateX(4px);
       }
 
-      .nav-link.active {
+      .nav-link:hover::before {
+        transform: translateX(0);
+      }
+
+      .nav-link.active,
+      .nav-link.active-parent {
         color: var(--text-primary);
-        background: var(--primary-color);
-        font-weight: 500;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.1) 100%);
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      }
+
+      .nav-link.active::before,
+      .nav-link.active-parent::before {
+        transform: translateX(0);
+      }
+
+      .nav-link i {
+        width: 1.3rem;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-link:hover i {
+        transform: scale(1.1);
+      }
+
+      .nav-link span {
+        transition: opacity 0.3s ease;
+      }
+
+      .nav-link.d-flex {
+        justify-content: space-between;
+      }
+
+      .submenu-toggle-icon {
+        transition: transform 0.3s ease;
+        font-size: 0.85rem;
+      }
+
+      .nav-link[aria-expanded="true"] .submenu-toggle-icon {
+        transform: rotate(180deg);
+      }
+
+      /* Submenu Styles */
+      .sidebar-submenu-container {
+        margin: 0.2rem 0;
+      }
+
+      .collapse:not(.show) {
+        display: none;
+      }
+
+      .collapsing {
+        height: 0;
+        overflow: hidden;
+        transition: height 0.35s ease;
+      }
+
+      .submenu {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        margin: 0 0.75rem;
+        padding: 0.5rem 0;
+      }
+
+      .submenu-link {
+        font-size: 0.85rem;
+        padding: 0.7rem 1rem 0.7rem 3rem;
+        margin: 0.2rem 0.5rem;
+      }
+
+      .submenu-link i {
+        font-size: 0.95rem;
       }
 
       /* Main Content Styles */
       #main-content {
         margin-left: var(--sidebar-width);
         min-height: 100vh;
-        transition: margin 0.3s ease;
+        transition: margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         background: var(--body-bg);
       }
 
@@ -153,16 +277,129 @@
         margin-left: 0;
       }
 
+      #main-content.collapsed {
+        margin-left: var(--sidebar-collapsed-width);
+      }
+
       .topbar {
-        height: var(--topbar-height);
+        height: var(--header-height);
         background: var(--topbar-bg);
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-        padding: 0 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(10px);
+        position: relative;
+      }
+
+      .topbar::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1 0%, #818cf8 50%, #6366f1 100%);
+        background-size: 200% 100%;
+        animation: gradient-shift 3s ease infinite;
+      }
+
+      @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+
+      .hamburger-btn {
+        width: 44px;
+        height: 44px;
+        border: none;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(129, 140, 248, 0.05) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--primary-color);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+      }
+
+      .hamburger-btn.sidebar-toggle {
+        display: none;
+      }
+
+      @media (max-width: 992px) {
+        .hamburger-btn.mobile-toggle {
+          display: flex;
+        }
+      }
+
+      @media (min-width: 993px) {
+        .hamburger-btn.mobile-toggle {
+          display: none;
+        }
+      }
+
+      .hamburger-btn:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.1) 100%);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      }
+
+      .hamburger-btn i {
+        font-size: 1.3rem;
+        transition: transform 0.3s ease;
+      }
+
+      .hamburger-btn:hover i {
+        transform: rotate(90deg);
+      }
+
+      .signout-btn {
+        border: none;
+        padding: 0.9rem 1.2rem;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+        color: #ef4444;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .signout-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .signout-btn:hover::before {
+        left: 100%;
+      }
+
+      .signout-btn:hover {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+      }
+
+      .signout-btn i {
+        transition: transform 0.3s ease;
+      }
+
+      .signout-btn:hover i {
+        transform: translateX(-3px);
       }
 
       .content-wrapper {
-        padding: 1.5rem;
+        padding: 2rem;
       }
 
       /* Card Styles */
@@ -222,7 +459,11 @@
 
         #sidebar.show {
           transform: translateX(0);
-          box-shadow: 0 0 15px rgba(0,0,0,0.2);
+          box-shadow: 8px 0 24px rgba(0,0,0,0.3);
+        }
+
+        #sidebar.collapsed {
+          width: var(--sidebar-width);
         }
 
         .sidebar-backdrop {
@@ -231,7 +472,8 @@
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0,0,0,0.5);
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(4px);
           z-index: 1040;
           opacity: 0;
           visibility: hidden;
@@ -246,20 +488,34 @@
         #main-content {
           margin-left: 0 !important;
         }
+
+        .hamburger-btn {
+          display: flex;
+        }
+      }
+
+      @media (min-width: 993px) {
+        .sidebar-backdrop {
+          display: none;
+        }
       }
 
       /* Custom Scrollbar */
-      ::-webkit-scrollbar {
+      #sidebar::-webkit-scrollbar {
         width: 6px;
       }
 
-      ::-webkit-scrollbar-track {
-        background: transparent;
+      #sidebar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
       }
 
-      ::-webkit-scrollbar-thumb {
-        background: var(--secondary-color);
+      #sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 3px;
+      }
+
+      #sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
 
       /* User Menu */
@@ -520,8 +776,11 @@
   <body>
     <div data-controller="sidebar">
       <!-- Sidebar -->
-      <div id="sidebar" class="d-flex flex-column">
-        <div class="sidebar-header">
+      <div id="sidebar" class="sidebar" data-sidebar-target="sidebar">
+        <div class="sidebar-header d-flex align-items-center justify-content-center position-relative">
+          <button class="hamburger-btn sidebar-toggle position-absolute start-0 ms-3" data-action="click->sidebar#toggle">
+            <i class="bi bi-list"></i>
+          </button>
           <%= link_to institute_admin_root_path, class: "text-decoration-none d-flex align-items-center" do %>
             <i class="bi bi-building-fill text-white fs-4 me-2"></i>
             <h5 class="mb-0 text-white">BeYa</h5>
@@ -538,12 +797,12 @@
 
             <!-- Participants Section (Collapsible) -->
             <div class="sidebar-submenu-container">
-              <a href="#participantsSubmenu" 
+              <a role="button" 
                  class="nav-link d-flex justify-content-between align-items-center <%= 'active-parent' if controller.controller_name == 'participants' %>" 
                  data-bs-toggle="collapse"
-                 data-custom-toggle="true"
-                 data-action="click->sidebar#toggleSubmenu"
-                 aria-expanded="<%= (controller.controller_name == 'participants').to_s %>">
+                 data-bs-target="#participantsSubmenu"
+                 aria-expanded="<%= (controller.controller_name == 'participants').to_s %>"
+                 aria-controls="participantsSubmenu">
                 <div>
                   <i class="bi bi-people"></i>
                   <span>Participants</span>
@@ -571,18 +830,18 @@
 
             <!-- Training Section (Collapsible) -->
             <div class="sidebar-submenu-container">
-              <a href="#trainingSubmenu" 
+              <a role="button" 
                  class="nav-link d-flex justify-content-between align-items-center <%= 'active-parent' if active_link?('trainers') || 
                                                                                          controller.controller_name == 'training_programs' || 
                                                                                          controller.controller_name == 'training_program_feedbacks' ||
                                                                                          active_link?('attendances') %>" 
                  data-bs-toggle="collapse"
-                 data-custom-toggle="true"
-                 data-action="click->sidebar#toggleSubmenu"
+                 data-bs-target="#trainingSubmenu"
                  aria-expanded="<%= (active_link?('trainers') || 
                                    controller.controller_name == 'training_programs' || 
                                    controller.controller_name == 'training_program_feedbacks' ||
-                                   active_link?('attendances')).to_s %>">
+                                   active_link?('attendances')).to_s %>"
+                 aria-controls="trainingSubmenu">
                 <div>
                   <i class="bi bi-book"></i>
                   <span>Training</span>
@@ -625,16 +884,16 @@
 
             <!-- Assessments Section (Collapsible) -->
             <div class="sidebar-submenu-container">
-              <a href="#assessmentsSubmenu" 
+              <a role="button" 
                  class="nav-link d-flex justify-content-between align-items-center <%= 'active-parent' if active_link?('questions') || 
                                                                                          controller.controller_name == 'assignments' || 
                                                                                          controller.controller_name == 'responses' %>" 
                  data-bs-toggle="collapse"
-                 data-custom-toggle="true"
-                 data-action="click->sidebar#toggleSubmenu"
+                 data-bs-target="#assessmentsSubmenu"
                  aria-expanded="<%= (active_link?('questions') || 
                                    controller.controller_name == 'assignments' || 
-                                   controller.controller_name == 'responses').to_s %>">
+                                   controller.controller_name == 'responses').to_s %>"
+                 aria-controls="assessmentsSubmenu">
                 <div>
                   <i class="bi bi-clipboard-check"></i>
                   <span>Assessments</span>
@@ -683,31 +942,29 @@
         </div>
         
         <!-- Signout button at bottom of sidebar -->
-        <div class="mt-auto p-3 border-top border-secondary border-opacity-25">
-          <%= button_to destroy_user_session_path,
-              method: :delete,
-              class: "btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2",
-              form: { data: { turbo: true } } do %>
+        <div class="mt-auto p-3">
+          <%= button_to destroy_user_session_path, method: :delete, 
+              class: "signout-btn w-100 d-flex align-items-center justify-content-center gap-2" do %>
             <i class="bi bi-box-arrow-right"></i>
             <span>Sign Out</span>
           <% end %>
         </div>
       </div>
 
-      <!-- Backdrop with data-sidebar-target -->
+      <!-- Backdrop for mobile -->
       <div class="sidebar-backdrop" data-sidebar-target="backdrop" data-action="click->sidebar#hide"></div>
 
       <!-- Main Content -->
-      <div id="main-content" data-sidebar-target="content">
+      <div id="main-content" class="main-content" data-sidebar-target="mainContent">
+        <!-- Topbar -->
         <div class="topbar d-flex justify-content-between align-items-center">
-          <!-- Left side: Toggle button for sidebar -->
-          <button class="btn btn-sm btn-outline-secondary d-lg-none" data-action="click->sidebar#toggle">
+          <button class="hamburger-btn mobile-toggle" data-action="click->sidebar#toggle">
             <i class="bi bi-list"></i>
           </button>
           
           <!-- Right side: Admin return button if in impersonation mode -->
           <% if current_user&.master_admin? && session[:admin_institute_id].present? && session[:admin_return_to].present? %>
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center gap-3 ms-auto">
               <div class="alert alert-warning py-1 px-3 mb-0 me-3 d-none d-md-block">
                 <small>You are viewing as institute admin for <%= current_institute&.name %></small>
               </div>
@@ -715,13 +972,29 @@
                 <i class="bi bi-arrow-return-left"></i> Return to Admin
               <% end %>
             </div>
+          <% else %>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+              <span class="text-secondary small fw-500">Welcome back!</span>
+            </div>
           <% end %>
         </div>
 
+        <!-- Page Content -->
         <div class="content-wrapper">
-          <!-- Flash Messages -->
-          <%= render "shared/flash" %>
+          <% if notice %>
+            <div class="alert alert-<%= bootstrap_class_for_flash(:notice) %> alert-dismissible fade show" role="alert">
+              <%= notice %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
           
+          <% if alert %>
+            <div class="alert alert-<%= bootstrap_class_for_flash(:alert) %> alert-dismissible fade show" role="alert">
+              <%= alert %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+
           <%= yield %>
         </div>
       </div>
@@ -729,29 +1002,9 @@
 
     <!-- ApexCharts for dashboard visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <%= yield :scripts %>
     
-    <script>
-      // Prevent Bootstrap from handling custom toggle elements
-      document.addEventListener('DOMContentLoaded', function() {
-        // Ensure our custom toggles override Bootstrap's default behavior
-        document.addEventListener('click', function(event) {
-          if (event.target.closest('[data-custom-toggle="true"]')) {
-            event.stopPropagation();
-          }
-        }, true);
-        
-        // Set active-parent class on parent menu items when a submenu item is active
-        const activeSubmenuItems = document.querySelectorAll('.submenu .nav-link.active');
-        activeSubmenuItems.forEach(item => {
-          const parentCollapse = item.closest('.collapse');
-          if (parentCollapse) {
-            const parentToggle = document.querySelector(`a[href="#${parentCollapse.id}"]`);
-            if (parentToggle) {
-              parentToggle.classList.add('active-parent');
-            }
-          }
-        });
-      });
-    </script>
+
   </body>
 </html> 
