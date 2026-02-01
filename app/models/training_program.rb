@@ -3,17 +3,17 @@ class TrainingProgram < ApplicationRecord
   belongs_to :trainer
   belongs_to :section, optional: true
   belongs_to :participant, optional: true
-  
+
   # Associations for multiple participants and sections
   has_many :training_program_participants, dependent: :destroy
   has_many :participants, through: :training_program_participants
-  
+
   has_many :training_program_sections, dependent: :destroy
   has_many :sections, through: :training_program_sections
-  
+
   has_many :feedbacks, class_name: "TrainingProgramFeedback", dependent: :destroy
   has_many :training_program_feedbacks, dependent: :destroy
-  
+
   # Add attendance association
   has_many :attendances, dependent: :destroy
 
@@ -71,12 +71,14 @@ class TrainingProgram < ApplicationRecord
   def all_participants
     if individual?
       if participant.present?
-        [participant].compact
+        [ participant ].compact
       else
         participants.includes(:user)
       end
     elsif section.present?
       section.participants.includes(:user)
+    elsif sections.any?
+      Participant.where(section_id: sections.select(:id)).includes(:user)
     else
       participants.includes(:user)
     end
@@ -90,7 +92,7 @@ class TrainingProgram < ApplicationRecord
   # Check if attendance is marked for a date
   def attendance_marked?(date)
     return false if date.nil?
-    
+
     # Convert string to date if necessary
     check_date = date.is_a?(String) ? Date.parse(date) : date.to_date
     attendances.by_date(check_date).exists?
@@ -110,13 +112,13 @@ class TrainingProgram < ApplicationRecord
     return 0 if start_date > Time.current.to_date
 
     # Calculate days from start to either today or end_date, whichever is earlier
-    current_date = [Time.current.to_date, end_date.to_date].min
+    current_date = [ Time.current.to_date, end_date.to_date ].min
     total_days = (current_date - start_date.to_date).to_i + 1
     return 0 if total_days <= 0
 
     total_possible = total_participants * total_days
     total_present = attendances.present_statuses.count
-    
+
     (total_present.to_f / total_possible * 100).round(2)
   end
 
@@ -131,7 +133,7 @@ class TrainingProgram < ApplicationRecord
     if individual?
       errors.add(:section_id, "must be blank for individual programs") if section_id.present?
       errors.add(:sections, "must be empty for individual programs") if sections.any?
-      
+
       # Check either participant_id or participants
       if participant_id.blank? && participants.empty?
         errors.add(:base, "At least one participant must be selected for individual programs")
@@ -139,7 +141,7 @@ class TrainingProgram < ApplicationRecord
     else
       errors.add(:participant_id, "must be blank for section programs") if participant_id.present?
       errors.add(:participants, "must be empty for section programs") if participants.any?
-      
+
       # Check either section_id or sections
       if section_id.blank? && sections.empty?
         errors.add(:base, "At least one section must be selected for section programs")
