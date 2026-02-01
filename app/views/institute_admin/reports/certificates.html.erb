@@ -2,17 +2,20 @@
 <style>
   .certificates-menu-page {
     min-height: 100vh;
-    padding: 2rem 0;
+    padding-top: 0;
+    padding-bottom: 2rem;
   }
   
   .certificates-menu-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
-    padding: 2.5rem;
-    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
     box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
   }
   
   .certificates-menu-header::before {
@@ -29,7 +32,7 @@
   .certificates-menu-header h3 {
     color: white;
     font-weight: 700;
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     margin: 0;
     position: relative;
     z-index: 1;
@@ -263,7 +266,6 @@
     <!-- Premium Header -->
     <div class="certificates-menu-header">
       <h3><i class="bi bi-award me-3"></i>Certificate Management</h3>
-      <div class="subtitle">Generate, view, and manage certificates for your participants</div>
     </div>
 
     <!-- Certificates Grid -->
