@@ -1,71 +1,253 @@
+<% content_for :styles do %>
+  <style>
+    .stat-card {
+      border: none;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      min-height: 120px; /* Reduced from 160px */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px); /* Reduced movement */
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ... (rest of stat-card styles unchanged) ... */
+
+    .stat-card .card-body {
+      position: relative;
+      z-index: 1;
+      padding: 1.25rem; /* Reduced padding */
+    }
+
+    .stat-card .stat-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.9;
+      margin-bottom: 0.25rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stat-card .stat-value {
+      font-size: 2rem; /* Slightly smaller */
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+      margin-bottom: 0;
+    }
+
+    .stat-card .stat-icon {
+      position: absolute;
+      right: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem; /* Slightly smaller */
+      color: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    /* ... (hover effect unchanged) ... */
+
+    /* Card Variants Row 1 */
+    .stat-card-participants {
+      background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+    }
+
+    .stat-card-questions {
+      background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+      box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
+    }
+
+    .stat-card-assignments {
+      background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+      box-shadow: 0 8px 20px rgba(217, 119, 6, 0.25);
+    }
+
+    .stat-card-sections {
+      background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
+      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.25);
+    }
+
+    /* Card Variants Row 2 */
+    .stat-card-responses {
+      background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+      box-shadow: 0 8px 20px rgba(8, 145, 178, 0.25);
+    }
+
+    .stat-card-trainers {
+      background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+    }
+
+    .stat-card-programs {
+      background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%);
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.25);
+    }
+
+    .stat-card-feedback {
+      background: linear-gradient(135deg, #db2777 0%, #f472b6 100%);
+      box-shadow: 0 8px 20px rgba(219, 39, 119, 0.25);
+    }
+
+    /* Modern Table Styles */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modern-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.75rem;
+      margin-top: -0.75rem;
+    }
+
+    .modern-table thead th {
+      background: #1e293b;
+      color: #fff;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      padding: 1rem 1.5rem;
+      border: none;
+    }
+
+    .modern-table thead th:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .modern-table thead th:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .modern-table tbody tr {
+      background: #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+    }
+
+    .modern-table tbody tr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .modern-table tbody td {
+      padding: 1.25rem 1.5rem;
+      vertical-align: middle;
+      border: none;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .modern-table tbody td:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .modern-table tbody td:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .status-badge {
+      padding: 0.35em 0.85em;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge-ongoing {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .status-badge-completed {
+      background-color: #f1f5f9;
+      color: #475569;
+      background-color: #475569;
+      color: white;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #f8fafc;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+  </style>
+<% end %>
+
 <!-- Institute Admin Dashboard -->
 <div class="container-fluid py-4">
   <!-- KPI Cards Row 1 -->
   <div class="row g-4 mb-4">
     <!-- Total Participants -->
+    <!-- Total Participants -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-participants">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total Participants</h6>
-              <h2 class="mb-0"><%= @total_participants %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-people fs-1 text-primary"></i>
-            </div>
-          </div>
+          <div class="stat-title">Total Participants</div>
+          <h2 class="stat-value"><%= @total_participants %></h2>
+          <i class="bi bi-people-fill stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Total Questions -->
+    <!-- Total Questions -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-questions">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total Questions</h6>
-              <h2 class="mb-0"><%= @total_questions %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-question-circle fs-1 text-success"></i>
-            </div>
-          </div>
+          <div class="stat-title">Total Questions</div>
+          <h2 class="stat-value"><%= @total_questions %></h2>
+          <i class="bi bi-question-circle-fill stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Total Assignments -->
+    <!-- Total Assignments -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-assignments">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total Assignments</h6>
-              <h2 class="mb-0"><%= @total_assignments %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-clipboard-check fs-1 text-warning"></i>
-            </div>
-          </div>
+          <div class="stat-title">Total Assignments</div>
+          <h2 class="stat-value"><%= @total_assignments %></h2>
+          <i class="bi bi-clipboard-check-fill stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Total Sections -->
+    <!-- Total Sections -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-sections">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total Sections</h6>
-              <h2 class="mb-0"><%= @total_sections %></h2>
-            </div>
-            <div class="icon-box  bg-opacity-10">
-              <i class="bi bi-grid fs-1 text-danger"></i>
-            </div>
-          </div>
+          <div class="stat-title">Total Sections</div>
+          <h2 class="stat-value"><%= @total_sections %></h2>
+          <i class="bi bi-grid-fill stat-icon"></i>
         </div>
       </div>
     </div>
@@ -153,69 +335,46 @@
 
   <div class="row g-4 mb-4">
     <!-- Today Responses (moved to row 2 first column) -->
+    <!-- Today Responses (moved to row 2 first column) -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-responses">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Today Responses</h6>
-              <h2 class="mb-0"><%= @today_responses_count || 0 %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-file-earmark-check fs-1 text-success"></i>
-            </div>
-          </div>
+          <div class="stat-title">Today Responses</div>
+          <h2 class="stat-value"><%= @today_responses_count || 0 %></h2>
+          <i class="bi bi-file-earmark-check-fill stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Total Trainers -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-trainers">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total Trainers</h6>
-              <h2 class="mb-0"><%= @total_trainers %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-person-workspace fs-1 text-primary"></i>
-            </div>
-          </div>
+          <div class="stat-title">Total Trainers</div>
+          <h2 class="stat-value"><%= @total_trainers %></h2>
+          <i class="bi bi-person-workspace stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Training Programs -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-programs">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Training Programs</h6>
-              <h2 class="mb-0"><%= @total_training_programs %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-mortarboard fs-1 text-success"></i>
-            </div>
-          </div>
+          <div class="stat-title">Training Programs</div>
+          <h2 class="stat-value"><%= @total_training_programs %></h2>
+          <i class="bi bi-mortarboard-fill stat-icon"></i>
         </div>
       </div>
     </div>
 
     <!-- Feedback Received -->
     <div class="col-xl-3 col-md-6">
-      <div class="card card-custom h-100">
+      <div class="stat-card stat-card-feedback">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Feedback Received</h6>
-              <h2 class="mb-0"><%= @total_feedback_received || 0 %></h2>
-            </div>
-            <div class="icon-box bg-opacity-10">
-              <i class="bi bi-chat-square-text fs-1 text-info"></i>
-            </div>
-          </div>
+          <div class="stat-title">Feedback Received</div>
+          <h2 class="stat-value"><%= @total_feedback_received || 0 %></h2>
+          <i class="bi bi-chat-square-text-fill stat-icon"></i>
         </div>
       </div>
     </div>
@@ -306,17 +465,17 @@
   </div>
 
   <!-- Recent Training Programs Table -->
-  <div class="card card-custom">
-    <div class="card-header border-0 pt-3">
+  <div class="card card-custom border-0 bg-transparent shadow-none">
+    <div class="card-header border-0 pt-0 px-0 pb-4 bg-transparent">
       <div class="d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Recent Training Programs</h5>
-        <%= link_to "View All", institute_admin_training_programs_path, class: "btn btn-sm btn-primary" %>
+        <h5 class="card-title mb-0 fw-bold">Recent Training Programs</h5>
+        <%= link_to "View All", institute_admin_training_programs_path, class: "btn btn-primary" %>
       </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-0">
       <div class="table-responsive">
         <% if @recent_programs.present? %>
-          <table class="table table-hover">
+          <table class="table modern-table">
             <thead>
               <tr>
                 <th>Program</th>
@@ -331,33 +490,34 @@
                 <tr>
                   <td>
                     <div class="d-flex align-items-center">
-                      <div class="program-icon me-2">
-                        <i class="bi bi-book text-primary"></i>
+                      <div class="me-3 p-2 rounded-3 bg-light text-primary">
+                        <i class="bi bi-book fs-5"></i>
                       </div>
                       <div>
-                        <%= program.title %>
-                        <br>
+                        <div class="fw-bold text-dark"><%= program.title %></div>
                         <small class="text-muted"><%= program.start_date&.strftime("%b %d, %Y") %></small>
                       </div>
                     </div>
                   </td>
-                  <td><%= program.participants_count %></td>
+                  <td class="fw-bold text-center"><%= program.participants_count %></td>
                   <td>
-                    <div class="progress" style="height: 6px; width: 120px;">
-                      <div class="progress-bar bg-success" role="progressbar" 
-                           style="width: <%= program.feedback_percentage %>%" 
-                           aria-valuenow="<%= program.feedback_percentage %>" 
-                           aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="d-flex align-items-center">
+                      <div class="progress flex-grow-1 me-2" style="height: 6px; background-color: #e2e8f0;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: <%= program.feedback_percentage %>%" 
+                             aria-valuenow="<%= program.feedback_percentage %>" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                      <span class="small fw-semibold text-muted"><%= program.feedback_percentage %>%</span>
                     </div>
-                    <small class="text-muted"><%= program.feedback_percentage %>%</small>
                   </td>
                   <td>
-                    <span class="badge bg-<%= program.status == 'ongoing' ? 'success' : 'secondary' %>">
+                    <span class="status-badge status-badge-<%= program.status %>">
                       <%= program.status %>
                     </span>
                   </td>
                   <td>
-                    <%= link_to institute_admin_training_program_path(program), class: "btn btn-sm btn-light" do %>
+                    <%= link_to institute_admin_training_program_path(program), class: "action-btn" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
                   </td>
