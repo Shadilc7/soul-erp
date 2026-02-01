@@ -445,6 +445,16 @@
     </style>
 
     <%= yield :styles %>
+    
+    <script>
+      // Ensure styles are reloaded on Turbo navigation
+      document.addEventListener('turbo:load', function() {
+        document.documentElement.style.visibility = 'visible';
+      });
+      document.addEventListener('turbo:before-render', function() {
+        document.documentElement.style.visibility = 'visible';
+      });
+    </script>
   </head>
 
   <body>
