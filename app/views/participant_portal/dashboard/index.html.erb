@@ -4,23 +4,16 @@
     <div class="col-12">
       <div class="welcome-card">
         <div class="welcome-gradient"></div>
-        <div class="card-body py-4 position-relative">
-          <div class="d-flex align-items-center">
-            <div class="avatar-circle me-3">
-              <span class="avatar-text">
-                <%= current_user.first_name&.first&.upcase || current_user.email.first.upcase %>
-              </span>
-            </div>
-            <div>
-              <h4 class="mb-1 welcome-title">Welcome, <%= current_user.first_name || "Participant" %>!</h4>
-              <p class="text-muted mb-0 welcome-info">
-                <i class="bi bi-building me-2"></i><%= current_institute.name %>
-                <% if current_participant.section %>
-                  <span class="mx-2">|</span>
-                  <i class="bi bi-diagram-2 me-2"></i><%= current_participant.section.name %>
-                <% end %>
-              </p>
-            </div>
+        <div class="card-body py-4 px-4 position-relative">
+          <div>
+            <h4 class="mb-1 welcome-title">Welcome, <%= current_user.first_name || "Participant" %>!</h4>
+            <p class="text-muted mb-0 welcome-info">
+              <i class="bi bi-building me-2"></i><%= current_institute.name %>
+              <% if current_participant.section %>
+                <span class="mx-2">|</span>
+                <i class="bi bi-diagram-2 me-2"></i><%= current_participant.section.name %>
+              <% end %>
+            </p>
           </div>
         </div>
       </div>
@@ -289,41 +282,20 @@
 
 <% content_for :styles do %>
   <style>
+    /* Container stability */
+    .container-fluid {
+      max-width: 100%;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
     /* Welcome Card */
     .welcome-card {
       background: #ffffff;
       border-radius: 24px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
       overflow: hidden;
-      position: relative;
       border: 1px solid rgba(148, 163, 184, 0.1);
-    }
-    .welcome-gradient {
-      display: none;
-    }
-    @keyframes shimmer {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-    .avatar-circle {
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-      animation: floatAvatar 3s ease-in-out infinite;
-    }
-    @keyframes floatAvatar {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    .avatar-text {
-      color: white;
-      font-size: 1.75rem;
-      font-weight: 700;
     }
     .welcome-title {
       font-weight: 700;
@@ -398,18 +370,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.1);
-      position: relative;
-    }
-    .modern-card.training-programs-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
-      background-size: 200% auto;
-      animation: shimmer 3s linear infinite;
     }
     .modern-card-header {
       padding: 1.75rem 2rem;

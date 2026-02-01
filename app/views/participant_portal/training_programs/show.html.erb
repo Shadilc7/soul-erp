@@ -216,23 +216,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(148, 163, 184, 0.1);
     padding: 1.75rem 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .page-header-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #6366f1);
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
-  }
-  @keyframes shimmer {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
   }
   .header-content {
     display: flex;
