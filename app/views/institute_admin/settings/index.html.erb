@@ -1,108 +1,186 @@
-<div class="container-fluid py-4">
-  <h1 class="fw-bold mb-4">Settings</h1>
-
-  <div class="row g-3">
-    <!-- Sections Card -->
-    <div class="col-sm-6 col-lg-4">
-      <div class="mini-card">
-        <div class="icon-box">
-          <i class="bi bi-grid"></i>
-        </div>
-        <div class="content">
-          <h6>Sections</h6>
-        </div>
-        <%= link_to "", institute_admin_sections_path, class: "card-link" %>
-      </div>
-    </div>
-
-    <!-- General Settings Card -->
-    <div class="col-sm-6 col-lg-4">
-      <div class="mini-card">
-        <div class="icon-box">
-          <i class="bi bi-sliders"></i>
-        </div>
-        <div class="content">
-          <h6>General Settings</h6>
-        </div>
-        <%= link_to "", institute_admin_general_settings_path, class: "card-link" %>
-      </div>
-    </div>
-  </div>
-</div>
-
+<% content_for :styles do %>
 <style>
-  .mini-card {
+  :root {
+    --primary-gradient: linear-gradient(135deg, #059669 0%, #0891b2 50%, #4f46e5 100%);
+    --card-hover-transform: translateY(-5px);
+  }
+
+  .settings-page {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    padding-bottom: 3rem;
+    padding-top: 0;
+  }
+
+  /* Modern Header */
+  .settings-hero {
+    background: var(--primary-gradient);
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
     position: relative;
-    background-color: white;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    transition: all 0.15s ease;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
     display: flex;
     align-items: center;
-    overflow: hidden;
-    height: 72px;
+    
+    /* Break out of .content-wrapper padding */
+    margin-top: -2.1rem;
+    margin-left: -2rem;
+    margin-right: -2rem;
+    width: auto;
+    border-radius: 0;
   }
-  
-  .mini-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    background-color: #fcfcfc;
-  }
-  
-  .icon-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background-color: rgba(var(--bs-primary-rgb), 0.1);
-    color: var(--bs-primary);
-    margin-right: 16px;
-    font-size: 1.2rem;
-  }
-  
-  .content {
-    flex: 1;
-    overflow: hidden;
-  }
-  
-  .mini-card h6 {
-    font-weight: 500;
-    font-size: 1rem;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #333;
-  }
-  
-  .card-link {
+
+  .settings-hero::after {
+    content: '';
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
+    background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .settings-hero h1 {
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.025em;
+    margin-bottom: 0;
+    position: relative;
     z-index: 1;
+    display: flex;
+    align-items: center;
   }
-  
-  .mini-card:focus-within {
-    box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.25);
-    outline: 0;
+
+  /* Feature Cards */
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    height: 100%;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
+
+  .feature-card:hover {
+    transform: var(--card-hover-transform);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: transparent;
+  }
+
+  .icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    transition: transform 0.3s ease;
+  }
+
+  .feature-card:hover .icon-box {
+    transform: scale(1.1) rotate(-5deg);
+  }
+
+  .icon-box-sections { background: #ecfdf5; color: #059669; }
+  .icon-box-settings { background: #eff6ff; color: #2563eb; }
+
+  .feature-card h3 {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+  }
+
+  .btn-feature {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-feature-sections { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+  .btn-feature-sections:hover { background: #22c55e; color: white; border-color: #22c55e; }
   
-  @media (max-width: 576px) {
-    .mini-card {
-      padding: 12px;
-      height: 64px;
+  .btn-feature-settings { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; }
+  .btn-feature-settings:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+  @media (max-width: 768px) {
+    .settings-hero {
+      padding: 1.5rem;
+      margin-left: -1rem;
+      margin-right: -1rem;
     }
     
-    .icon-box {
-      min-width: 36px;
-      height: 36px;
-      margin-right: 12px;
-      font-size: 1rem;
+    .settings-hero h1 {
+      font-size: 1.75rem;
+    }
+    
+    .feature-card {
+      padding: 1.5rem;
     }
   }
-</style> 
+</style>
+<% end %>
+
+<div class="settings-page">
+  <!-- Hero Header -->
+  <div class="settings-hero">
+    <div class="container-fluid px-4">
+      <h1><i class="bi bi-gear-fill me-3"></i>Settings</h1>
+    </div>
+  </div>
+
+  <div class="container-fluid px-4 pt-2">
+    <div class="row g-4">
+      <!-- Sections -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="icon-box icon-box-sections">
+            <i class="bi bi-grid-fill"></i>
+          </div>
+          <h3>Sections</h3>
+          <p>Manage and organize institute sections, groups, and student allocations efficiently.</p>
+          <%= link_to institute_admin_sections_path, class: "btn-feature btn-feature-sections" do %>
+            Manage Sections <i class="bi bi-arrow-right"></i>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- General Settings -->
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="icon-box icon-box-settings">
+            <i class="bi bi-sliders"></i>
+          </div>
+          <h3>General Settings</h3>
+          <p>Configure institute-wide preferences, defaults, and other administrative options.</p>
+          <%= link_to institute_admin_general_settings_path, class: "btn-feature btn-feature-settings" do %>
+            Configure Settings <i class="bi bi-arrow-right"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

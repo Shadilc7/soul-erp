@@ -1,7 +1,7 @@
 <% content_for :styles do %>
 <style>
   :root {
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --primary-gradient: linear-gradient(135deg, #059669 0%, #0891b2 50%, #4f46e5 100%);
     --card-hover-transform: translateY(-5px);
   }
 
@@ -9,19 +9,26 @@
     min-height: 100vh;
     background-color: #f8fafc;
     padding-bottom: 3rem;
+    padding-top: 0;
   }
 
   /* Modern Header */
   .reports-hero {
     background: var(--primary-gradient);
-    border-radius: 16px;
-    padding: 1.5rem;
+    padding: 2rem 2.5rem;
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
     display: flex;
     align-items: center;
+    
+    /* Break out of .content-wrapper padding */
+    margin-top: -2.1rem; /* Adjusted to close gap */
+    margin-left: -2rem; /* Pull left */
+    margin-right: -2rem; /* Pull right */
+    width: auto; /* Fill available space */
+    border-radius: 0;
   }
 
   .reports-hero::after {
@@ -141,7 +148,9 @@
   
   @media (max-width: 768px) {
     .reports-hero {
-      padding: 2rem 1.5rem;
+      padding: 1.5rem;
+      margin-left: -1rem;
+      margin-right: -1rem;
     }
     
     .reports-hero h1 {
@@ -156,12 +165,14 @@
 <% end %>
 
 <div class="reports-page">
-  <div class="container-fluid px-4 pt-4">
-    <!-- Hero Header -->
-    <div class="reports-hero">
+  <!-- Hero Header -->
+  <div class="reports-hero">
+    <div class="container-fluid px-4">
       <h1><i class="bi bi-bar-chart-line-fill me-3"></i>Reports & Analytics</h1>
     </div>
+  </div>
 
+  <div class="container-fluid px-4 pt-2">
     <!-- Features Grid -->
     <div class="row g-4">
       <!-- Certificates -->
