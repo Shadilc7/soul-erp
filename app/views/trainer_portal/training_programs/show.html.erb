@@ -1,4 +1,4 @@
-<div class="container-fluid py-4">
+<div class="container py-4 trainer-program-show">
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
@@ -10,137 +10,140 @@
     </ol>
   </nav>
 
-  <div class="row">
-    <div class="col-md-8">
-      <!-- Program Details -->
-      <div class="card card-custom shadow-sm mb-4">
-        <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-          <h4 class="mb-0"><%= @training_program.title %></h4>
-          <span class="badge <%= @training_program.status == 'completed' ? 'bg-success' : 'bg-primary' %>">
-            <%= @training_program.status.titleize %>
-          </span>
+  <div class="program-hero mb-4">
+    <div class="program-hero-content">
+      <div class="program-icon">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <div>
+        <h3 class="program-title"><%= @training_program.title %></h3>
+        <p class="program-subtitle"><%= truncate(@training_program.description, length: 140) %></p>
+        <div class="hero-meta">
+          <span><i class="bi bi-calendar-range me-1"></i><%= @training_program.start_date&.strftime("%b %d") || "Not set" %> - <%= @training_program.end_date&.strftime("%b %d, %Y") || "Not set" %></span>
+          <span class="dot-divider"></span>
+          <span><i class="bi bi-person-workspace me-1"></i><%= @training_program.program_type.titleize %></span>
         </div>
-        <div class="card-body">
-          <p class="text-muted mb-4">
-            <%= @training_program.description %>
-          </p>
+      </div>
+    </div>
+    <div class="program-status">
+      <span class="status-pill status-<%= @training_program.status == "completed" ? "completed" : "active" %>">
+        <i class="bi bi-<%= @training_program.status == "completed" ? "check-circle-fill" : "play-circle-fill" %> me-1"></i>
+        <%= @training_program.status.titleize %>
+      </span>
+      <% unless @training_program.completed? %>
+        <%= button_to mark_completed_trainer_portal_training_program_path(@training_program),
+            method: :patch,
+            class: "btn-complete",
+            form: { style: "display: inline-block" },
+            data: { turbo_confirm: "Are you sure you want to mark this program as completed?" } do %>
+          <i class="bi bi-check-circle me-1"></i> Mark Completed
+        <% end %>
+      <% end %>
+    </div>
+  </div>
 
-          <div class="row g-3 mb-4">
-            <div class="col-sm-6">
-              <div class="p-3 border rounded bg-light">
-                <p class="small text-muted mb-1">Start Date</p>
-                <p class="mb-0">
-                  <i class="bi bi-calendar me-2"></i>
-                  <%= @training_program.start_date&.strftime("%B %d, %Y") || "Not set" %>
-                </p>
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="info-card mb-4">
+        <div class="info-card-header">
+          <h5>Program Overview</h5>
+        </div>
+        <div class="info-card-body">
+          <p class="lead-text"><%= @training_program.description %></p>
+
+          <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+              <div class="detail-pill">
+                <div class="detail-icon"><i class="bi bi-calendar"></i></div>
+                <div>
+                  <p class="detail-label">Start Date</p>
+                  <p class="detail-value"><%= @training_program.start_date&.strftime("%B %d, %Y") || "Not set" %></p>
+                </div>
               </div>
             </div>
-            <div class="col-sm-6">
-              <div class="p-3 border rounded bg-light">
-                <p class="small text-muted mb-1">End Date</p>
-                <p class="mb-0">
-                  <i class="bi bi-calendar-check me-2"></i>
-                  <%= @training_program.end_date&.strftime("%B %d, %Y") || "Not set" %>
-                </p>
+            <div class="col-12 col-md-6">
+              <div class="detail-pill">
+                <div class="detail-icon"><i class="bi bi-calendar-check"></i></div>
+                <div>
+                  <p class="detail-label">End Date</p>
+                  <p class="detail-value"><%= @training_program.end_date&.strftime("%B %d, %Y") || "Not set" %></p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="mb-4">
-            <h5 class="mb-3">Progress Tracking</h5>
-            <div class="progress mb-2" style="height: 15px;">
-              <div class="progress-bar bg-success" 
-                   role="progressbar" 
-                   style="width: <%= @training_program.progress || 0 %>%" 
-                   aria-valuenow="<%= @training_program.progress || 0 %>" 
-                   aria-valuemin="0" 
-                   aria-valuemax="100">
-                <%= @training_program.progress || 0 %>%
-              </div>
+          <div class="progress-card mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0">Progress Tracking</h6>
+              <span class="progress-value"><%= @training_program.progress || 0 %>%</span>
             </div>
-
-            <% unless @training_program.completed? %>
-              <div class="mt-3">
-                <%= button_to mark_completed_trainer_portal_training_program_path(@training_program), 
-                    method: :patch,
-                    class: "btn btn-success",
-                    data: { turbo_confirm: "Are you sure you want to mark this program as completed?" } do %>
-                  <i class="bi bi-check-circle me-1"></i> Mark as Completed
-                <% end %>
-              </div>
-            <% end %>
+            <div class="progress">
+              <div class="progress-bar" role="progressbar"
+                   style="width: <%= @training_program.progress || 0 %>%"
+                   aria-valuenow="<%= @training_program.progress || 0 %>"
+                   aria-valuemin="0"
+                   aria-valuemax="100"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-4">
-      <!-- Participants Info -->
-      <div class="card card-custom shadow-sm mb-4">
-        <div class="card-header card-header-custom">
-          <h5 class="mb-0">
-            <%= @training_program.individual? ? "Participant Details" : "Section Details" %>
-          </h5>
+    <div class="col-12 col-lg-4">
+      <div class="info-card mb-4">
+        <div class="info-card-header">
+          <h5><%= @training_program.individual? ? "Participant Details" : "Section Details" %></h5>
         </div>
-        <div class="card-body">
+        <div class="info-card-body">
           <% if @training_program.individual? %>
             <% if @participants.any? %>
               <% @participants.each do |participant| %>
-                <div class="participant-info mb-4">
-                  <div class="text-center mb-3">
-                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                      <span class="h3 mb-0">
-                        <%= participant.user.first_name&.first&.upcase || participant.user.email.first.upcase %>
-                      </span>
-                    </div>
-                    <h5 class="mb-1"><%= participant.user.full_name %></h5>
-                    <p class="text-muted mb-0"><%= participant.user.email %></p>
+                <div class="person-card mb-3">
+                  <div class="person-avatar">
+                    <span><%= participant.user.first_name&.first&.upcase || participant.user.email.first.upcase %></span>
                   </div>
-
-                  <ul class="list-unstyled">
-                    <li class="mb-2">
-                      <i class="bi bi-building me-2 text-muted"></i>
-                      <%= @training_program.institute.name %>
-                    </li>
-                    <% if participant.section %>
-                      <li class="mb-2">
-                        <i class="bi bi-diagram-2 me-2 text-muted"></i>
-                        <%= participant.section.name %>
-                      </li>
-                    <% end %>
-                    <li class="mb-2">
-                      <i class="bi bi-calendar me-2 text-muted"></i>
+                  <div class="person-body">
+                    <h6><%= participant.user.full_name %></h6>
+                    <p><%= participant.user.email %></p>
+                    <div class="person-meta">
+                      <span><i class="bi bi-building me-1"></i><%= @training_program.institute.name %></span>
+                      <% if participant.section %>
+                        <span class="dot-divider"></span>
+                        <span><i class="bi bi-diagram-2 me-1"></i><%= participant.section.name %></span>
+                      <% end %>
+                    </div>
+                    <div class="enrolled-pill">
+                      <i class="bi bi-calendar me-2"></i>
                       <% enrollment = @training_program.training_program_participants.find_by(participant: participant) %>
                       Enrolled: <%= enrollment ? enrollment.created_at.strftime("%B %d, %Y") : "Not available" %>
-                    </li>
-                  </ul>
+                    </div>
+                  </div>
                 </div>
               <% end %>
             <% else %>
-              <div class="text-center py-4">
-                <i class="bi bi-person-x fs-1 text-muted mb-3"></i>
-                <p class="text-muted mb-0">No participants assigned</p>
+              <div class="empty-state">
+                <i class="bi bi-person-x"></i>
+                <p>No participants assigned</p>
               </div>
             <% end %>
           <% else %>
             <% if @training_program.sections.any? %>
               <% @training_program.sections.each do |section| %>
-                <div class="section-info mb-4">
-                  <h6 class="mb-2"><%= section.name %></h6>
-                  <p class="text-muted mb-2">
-                    <i class="bi bi-people me-2"></i>
-                    <%= pluralize(section.participants.count, 'participant') %>
-                  </p>
-                  <div class="d-flex align-items-center">
-                    <span class="badge bg-info me-2">Code: <%= section.code %></span>
-                    <span class="badge bg-success">Active</span>
+                <div class="section-card mb-3">
+                  <div class="section-header">
+                    <h6><%= section.name %></h6>
+                    <span class="section-code">Code: <%= section.code %></span>
+                  </div>
+                  <div class="section-meta">
+                    <span><i class="bi bi-people me-1"></i><%= pluralize(section.participants.count, "participant") %></span>
+                    <span class="section-pill">Active</span>
                   </div>
                 </div>
               <% end %>
             <% else %>
-              <div class="text-center py-4">
-                <i class="bi bi-diagram-3 fs-1 text-muted mb-3"></i>
-                <p class="text-muted mb-0">No sections assigned</p>
+              <div class="empty-state">
+                <i class="bi bi-diagram-3"></i>
+                <p>No sections assigned</p>
               </div>
             <% end %>
           <% end %>
@@ -149,3 +152,315 @@
     </div>
   </div>
 </div>
+
+<% content_for :styles do %>
+  <style>
+    .trainer-program-show {
+      max-width: 1400px;
+    }
+    .program-hero {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .program-hero-content {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      min-width: 0;
+      flex: 1;
+    }
+    .program-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2));
+      color: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .program-title {
+      margin: 0;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.6rem;
+    }
+    .program-subtitle {
+      margin: 0.35rem 0 0;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 0.75rem;
+      color: #64748b;
+      font-size: 0.9rem;
+      align-items: center;
+    }
+    .dot-divider {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.7);
+      display: inline-block;
+    }
+    .program-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .status-pill {
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+    }
+    .status-completed {
+      background: rgba(34, 197, 94, 0.15);
+      color: #059669;
+    }
+    .status-active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #2563eb;
+    }
+    .btn-complete {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: #ffffff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    .btn-complete:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+    }
+
+    .info-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+    .info-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+    }
+    .info-card-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .info-card-body {
+      padding: 1.5rem;
+    }
+    .lead-text {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .detail-pill {
+      display: flex;
+      gap: 0.9rem;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      background: rgba(99, 102, 241, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .detail-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .detail-label {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .detail-value {
+      margin: 0.2rem 0 0;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .progress-card {
+      background: rgba(15, 23, 42, 0.03);
+      border-radius: 16px;
+      padding: 1.1rem 1.2rem;
+    }
+    .progress-value {
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    .person-card {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 16px;
+      background: rgba(99, 102, 241, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .person-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2));
+      color: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .person-body h6 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .person-body p {
+      margin: 0.2rem 0 0;
+      color: #64748b;
+      font-size: 0.88rem;
+    }
+    .person-meta {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      color: #64748b;
+      font-size: 0.85rem;
+      align-items: center;
+    }
+    .enrolled-pill {
+      margin-top: 0.7rem;
+      background: rgba(15, 23, 42, 0.04);
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
+      color: #475569;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .section-card {
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 1rem;
+      background: rgba(99, 102, 241, 0.04);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .section-header h6 {
+      margin: 0;
+      font-weight: 700;
+    }
+    .section-code {
+      font-size: 0.8rem;
+      background: rgba(59, 130, 246, 0.15);
+      color: #2563eb;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .section-meta {
+      margin-top: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    .section-pill {
+      background: rgba(34, 197, 94, 0.15);
+      color: #059669;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #94a3b8;
+    }
+    .empty-state i {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    @media (max-width: 992px) {
+      .program-hero {
+        padding: 1.4rem;
+      }
+      .program-hero-content {
+        flex-direction: row;
+      }
+    }
+    @media (max-width: 768px) {
+      .program-hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .program-hero-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .program-status {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .btn-complete {
+        width: 100%;
+        justify-content: center;
+      }
+      .person-card {
+        flex-direction: column;
+      }
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+<% end %>
