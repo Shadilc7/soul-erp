@@ -1,89 +1,299 @@
-<div class="row">
-  <div class="col-lg-4">
-    <div class="card card-custom">
-      <div class="card-body text-center py-4">
-        <div class="mb-3">
-          <i class="bi bi-person-circle display-1 text-primary"></i>
+<div class="container py-4 trainer-profile">
+  <div class="profile-hero mb-4">
+    <div class="profile-hero-content">
+      <div class="avatar-card">
+        <span><%= @trainer.user.first_name&.first&.upcase || @trainer.user.email.first.upcase %></span>
+      </div>
+      <div>
+        <h3 class="profile-name"><%= @trainer.user.full_name %></h3>
+        <p class="profile-email"><%= @trainer.user.email %></p>
+        <div class="profile-tags">
+          <span class="tag tag-success"><i class="bi bi-check-circle me-1"></i> Active</span>
+          <span class="tag tag-primary"><i class="bi bi-mortarboard me-1"></i> Trainer</span>
         </div>
-        <h5 class="mb-1"><%= @trainer.user.full_name %></h5>
-        <p class="text-muted mb-3"><%= @trainer.user.email %></p>
-        <div class="d-flex justify-content-center gap-2">
-          <span class="badge badge-success">
-            <i class="bi bi-check-circle me-1"></i> Active
-          </span>
-          <span class="badge bg-primary">
-            <i class="bi bi-mortarboard me-1"></i> Trainer
-          </span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <span class="profile-pill">
+        <i class="bi bi-building me-2"></i><%= current_institute.name %>
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-7">
+      <div class="info-card">
+        <div class="info-card-header">
+          <h5>Profile Information</h5>
+        </div>
+        <div class="info-card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <div class="info-item">
+                <p class="info-label">Full Name</p>
+                <p class="info-value"><%= @trainer.user.full_name %></p>
+              </div>
+              <div class="info-item">
+                <p class="info-label">Email</p>
+                <p class="info-value"><%= @trainer.user.email %></p>
+              </div>
+              <div class="info-item">
+                <p class="info-label">Phone Number</p>
+                <p class="info-value"><%= @trainer.phone_number.presence || "Not set" %></p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="info-item">
+                <p class="info-label">Specialization</p>
+                <p class="info-value"><%= @trainer.specialization.presence || "Not set" %></p>
+              </div>
+              <div class="info-item">
+                <p class="info-label">Experience</p>
+                <p class="info-value"><%= pluralize(@trainer.experience_years || 0, "year") %></p>
+              </div>
+              <div class="info-item">
+                <p class="info-label">Joined On</p>
+                <p class="info-value"><%= @trainer.created_at.strftime("%B %d, %Y") %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="info-card">
+        <div class="info-card-header">
+          <h5>Training Programs Overview</h5>
+        </div>
+        <div class="info-card-body">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon bg-success-soft"><i class="bi bi-check-circle"></i></div>
+              <div>
+                <p class="stat-label">Completed</p>
+                <h4 class="stat-value"><%= @trainer.training_programs.completed.count %></h4>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-info-soft"><i class="bi bi-play-circle"></i></div>
+              <div>
+                <p class="stat-label">Ongoing</p>
+                <h4 class="stat-value"><%= @trainer.training_programs.ongoing.count %></h4>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-primary-soft"><i class="bi bi-collection"></i></div>
+              <div>
+                <p class="stat-label">Total Programs</p>
+                <h4 class="stat-value"><%= @trainer.training_programs.count %></h4>
+              </div>
+            </div>
+          </div>
+          <div class="note-box mt-3">
+            <i class="bi bi-info-circle"></i>
+            Stats update automatically as your programs progress.
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="col-lg-8">
-    <div class="card card-custom">
-      <div class="card-header card-header-custom">
-        <h5 class="mb-0">Profile Information</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="mb-4">
-              <label class="form-label text-muted">Full Name</label>
-              <p class="mb-0"><%= @trainer.user.full_name %></p>
-            </div>
-            <div class="mb-4">
-              <label class="form-label text-muted">Email</label>
-              <p class="mb-0"><%= @trainer.user.email %></p>
-            </div>
-            <div class="mb-4">
-              <label class="form-label text-muted">Phone Number</label>
-              <p class="mb-0"><%= @trainer.phone_number %></p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-4">
-              <label class="form-label text-muted">Specialization</label>
-              <p class="mb-0"><%= @trainer.specialization %></p>
-            </div>
-            <div class="mb-4">
-              <label class="form-label text-muted">Experience</label>
-              <p class="mb-0"><%= pluralize(@trainer.experience_years, 'year') %></p>
-            </div>
-            <div class="mb-4">
-              <label class="form-label text-muted">Joined On</label>
-              <p class="mb-0"><%= @trainer.created_at.strftime("%B %d, %Y") %></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<% content_for :styles do %>
+  <style>
+    .trainer-profile {
+      max-width: 1200px;
+    }
+    .profile-hero {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .profile-hero-content {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      min-width: 0;
+    }
+    .avatar-card {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.7rem;
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+      flex-shrink: 0;
+    }
+    .profile-name {
+      margin: 0;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .profile-email {
+      margin: 0.35rem 0 0;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .profile-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .tag {
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+    }
+    .tag-success {
+      background: rgba(34, 197, 94, 0.15);
+      color: #059669;
+    }
+    .tag-primary {
+      background: rgba(99, 102, 241, 0.15);
+      color: #4f46e5;
+    }
+    .profile-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .profile-pill {
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 999px;
+      padding: 0.5rem 1rem;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+    }
 
-    <div class="card card-custom mt-4">
-      <div class="card-header card-header-custom">
-        <h5 class="mb-0">Training Programs Overview</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-4">
-          <div class="col-sm-4">
-            <div class="text-center">
-              <h3 class="mb-1"><%= @trainer.training_programs.completed.count %></h3>
-              <p class="text-muted mb-0">Completed Programs</p>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="text-center">
-              <h3 class="mb-1"><%= @trainer.training_programs.ongoing.count %></h3>
-              <p class="text-muted mb-0">Ongoing Programs</p>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="text-center">
-              <h3 class="mb-1"><%= @trainer.training_programs.count %></h3>
-              <p class="text-muted mb-0">Total Programs</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div> 
+    .info-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+      height: 100%;
+    }
+    .info-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+    }
+    .info-card-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .info-card-body {
+      padding: 1.5rem;
+    }
+    .info-item {
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      background: rgba(99, 102, 241, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      margin-bottom: 1rem;
+    }
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    .info-label {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .info-value {
+      margin: 0.35rem 0 0;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .stat-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(99, 102, 241, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .bg-primary-soft { background: rgba(99, 102, 241, 0.15); color: #4f46e5; }
+    .bg-success-soft { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+    .bg-info-soft { background: rgba(56, 189, 248, 0.16); color: #0284c7; }
+    .stat-label {
+      margin: 0;
+      color: #64748b;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .stat-value {
+      margin: 0.25rem 0 0;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.4rem;
+    }
+    .note-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .note-box i {
+      color: #6366f1;
+      margin-top: 0.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .profile-hero {
+        padding: 1.3rem;
+      }
+      .profile-hero-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .profile-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+<% end %>
