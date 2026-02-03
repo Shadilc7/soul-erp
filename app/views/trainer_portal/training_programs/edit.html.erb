@@ -1,0 +1,297 @@
+<div class="container py-4 trainer-program-edit">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <%= link_to trainer_portal_training_programs_path do %>
+          <i class="bi bi-journal-text"></i> Training Programs
+        <% end %>
+      </li>
+      <li class="breadcrumb-item">
+        <%= link_to trainer_portal_training_program_path(@training_program) do %>
+          <%= @training_program.title %>
+        <% end %>
+      </li>
+      <li class="breadcrumb-item active">Edit</li>
+    </ol>
+  </nav>
+
+  <div class="edit-hero mb-4">
+    <div class="edit-hero-content">
+      <div class="edit-icon">
+        <i class="bi bi-pencil-square"></i>
+      </div>
+      <div>
+        <h3 class="edit-title">Edit Training Program</h3>
+        <p class="edit-subtitle">Update schedule and status while keeping assignments intact.</p>
+      </div>
+    </div>
+    <span class="status-pill status-<%= @training_program.status == "completed" ? "completed" : "active" %>">
+      <%= @training_program.status.titleize %>
+    </span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="edit-card">
+        <div class="edit-card-header">
+          <h5>Program Details</h5>
+        </div>
+        <div class="edit-card-body">
+          <%= form_with(model: [:trainer_portal, @training_program], class: "edit-form") do |form| %>
+            <% if @training_program.errors.any? %>
+              <div class="alert alert-danger">
+                <h6 class="mb-2"><%= pluralize(@training_program.errors.count, "error") %> prevented saving:</h6>
+                <ul class="mb-0">
+                  <% @training_program.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <%= form.label :title, class: "form-label" %>
+                <%= form.text_field :title, class: "form-control form-control-lg" %>
+              </div>
+
+              <div class="col-12">
+                <%= form.label :description, class: "form-label" %>
+                <%= form.text_area :description, class: "form-control", rows: 4 %>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <%= form.label :start_date, class: "form-label" %>
+                <%= form.datetime_local_field :start_date, class: "form-control" %>
+              </div>
+              <div class="col-12 col-md-6">
+                <%= form.label :end_date, class: "form-label" %>
+                <%= form.datetime_local_field :end_date, class: "form-control" %>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <%= form.label :program_type, class: "form-label" %>
+                <%= form.select :program_type, TrainingProgram.program_types.keys.map { |k| [k.humanize, k] },
+                                {}, { class: "form-select", disabled: true } %>
+                <small class="text-muted">Program type is locked once created.</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <%= form.label :status, class: "form-label" %>
+                <%= form.select :status, TrainingProgram.statuses.keys.map { |k| [k.humanize, k] },
+                                {}, { class: "form-select" } %>
+              </div>
+            </div>
+
+            <div class="form-actions mt-4">
+              <%= link_to trainer_portal_training_program_path(@training_program), class: "btn btn-outline-secondary" do %>
+                Cancel
+              <% end %>
+              <%= form.submit "Save Changes", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="edit-card">
+        <div class="edit-card-header">
+          <h5>Assignments</h5>
+        </div>
+        <div class="edit-card-body">
+          <div class="assignment-pill">
+            <i class="bi bi-people"></i>
+            <span class="label">Assigned To</span>
+            <span class="value">
+              <% if @training_program.individual? %>
+                <% if @training_program.participants.any? %>
+                  <%= pluralize(@training_program.participants.count, "participant") %>
+                <% else %>
+                  <%= @training_program.participant&.user&.full_name || "Unassigned" %>
+                <% end %>
+              <% else %>
+                <% if @training_program.sections.any? %>
+                  <%= pluralize(@training_program.sections.count, "section") %>
+                <% else %>
+                  <%= @training_program.section&.name || "Unassigned" %>
+                <% end %>
+              <% end %>
+            </span>
+          </div>
+
+          <div class="assignment-pill">
+            <i class="bi bi-calendar-range"></i>
+            <span class="label">Duration</span>
+            <span class="value">
+              <%= @training_program.start_date.strftime("%b %d") %> - <%= @training_program.end_date.strftime("%b %d, %Y") %>
+            </span>
+          </div>
+
+          <div class="assignment-note">
+            <i class="bi bi-info-circle"></i>
+            Assignments are managed by institute admins. You can update schedule and status here.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% content_for :styles do %>
+  <style>
+    .trainer-program-edit {
+      max-width: 1200px;
+    }
+    .edit-hero {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 20px;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .edit-hero-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .edit-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(34, 211, 238, 0.2));
+      color: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .edit-title {
+      margin: 0;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .edit-subtitle {
+      margin: 0.3rem 0 0;
+      color: #64748b;
+    }
+    .status-pill {
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .status-completed {
+      background: rgba(34, 197, 94, 0.15);
+      color: #059669;
+    }
+    .status-active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #2563eb;
+    }
+
+    .edit-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+      height: 100%;
+    }
+    .edit-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+    }
+    .edit-card-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .edit-card-body {
+      padding: 1.5rem;
+    }
+    .edit-form .form-label {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .edit-form .form-control,
+    .edit-form .form-select {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 0.75rem 0.9rem;
+    }
+    .edit-form .form-control:focus,
+    .edit-form .form-select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+    }
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .form-actions .btn {
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .assignment-pill {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.75rem 1rem;
+      align-items: center;
+      padding: 0.9rem 1rem;
+      background: rgba(99, 102, 241, 0.04);
+      border-radius: 14px;
+      margin-bottom: 1rem;
+      color: #1e293b;
+    }
+    .assignment-pill i {
+      color: #6366f1;
+      font-size: 1.1rem;
+    }
+    .assignment-pill .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+    }
+    .assignment-pill .value {
+      grid-column: 2 / -1;
+      font-weight: 600;
+    }
+    .assignment-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: #64748b;
+      background: rgba(15, 23, 42, 0.03);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .edit-hero {
+        padding: 1.25rem;
+      }
+      .edit-hero-content {
+        flex-direction: row;
+      }
+      .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+<% end %>
