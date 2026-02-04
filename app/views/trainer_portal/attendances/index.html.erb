@@ -1,32 +1,40 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom py-3">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Attendance Management</h5>
-      <%= link_to list_trainer_portal_attendances_path, class: "btn btn-outline-primary" do %>
+<div class="container py-4 trainer-attendance">
+  <div class="page-header-card mb-4">
+    <div class="header-icon">
+      <i class="bi bi-calendar-check"></i>
+    </div>
+    <div>
+      <h4 class="header-title">Attendance Management</h4>
+      <p class="header-subtitle">Mark attendance, edit records, and review history</p>
+    </div>
+    <div class="ms-auto">
+      <%= link_to list_trainer_portal_attendances_path, class: "btn-back" do %>
         <i class="bi bi-list-check me-1"></i> View All Programs
       <% end %>
     </div>
   </div>
 
-  <div class="card-body">
-    <% if @training_programs.any? %>
-      <div data-controller="attendance-selector">
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="form-group">
+  <div class="card-shell">
+    <div class="card-shell-header">
+      <h5>Program Selector</h5>
+      <span class="table-chip"><%= pluralize(@training_programs.count, "program") %></span>
+    </div>
+    <div class="card-shell-body">
+      <% if @training_programs.any? %>
+        <div data-controller="attendance-selector">
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-6">
               <label for="training-program-select" class="form-label">Select Training Program</label>
-              <div class="d-flex align-items-center mb-2">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="show-all-programs" data-action="change->attendance-selector#toggleCompletedPrograms">
-                  <label class="form-check-label" for="show-all-programs">Show completed programs</label>
-                </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="show-all-programs" data-action="change->attendance-selector#toggleCompletedPrograms">
+                <label class="form-check-label" for="show-all-programs">Show completed programs</label>
               </div>
-              <select id="training-program-select" class="form-select" 
+              <select id="training-program-select" class="form-select"
                       data-attendance-selector-target="select"
                       data-action="change->attendance-selector#change">
                 <option value="">-- Select a Training Program --</option>
                 <% @training_programs.each do |program| %>
-                  <option value="<%= program.id %>" 
+                  <option value="<%= program.id %>"
                           data-mark-url="<%= mark_trainer_portal_attendance_path(program) %>"
                           data-history-url="<%= history_trainer_portal_attendance_path(program) %>"
                           data-start-date="<%= program.start_date.to_date.iso8601 %>"
@@ -34,81 +42,313 @@
                           data-status="<%= program.status %>"
                           <%= 'disabled' if program.completed? %>
                           <%= 'style="display:none"' if program.completed? %>>
-                    <%= program.title %> 
-                    (<%= program.program_type.titleize %>, 
+                    <%= program.title %>
+                    (<%= program.program_type.titleize %>,
                     <%= program.individual? ? pluralize(program.participants.count, "participant") : pluralize(program.sections.count, "section") %>)
                     <%= program.completed? ? "[Completed]" : "[Ongoing]" %>
                   </option>
                 <% end %>
               </select>
             </div>
-          </div>
-        </div>
 
-        <div class="row mb-4 d-none" data-attendance-selector-target="dateContainer">
-          <div class="col-md-6">
-            <div class="form-group">
+            <div class="col-12 col-lg-6 d-none" data-attendance-selector-target="dateContainer">
               <label for="attendance-date" class="form-label">Select Date</label>
-              <input type="date" id="attendance-date" class="form-control" 
+              <input type="date" id="attendance-date" class="form-control"
                      data-attendance-selector-target="dateSelector"
                      data-action="change->attendance-selector#dateChanged">
             </div>
           </div>
-        </div>
 
-        <div id="attendance-actions" class="d-none" data-attendance-selector-target="actions">
-          <div class="row mb-4">
-            <div class="col-12">
-              <div class="card bg-light">
-                <div class="card-body">
-                  <h6 class="card-title" id="selected-program-title" data-attendance-selector-target="programTitle"></h6>
-                  <div class="d-flex gap-2 mt-3">
-                    <a href="#" id="mark-attendance-btn" class="btn btn-primary" data-attendance-selector-target="markBtn">
-                      <i class="bi bi-plus-circle me-1"></i> Mark Attendance
-                    </a>
-                    <a href="#" id="edit-attendance-btn" class="btn btn-secondary d-none" data-attendance-selector-target="editBtn">
-                      <i class="bi bi-pencil me-1"></i> Edit Attendance
-                    </a>
-                    <a href="#" id="view-history-btn" class="btn btn-info text-white" data-attendance-selector-target="historyBtn">
-                      <i class="bi bi-clock-history me-1"></i> View Attendance History
-                    </a>
-                  </div>
-                </div>
+          <div id="attendance-actions" class="d-none" data-attendance-selector-target="actions">
+            <div class="action-panel">
+              <div>
+                <h6 class="panel-title" id="selected-program-title" data-attendance-selector-target="programTitle"></h6>
+                <p class="panel-subtitle">Choose an action for the selected date.</p>
+              </div>
+              <div class="action-buttons">
+                <a href="#" id="mark-attendance-btn" class="btn-primary-cta" data-attendance-selector-target="markBtn">
+                  <i class="bi bi-plus-circle me-1"></i> Mark Attendance
+                </a>
+                <a href="#" id="edit-attendance-btn" class="btn-secondary-cta d-none" data-attendance-selector-target="editBtn">
+                  <i class="bi bi-pencil me-1"></i> Edit Attendance
+                </a>
+                <a href="#" id="view-history-btn" class="btn-tertiary-cta" data-attendance-selector-target="historyBtn">
+                  <i class="bi bi-clock-history me-1"></i> View History
+                </a>
               </div>
             </div>
           </div>
-        </div>
 
-        <div id="no-selection" class="text-center py-5" data-attendance-selector-target="noSelection">
-          <div class="mb-3">
-            <i class="bi bi-calendar-check fs-1 text-muted"></i>
+          <div id="no-selection" class="empty-state" data-attendance-selector-target="noSelection">
+            <div class="empty-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <h5 class="empty-title">Select a Training Program</h5>
+            <p class="empty-text">Pick a program to mark attendance, edit records, or view history.</p>
           </div>
-          <h5 class="text-muted">Select a Training Program to Manage Attendance</h5>
-          <p class="text-muted">You can mark attendance, edit existing records, or view attendance history.</p>
         </div>
-      </div>
-    <% else %>
-      <div class="text-center py-5">
-        <div class="mb-3">
-          <i class="bi bi-calendar-x fs-1 text-muted"></i>
+      <% else %>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-calendar-x"></i>
+          </div>
+          <h5 class="empty-title">No Training Programs Available</h5>
+          <p class="empty-text">You don't have any programs assigned yet.</p>
         </div>
-        <h5 class="text-muted">No Training Programs Available</h5>
-        <p class="text-muted">You don't have any training programs assigned to you yet.</p>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 </div>
 
 <% content_for :styles do %>
   <style>
+    .trainer-attendance {
+      max-width: 1400px;
+    }
+    .page-header-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
+    }
+    .btn-back {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #475569;
+      padding: 0.6rem 1.1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    .btn-back:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-shell {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+    .card-shell-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .card-shell-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .table-chip {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      border-radius: 999px;
+      padding: 0.3rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .card-shell-body {
+      padding: 1.5rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .form-control,
+    .form-select {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 0.75rem 0.9rem;
+    }
+    .form-control:focus,
+    .form-select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+    }
+
+    .action-panel {
+      background: rgba(99, 102, 241, 0.04);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .panel-title {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .panel-subtitle {
+      margin: 0.35rem 0 0;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .btn-primary-cta,
+    .btn-secondary-cta,
+    .btn-tertiary-cta {
+      padding: 0.65rem 1.1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    .btn-primary-cta {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      color: #ffffff;
+      border: none;
+    }
+    .btn-primary-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+    }
+    .btn-secondary-cta {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: #475569;
+    }
+    .btn-secondary-cta:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.12);
+      transform: translateY(-2px);
+    }
+    .btn-tertiary-cta {
+      background: rgba(59, 130, 246, 0.12);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .btn-tertiary-cta:hover {
+      background: rgba(59, 130, 246, 0.2);
+      transform: translateY(-2px);
+      color: #2563eb;
+    }
+
+    .empty-state {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .empty-icon i {
+      font-size: 3rem;
+      color: #94a3b8;
+    }
+    .empty-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+    }
+    .empty-text {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
     option[data-status="completed"] {
       color: #6c757d;
       font-style: italic;
     }
-    
+
     option[data-status="ongoing"] {
       color: #198754;
       font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .page-header-card {
+        padding: 1.5rem;
+        gap: 0.875rem;
+      }
+      .header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+      }
+      .header-title {
+        font-size: 1.25rem;
+      }
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+      }
+      .action-buttons {
+        flex-direction: column;
+      }
+      .btn-primary-cta,
+      .btn-secondary-cta,
+      .btn-tertiary-cta {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 <% end %> 
