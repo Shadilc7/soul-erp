@@ -1,95 +1,126 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom py-3">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">
-        Edit Attendance: <%= @training_program.title %> 
-        <span class="badge bg-primary ms-2"><%= @date.strftime("%B %d, %Y") %></span>
-      </h5>
-      <%= link_to trainer_portal_attendances_path, class: "btn btn-outline-secondary" do %>
+<div class="container py-4 trainer-attendance-edit">
+  <div class="page-header-card mb-4">
+    <div class="header-icon">
+      <i class="bi bi-pencil-square"></i>
+    </div>
+    <div>
+      <h4 class="header-title">Edit Attendance</h4>
+      <p class="header-subtitle"><%= @training_program.title %></p>
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+      <span class="date-pill"><i class="bi bi-calendar-event me-1"></i><%= @date.strftime("%B %d, %Y") %></span>
+      <%= link_to trainer_portal_attendances_path, class: "btn-back" do %>
         <i class="bi bi-arrow-left me-1"></i> Back
       <% end %>
     </div>
   </div>
 
-  <div class="card-body" data-controller="attendance-marker">
+  <div class="card-shell" data-controller="attendance-marker">
     <% if @participants.any? %>
-      <div class="mb-4">
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-success" data-action="attendance-marker#markAllPresent">
+      <div class="card-shell-header">
+        <div>
+          <h5>Participants</h5>
+          <p class="table-subtitle">Update each participant status below</p>
+        </div>
+        <div class="bulk-actions">
+          <button type="button" class="btn-success-cta" data-action="attendance-marker#markAllPresent">
             <i class="bi bi-check-all me-1"></i> Mark All Present
           </button>
-          <button type="button" class="btn btn-danger" data-action="attendance-marker#markAllAbsent">
+          <button type="button" class="btn-danger-cta" data-action="attendance-marker#markAllAbsent">
             <i class="bi bi-x-lg me-1"></i> Mark All Absent
           </button>
-          <button type="button" class="btn btn-warning" data-action="attendance-marker#markAllLate">
+          <button type="button" class="btn-warning-cta" data-action="attendance-marker#markAllLate">
             <i class="bi bi-clock me-1"></i> Mark All Late
           </button>
         </div>
       </div>
 
-      <%= form_with(url: trainer_portal_attendance_path(@training_program, date: @date), 
-                    method: :patch, local: true, scope: :attendance) do |f| %>
-        <%= hidden_field_tag :date, @date %>
+      <div class="card-shell-body">
+        <%= form_with(url: trainer_portal_attendance_path(@training_program, date: @date),
+                      method: :patch, local: true, scope: :attendance) do |f| %>
+          <%= hidden_field_tag :date, @date %>
 
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th width="40%">Participant</th>
-                <th width="40%">Status</th>
-                <th width="20%">Section</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @participants.each do |participant| %>
-                <% attendance = @attendance_records[participant.id] %>
-                <tr class="attendance-row <%= attendance&.status %>-row" data-participant-id="<%= participant.id %>" data-attendance-marker-target="row">
-                  <td><%= participant.user&.full_name || "Unknown Participant" %></td>
-                  <td>
-                    <div class="attendance-toggle">
-                      <input type="radio" 
-                             id="present_<%= participant.id %>" 
-                             name="attendance[attendances][<%= participant.id %>]" 
-                             value="present" 
-                             <%= 'checked' if attendance&.present? %>>
-                      <label class="btn btn-outline-success" for="present_<%= participant.id %>">
-                        <i class="bi bi-check-lg"></i> Present
-                      </label>
-                      
-                      <input type="radio" 
-                             id="absent_<%= participant.id %>" 
-                             name="attendance[attendances][<%= participant.id %>]" 
-                             value="absent"
-                             <%= 'checked' if attendance&.absent? %>>
-                      <label class="btn btn-outline-danger" for="absent_<%= participant.id %>">
-                        <i class="bi bi-x-lg"></i> Absent
-                      </label>
-                      
-                      <input type="radio" 
-                             id="late_<%= participant.id %>" 
-                             name="attendance[attendances][<%= participant.id %>]" 
-                             value="late"
-                             <%= 'checked' if attendance&.late? %>>
-                      <label class="btn btn-outline-warning" for="late_<%= participant.id %>">
-                        <i class="bi bi-clock"></i> Late
-                      </label>
-                    </div>
-                  </td>
-                  <td><%= participant.section&.name || 'Not Assigned' %></td>
+          <div class="table-responsive">
+            <table class="table table-hover modern-table">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Status</th>
+                  <th>Section</th>
                 </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                <% @participants.each do |participant| %>
+                  <% attendance = @attendance_records[participant.id] %>
+                  <tr class="attendance-row <%= attendance&.status %>-row" data-participant-id="<%= participant.id %>" data-attendance-marker-target="row">
+                    <td>
+                      <div class="participant-cell">
+                        <div class="participant-avatar">
+                          <%= participant.user&.first_name&.first&.upcase || participant.user&.email&.first&.upcase || "?" %>
+                        </div>
+                        <div>
+                          <div class="participant-name"><%= participant.user&.full_name || "Unknown Participant" %></div>
+                          <div class="participant-meta"><%= participant.user&.email || "No email" %></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="attendance-toggle">
+                        <input type="radio"
+                               id="present_<%= participant.id %>"
+                               name="attendance[attendances][<%= participant.id %>]"
+                               value="present"
+                               class="status-radio"
+                               data-attendance-marker-target="statusRadio"
+                               <%= 'checked' if attendance&.present? %>>
+                        <label class="status-pill status-pill-present" for="present_<%= participant.id %>">
+                          <i class="bi bi-check-lg"></i> Present
+                        </label>
 
-        <div class="mt-4 text-end">
-          <%= f.submit "Update Attendance", class: "btn btn-primary btn-lg" %>
-        </div>
-      <% end %>
+                        <input type="radio"
+                               id="absent_<%= participant.id %>"
+                               name="attendance[attendances][<%= participant.id %>]"
+                               value="absent"
+                               class="status-radio"
+                               data-attendance-marker-target="statusRadio"
+                               <%= 'checked' if attendance&.absent? %>>
+                        <label class="status-pill status-pill-absent" for="absent_<%= participant.id %>">
+                          <i class="bi bi-x-lg"></i> Absent
+                        </label>
+
+                        <input type="radio"
+                               id="late_<%= participant.id %>"
+                               name="attendance[attendances][<%= participant.id %>]"
+                               value="late"
+                               class="status-radio"
+                               data-attendance-marker-target="statusRadio"
+                               <%= 'checked' if attendance&.late? %>>
+                        <label class="status-pill status-pill-late" for="late_<%= participant.id %>">
+                          <i class="bi bi-clock"></i> Late
+                        </label>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="section-pill"><%= participant.section&.name || "Not Assigned" %></span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-actions">
+            <%= f.submit "Update Attendance", class: "btn-primary-cta btn-lg" %>
+          </div>
+        <% end %>
+      </div>
     <% else %>
-      <div class="text-center py-4">
-        <i class="bi bi-people fs-1 text-muted mb-3"></i>
-        <p class="text-muted mb-0">No participants found for this training program</p>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="bi bi-people"></i>
+        </div>
+        <h5 class="empty-title">No Participants Found</h5>
+        <p class="empty-text">There are no participants assigned to this training program.</p>
       </div>
     <% end %>
   </div>
@@ -97,36 +128,370 @@
 
 <% content_for :styles do %>
   <style>
+    .trainer-attendance-edit {
+      max-width: 1400px;
+    }
+    .page-header-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
+    }
+    .date-pill {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-back {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #475569;
+      padding: 0.6rem 1.1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    .btn-back:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-shell {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+    .card-shell-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .card-shell-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .table-subtitle {
+      margin: 0.35rem 0 0;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+    .card-shell-body {
+      padding: 1.5rem;
+    }
+
+    .bulk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .btn-success-cta,
+    .btn-danger-cta,
+    .btn-warning-cta {
+      padding: 0.6rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      border: none;
+    }
+    .btn-success-cta {
+      background: rgba(34, 197, 94, 0.15);
+      color: #059669;
+    }
+    .btn-success-cta:hover {
+      background: rgba(34, 197, 94, 0.25);
+      transform: translateY(-2px);
+    }
+    .btn-danger-cta {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+    .btn-danger-cta:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-2px);
+    }
+    .btn-warning-cta {
+      background: rgba(245, 158, 11, 0.15);
+      color: #b45309;
+    }
+    .btn-warning-cta:hover {
+      background: rgba(245, 158, 11, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .modern-table thead th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 1rem 1.25rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .modern-table tbody td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      vertical-align: middle;
+      color: #1e293b;
+    }
+    .modern-table tbody tr:hover {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    .participant-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .participant-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .participant-name {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .participant-meta {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
     .attendance-toggle {
       display: flex;
-      gap: 5px;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
-    
+    .status-radio {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: 1px solid transparent;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .status-pill-present {
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #059669;
+      background: rgba(34, 197, 94, 0.08);
+    }
+    .status-pill-absent {
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .status-pill-late {
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .status-radio:focus + .status-pill,
+    .status-radio:checked + .status-pill {
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.2);
+      transform: translateY(-1px);
+    }
+    .status-radio:checked + .status-pill-present {
+      background: #047857;
+      border-color: #047857;
+      color: #ffffff;
+    }
+    .status-radio:checked + .status-pill-absent {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      color: #ffffff;
+    }
+    .status-radio:checked + .status-pill-late {
+      background: #92400e;
+      border-color: #92400e;
+      color: #ffffff;
+    }
+
     .attendance-row {
       transition: background-color 0.2s;
     }
-    
     .attendance-row.present-row {
-      background-color: rgba(25, 135, 84, 0.1);
+      background-color: rgba(5, 150, 105, 0.18);
     }
-    
     .attendance-row.absent-row {
-      background-color: rgba(220, 53, 69, 0.1);
+      background-color: rgba(220, 38, 38, 0.18);
     }
-    
     .attendance-row.late-row {
-      background-color: rgba(255, 193, 7, 0.1);
+      background-color: rgba(180, 83, 9, 0.18);
     }
-    
-    .btn-outline-warning {
-      --bs-btn-color: #fd7e14;
-      --bs-btn-border-color: #fd7e14;
-      --bs-btn-hover-color: #fff;
-      --bs-btn-hover-bg: #fd7e14;
-      --bs-btn-hover-border-color: #fd7e14;
-      --bs-btn-active-color: #fff;
-      --bs-btn-active-bg: #fd7e14;
-      --bs-btn-active-border-color: #fd7e14;
+
+    .section-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.12);
+      color: #2563eb;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+    .btn-primary-cta.btn-lg {
+      padding: 0.85rem 1.5rem;
+      border-radius: 14px;
+      font-weight: 700;
+    }
+    .btn-primary-cta {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      color: #ffffff;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-primary-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+    }
+
+    .empty-state {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .empty-icon i {
+      font-size: 3rem;
+      color: #94a3b8;
+    }
+    .empty-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+    }
+    .empty-text {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .page-header-card {
+        padding: 1.5rem;
+        gap: 0.875rem;
+      }
+      .header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+      }
+      .header-title {
+        font-size: 1.25rem;
+      }
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+      }
+      .bulk-actions {
+        width: 100%;
+      }
+      .btn-success-cta,
+      .btn-danger-cta,
+      .btn-warning-cta {
+        width: 100%;
+        justify-content: center;
+      }
+      .attendance-toggle {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .form-actions {
+        justify-content: stretch;
+      }
+      .btn-primary-cta.btn-lg {
+        width: 100%;
+      }
     }
   </style>
-<% end %> 
+<% end %>
