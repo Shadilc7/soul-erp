@@ -8,6 +8,21 @@
       <p class="header-subtitle"><%= @training_program.title %></p>
     </div>
     <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+      <%= form_with url: mark_trainer_portal_attendance_path(@training_program),
+                    method: :get,
+                    local: true,
+                    class: "date-form" do %>
+        <label class="date-label" for="attendance-date-select">Select Date</label>
+        <input
+          type="date"
+          id="attendance-date-select"
+          name="date"
+          class="form-control date-input"
+          value="<%= @date.to_date.iso8601 %>"
+          min="<%= @training_program.start_date&.to_date&.iso8601 %>"
+          max="<%= [Date.current, @training_program.end_date&.to_date].compact.min.iso8601 %>"
+          onchange="this.form.submit()">
+      <% end %>
       <span class="date-pill"><i class="bi bi-calendar-event me-1"></i><%= @date.strftime("%B %d, %Y") %></span>
       <%= link_to trainer_portal_attendances_path, class: "btn-back" do %>
         <i class="bi bi-arrow-left me-1"></i> Back
@@ -193,6 +208,28 @@
       box-shadow: 0 6px 18px rgba(99, 102, 241, 0.12);
       transform: translateY(-2px);
     }
+    .date-form {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .date-label {
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.85rem;
+    }
+    .date-input {
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 0.5rem 0.75rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .date-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+    }
 
     .card-shell {
       background: #ffffff;
@@ -331,7 +368,7 @@
       align-items: center;
       gap: 0.35rem;
       padding: 0.45rem 0.85rem;
-      border-radius: 12px;
+      border-radius: 8px;
       font-weight: 600;
       font-size: 0.85rem;
       border: 1px solid transparent;
@@ -479,6 +516,12 @@
       .btn-back {
         width: 100%;
         justify-content: center;
+      }
+      .date-form {
+        width: 100%;
+      }
+      .date-input {
+        width: 100%;
       }
       .bulk-actions {
         width: 100%;
