@@ -73,8 +73,9 @@ module TrainerPortal
     def edit
       # Check if attendance has been marked for this date
       unless @training_program.attendance_marked?(@date)
-        redirect_to trainer_portal_attendances_path,
-          alert: "No attendance record found for #{@date.strftime('%B %d, %Y')}"
+        flash.now[:alert] = "No attendance record found for #{@date.strftime('%B %d, %Y')}. You can mark attendance below."
+        @attendance_records = []
+        render :mark, status: :unprocessable_entity
         return
       end
       
