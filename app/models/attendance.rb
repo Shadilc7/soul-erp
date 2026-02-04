@@ -17,6 +17,8 @@ class Attendance < ApplicationRecord
   scope :present_statuses, -> { where(status: [:present, :late]) }
   scope :absent_statuses, -> { where(status: [:absent]) }
   
+  validate :date_within_program_range
+  
   # Calculate attendance percentage for a participant in a program
   def self.attendance_percentage(training_program_id, participant_id)
     total = where(training_program_id: training_program_id, participant_id: participant_id).count
@@ -27,5 +29,19 @@ class Attendance < ApplicationRecord
                           status: [:present, :late]).count
     
     ((present_count.to_f / total) * 100).round
+  end
+
+  private
+
+  def date_within_program_range
+    return if date.blank? || training_program.nil?
+
+    start_date = training_program.start_date&.to_date
+    end_date = training_program.end_date&.to_date
+    return if start_date.blank? || end_date.blank?
+
+    if date < start_date || date > end_date
+      errors.add(:date, "must be within the training program dates")
+    end
   end
 end 
