@@ -7,7 +7,7 @@ module InstituteAdmin
     before_action :set_sections, only: [ :new, :create, :edit, :update ]
 
     def index
-      @participants = current_institute.participants.includes(:user, :section).order(created_at: :desc)
+      @participants = current_institute.participants.includes(:section, user: :section).order(created_at: :desc)
       @sections = current_institute.sections.order(:name)
 
       # Filter by approval status

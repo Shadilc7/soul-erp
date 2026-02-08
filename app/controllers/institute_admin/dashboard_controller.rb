@@ -275,20 +275,22 @@ module InstituteAdmin
 
       # Recent training programs
       @recent_programs = current_institute.training_programs
-        .includes(:participants, :training_program_feedbacks)
+        .left_joins(:training_program_participants)
+        .select("training_programs.*, COUNT(training_program_participants.id) AS participants_count")
+        .group("training_programs.id")
         .order(created_at: :desc)
         .limit(5)
         .map do |program|
           program.define_singleton_method(:feedback_percentage) do
-            total_participants = self.participants.count
+            total_participants = self[:participants_count].to_i
             return 0 if total_participants.zero?
 
-            received_feedback = self.training_program_feedbacks.count
+            received_feedback = self.training_program_feedbacks_count.to_i
             ((received_feedback.to_f / total_participants) * 100).round
           end
 
           program.define_singleton_method(:participants_count) do
-            self.participants.count
+            self[:participants_count].to_i
           end
 
           program
@@ -304,9 +306,10 @@ module InstituteAdmin
                                     .where(training_programs: { institute_id: current_institute.id })
                                     .count
 
-        total_possible_feedback = current_institute.training_programs.sum do |program|
-          program.participants.count
-        end
+        total_possible_feedback = TrainingProgramParticipant
+          .joins(:training_program)
+          .where(training_programs: { institute_id: current_institute.id })
+          .count
 
         @total_feedback_pending = total_possible_feedback - @total_feedback_received
         @feedback_received_percentage = calculate_percentage(@total_feedback_received, total_possible_feedback)
@@ -323,12 +326,14 @@ module InstituteAdmin
     def get_program_feedback_data
       begin
         programs = current_institute.training_programs
-                    .includes(:participants, :training_program_feedbacks)
+                    .left_joins(:training_program_participants)
+                    .select("training_programs.*, COUNT(training_program_participants.id) AS participants_count")
+                    .group("training_programs.id")
                     .limit(10)
 
         result = programs.map do |program|
-          total_participants = program.participants.count
-          received_feedback = program.training_program_feedbacks.count
+          total_participants = program[:participants_count].to_i
+          received_feedback = program.training_program_feedbacks_count.to_i
           pending_feedback = [ total_participants - received_feedback, 0 ].max
 
           {

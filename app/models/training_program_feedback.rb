@@ -1,5 +1,5 @@
 class TrainingProgramFeedback < ApplicationRecord
-  belongs_to :training_program
+  belongs_to :training_program, counter_cache: true
   belongs_to :participant
 
   validates :content, presence: true

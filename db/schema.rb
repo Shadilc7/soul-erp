@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_19_140229) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_08_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -338,6 +338,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_140229) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "training_program_feedbacks_count", default: 0, null: false
     t.index ["institute_id", "program_type"], name: "index_training_programs_on_institute_id_and_program_type"
     t.index ["institute_id"], name: "index_training_programs_on_institute_id"
     t.index ["participant_id"], name: "index_training_programs_on_participant_id"
