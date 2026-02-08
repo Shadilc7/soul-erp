@@ -3,12 +3,12 @@ class Question < ApplicationRecord
   has_many :question_set_items, dependent: :restrict_with_error
   has_many :question_sets, through: :question_set_items
   has_many :options, dependent: :destroy
-  accepts_nested_attributes_for :options, allow_destroy: true, reject_if: proc { |attributes| 
-    attributes['text'].blank? && attributes['_destroy'] != '1'
+  accepts_nested_attributes_for :options, allow_destroy: true, reject_if: proc { |attributes|
+    attributes["text"].blank? && attributes["_destroy"] != "1"
   }
   has_many :assignment_questions, dependent: :restrict_with_error
   has_many :assignments, through: :assignment_questions
-  has_many :responses, class_name: 'AssignmentResponse', dependent: :destroy
+  has_many :responses, class_name: "AssignmentResponse", dependent: :destroy
 
   validates :title, presence: true
   validates :question_type, presence: true
@@ -61,7 +61,7 @@ class Question < ApplicationRecord
       if options.size < 2
         errors.add(:options, "must have at least 2 options")
       end
-      
+
       # Ensure all options have text
       options.each do |option|
         if option.text.blank? && !option.marked_for_destruction?

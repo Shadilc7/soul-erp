@@ -17,7 +17,7 @@ module InstituteAdmin
       begin
         # Get the parameters first
         question_parameters = sanitize_question_params(question_params)
-        
+
         @question = current_institute.questions.build(question_parameters)
 
         # Final safety check before saving
@@ -32,10 +32,10 @@ module InstituteAdmin
         # Log the error
         Rails.logger.error("Error creating question: #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))
-        
+
         # Create a new question object for the form
         @question = current_institute.questions.build(question_params)
-        
+
         # Add error message
         flash.now[:error] = "An error occurred while creating the question. Please try again."
         render :new, status: :unprocessable_entity
@@ -49,11 +49,11 @@ module InstituteAdmin
       begin
         # Get the parameters first
         question_parameters = sanitize_question_params(question_params)
-        
+
         # Final safety check before updating
         @question.assign_attributes(question_parameters)
         ensure_options_have_text(@question) if @question.requires_options?
-        
+
         if @question.save
           redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated."
         else
@@ -63,7 +63,7 @@ module InstituteAdmin
         # Log the error
         Rails.logger.error("Error updating question: #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))
-        
+
         # Add error message
         flash.now[:error] = "An error occurred while updating the question. Please try again."
         render :edit, status: :unprocessable_entity
@@ -83,10 +83,10 @@ module InstituteAdmin
     def duplicate
       begin
         original_question = current_institute.questions.includes(:options).find(params[:id])
-        
+
         # Skip validation temporarily for the new question
         new_question = nil
-        
+
         ActiveRecord::Base.transaction do
           # For question types that require options, we need to handle differently
           if original_question.requires_options?
@@ -100,17 +100,17 @@ module InstituteAdmin
               active: original_question.active,
               max_rating: original_question.max_rating
             )
-            
+
             # Temporarily disable validation
             new_question.validate_options_on_save = false if new_question.respond_to?(:validate_options_on_save=)
-            
+
             # Save without validation first
             unless new_question.save(validate: false)
               error_message = "Failed to create question: #{new_question.errors.full_messages.join(', ')}"
               Rails.logger.error(error_message)
               raise ActiveRecord::Rollback, error_message
             end
-            
+
             # Now duplicate all options
             if original_question.options.any?
               original_question.options.each do |original_option|
@@ -119,7 +119,7 @@ module InstituteAdmin
                   value: original_option.value,
                   correct: original_option.correct
                 )
-                
+
                 unless new_option.save
                   error_message = "Failed to save option: #{new_option.errors.full_messages.join(', ')}"
                   Rails.logger.error(error_message)
@@ -127,7 +127,7 @@ module InstituteAdmin
                 end
               end
             end
-            
+
             # Now validate the question with its options
             unless new_question.valid?
               error_message = "Question validation failed after adding options: #{new_question.errors.full_messages.join(', ')}"
@@ -145,7 +145,7 @@ module InstituteAdmin
               active: original_question.active,
               max_rating: original_question.max_rating
             )
-            
+
             unless new_question.save
               error_message = "Failed to save question: #{new_question.errors.full_messages.join(', ')}"
               Rails.logger.error(error_message)
@@ -153,7 +153,7 @@ module InstituteAdmin
             end
           end
         end
-        
+
         if new_question&.persisted?
           redirect_to institute_admin_questions_path, notice: "Question was successfully duplicated."
         else
@@ -183,7 +183,7 @@ module InstituteAdmin
         options_attributes: [ :id, :text, :correct, :_destroy ]
       )
     end
-    
+
     # Sanitize parameters to ensure no null values for options text
     def sanitize_question_params(params)
       if params[:options_attributes].present?
@@ -195,7 +195,7 @@ module InstituteAdmin
       end
       params
     end
-    
+
     # Ensure all options have text
     def ensure_options_have_text(question)
       question.options.each do |option|

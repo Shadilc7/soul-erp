@@ -8,4 +8,4 @@ class AddDetailsToInstitutes < ActiveRecord::Migration[8.0]
     add_column :institutes, :expiry_date, :date
     add_column :institutes, :other_details, :text
   end
-end 
+end

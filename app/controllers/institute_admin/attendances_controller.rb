@@ -1,22 +1,22 @@
 module InstituteAdmin
   class AttendancesController < InstituteAdmin::BaseController
-    before_action :set_training_program, only: [:mark, :record, :edit, :update, :history, :check_status]
-    before_action :set_date, only: [:mark, :record, :edit, :update]
+    before_action :set_training_program, only: [ :mark, :record, :edit, :update, :history, :check_status ]
+    before_action :set_date, only: [ :mark, :record, :edit, :update ]
 
     def index
       @training_programs = current_institute.training_programs
         .includes(:trainer, :section, participant: :user)
         .order(status: :asc, created_at: :desc)
     end
-    
+
     def list
       @training_programs = current_institute.training_programs
         .includes(:trainer, :section, participant: :user)
         .order(status: :asc, created_at: :desc)
-      
+
       # Get today's date
       @today = Date.today
-      
+
       # For each program, check if attendance is marked for today
       @attendance_status = {}
       @training_programs.each do |program|
@@ -38,7 +38,7 @@ module InstituteAdmin
           alert: "Cannot mark attendance for completed programs"
         return
       end
-      
+
       # Check if attendance has already been marked for this date
       if @training_program.attendance_marked?(@date)
         redirect_to institute_admin_attendances_path,
@@ -67,18 +67,18 @@ module InstituteAdmin
       redirect_to mark_institute_admin_attendance_path(@training_program, date: @date),
         alert: "Error marking attendance: #{e.message}"
     end
-    
+
     def edit
       unless @training_program.attendance_marked?(@date)
         redirect_to institute_admin_attendances_path,
           alert: "No attendance record found for #{@date.strftime('%B %d, %Y')}"
         return
       end
-      
+
       @participants = @training_program.all_participants
       @attendances = @training_program.attendances.by_date(@date).index_by(&:participant_id)
     end
-    
+
     def update
       ActiveRecord::Base.transaction do
         attendance_params[:attendances].each do |participant_id, status|
@@ -86,15 +86,15 @@ module InstituteAdmin
             participant_id: participant_id,
             date: @date
           )
-          
+
           if attendance.new_record?
             attendance.marked_by = current_user
           end
-          
+
           attendance.status = status
           attendance.save!
         end
-        
+
         redirect_to institute_admin_attendances_path,
           notice: "Attendance updated successfully for #{@date.strftime('%B %d, %Y')}"
       end
@@ -102,7 +102,7 @@ module InstituteAdmin
       redirect_to edit_institute_admin_attendance_path(@training_program, date: @date),
         alert: "Error updating attendance: #{e.message}"
     end
-    
+
     def history
       @training_program = TrainingProgram.find(params[:id])
       @attendance_dates = @training_program.attendances
@@ -110,12 +110,12 @@ module InstituteAdmin
         .distinct
         .order(date: :asc)
         .pluck(:date)
-        
+
       @participants = @training_program.all_participants.includes(:user)
-      
+
       # Create a hash of attendance records by date and participant
       @attendance_records = {}
-      
+
       @attendance_dates.each do |date|
         @attendance_records[date] = @training_program.attendances
           .where(date: date)
@@ -127,9 +127,9 @@ module InstituteAdmin
     def check_status
       @training_program = TrainingProgram.find(params[:id])
       date = params[:date].present? ? Date.parse(params[:date]) : Date.current
-      
+
       marked = @training_program.attendance_marked?(date)
-      
+
       render json: {
         marked: marked,
         edit_url: marked ? edit_institute_admin_attendance_path(@training_program, date: date) : nil
@@ -154,4 +154,4 @@ module InstituteAdmin
       params.require(:attendance).permit(attendances: {})
     end
   end
-end 
+end

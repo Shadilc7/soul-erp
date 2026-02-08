@@ -3,10 +3,10 @@
 Kaminari.configure do |config|
   # Default number of items per page
   config.default_per_page = 10
-  
+
   # Maximum number of pages shown in pagination
   config.max_pages = 5
-  
+
   # Default options for link_to_next_page
   config.page_method_name = :page
   # config.max_per_page = nil

@@ -1,7 +1,7 @@
 module Admin
   class InstitutesController < Admin::BaseController
     before_action :set_institute, only: [ :show, :edit, :update, :login_as_institute_admin ]
-    skip_before_action :authenticate_user!, only: [:sections]
+    skip_before_action :authenticate_user!, only: [ :sections ]
 
     def index
       @institutes = Institute.all
@@ -63,11 +63,11 @@ module Admin
       if current_user.master_admin?
         session[:admin_institute_id] = @institute.id
         session[:admin_return_to] = admin_institute_path(@institute)
-        
-        redirect_to institute_admin_root_path, 
+
+        redirect_to institute_admin_root_path,
           notice: "You are now logged in as an institute admin for #{@institute.name}. Your actions will affect this institute."
       else
-        redirect_to admin_institute_path(@institute), 
+        redirect_to admin_institute_path(@institute),
           alert: "Only master admins can access this functionality."
       end
     end
@@ -78,7 +78,7 @@ module Admin
       if @sections.any?
         render json: @sections
       else
-        render json: { error: 'No sections found for this institute.' }, status: :not_found
+        render json: { error: "No sections found for this institute." }, status: :not_found
       end
     end
 
@@ -89,8 +89,8 @@ module Admin
     end
 
     def institute_params
-      params.require(:institute).permit(:name, :code, :description, :address, :contact_number, :email, :active, :institution_type, 
-                                       :registered_poc, :service_started_on, :owner_name, :age_of_service, 
+      params.require(:institute).permit(:name, :code, :description, :address, :contact_number, :email, :active, :institution_type,
+                                       :registered_poc, :service_started_on, :owner_name, :age_of_service,
                                        :billing_type, :expiry_date, :other_details)
     end
   end

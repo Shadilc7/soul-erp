@@ -1,6 +1,6 @@
 module TrainerPortal
   class TrainingProgramFeedbacksController < TrainerPortal::BaseController
-    before_action :set_training_program, only: [:show]
+    before_action :set_training_program, only: [ :show ]
 
     def index
       @training_programs = current_trainer.training_programs
@@ -20,4 +20,4 @@ module TrainerPortal
       @training_program = current_trainer.training_programs.find(params[:id])
     end
   end
-end 
+end

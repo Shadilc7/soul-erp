@@ -10,8 +10,8 @@ class CreateAttendances < ActiveRecord::Migration[8.0]
 
       t.timestamps
 
-      t.index [:training_program_id, :participant_id, :date], unique: true, 
+      t.index [ :training_program_id, :participant_id, :date ], unique: true,
               name: 'index_attendances_uniqueness'
     end
   end
-end 
+end

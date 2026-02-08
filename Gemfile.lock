@@ -438,6 +438,7 @@ DEPENDENCIES
   pry-byebug
   puma (>= 5.0)
   rails (~> 8.0.1)
+  rubocop
   rubocop-rails-omakase
   selenium-webdriver
   simple_calendar (~> 2.4)

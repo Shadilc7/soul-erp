@@ -14,4 +14,4 @@ module InstituteAdmin
       @training_program = current_institute.training_programs.find(params[:training_program_id])
     end
   end
-end 
+end

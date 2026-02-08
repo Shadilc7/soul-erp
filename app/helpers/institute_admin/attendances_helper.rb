@@ -2,15 +2,15 @@ module InstituteAdmin
   module AttendancesHelper
     def status_color(status)
       case status
-      when 'present'
-        'success'
-      when 'absent'
-        'danger'
-      when 'late'
-        'warning'
+      when "present"
+        "success"
+      when "absent"
+        "danger"
+      when "late"
+        "warning"
       else
-        'secondary'
+        "secondary"
       end
     end
   end
-end 
+end

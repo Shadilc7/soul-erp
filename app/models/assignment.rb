@@ -130,14 +130,14 @@ class Assignment < ApplicationRecord
   end
 
   def status
-    return 'inactive' unless active?
-    
+    return "inactive" unless active?
+
     if Time.current < start_date
-      'upcoming'
+      "upcoming"
     elsif Time.current > end_date
-      'completed'
+      "completed"
     else
-      'active'
+      "active"
     end
   end
 

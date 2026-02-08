@@ -8,12 +8,12 @@ class AddTriggerToOptions < ActiveRecord::Migration[8.0]
         IF NEW.text IS NULL THEN
           NEW.text := 'Option ' || extract(epoch from now())::bigint;
         END IF;
-        
+      #{'  '}
         -- Also ensure value is set for backward compatibility
         IF NEW.value IS NULL THEN
           NEW.value := NEW.text;
         END IF;
-        
+      #{'  '}
         RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;

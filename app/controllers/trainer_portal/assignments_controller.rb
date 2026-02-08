@@ -1,6 +1,6 @@
 module TrainerPortal
   class AssignmentsController < TrainerPortal::BaseController
-    before_action :set_assignment, only: [:show, :edit, :update, :destroy]
+    before_action :set_assignment, only: [ :show, :edit, :update, :destroy ]
 
     def index
       @assignments = Assignment.joins(training_program: :trainer)
@@ -26,7 +26,7 @@ module TrainerPortal
 
       if @assignment.save
         redirect_to trainer_portal_assignment_path(@assignment),
-          notice: 'Assignment was successfully created.'
+          notice: "Assignment was successfully created."
       else
         @training_programs = current_trainer.training_programs
           .where(status: :ongoing)
@@ -42,7 +42,7 @@ module TrainerPortal
     def update
       if @assignment.update(assignment_params)
         redirect_to trainer_portal_assignment_path(@assignment),
-          notice: 'Assignment was successfully updated.'
+          notice: "Assignment was successfully updated."
       else
         @training_programs = current_trainer.training_programs
           .where(status: :ongoing)
@@ -53,7 +53,7 @@ module TrainerPortal
     def destroy
       @assignment.destroy
       redirect_to trainer_portal_assignments_path,
-        notice: 'Assignment was successfully deleted.'
+        notice: "Assignment was successfully deleted."
     end
 
     private
@@ -77,4 +77,4 @@ module TrainerPortal
       )
     end
   end
-end 
+end

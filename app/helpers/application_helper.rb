@@ -2,7 +2,7 @@ module ApplicationHelper
   def active_link?(controller_name)
     case controller_name
     when "dashboard"
-      controller.controller_name == "dashboard" || 
+      controller.controller_name == "dashboard" ||
       (controller.controller_name == "admin" && controller.action_name == "dashboard")
     when "sections"
       controller.controller_name == "sections"

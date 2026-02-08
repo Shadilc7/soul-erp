@@ -4,4 +4,4 @@ module TrainerPortal
       @trainer = current_trainer
     end
   end
-end 
+end

@@ -36,7 +36,7 @@ class Institute < ApplicationRecord
   def active_participants
     participants.includes(:user).active
   end
-  
+
   # Helper method to find a certificate
   def find_certificate(id)
     individual_certificates.find(id)
