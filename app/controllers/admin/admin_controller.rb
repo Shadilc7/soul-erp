@@ -7,34 +7,56 @@ module Admin
       @institutes_count = Institute.count
       @institute_admins_count = User.institute_admin.count
 
+      # Pre-aggregate institute statistics to avoid N+1/count warnings in Bullet.
+      program_totals = TrainingProgram.group(:institute_id).count
+      program_active_totals = TrainingProgram.where(status: :ongoing).group(:institute_id).count
+      program_completed_totals = TrainingProgram.where(status: :completed).group(:institute_id).count
+
+      participant_totals = Participant.group(:institute_id).count
+      participant_active_totals = Participant.joins(:user).where(users: { active: true }).group(:institute_id).count
+
+      section_totals = Section.group(:institute_id).count
+      section_active_totals = Section.active.group(:institute_id).count
+
+      assignment_totals = Assignment.group(:institute_id).count
+      assignment_active_totals = Assignment.active.group(:institute_id).count
+
+      question_totals = Question.group(:institute_id).count
+      question_set_totals = QuestionSet.group(:institute_id).count
+
+      feedback_totals = TrainingProgramFeedback.joins(:training_program).group("training_programs.institute_id").count
+      feedback_avg_ratings = TrainingProgramFeedback.joins(:training_program).group("training_programs.institute_id").average(:rating)
+
       # Get all institutes with their statistics
-      @institutes = Institute.all.map do |institute|
+      @institutes = Institute.select(:id, :name).map do |institute|
+        institute_id = institute.id
+
         {
-          id: institute.id,
+          id: institute_id,
           name: institute.name,
           stats: {
             programs: {
-              total: institute.training_programs.count,
-              active: institute.training_programs.where(status: :ongoing).count,
-              completed: institute.training_programs.where(status: :completed).count
+              total: program_totals[institute_id] || 0,
+              active: program_active_totals[institute_id] || 0,
+              completed: program_completed_totals[institute_id] || 0
             },
             participants: {
-              total: institute.participants.count,
-              active: institute.participants.joins(:user).where(users: { active: true }).count
+              total: participant_totals[institute_id] || 0,
+              active: participant_active_totals[institute_id] || 0
             },
             sections: {
-              total: institute.sections.count,
-              active: institute.sections.active.count
+              total: section_totals[institute_id] || 0,
+              active: section_active_totals[institute_id] || 0
             },
             assignments: {
-              total: institute.assignments.count,
-              active: institute.assignments.active.count
+              total: assignment_totals[institute_id] || 0,
+              active: assignment_active_totals[institute_id] || 0
             },
-            questions: institute.questions.count,
-            question_sets: institute.question_sets.count,
+            questions: question_totals[institute_id] || 0,
+            question_sets: question_set_totals[institute_id] || 0,
             feedbacks: {
-              count: institute.training_programs.joins(:training_program_feedbacks).count,
-              average_rating: (TrainingProgramFeedback.joins(:training_program).where(training_programs: { institute_id: institute.id }).average(:rating) || 0).to_f.round(1)
+              count: feedback_totals[institute_id] || 0,
+              average_rating: (feedback_avg_ratings[institute_id] || 0).to_f.round(1)
             }
           }
         }
@@ -62,10 +84,10 @@ module Admin
 
       # Recent Data
       @recent_institutes = Institute.order(created_at: :desc).limit(5)
-      @recent_programs = TrainingProgram.includes(:institute, :trainer)
+      @recent_programs = TrainingProgram.includes(:institute, trainer: :user)
                                       .order(created_at: :desc)
                                       .limit(5)
-      @recent_feedbacks = TrainingProgramFeedback.includes(:training_program, :participant)
+      @recent_feedbacks = TrainingProgramFeedback.includes(:training_program, participant: :user)
                                                .order(created_at: :desc)
                                                .limit(5)
 
