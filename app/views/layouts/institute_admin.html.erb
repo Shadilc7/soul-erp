@@ -8,6 +8,9 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     
     <!-- Chart.js -->
@@ -303,6 +306,23 @@
         animation: gradient-shift 3s ease infinite;
       }
 
+      .topbar-left {
+        min-width: 0;
+      }
+
+      .topbar-institute-name {
+        font-family: "Plus Jakarta Sans", "Segoe UI", Roboto, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        font-size: clamp(1rem, 1.8vw, 1.25rem);
+        color: #1e293b;
+        max-width: min(55vw, 560px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+      }
+
       @keyframes gradient-shift {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -491,6 +511,15 @@
 
         .hamburger-btn {
           display: flex;
+        }
+
+        .topbar {
+          padding: 0 1rem;
+        }
+
+        .topbar-institute-name {
+          font-size: 0.95rem;
+          max-width: 48vw;
         }
       }
 
@@ -958,13 +987,18 @@
       <div id="main-content" class="main-content" data-sidebar-target="mainContent">
         <!-- Topbar -->
         <div class="topbar d-flex justify-content-between align-items-center">
-          <button class="hamburger-btn mobile-toggle" data-action="click->sidebar#toggle">
-            <i class="bi bi-list"></i>
-          </button>
+          <div class="topbar-left d-flex align-items-center gap-3">
+            <button class="hamburger-btn mobile-toggle" data-action="click->sidebar#toggle">
+              <i class="bi bi-list"></i>
+            </button>
+            <span class="topbar-institute-name">
+              <%= current_institute&.name.presence || "Institute Admin Portal" %>
+            </span>
+          </div>
           
           <!-- Right side: Admin return button if in impersonation mode -->
           <% if current_user&.master_admin? && session[:admin_institute_id].present? && session[:admin_return_to].present? %>
-            <div class="d-flex align-items-center gap-3 ms-auto">
+            <div class="d-flex align-items-center gap-3">
               <div class="alert alert-warning py-1 px-3 mb-0 me-3 d-none d-md-block">
                 <small>You are viewing as institute admin for <%= current_institute&.name %></small>
               </div>
@@ -973,7 +1007,7 @@
               <% end %>
             </div>
           <% else %>
-            <div class="d-flex align-items-center gap-3 ms-auto">
+            <div class="d-flex align-items-center gap-3">
               <span class="text-secondary small fw-500">Welcome back!</span>
             </div>
           <% end %>
