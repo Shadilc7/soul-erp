@@ -26,7 +26,7 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg landing-navbar py-2 py-lg-0">
   <div class="container h-100">
-    <div class="logo-container landing-logo-offset">
+    <div class="logo-container landing-logo-container">
       <a href="#hero" class="text-decoration-none logo-link-reset">
         <h1 class="logo-text m-0"><span class="gradient-text-1">BeYa</span></h1>
       </a>
@@ -38,7 +38,7 @@
         <i class="bi bi-moon-stars-fill icon-moon"></i>
         <i class="bi bi-sun-fill icon-sun"></i>
       </button>
-      <button class="navbar-toggler border-0 shadow-none px-2" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-controls="navCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <button id="navMenuToggle" class="navbar-toggler border-0 shadow-none px-2" type="button" aria-controls="navCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <i class="bi bi-list fs-1 text-primary-color"></i>
       </button>
     </div>
@@ -400,19 +400,48 @@
 </section>
 
 <!-- 11. FOOTER -->
-<footer class="landing-footer py-5 mt-5 border-top border-secondary-custom">
-  <div class="container">
-    <div class="row justify-content-between align-items-center">
-      <div class="col-md-6 mb-4 mb-md-0 text-center text-md-start">
-        <h4 class="logo-text m-0 fs-3 mb-2"><span class="gradient-text-1">BeYa</span></h4>
-        <p class="text-secondary-color m-0 fs-6">Wayanad, Kerala, India</p>
-      </div>
-      <div class="col-md-6 text-center text-md-end">
-        <div class="d-flex justify-content-center justify-content-md-end gap-4 mb-3 fs-5">
-          <a href="mailto:sabithaliv@gmail.com" class="text-secondary-color text-hover-primary text-decoration-none"><i class="bi bi-envelope-fill me-2"></i>sabithaliv@gmail.com</a>
-          <a href="tel:+919544788304" class="text-secondary-color text-hover-primary text-decoration-none"><i class="bi bi-telephone-fill me-2"></i>+91 95447 88304</a>
+<footer class="landing-footer mt-5 border-top border-secondary-custom">
+  <div class="container py-5">
+    <div class="p-2 p-lg-0">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-4">
+          <h4 class="logo-text m-0 fs-3 mb-3"><span class="gradient-text-1">BeYa</span></h4>
+          <p class="text-secondary-color mb-3 footer-copy">
+            Building dignity through structured daily practice for families, schools, corporates, and hospitals.
+          </p>
+          <p class="text-secondary-color mb-0 fs-sm">
+            <i class="bi bi-geo-alt-fill me-2"></i>Wayanad, Kerala, India
+          </p>
         </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="footer-title mb-3">Quick Links</h6>
+          <a href="#about" class="footer-link d-block mb-2">About</a>
+          <a href="#origin" class="footer-link d-block mb-2">Origin Story</a>
+          <a href="#life-skills" class="footer-link d-block mb-2">Life Skills</a>
+          <a href="#medibuk" class="footer-link d-block">MediBuk</a>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h6 class="footer-title mb-3">Contact</h6>
+          <a href="mailto:sabithaliv@gmail.com" class="footer-link d-flex align-items-center mb-2">
+            <i class="bi bi-envelope-fill me-2"></i>sabithaliv@gmail.com
+          </a>
+          <a href="tel:+919544788304" class="footer-link d-flex align-items-center">
+            <i class="bi bi-telephone-fill me-2"></i>+91 95447 88304
+          </a>
+        </div>
+
+        <div class="col-lg-3">
+          <h6 class="footer-title mb-2">Work With BeYa</h6>
+          <p class="text-secondary-color fs-sm mb-3">Start a conversation about implementing BeYa in your institution.</p>
+          <a href="#" class="btn-primary-lg text-decoration-none d-inline-block">Start a Conversation</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom d-flex flex-column flex-md-row align-items-center justify-content-between gap-2 mt-4 pt-3 border-top border-secondary-custom">
         <p class="mb-0 fs-sm text-secondary-color">&copy; <%= Time.current.year %> BeYa. All rights reserved.</p>
+        <p class="mb-0 fs-sm text-secondary-color">Designed for measurable, lasting change.</p>
       </div>
     </div>
   </div>
@@ -446,8 +475,57 @@
         }
     }
   }
+  function initLandingNavbar() {
+    const navCollapseEl = document.getElementById('navCollapse');
+    const navToggler = document.getElementById('navMenuToggle');
+    if (!navCollapseEl || !navToggler) return;
+    if (navCollapseEl.dataset.mobileNavInit === 'true') return;
+    navCollapseEl.dataset.mobileNavInit = 'true';
+
+    function closeMobileNav() {
+      navCollapseEl.classList.remove('show');
+      navToggler.setAttribute('aria-expanded', 'false');
+    }
+
+    const closeTargets = navCollapseEl.querySelectorAll('a');
+    closeTargets.forEach((el) => {
+      el.addEventListener('click', closeMobileNav);
+    });
+
+    navToggler.addEventListener('click', (event) => {
+      if (window.innerWidth >= 992) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      const willOpen = !navCollapseEl.classList.contains('show');
+      navCollapseEl.classList.toggle('show', willOpen);
+      navToggler.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (event) => {
+      const clickedInsideMenu = navCollapseEl.contains(event.target);
+      const clickedToggler = navToggler.contains(event.target);
+      if (navCollapseEl.classList.contains('show') && !clickedInsideMenu && !clickedToggler) {
+        closeMobileNav();
+      }
+    });
+
+    window.addEventListener('hashchange', closeMobileNav);
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 992) closeMobileNav();
+    });
+    document.addEventListener('turbo:before-cache', closeMobileNav);
+
+    // Reset stale cached/open state on load.
+    closeMobileNav();
+  }
+
   window.addEventListener("scroll", reveal);
-  document.addEventListener("DOMContentLoaded", reveal);
+  document.addEventListener("DOMContentLoaded", () => {
+    reveal();
+    initLandingNavbar();
+  });
+  document.addEventListener("turbo:load", initLandingNavbar);
 
   window.addEventListener('scroll', () => {
     const scrollTracker = document.querySelector('.scroll-tracker');
