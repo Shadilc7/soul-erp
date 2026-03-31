@@ -2,10 +2,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <%= stylesheet_link_tag "home_landing", "data-turbo-track": "reload", media: "all" %>
   <script>
-    // Apply theme immediately to prevent FOUC
-    const savedTheme = localStorage.getItem('beyaTheme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    const savedTheme = localStorage.getItem('beyaTheme');
+    const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+    document.documentElement.setAttribute('data-theme', initialTheme);
   </script>
 <% end %>
 
@@ -23,282 +24,148 @@
 </div>
 
 <!-- Navbar -->
-<nav class="landing-navbar">
-  <div class="container d-flex justify-content-between align-items-center h-100">
-    <div class="logo-container" style="transform: translateY(12px);">
-      <a href="#hero" class="text-decoration-none" style="outline: none;">
+<nav class="navbar navbar-expand-lg landing-navbar py-2 py-lg-0">
+  <div class="container h-100">
+    <div class="logo-container landing-logo-offset">
+      <a href="#hero" class="text-decoration-none logo-link-reset">
         <h1 class="logo-text m-0"><span class="gradient-text-1">BeYa</span></h1>
       </a>
     </div>
-    <div class="nav-links d-none d-lg-flex align-items-center gap-4">
-      <a href="#how-it-works" class="nav-link">How it Works</a>
-      <a href="#features" class="nav-link">Features</a>
-      <a href="#portals" class="nav-link">Roles</a>
-      <a href="#faq" class="nav-link">FAQ</a>
-      
-      <!-- Theme Toggle -->
-      <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">
+
+    <!-- Mobile Theme Toggle & Hamburger -->
+    <div class="d-flex align-items-center d-lg-none ms-auto gap-2">
+      <button id="themeToggleBtnMobile" class="theme-toggle" aria-label="Toggle Theme">
         <i class="bi bi-moon-stars-fill icon-moon"></i>
         <i class="bi bi-sun-fill icon-sun"></i>
       </button>
-      
-      <div class="nav-divider"></div>
-      
-      <%= link_to "Login", new_user_session_path, class: "nav-link fw-semibold", target: "_blank" %>
-      <%= link_to "Register", new_user_registration_path, class: "btn-register-sm", target: "_blank" %>
+      <button class="navbar-toggler border-0 shadow-none px-2" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-controls="navCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="bi bi-list fs-1 text-primary-color"></i>
+      </button>
+    </div>
+
+    <!-- Collapsible Links -->
+    <div class="collapse navbar-collapse flex-grow-0" id="navCollapse">
+      <div class="nav-links d-flex flex-column flex-lg-row align-items-lg-center gap-3 gap-lg-4 mt-3 mt-lg-0 p-4 p-lg-0 mobile-nav-card">
+        <a href="#about" class="nav-link">About</a>
+        <a href="#origin" class="nav-link">Origin Story</a>
+        <a href="#life-skills" class="nav-link">Life Skills</a>
+        <a href="#medibuk" class="nav-link">MediBuk</a>
+
+        <!-- Desktop Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle d-none d-lg-flex" aria-label="Toggle Theme">
+          <i class="bi bi-moon-stars-fill icon-moon"></i>
+          <i class="bi bi-sun-fill icon-sun"></i>
+        </button>
+
+        <div class="nav-divider d-none d-lg-block"></div>
+
+        <%= link_to "Login", new_user_session_path, class: "nav-link fw-semibold w-100 w-lg-auto text-lg-start", target: "_blank" %>
+        <%= link_to "Register", new_user_registration_path, class: "btn-register-sm text-center w-100 w-lg-auto", target: "_blank" %>
+      </div>
     </div>
   </div>
 </nav>
 
-<!-- Hero Section -->
+<!-- 1. HERO SECTION -->
 <section id="hero" class="hero-section d-flex align-items-center text-center">
   <div class="container reveal">
-    <div class="hero-badge mb-4 mx-auto d-inline-flex align-items-center gap-2">
-      <i class="bi bi-stars"></i> Enriching Lives through Education
-    </div>
     <h1 class="hero-title fw-bolder mb-4 mx-auto">
-      Empower Your Institute with<br/>
-      <span class="gradient-text-2">Intelligent Training Management</span>
+      Where Habit Becomes<br/><span class="gradient-text-2">Character</span>
     </h1>
     <p class="hero-subtitle mb-5 mx-auto text-secondary-color">
-      BeYa is a robust multi-tenant platform designed to streamline training programs, smart attendance tracking, and automated certificate generation for modern learning environments.
+      BeYa is a behavioral life-skills organization rooted in Kerala, India.<br/>
+      Under one mission — two programs that transform families, schools, corporates, and hospitals from the inside out.
     </p>
-    <div class="hero-ctas d-flex flex-wrap gap-3 justify-content-center">
-      <%= link_to "Get Started Now", new_user_registration_path, class: "btn-primary-lg shadow-glow-primary hover-scale", target: "_blank" %>
-      <%= link_to "Sign In", new_user_session_path, class: "btn-secondary-lg hover-scale", target: "_blank" %>
+    <div class="hero-ctas d-flex flex-wrap gap-3 justify-content-center mb-5">
+      <a href="#life-skills" class="btn-primary-lg shadow-glow-primary hover-scale text-decoration-none">BeYa Life Skills</a>
+      <a href="#medibuk" class="btn-secondary-lg hover-scale text-decoration-none">BeYa MediBuk</a>
+    </div>
+
+    <!-- Founder Quote -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-10 col-lg-8">
+        <div class="quote-card p-4 rounded-4 text-start shadow-glow-accent floating-slow">
+          <i class="bi bi-quote display-4 text-accent opacity-50 floating-quote-icon"></i>
+          <p class="fs-5 text-primary-color fst-italic mb-4 position-relative z-1 text-lh-17">
+            “My mother taught me that dignity is not given — it is built, one small action at a time. BeYa is a system designed to make those small actions possible for millions.”
+          </p>
+          <div class="d-flex align-items-center gap-3">
+             <div class="founder-avatar founder-avatar-size gradient-bg-1 rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white fs-5">SA</div>
+             <div>
+               <h6 class="mb-0 fw-bold text-primary-color">Sabith Ali</h6>
+               <small class="text-secondary-color">Founder & CEO</small>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Metrics -->
+    <div class="hero-metrics d-flex justify-content-center flex-wrap gap-3 gap-md-4 mt-5 pt-3">
+      <div class="metric-pill px-4 py-2 rounded-pill"><span class="fw-bold gradient-text-1">3,000+</span> <span class="text-secondary-color">Families Enrolled</span></div>
+      <div class="metric-pill px-4 py-2 rounded-pill"><span class="fw-bold gradient-text-2">1M+</span> <span class="text-secondary-color">Patients via MediBuk</span></div>
+      <div class="metric-pill px-4 py-2 rounded-pill"><span class="fw-bold gradient-text-3">13</span> <span class="text-secondary-color">Years of Practice</span></div>
     </div>
   </div>
 </section>
 
-<!-- How it Works -->
-<section id="how-it-works" class="py-5 section-darker">
-  <div class="container py-5 reveal">
-    <div class="section-header text-center mb-5 mx-auto">
-      <h2 class="fw-bold section-title">Three steps to <span class="gradient-text-3">success</span></h2>
-      <p class="text-secondary-color">Simplify your administrative overhead instantly.</p>
-    </div>
-    
-    <div class="row g-5 position-relative">
-      <div class="timeline-line d-none d-md-block"></div>
-      
-      <!-- Step 1 -->
-      <div class="col-md-4 text-center step-card">
-        <div class="step-icon-wrapper gradient-bg-1 mx-auto mb-4">
-          <i class="bi bi-buildings text-white fs-2"></i>
-        </div>
-        <h4 class="fw-bold mb-3 text-primary-color">1. Register Institute</h4>
-        <p class="text-secondary-color">Create your workspace, invite trainers, and set up your organizational structure in minutes.</p>
-      </div>
-      
-      <!-- Step 2 -->
-      <div class="col-md-4 text-center step-card mt-md-5">
-        <div class="step-icon-wrapper gradient-bg-2 mx-auto mb-4">
-          <i class="bi bi-sliders text-white fs-2"></i>
-        </div>
-        <h4 class="fw-bold mb-3 text-primary-color">2. Manage Training</h4>
-        <p class="text-secondary-color">Schedule sessions, distribute assignments, and track daily attendance with ease.</p>
-      </div>
-      
-      <!-- Step 3 -->
-      <div class="col-md-4 text-center step-card">
-        <div class="step-icon-wrapper gradient-bg-3 mx-auto mb-4">
-          <i class="bi bi-patch-check text-white fs-2"></i>
-        </div>
-        <h4 class="fw-bold mb-3 text-primary-color">3. Automate Growth</h4>
-        <p class="text-secondary-color">Generate bulk certificates, analyze rich feedback metrics, and expand confidently.</p>
-      </div>
-    </div>
+<!-- 2. INTRO BAND -->
+<section class="intro-band py-5 position-relative overflow-hidden">
+  <div class="intro-bg-glow"></div>
+  <div class="container reveal text-center py-4 position-relative z-1">
+    <h2 class="fw-bold text-primary-color mb-4 display-6 px-md-5 mx-md-5 intro-quote-title">
+      “The most powerful change agent is already inside the system — waiting to be trained and trusted.”
+    </h2>
+    <a href="#about" class="btn-primary-lg shadow-glow-primary hover-scale text-decoration-none mt-2 d-inline-block">Discover BeYa</a>
   </div>
 </section>
 
-<!-- Features Grid -->
-<section id="features" class="py-5">
-  <div class="container py-5 reveal">
-    <div class="section-header text-center mb-5 mx-auto">
-      <h2 class="fw-bold section-title">Everything you need, <span class="gradient-text-1">unified.</span></h2>
-      <p class="text-secondary-color">Powerful tools designed specifically for digital educational operations.</p>
-    </div>
-    
-    <div class="row g-4 pt-3">
-      <!-- Feature 1 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-blue mb-3">
-            <i class="bi bi-shield-lock-fill"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Multi-Institute Ops</h4>
-          <p class="text-secondary-color fs-sm m-0">Secure data isolation. Create separate environments for different campuses or wings automatically.</p>
-        </div>
-      </div>
-      
-      <!-- Feature 2 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-pink mb-3">
-            <i class="bi bi-calendar-check-fill"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Smart Attendance</h4>
-          <p class="text-secondary-color fs-sm m-0">Intelligent daily tracking with comprehensive history, section-based views, and instant CSV exports.</p>
-        </div>
-      </div>
-      
-      <!-- Feature 3 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-orange mb-3">
-            <i class="bi bi-journal-text"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Dynamic Assessments</h4>
-          <p class="text-secondary-color fs-sm m-0">Build reusable question banks and schedule complex assignments tied precisely to curriculum dates.</p>
-        </div>
-      </div>
-      
-      <!-- Feature 4 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-indigo mb-3">
-            <i class="bi bi-award-fill"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Bulk Certificates</h4>
-          <p class="text-secondary-color fs-sm m-0">Visually design templates, generate hundreds of certificates in one click, and publish them instantly.</p>
-        </div>
-      </div>
-      
-      <!-- Feature 5 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-teal mb-3">
-            <i class="bi bi-chat-heart-fill"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Feedback Workflows</h4>
-          <p class="text-secondary-color fs-sm m-0">Capture granular feedback workflows tied directly to daily participant attendance and trainer performance.</p>
-        </div>
-      </div>
-      
-      <!-- Feature 6 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card h-100 p-4 rounded-4">
-          <div class="feature-icon-box box-purple mb-3">
-            <i class="bi bi-pie-chart-fill"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-2">Rich Analytics</h4>
-          <p class="text-secondary-color fs-sm m-0">Visualize operational health with real-time dynamic charts, interactive tables, and deep-dive PDF reports.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Role Portals -->
-<section id="portals" class="py-5 section-darker">
-  <div class="container py-5 reveal">
-    <div class="section-header text-center mb-5 mx-auto">
-      <h2 class="fw-bold section-title">Built for the <span class="gradient-text-2">whole team</span></h2>
-      <p class="text-secondary-color">Dedicated portal experiences offering exactly the tools each user needs.</p>
-    </div>
-    
-    <div class="row g-4 pt-3 justify-content-center">
-      <!-- Institute Admin -->
-      <div class="col-lg-4 col-md-6">
-        <div class="portal-card h-100 p-5 rounded-4 text-center">
-          <div class="portal-icon gradient-bg-1 mx-auto mb-4">
-            <i class="bi bi-building text-white"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-4">Institute Admin</h4>
-          <ul class="portal-list text-start mb-0 text-secondary-color">
-            <li><i class="bi bi-check2-circle text-blue"></i> Full Program Lifecycle Control</li>
-            <li><i class="bi bi-check2-circle text-blue"></i> Trainer & Participant Management</li>
-            <li><i class="bi bi-check2-circle text-blue"></i> Advanced Reporting & Certificates</li>
-          </ul>
-        </div>
-      </div>
-      
-      <!-- Trainer -->
-      <div class="col-lg-4 col-md-6">
-        <div class="portal-card h-100 p-5 rounded-4 text-center">
-          <div class="portal-icon gradient-bg-2 mx-auto mb-4">
-            <i class="bi bi-person-workspace text-white"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-4">Trainer</h4>
-          <ul class="portal-list text-start mb-0 text-secondary-color">
-            <li><i class="bi bi-check2-circle text-pink"></i> Interactive Program Instruction</li>
-            <li><i class="bi bi-check2-circle text-pink"></i> Rapid Attendance Marking</li>
-            <li><i class="bi bi-check2-circle text-pink"></i> Session Feedback Review</li>
-          </ul>
-        </div>
-      </div>
-      
-      <!-- Participant -->
-      <div class="col-lg-4 col-md-6">
-        <div class="portal-card h-100 p-5 rounded-4 text-center">
-          <div class="portal-icon gradient-bg-3 mx-auto mb-4">
-            <i class="bi bi-mortarboard-fill text-white"></i>
-          </div>
-          <h4 class="fw-bold text-primary-color mb-4">Participant</h4>
-          <ul class="portal-list text-start mb-0 text-secondary-color">
-            <li><i class="bi bi-check2-circle text-teal"></i> Streamlined Assignment Submission</li>
-            <li><i class="bi bi-check2-circle text-teal"></i> Daily Feedback Provision</li>
-            <li><i class="bi bi-check2-circle text-teal"></i> Secure Certificate Downloads</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ Section -->
-<section id="faq" class="py-5">
+<!-- 3. ABOUT SECTION -->
+<section id="about" class="py-5 section-darker">
   <div class="container py-5 reveal">
     <div class="row align-items-center">
-      <div class="col-lg-5 mb-5 mb-lg-0">
-        <h2 class="fw-bold section-title mb-4">Frequently Asked<br/><span class="gradient-text-3">Questions</span></h2>
-        <p class="text-secondary-color mb-4">Everything you need to know about the product and billing. Can't find the answer you're looking for? Please chat to our friendly team.</p>
-        <%= link_to "Contact Support", "#", class: "btn-secondary-lg" %>
+      <div class="col-lg-5 mb-5 mb-lg-0 pe-lg-5">
+        <h6 class="text-uppercase text-secondary-color fw-bold mb-3 text-tracking-2">About Us</h6>
+        <h2 class="fw-bold section-title mb-4">Not Inspiration.<br/><span class="gradient-text-1">Transformation.</span></h2>
+        <p class="text-secondary-color fs-5 text-lh-17">
+          BeYa is the parent organization behind two programs built on a single conviction: lasting change does not come from the outside. It comes from within — from families, schools, corporates, and hospitals learning to grow through daily practice.
+        </p>
+        <p class="text-secondary-color fs-5 text-lh-17">
+          We do not insert external programs into broken systems. We train and trust the people already inside those systems — and watch them transform everything around them.
+        </p>
       </div>
-      
       <div class="col-lg-7">
-        <div class="faq-accordion">
-          <!-- FAQ 1 -->
-          <div class="faq-item active">
-            <button class="faq-question">
-              <span class="fw-bold text-primary-color">Is my institute's data isolated safely?</span>
-              <i class="bi bi-chevron-down faq-icon"></i>
-            </button>
-            <div class="faq-answer">
-              <p class="text-secondary-color m-0">Yes, extremely. BeYa uses robust multi-tenant architecture at the database level. Each institute operates in a fully isolated silo, ensuring privacy and compliance.</p>
+        <div class="row g-4">
+          <!-- Pillar 1 -->
+          <div class="col-md-6">
+            <div class="feature-card h-100 p-4 rounded-4">
+              <div class="feature-icon-box box-blue mb-3"><i class="bi bi-calendar-check-fill"></i></div>
+              <h5 class="fw-bold text-primary-color mb-2">Daily Practice</h5>
+              <p class="text-secondary-color fs-sm m-0">Change happens through small, repeated actions — not one-time sessions.</p>
             </div>
           </div>
-          
-          <!-- FAQ 2 -->
-          <div class="faq-item">
-            <button class="faq-question">
-              <span class="fw-bold text-primary-color">Can I import my existing participants?</span>
-              <i class="bi bi-chevron-down faq-icon"></i>
-            </button>
-            <div class="faq-answer">
-              <p class="text-secondary-color m-0">Institute Admins can provide a tailored registration link or manage participants directly. We also offer tools for managing approvals for self-registered users.</p>
+          <!-- Pillar 2 -->
+          <div class="col-md-6">
+            <div class="feature-card h-100 p-4 rounded-4">
+              <div class="feature-icon-box box-pink mb-3"><i class="bi bi-book-half"></i></div>
+              <h5 class="fw-bold text-primary-color mb-2">Constitutional Grounding</h5>
+              <p class="text-secondary-color fs-sm m-0">Every module integrates equality, justice, and fundamental rights.</p>
             </div>
           </div>
-          
-          <!-- FAQ 3 -->
-          <div class="faq-item">
-            <button class="faq-question">
-              <span class="fw-bold text-primary-color">How does the certificate generation work?</span>
-              <i class="bi bi-chevron-down faq-icon"></i>
-            </button>
-            <div class="faq-answer">
-              <p class="text-secondary-color m-0">You create a template design via our builder. Once a program completes, you can select an entire section and click "Generate". It builds personalized PDFs mapped to their names instantly.</p>
+          <!-- Pillar 3 -->
+          <div class="col-md-6">
+            <div class="feature-card h-100 p-4 rounded-4">
+              <div class="feature-icon-box box-orange mb-3"><i class="bi bi-people-fill"></i></div>
+              <h5 class="fw-bold text-primary-color mb-2">Train the Trainer</h5>
+              <p class="text-secondary-color fs-sm m-0">We create more trainers and leaders, not dependency on external forces.</p>
             </div>
           </div>
-          
-          <!-- FAQ 4 -->
-          <div class="faq-item">
-            <button class="faq-question">
-              <span class="fw-bold text-primary-color">Are there limits on number of trainers?</span>
-              <i class="bi bi-chevron-down faq-icon"></i>
-            </button>
-            <div class="faq-answer">
-              <p class="text-secondary-color m-0">No, BeYa scales with your needs. Institute Admins can add unlimited trainers and allocate them to various concurrent training programs without restrictions.</p>
+          <!-- Pillar 4 -->
+          <div class="col-md-6">
+            <div class="feature-card h-100 p-4 rounded-4">
+              <div class="feature-icon-box box-teal mb-3"><i class="bi bi-graph-up-arrow"></i></div>
+              <h5 class="fw-bold text-primary-color mb-2">Evidence-Based</h5>
+              <p class="text-secondary-color fs-sm m-0">Behavioral change is tracked, measured, and made visible in real-time.</p>
             </div>
           </div>
         </div>
@@ -307,431 +174,288 @@
   </div>
 </section>
 
-<!-- Final CTA Section -->
+<!-- 4. ORIGIN STORY -->
+<section id="origin" class="py-5 bg-primary-custom position-relative">
+  <!-- subtle background pattern -->
+  <div class="pattern-dots pattern-dots-muted position-absolute w-100 h-100 top-0 left-0"></div>
+  <div class="container py-5 reveal position-relative z-1">
+    <div class="section-header text-center mb-5 pb-3">
+      <h6 class="text-uppercase text-secondary-color fw-bold mb-3 text-tracking-2">Origin Story</h6>
+      <h2 class="fw-bold section-title">Named After a <span class="gradient-text-2">Mother’s Resilience</span></h2>
+      <p class="text-secondary-color mx-auto maxw-700">The origin of BeYa is rooted in lived experience, not theory.</p>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-5 mb-lg-0 order-2 order-lg-1">
+        <div class="timeline-container ps-4 border-start border-3 border-glow">
+          <div class="timeline-item mb-4 position-relative">
+            <div class="timeline-dot gradient-bg-1"></div>
+            <h5 class="fw-bold text-primary-color">The Realization: Motivation Fades</h5>
+            <p class="text-secondary-color">Over 13 years and 300+ sessions reaching 100,000+ individuals, inspiration created intent, but weeks later people returned to old habits. The impact did not sustain.</p>
+          </div>
+          <div class="timeline-item mb-4 position-relative">
+            <div class="timeline-dot gradient-bg-2"></div>
+            <h5 class="fw-bold text-primary-color">The Central Question</h5>
+            <p class="text-secondary-color">How can behavioral training become a system of daily practice instead of a one-time emotional experience?</p>
+          </div>
+          <div class="timeline-item mb-4 position-relative">
+            <div class="timeline-dot gradient-bg-3"></div>
+            <h5 class="fw-bold text-primary-color">The Turning Point</h5>
+            <p class="text-secondary-color">A student asked: “We are not allowed to draw water from the public well because of our caste. How will learning these skills change that?” This revealed that skills alone only help people cope—understanding rights empowers them to refuse injustice.</p>
+          </div>
+          <div class="timeline-item position-relative">
+            <div class="timeline-dot gradient-bg-1"></div>
+            <h5 class="fw-bold text-primary-color">The Outcome: System Built</h5>
+            <p class="text-secondary-color">BeYa became a unified system integrating daily practice and constitutional awareness, named after a mother whose hospital experience proved that systems fail from a lack of structure, not intent.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 order-1 order-lg-2 mb-5">
+        <div class="story-card p-5 rounded-4 border-glow shadow-glow-accent">
+          <p class="text-primary-color fs-5 text-lh-18">
+            Sabith Ali grew up as the youngest of eight in rural Kerala. He lost his father early and funded his education through work. He watched his paralyzed mother wait for hours in a hospital corridor — without support, clarity, or dignity.
+          </p>
+          <p class="text-primary-color fs-5 mb-0 text-lh-18">
+            Every solution he built from that day forward came from that lived experience. BeYa exists to ensure that dignity is not given; it is built through structured, small actions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. BEYA LIFE SKILLS PROGRAM -->
+<section id="life-skills" class="py-5 section-darker border-top border-bottom border-secondary-custom">
+  <div class="container py-5 reveal">
+    <div class="text-center mb-5">
+      <h6 class="text-uppercase text-secondary-color fw-bold mb-4 text-tracking-2">Programs</h6>
+      <div class="feature-icon-box feature-icon-box-lg box-blue mx-auto mb-3"><i class="bi bi-puzzle-fill fs-3"></i></div>
+      <h2 class="fw-bold section-title"><span class="gradient-text-1">BeYa Life Skills</span> Trainings</h2>
+      <p class="text-secondary-color mx-auto fs-5 maxw-800">
+        A structured behavioral development system designed for families, schools, corporates, NGOs, and institutions, enabling consistent daily habit-building.
+      </p>
+    </div>
+
+    <div class="row g-4 mt-2">
+      <div class="col-lg-4 col-md-6">
+        <div class="portal-card h-100 p-4 rounded-4">
+          <h4 class="fw-bold text-primary-color mb-3">Family Program</h4>
+          <p class="text-secondary-color fs-sm mb-4">Parents and students commit together and follow daily practices via a web app to develop communication, accountability, and mutual understanding.</p>
+          <ul class="portal-list pb-2 text-start mb-0 text-secondary-color border-bottom border-light-custom">
+            <li><i class="bi bi-check2-circle text-blue"></i> Joint commitment session</li>
+            <li><i class="bi bi-check2-circle text-blue"></i> Daily reflections & Dialogue</li>
+            <li><i class="bi bi-check2-circle text-blue"></i> Web app progress tracking</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="portal-card h-100 p-4 rounded-4">
+          <h4 class="fw-bold text-primary-color mb-3">Schools Program</h4>
+          <p class="text-secondary-color fs-sm mb-4">Integrates the Indian Constitution and WHO life skills framework directly into the educational curriculum with built-in mentoring.</p>
+          <ul class="portal-list pb-2 text-start mb-0 text-secondary-color border-bottom border-light-custom">
+            <li><i class="bi bi-check2-circle text-pink"></i> Emotional regulation</li>
+            <li><i class="bi bi-check2-circle text-pink"></i> Civic responsibility</li>
+            <li><i class="bi bi-check2-circle text-pink"></i> Guided communication</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="portal-card h-100 p-4 rounded-4">
+          <h4 class="fw-bold text-primary-color mb-3">Corporate Program</h4>
+          <p class="text-secondary-color fs-sm mb-4">Equips staff with critical behavioral competencies. A unique strength is employees applying these practices both professionally and within their families.</p>
+          <ul class="portal-list pb-2 text-start mb-0 text-secondary-color border-bottom border-light-custom">
+            <li><i class="bi bi-check2-circle text-teal"></i> Emotional intelligence</li>
+            <li><i class="bi bi-check2-circle text-teal"></i> Leadership & conflict resolution</li>
+            <li><i class="bi bi-check2-circle text-teal"></i> Measurable digital tracking</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-12 mt-4">
+        <div class="p-4 rounded-4 border-glow shadow-sm bg-primary-custom d-flex flex-wrap align-items-center justify-content-between">
+          <div class="mb-3 mb-md-0">
+            <h5 class="fw-bold text-primary-color mb-1">Core Add-ons</h5>
+            <p class="text-secondary-color fs-sm mb-0">Every program strictly incorporates these powerful foundational pillars.</p>
+          </div>
+          <div class="d-flex gap-3 flex-wrap">
+            <span class="badge border border-glow text-accent bg-transparent px-3 py-2 fs-6">Train the Trainers</span>
+            <span class="badge border border-glow text-blue bg-transparent px-3 py-2 fs-6">Constitutional Consciousness</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. MEDIBUK PROGRAM -->
+<section id="medibuk" class="py-5 position-relative">
+  <div class="container py-5 reveal">
+    <div class="row align-items-center mb-5">
+      <div class="col-lg-5 mb-5 mb-lg-0 pe-lg-4">
+        <h6 class="text-uppercase text-secondary-color fw-bold mb-4 text-tracking-2">Programs</h6>
+        <div class="feature-icon-box feature-icon-box-lg box-teal mx-auto mx-lg-0 mb-3"><i class="bi bi-heart-pulse-fill fs-3"></i></div>
+        <h2 class="fw-bold section-title text-center text-lg-start"><span class="gradient-text-3">BeYa MediBuk</span></h2>
+        <p class="text-secondary-color fs-5 text-center text-lg-start maxw-500">
+          Originating from the personal hospital experience of the founder’s mother. The problem was clear: 4–5 hour wait times and no dignity in patient flow.
+        </p>
+        <p class="text-secondary-color fs-5 text-center text-lg-start maxw-500">
+          MediBuk optimizes outpatient systems, restores dignity to healthcare, and drastically reduces waiting times through structured digital flow and human coordination.
+        </p>
+      </div>
+      <div class="col-lg-7 ps-lg-5">
+        <div class="p-5 rounded-4 border-glow shadow-glow-primary bg-card-custom mb-4 transition">
+          <h4 class="fw-bold text-primary-color mb-3">External Management Model</h4>
+          <p class="text-secondary-color m-0">Professionally trained BeYa teams are deployed within hospitals to directly manage patient flow, queue systems, and coordination. This ensures immediate operational improvement.</p>
+        </div>
+        <div class="p-5 rounded-4 border-glow shadow-glow-primary bg-card-custom transition">
+          <h4 class="fw-bold text-primary-color mb-3">Internal Training Model</h4>
+          <p class="text-secondary-color m-0">Hospital receptionists, OPD nurses, and coordinators are trained to independently manage patient flow, time estimation, and communication—enabling hospitals to fully own the system.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. IMPACT SECTION -->
+<section class="impact-section py-5 gradient-bg-1 position-relative overflow-hidden">
+  <div class="container py-5 reveal text-center position-relative z-1">
+    <h6 class="text-uppercase text-white opacity-75 fw-bold mb-3 text-tracking-2">Our Impact</h6>
+    <h2 class="fw-bold text-white mb-5 display-5">Impact That Speaks</h2>
+    <div class="row justify-content-center g-4">
+      <div class="col-md-4">
+        <div class="impact-card p-4 rounded-4 bg-white shadow-glow-accent hover-scale">
+          <h1 class="display-3 fw-bolder gradient-text-1 mb-0 counter" data-target="3000">3,000+</h1>
+          <p class="fw-semibold text-secondary mb-0 fs-5 mt-2">Families Trained</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="impact-card p-4 rounded-4 bg-white shadow-glow-accent hover-scale">
+          <h1 class="display-3 fw-bolder gradient-text-2 mb-0 counter" data-target="1000000">1M+</h1>
+          <p class="fw-semibold text-secondary mb-0 fs-5 mt-2">Patients Served</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="impact-card p-4 rounded-4 bg-white shadow-glow-accent hover-scale">
+          <h1 class="display-3 fw-bolder gradient-text-3 mb-0 counter" data-target="100000">100K+</h1>
+          <p class="fw-semibold text-secondary mb-0 fs-5 mt-2">Lives Energized</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. & 9. FOUNDER & PHILOSOPHY SECTIONS -->
+<section id="founder" class="py-5 section-darker">
+  <div class="container py-5 reveal">
+    <div class="row gx-5 align-items-center">
+      <div class="col-lg-5 mb-5 mb-lg-0 text-center">
+        <!-- Founder Portrait Placeholder -->
+        <div class="founder-portrait founder-portrait-frame mx-auto rounded-4 shadow-glow-accent overflow-hidden position-relative mb-4">
+           <i class="bi bi-person-fill founder-icon-xl text-white position-absolute top-50 start-50 translate-middle"></i>
+        </div>
+        <h3 class="fw-bold text-primary-color mb-1">Sabith Ali</h3>
+        <p class="text-secondary-color fs-5">Founder & CEO, BeYa</p>
+      </div>
+      <div class="col-lg-7">
+        <h6 class="text-uppercase text-secondary-color fw-bold mb-3 text-tracking-2">Our Philosophy</h6>
+        <h2 class="fw-bold section-title mb-4">The Most Powerful Change Agent Is <span class="gradient-text-2">Already Inside the System.</span></h2>
+
+        <div class="founder-narrative">
+          <p class="text-secondary-color fs-5 mb-4 text-lh-17">
+            For 13 years, Sabith Ali trained over 100,000 individuals across schools, corporates, and hospitals. But the core question remained: <strong>“What will people do differently tomorrow?”</strong>
+          </p>
+          <p class="text-secondary-color fs-5 mb-4 text-lh-17">
+            His leadership philosophy rejects motivation as a long-term solution. Instead of external interventions that fade when the trainer leaves, BeYa builds internal systems, multiplies insider trainers, and empowers existing people to manage themselves with constitutional dignity.
+          </p>
+
+          <blockquote class="blockquote border-start border-4 border-glow ps-4 mt-4 py-2">
+             <p class="text-primary-color fs-4 fst-italic fw-medium mb-0">"Dignity is not given — it is built through small, consistent daily actions."</p>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. CTA / JOIN SECTION -->
 <section class="cta-section py-5 my-md-5">
   <div class="container text-center reveal">
     <div class="cta-box p-5 border-glow position-relative overflow-hidden">
-      <!-- Glow effects behind the CTA -->
-      <div class="cta-glow-1"></div>
-      <div class="cta-glow-2"></div>
-      
+      <div class="cta-glow-1"></div><div class="cta-glow-2"></div>
+
       <div class="position-relative z-1 py-md-4">
-        <h2 class="fw-bolder text-primary-color mb-3 display-5">Start modernizing today.</h2>
-        <p class="text-secondary-color mb-5 mx-auto fs-5" style="max-width: 600px;">
-          Join the institutes already using BeYa to save hundreds of administrative hours each month.
+        <h2 class="fw-bolder text-primary-color mb-3 display-5">Ready to Build a System That Lasts?</h2>
+        <p class="text-secondary-color mb-4 mx-auto fs-5 maxw-600">
+          For Families, Schools, Corporates, and Hospitals. Empower the people already inside your system today.
         </p>
         <div class="d-flex flex-wrap gap-3 justify-content-center">
-          <%= link_to "Register Institute", new_user_registration_path, class: "btn-primary-lg shadow-glow-primary", target: "_blank" %>
+          <a href="#" class="btn-primary-lg shadow-glow-primary hover-scale text-decoration-none">Explore Programs</a>
+          <a href="#" class="btn-secondary-lg hover-scale text-decoration-none">Start a Conversation</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="landing-footer py-5 mt-5">
-  <div class="container text-center text-secondary-color">
-    <div class="d-flex justify-content-center align-items-center gap-2 mb-4">
-      <h4 class="logo-text m-0 fs-4"><span class="gradient-text-1">BeYa</span></h4>
+<!-- 11. FOOTER -->
+<footer class="landing-footer py-5 mt-5 border-top border-secondary-custom">
+  <div class="container">
+    <div class="row justify-content-between align-items-center">
+      <div class="col-md-6 mb-4 mb-md-0 text-center text-md-start">
+        <h4 class="logo-text m-0 fs-3 mb-2"><span class="gradient-text-1">BeYa</span></h4>
+        <p class="text-secondary-color m-0 fs-6">Wayanad, Kerala, India</p>
+      </div>
+      <div class="col-md-6 text-center text-md-end">
+        <div class="d-flex justify-content-center justify-content-md-end gap-4 mb-3 fs-5">
+          <a href="mailto:sabithaliv@gmail.com" class="text-secondary-color text-hover-primary text-decoration-none"><i class="bi bi-envelope-fill me-2"></i>sabithaliv@gmail.com</a>
+          <a href="tel:+919544788304" class="text-secondary-color text-hover-primary text-decoration-none"><i class="bi bi-telephone-fill me-2"></i>+91 95447 88304</a>
+        </div>
+        <p class="mb-0 fs-sm text-secondary-color">&copy; <%= Time.current.year %> BeYa. All rights reserved.</p>
+      </div>
     </div>
-    <div class="d-flex justify-content-center gap-4 mb-4 fs-5">
-      <a href="#" class="text-secondary-color text-hover-primary"><i class="bi bi-twitter-x"></i></a>
-      <a href="#" class="text-secondary-color text-hover-primary"><i class="bi bi-github"></i></a>
-      <a href="#" class="text-secondary-color text-hover-primary"><i class="bi bi-linkedin"></i></a>
-    </div>
-    <p class="mb-0 fs-sm">&copy; <%= Time.current.year %> BeYa Educational Platform. All rights reserved.</p>
   </div>
 </footer>
 
-<!-- Theme toggle functionality & Animations -->
+<!-- JavaScript Logic -->
 <script>
-  // Theme Toggle Logic
-  const toggleBtn = document.getElementById('themeToggleBtn');
-  
-  toggleBtn.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
+  function applyTheme(newTheme) {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('beyaTheme', newTheme);
-  });
+  }
 
-  // Scroll Reveal Logic
+  const toggleBtnDesktop = document.getElementById('themeToggleBtn');
+  const toggleBtnMobile = document.getElementById('themeToggleBtnMobile');
+
+  function themeHandler() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  }
+
+  if(toggleBtnDesktop) toggleBtnDesktop.addEventListener('click', themeHandler);
+  if(toggleBtnMobile) toggleBtnMobile.addEventListener('click', themeHandler);
+
   function reveal() {
     var reveals = document.querySelectorAll(".reveal");
     for (var i = 0; i < reveals.length; i++) {
         var windowHeight = window.innerHeight;
         var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 100;
-        if (elementTop < windowHeight - elementVisible) {
+        if (elementTop < windowHeight - 100) {
             reveals[i].classList.add("active");
         }
     }
   }
   window.addEventListener("scroll", reveal);
-  // Initial check
   document.addEventListener("DOMContentLoaded", reveal);
 
-  // FAQ Accordion Logic
-  document.querySelectorAll('.faq-question').forEach(button => {
-    button.addEventListener('click', () => {
-      const faqItem = button.parentElement;
-      
-      // Close all other items
-      document.querySelectorAll('.faq-item').forEach(item => {
-        if (item !== faqItem) item.classList.remove('active');
-      });
-      
-      // Toggle current item
-      faqItem.classList.toggle('active');
-    });
-  });
-
-  // Scroll Tracker Logic
   window.addEventListener('scroll', () => {
     const scrollTracker = document.querySelector('.scroll-tracker');
     if (scrollTracker) {
       const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrollPos = window.scrollY;
-      const scrollPercent = (scrollPos / docHeight) * 100;
-      scrollTracker.style.width = scrollPercent + '%';
+      const scrollTrackerWidth = (scrollPos / docHeight) * 100;
+      scrollTracker.style.width = scrollTrackerWidth + '%';
     }
   });
 </script>
-
-<% content_for :styles do %>
-  <style>
-    /* CSS Variables system for Theming */
-    :root {
-      /* LIGHT MODE VARIABLES */
-      --bg-primary: #f8fafc;
-      --bg-secondary: #f1f5f9;
-      --bg-card: #ffffff;
-      --bg-nav: rgba(255, 255, 255, 0.85);
-      
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      
-      --border-color: #e2e8f0;
-      --border-glow: rgba(59, 130, 246, 0.15);
-      
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-      --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      
-      --gradient-1: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-      --gradient-2: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
-      --gradient-3: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
-      
-      --btn-secondary-bg: #f1f5f9;
-      --btn-secondary-text: #0f172a;
-      --btn-secondary-hover: #e2e8f0;
-      
-      --shape-primary: rgba(59, 130, 246, 0.15);
-      --shape-secondary: rgba(236, 72, 153, 0.1);
-      --shape-accent: rgba(139, 92, 246, 0.15);
-      
-      /* Vibrant Colors for Light Theme */
-      --color-blue: #3B82F6;
-      --color-pink: #EC4899;
-      --color-indigo: #4F46E5;
-      --color-teal: #14B8A6;
-      --color-orange: #F97316;
-      --color-purple: #A855F7;
-    }
-
-    /* DARK MODE VARIABLES */
-    [data-theme="dark"] {
-      --bg-primary: #0B1120;
-      --bg-secondary: #0d1612; /* Keep a hint of deep rich green-black */
-      --bg-card: #151E32;
-      --bg-nav: rgba(11, 17, 32, 0.85);
-      
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-glow: rgba(59, 130, 246, 0.3);
-      
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-      --card-hover-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-      
-      --gradient-1: linear-gradient(135deg, #60A5FA 0%, #C084FC 100%);
-      --gradient-2: linear-gradient(135deg, #F472B6 0%, #C084FC 100%);
-      --gradient-3: linear-gradient(135deg, #2DD4BF 0%, #60A5FA 100%);
-      
-      --btn-secondary-bg: rgba(255, 255, 255, 0.05);
-      --btn-secondary-text: #f8fafc;
-      --btn-secondary-hover: rgba(255, 255, 255, 0.1);
-      
-      --shape-primary: rgba(59, 130, 246, 0.2);
-      --shape-secondary: rgba(236, 72, 153, 0.15);
-      --shape-accent: rgba(139, 92, 246, 0.2);
-      
-      /* Vibrant Bright Colors for Dark Theme */
-      --color-blue: #60A5FA;
-      --color-pink: #F472B6;
-      --color-indigo: #818CF8;
-      --color-teal: #2DD4BF;
-      --color-orange: #FB923C;
-      --color-purple: #C084FC;
-    }
-
-    /* Base Setup */
-    html {
-      scroll-behavior: smooth;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      margin: 0;
-      overflow-x: hidden;
-      transition: background-color 0.4s ease, color 0.4s ease;
-    }
-    
-    /* Scroll Tracker */
-    .scroll-tracker {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 4px;
-      background: var(--gradient-1); /* Vibrant Multi-Color Gradient */
-      width: 0%;
-      z-index: 2000; /* Must be entirely above the navbar */
-      transition: width 0.1s ease-out;
-    }
-    
-    h1, h2, h3, h4, h5, h6, .outfit, .logo-text {
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .text-primary-color { color: var(--text-primary) !important; font-family: 'Outfit', sans-serif;}
-    .text-secondary-color { color: var(--text-secondary) !important; }
-    .section-darker { background-color: var(--bg-secondary); }
-    .fs-sm { font-size: 0.9rem; line-height: 1.5; }
-    .section-title { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.5px; }
-
-    /* Gradients */
-    .gradient-text-1 {
-      background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      padding: 0.25em 0; display: inline-block; line-height: normal; margin-bottom: -0.25em;
-    }
-    .gradient-text-2 {
-      background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      padding: 0.25em 0; display: inline-block; line-height: normal; margin-bottom: -0.25em;
-    }
-    .gradient-text-3 {
-      background: var(--gradient-3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      padding: 0.25em 0; display: inline-block; line-height: normal; margin-bottom: -0.25em;
-    }
-    
-    .gradient-bg-1 { background: var(--gradient-1); }
-    .gradient-bg-2 { background: var(--gradient-2); }
-    .gradient-bg-3 { background: var(--gradient-3); }
-    
-    .text-blue { color: var(--color-blue); }
-    .text-pink { color: var(--color-pink); }
-    .text-teal { color: var(--color-teal); }
-    .text-accent { color: var(--color-purple); }
-    .text-hover-primary:hover { color: var(--color-blue) !important; }
-
-    /* Animated Background */
-    .landing-bg {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      overflow: hidden; z-index: -1; pointer-events: none;
-    }
-    
-    .blur-blob {
-      position: absolute; filter: blur(80px); border-radius: 50%;
-      animation: float-shape 25s infinite ease-in-out alternate;
-    }
-    
-    .shape-primary { background: var(--shape-primary); width: 600px; height: 600px; top: -10%; left: -20%; }
-    .shape-secondary { background: var(--shape-secondary); width: 500px; height: 500px; top: 30%; right: -10%; animation-delay: -10s; }
-    .shape-accent { background: var(--shape-accent); width: 400px; height: 400px; bottom: -10%; left: 30%; animation-delay: -5s; }
-
-    /* Floating wireframe boxes (concept) */
-    .floating-cube {
-      position: absolute; border: 1px solid var(--border-glow); border-radius: 12px;
-      backdrop-filter: blur(2px); animation: float-particle 20s infinite linear;
-    }
-    .cube-1 { width: 50px; height: 50px; top: 20%; left: 15%; animation-duration: 35s; transform: rotate(45deg); }
-    .cube-2 { width: 80px; height: 80px; top: 70%; left: 85%; animation-duration: 40s; transform: rotate(15deg); }
-    .cube-3 { width: 40px; height: 40px; top: 40%; left: 75%; animation-duration: 25s; transform: rotate(60deg); }
-
-    @keyframes float-shape { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(100px, 50px) scale(1.1); } }
-    @keyframes float-particle { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.5; } 90% { opacity: 0.5; } 100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; } }
-
-    /* Navbar */
-    .landing-navbar {
-      position: fixed; top: 0; left: 0; width: 100%; height: 80px; z-index: 1000;
-      background: var(--bg-nav); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-color);
-      transition: background 0.4s, border-color 0.4s;
-    }
-    .logo-text { font-size: 2rem; font-weight: 800; letter-spacing: -1px; line-height: 1.2; position: relative; top: 5px; }
-    
-    .nav-link { color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; text-decoration: none; transition: color 0.3s; }
-    .nav-link:hover { color: var(--text-primary); }
-    
-    .nav-divider { width: 1px; height: 24px; background-color: var(--border-color); }
-    
-    .btn-register-sm { background: var(--gradient-1); color: #fff; padding: 0.6rem 1.4rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s; border: none;}
-    .btn-register-sm:hover { transform: translateY(-2px); box-shadow: var(--card-hover-shadow); color: #fff;}
-
-    /* Theme Toggle Button */
-    .theme-toggle {
-      background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);
-      display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;
-      transition: background 0.3s, color 0.3s;
-    }
-    .theme-toggle:hover { background: var(--bg-secondary); color: var(--color-blue); }
-    
-    [data-theme="dark"] .icon-moon { display: none; }
-    [data-theme="dark"] .icon-sun { display: block; color: var(--color-orange); }
-    [data-theme="light"] .icon-sun { display: none; }
-    [data-theme="light"] .icon-moon { display: block; }
-
-    /* Hero Section */
-    .hero-section { min-height: 100vh; padding-top: 100px; position: relative; overflow: hidden;}
-    
-    .hero-badge { 
-      background: var(--bg-secondary); padding: 0.5rem 1.25rem; border-radius: 50px; 
-      border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; 
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .badge-dot { width: 8px; height: 8px; background: var(--color-blue); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--color-blue); }
-    
-    .hero-title { font-size: clamp(3rem, 6vw, 5rem); line-height: 1.1; letter-spacing: -2px; }
-    .hero-subtitle { font-size: clamp(1.1rem, 2vw, 1.25rem); max-width: 650px; line-height: 1.6; }
-    
-    .btn-primary-lg { display: inline-block; background: var(--gradient-1); color: #fff; border: none; padding: 1.1rem 2.5rem; border-radius: 12px; font-weight: 600; font-size: 1.05rem; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; }
-    .btn-secondary-lg { display: inline-block; background: var(--btn-secondary-bg); color: var(--btn-secondary-text); border: 1px solid var(--border-color); padding: 1.1rem 2.5rem; border-radius: 12px; font-weight: 600; font-size: 1.05rem; text-decoration: none; transition: all 0.3s; }
-    .btn-secondary-lg:hover { background: var(--btn-secondary-hover); transform: translateY(-2px); color: var(--btn-secondary-text); }
-    .shadow-glow-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4); color: #fff; }
-
-    /* Hero Mockup Graphic */
-    .hero-mockup {
-      width: 100%; max-width: 800px; height: 350px; background: var(--bg-card);
-      border-radius: 16px 16px 0 0; border: 1px solid var(--border-color); border-bottom: none;
-      box-shadow: var(--card-shadow); position: relative; overflow: hidden;
-      mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-    }
-    .mockup-header { padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
-    .mockup-dots { display: flex; gap: 6px; }
-    .mockup-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--border-color); }
-    .mockup-body { height: 100%; background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-card) 100%); }
-    .mockup-stat-card {
-      background: var(--bg-card); padding: 2rem; border-radius: 16px; border: 1px solid var(--border-color);
-      box-shadow: var(--card-shadow); display: inline-block;
-    }
-    .floating-slow { animation: float-card 6s ease-in-out infinite; }
-    @keyframes float-card { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-    /* How it Works Section */
-    .timeline-line {
-      position: absolute; top: 20%; left: 0; width: 100%; height: 2px;
-      background: linear-gradient(90deg, transparent 0%, var(--border-color) 20%, var(--border-color) 80%, transparent 100%);
-      z-index: 0;
-    }
-    .step-card { position: relative; z-index: 1; }
-    .step-icon-wrapper {
-      width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); transform: rotate(-5deg); transition: transform 0.4s;
-    }
-    .step-card:hover .step-icon-wrapper { transform: rotate(0) scale(1.1); }
-
-    /* Hover Animations */
-    .hover-scale { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .hover-scale:hover { transform: scale(1.05); }
-
-    /* Keyframe Entrance Animations */
-    @keyframes fadeInUp {
-      0% { opacity: 0; transform: translateY(50px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes zoomInPulse {
-      0% { opacity: 0; transform: scale(0.85); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-      70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-      100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-    }
-    
-    .hero-title, .hero-subtitle { animation: fadeInUp 1s ease-out forwards; }
-    .hero-badge { animation: fadeInUp 0.8s ease-out forwards; }
-    .hero-ctas { animation: fadeInUp 1.2s ease-out forwards; }
-
-    /* Improved Scroll Reveal */
-    .reveal { opacity: 0; transform: translateY(50px) scale(0.98); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0) scale(1); }
-    
-    /* Staggered Feature Cards */
-    .feature-card {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
-      box-shadow: var(--card-shadow); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s, border-color 0.4s;
-    }
-    .feature-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: var(--card-hover-shadow); border-color: var(--border-glow); }
-    
-    .feature-icon-box {
-      width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
-      transition: transform 0.4s;
-    }
-    .feature-card:hover .feature-icon-box { transform: scale(1.15) rotate(5deg); }
-    
-    /* Colorful Feature Boxes */
-    .box-blue { background: rgba(59, 130, 246, 0.1); color: var(--color-blue); }
-    .box-pink { background: rgba(236, 72, 153, 0.1); color: var(--color-pink); }
-    .box-indigo { background: rgba(79, 70, 229, 0.1); color: var(--color-indigo); }
-    .box-teal { background: rgba(20, 184, 166, 0.1); color: var(--color-teal); }
-    .box-orange { background: rgba(249, 115, 22, 0.1); color: var(--color-orange); }
-    .box-purple { background: rgba(168, 85, 247, 0.1); color: var(--color-purple); }
-    
-    /* Portal Card Bounce */
-    .portal-card {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
-      box-shadow: var(--card-shadow); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s; position: relative; overflow: hidden;
-    }
-    .portal-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--border-color); transition: background 0.4s; }
-    .portal-card:hover { transform: translateY(-12px); box-shadow: var(--card-hover-shadow); }
-    .portal-card:hover::before { background: var(--gradient-1); }
-    
-    .portal-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-    .portal-card:hover .portal-icon { transform: scale(1.2); }
-    
-    .portal-list li { margin-bottom: 0.8rem; font-size: 0.95rem; list-style: none; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.3s; }
-    .portal-card:hover .portal-list li { transform: translateX(5px); }
-
-    /* FAQ Section */
-    .faq-accordion { display: flex; flex-direction: column; gap: 1rem; }
-    .faq-item {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .faq-item.active { border-color: var(--color-blue); box-shadow: var(--card-shadow); }
-    
-    .faq-question {
-      width: 100%; text-align: left; padding: 1.5rem; background: transparent; border: none; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem;
-    }
-    .faq-icon { transition: transform 0.3s ease; color: var(--text-secondary); }
-    .faq-item.active .faq-icon { transform: rotate(180deg); color: var(--color-blue); }
-    
-    .faq-answer {
-      max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; background: var(--bg-card); padding: 0 1.5rem;
-    }
-    .faq-item.active .faq-answer { max-height: 200px; padding: 0 1.5rem 1.5rem 1.5rem; }
-
-    /* Final CTA Section */
-    .border-glow {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px;
-      box-shadow: var(--card-shadow);
-    }
-    .cta-glow-1 { position: absolute; top: -50px; left: -50px; width: 200px; height: 200px; background: var(--color-purple); filter: blur(100px); opacity: 0.4; pointer-events: none; border-radius: 50%; }
-    .cta-glow-2 { position: absolute; bottom: -50px; right: -50px; width: 250px; height: 250px; background: var(--color-blue); filter: blur(120px); opacity: 0.3; pointer-events: none; border-radius: 50%; }
-
-    /* Scroll Reveal */
-    .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0); }
-  </style>
-<% end %>
