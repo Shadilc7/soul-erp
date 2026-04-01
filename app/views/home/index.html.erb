@@ -1,4 +1,61 @@
 <% content_for :head do %>
+  <%# ── SEO: Primary Meta Tags ── %>
+  <title>BeYa — Where Habit Becomes Character | Behavioral Life-Skills, Kerala</title>
+  <meta name="description" content="BeYa is a behavioral life-skills organization from Kerala, India. Two programs — BeYa Life Skills and BeYa MediBuk — transforming families, schools, corporates, and hospitals through structured daily practice.">
+  <meta name="keywords" content="BeYa, life skills training, behavioral development, Kerala, MediBuk, family program, schools program, corporate training, hospital patient flow, Sabith Ali, Wayanad">
+  <meta name="author" content="BeYa — Sabith Ali">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://beya.in/">
+
+  <%# ── SEO: Open Graph (Facebook / WhatsApp / LinkedIn) ── %>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BeYa">
+  <meta property="og:title" content="BeYa — Where Habit Becomes Character">
+  <meta property="og:description" content="BeYa is a behavioral life-skills organization from Kerala, India, transforming families, schools, corporates, and hospitals through structured daily practice.">
+  <meta property="og:url" content="https://beya.in/">
+  <meta property="og:image" content="https://beya.in/assets/beya_logo_color.png">
+  <meta property="og:locale" content="en_IN">
+
+  <%# ── SEO: Twitter Card ── %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BeYa — Where Habit Becomes Character">
+  <meta name="twitter:description" content="Behavioral life-skills training for families, schools, corporates, and hospitals across Kerala, India.">
+  <meta name="twitter:image" content="https://beya.in/assets/beya_logo_color.png">
+
+  <%# ── SEO: JSON-LD Structured Data ── %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "BeYa",
+    "alternateName": "BeYa Life Skills",
+    "description": "BeYa is a behavioral life-skills organization from Kerala, India, offering two programs: BeYa Life Skills and BeYa MediBuk.",
+    "url": "https://beya.in",
+    "logo": "https://beya.in/assets/beya_logo_color.png",
+    "foundingDate": "2011",
+    "founder": {
+      "@type": "Person",
+      "name": "Sabith Ali"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Wayanad",
+      "addressRegion": "Kerala",
+      "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-95447-88304",
+      "email": "sabithaliv@gmail.com",
+      "contactType": "Customer Service",
+      "areaServed": "IN",
+      "availableLanguage": ["English", "Malayalam"]
+    },
+    "sameAs": []
+  }
+  </script>
+
+  <%# ── Fonts ── %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -27,8 +84,9 @@
 <nav class="navbar navbar-expand-lg landing-navbar py-2 py-lg-0">
   <div class="container h-100">
     <div class="logo-container landing-logo-container">
-      <a href="#hero" class="text-decoration-none logo-link-reset">
-        <h1 class="logo-text m-0"><span class="gradient-text-1">BeYa</span></h1>
+      <a href="#hero" class="text-decoration-none logo-link-reset d-flex align-items-center">
+        <%= image_tag "beya_logo_color.png", alt: "BeYa Logo", class: "beya-logo beya-logo-color" %>
+        <%= image_tag "beya_logo_white.png", alt: "BeYa Logo", class: "beya-logo beya-logo-white" %>
       </a>
     </div>
 
@@ -187,7 +245,7 @@
 
     <div class="row align-items-center">
       <div class="col-lg-6 mb-5 mb-lg-0 order-2 order-lg-1">
-        <div class="timeline-container ps-4 border-start border-3 border-glow">
+        <div class="timeline-container ps-4">
           <div class="timeline-item mb-4 position-relative">
             <div class="timeline-dot gradient-bg-1"></div>
             <h5 class="fw-bold text-primary-color">The Realization: Motivation Fades</h5>
@@ -405,7 +463,10 @@
     <div class="p-2 p-lg-0">
       <div class="row g-4 align-items-start">
         <div class="col-lg-4">
-          <h4 class="logo-text m-0 fs-3 mb-3"><span class="gradient-text-1">BeYa</span></h4>
+          <div class="mb-3 footer-logo-wrap d-flex d-lg-block justify-content-center">
+            <%= image_tag "beya_logo_color.png", alt: "BeYa Logo", class: "footer-logo beya-logo-color" %>
+            <%= image_tag "beya_logo_white.png", alt: "BeYa Logo", class: "footer-logo beya-logo-white" %>
+          </div>
           <p class="text-secondary-color mb-3 footer-copy">
             Building dignity through structured daily practice for families, schools, corporates, and hospitals.
           </p>
@@ -449,6 +510,7 @@
 
 <!-- JavaScript Logic -->
 <script>
+  // ── Theme Toggle ──────────────────────────────────────────────
   function applyTheme(newTheme) {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('beyaTheme', newTheme);
@@ -465,16 +527,19 @@
   if(toggleBtnDesktop) toggleBtnDesktop.addEventListener('click', themeHandler);
   if(toggleBtnMobile) toggleBtnMobile.addEventListener('click', themeHandler);
 
+  // ── Scroll Reveal ─────────────────────────────────────────────
   function reveal() {
-    var reveals = document.querySelectorAll(".reveal");
-    for (var i = 0; i < reveals.length; i++) {
-        var windowHeight = window.innerHeight;
-        var elementTop = reveals[i].getBoundingClientRect().top;
-        if (elementTop < windowHeight - 100) {
-            reveals[i].classList.add("active");
+    const classes = ['reveal', 'reveal-left', 'reveal-right'];
+    classes.forEach(cls => {
+      document.querySelectorAll('.' + cls).forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight - 100) {
+          el.classList.add('active');
         }
-    }
+      });
+    });
   }
+
+  // ── Mobile Navbar ─────────────────────────────────────────────
   function initLandingNavbar() {
     const navCollapseEl = document.getElementById('navCollapse');
     const navToggler = document.getElementById('navMenuToggle');
@@ -487,16 +552,27 @@
       navToggler.setAttribute('aria-expanded', 'false');
     }
 
-    const closeTargets = navCollapseEl.querySelectorAll('a');
-    closeTargets.forEach((el) => {
-      el.addEventListener('click', closeMobileNav);
+    navCollapseEl.querySelectorAll('a').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const href = el.getAttribute('href');
+        if (window.innerWidth < 992 && href && href.startsWith('#')) {
+          e.preventDefault();
+          closeMobileNav();
+          // Wait for mobile nav collapse transition before scrolling
+          setTimeout(() => {
+            const target = document.querySelector(href);
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+          }, 320);
+        } else {
+          closeMobileNav();
+        }
+      });
     });
 
     navToggler.addEventListener('click', (event) => {
       if (window.innerWidth >= 992) return;
       event.preventDefault();
       event.stopPropagation();
-
       const willOpen = !navCollapseEl.classList.contains('show');
       navCollapseEl.classList.toggle('show', willOpen);
       navToggler.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
@@ -511,29 +587,94 @@
     });
 
     window.addEventListener('hashchange', closeMobileNav);
-    window.addEventListener('resize', () => {
-      if (window.innerWidth >= 992) closeMobileNav();
-    });
+    window.addEventListener('resize', () => { if (window.innerWidth >= 992) closeMobileNav(); });
     document.addEventListener('turbo:before-cache', closeMobileNav);
-
-    // Reset stale cached/open state on load.
     closeMobileNav();
   }
 
-  window.addEventListener("scroll", reveal);
-  document.addEventListener("DOMContentLoaded", () => {
+  // ── Active Nav Link on Scroll ─────────────────────────────────
+  function initActiveNavLinks() {
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+    const sectionIds = ['hero', 'about', 'origin', 'life-skills', 'medibuk', 'founder'];
+    const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+    function updateActiveNavLink() {
+      let currentId = '';
+      sections.forEach(section => {
+        if (window.scrollY >= section.offsetTop - 120) currentId = '#' + section.id;
+      });
+      navLinks.forEach(link => {
+        link.classList.toggle('nav-link-active', link.getAttribute('href') === currentId);
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveNavLink, { passive: true });
+    updateActiveNavLink();
+  }
+
+  // ── Scroll Tracker & Navbar Shadow ───────────────────────────
+  function initScrollEffects() {
+    const scrollTracker = document.querySelector('.scroll-tracker');
+    const navbar = document.querySelector('.landing-navbar');
+
+    window.addEventListener('scroll', () => {
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (scrollTracker) scrollTracker.style.width = ((window.scrollY / docHeight) * 100) + '%';
+      if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 50);
+    }, { passive: true });
+  }
+
+  // ── Impact Counter Animation ──────────────────────────────────
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target, 10);
+    const duration = 2000;
+    const steps = Math.ceil(duration / 16);
+    const increment = target / steps;
+    let current = 0;
+    let step = 0;
+
+    const timer = setInterval(() => {
+      step++;
+      current = Math.min(increment * step, target);
+      if (target >= 1000000)      el.textContent = (current / 1000000).toFixed(1) + 'M+';
+      else if (target >= 1000)    el.textContent = Math.round(current / 1000) + 'K+';
+      else                        el.textContent = Math.round(current) + '+';
+      if (step >= steps) clearInterval(timer);
+    }, 16);
+  }
+
+  function initCounters() {
+    const counterEls = document.querySelectorAll('.counter[data-target]');
+    if (!counterEls.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.animated) {
+          entry.target.dataset.animated = 'true';
+          animateCounter(entry.target);
+        }
+      });
+    }, { threshold: 0.6 });
+
+    counterEls.forEach(el => observer.observe(el));
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────
+  window.addEventListener('scroll', reveal, { passive: true });
+
+  document.addEventListener('DOMContentLoaded', () => {
     reveal();
     initLandingNavbar();
+    initActiveNavLinks();
+    initScrollEffects();
+    initCounters();
   });
-  document.addEventListener("turbo:load", initLandingNavbar);
 
-  window.addEventListener('scroll', () => {
-    const scrollTracker = document.querySelector('.scroll-tracker');
-    if (scrollTracker) {
-      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrollPos = window.scrollY;
-      const scrollTrackerWidth = (scrollPos / docHeight) * 100;
-      scrollTracker.style.width = scrollTrackerWidth + '%';
-    }
+  document.addEventListener('turbo:load', () => {
+    initLandingNavbar();
+    initActiveNavLinks();
+    initScrollEffects();
+    initCounters();
+    reveal();
   });
 </script>
