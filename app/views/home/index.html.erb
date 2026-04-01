@@ -58,11 +58,11 @@
   <%# ── Fonts ── %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
   <%= stylesheet_link_tag "home_landing", "data-turbo-track": "reload", media: "all" %>
   <script>
     const savedTheme = localStorage.getItem('beyaTheme');
-    const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+    const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
   </script>
 <% end %>
@@ -127,6 +127,9 @@
 <!-- 1. HERO SECTION -->
 <section id="hero" class="hero-section d-flex align-items-center text-center">
   <div class="container reveal">
+    <div class="hero-tagline-wrap mb-2">
+      <span class="hero-tagline">Mother's Dream</span>
+    </div>
     <h1 class="hero-title fw-bolder mb-4 mx-auto">
       Where Habit Becomes<br/><span class="gradient-text-2">Character</span>
     </h1>

@@ -11,6 +11,7 @@
   --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
   --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --brand-red: #E30613;
+  --brand-red-rgb: 227, 6, 19;
   --gradient-1: linear-gradient(135deg, #E30613 0%, #9b1520 100%);
   --gradient-2: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
   --gradient-3: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
@@ -40,6 +41,7 @@
   --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --card-hover-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
   --brand-red: #ff3547;
+  --brand-red-rgb: 255, 53, 71;
   --gradient-1: linear-gradient(135deg, #ff3547 0%, #E30613 100%);
   --gradient-2: linear-gradient(135deg, #f472b6 0%, #c084fc 100%);
   --gradient-3: linear-gradient(135deg, #2dd4bf 0%, #60a5fa 100%);
@@ -543,6 +545,47 @@ h6,
   padding-bottom: 80px;
   position: relative;
   overflow: hidden;
+}
+
+/* ── Hero Tagline: "Mother's Dream" ── */
+.hero-tagline-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  opacity: 0;
+  transform: translateY(-14px);
+  animation: taglineFadeIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+
+.hero-tagline-wrap::before,
+.hero-tagline-wrap::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: var(--gradient-1);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.hero-tagline {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  filter: drop-shadow(0 2px 12px rgba(var(--brand-red-rgb, 227, 6, 19), 0.22));
+}
+
+@keyframes taglineFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title {
