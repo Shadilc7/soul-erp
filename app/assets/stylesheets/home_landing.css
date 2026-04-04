@@ -1262,6 +1262,8 @@ h6,
 /* ── Founder Photo Slots ── */
 .founder-photo {
   display: block;
+  position: relative;
+  z-index: 1;
   object-fit: cover;
   object-position: center top;
   width: 100%;
