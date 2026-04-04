@@ -158,6 +158,13 @@ h6,
 .landing-logo-container {
   margin-bottom: 0;
   flex-shrink: 0;
+  padding-left: 4px;
+}
+
+@media (min-width: 992px) {
+  .landing-logo-container {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 992px) {
@@ -663,6 +670,15 @@ h6,
 .metric-pill {
   background: var(--bg-card);
   border-color: var(--border-color) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.07);
+  font-size: 0.97rem;
+}
+
+[data-theme="light"] .metric-pill {
+  background: #ffffff;
+  border-color: #c7d2de !important;
+  box-shadow: 0 2px 12px 0 rgba(15,23,42,0.10);
 }
 
 /* Intro Band */
@@ -1284,6 +1300,7 @@ h6,
   color: #fff;
   font-size: 1.1rem;
   position: relative;
+  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px var(--brand-red);
 }
 
 .founder-hero-thumb img {
@@ -1515,6 +1532,42 @@ h6,
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.85rem;
+}
+
+/* ── Institute / credential badge highlights ── */
+.inst-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15em 0.55em;
+  border-radius: 5px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-blue);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.inst-badge-iim {
+  background: rgba(227, 6, 19, 0.08);
+  color: var(--brand-red);
+  border-color: rgba(227, 6, 19, 0.2);
+}
+
+.inst-badge-iit {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--color-teal);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* ── Key stat highlight in lists ── */
+.stat-highlight {
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--brand-red), var(--color-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
 }
 
 /* ── footer social centre on mobile ── */
