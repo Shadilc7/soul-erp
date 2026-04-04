@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>BeYa</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -14,7 +14,7 @@
     <%= yield :head %>
   </head>
 
-  <body class="bg-light">
+  <body class="<%= current_page?(root_path) ? '' : 'bg-light' %>">
     <%= turbo_frame_tag "flash" do %>
       <%= render "shared/flash" %>
     <% end %>
