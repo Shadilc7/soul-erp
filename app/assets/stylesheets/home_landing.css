@@ -432,6 +432,11 @@ h6,
   transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
 }
 
+/* Offset anchor scroll so fixed navbar doesn't cover section headings */
+section[id] {
+  scroll-margin-top: 64px;
+}
+
 .landing-navbar.scrolled {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
@@ -758,14 +763,13 @@ h6,
   position: relative;
 }
 
-/* Pure-CSS left line: starts at centre of first dot, ends at centre of last dot */
-/* left: 1px → line spans 1–3px, centre at 2px = dot centre (24px ps-4 − 29px offset + 7px radius) */
-.timeline-container::before {
+/* Line drawn between consecutive items only — never extends past the last dot */
+.timeline-item:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 1px;
-  top: 13px;
-  bottom: 0;
+  left: -23px;    /* dot centre: dot-left(-29px) + half-dot(7px) = -22px; line left-edge = -23px */
+  top: 13px;      /* dot centre: dot-top(6px) + half-dot(7px) = 13px */
+  bottom: -37px;  /* gap(mb-4=24px) + next-dot-centre(13px) = 37px below item bottom */
   width: 2px;
   background: linear-gradient(180deg,
     var(--brand-red)    0%,
@@ -782,6 +786,10 @@ h6,
 
 .timeline-item {
   padding-left: 20px;
+}
+
+.timeline-item p {
+  line-height: 1.85;
 }
 
 .timeline-dot {
@@ -1151,9 +1159,11 @@ h6,
     margin-left: 10px;
   }
 
-  /* Mobile left: -2px → line spans −2–0px, centre at −1px = dot centre (24px ps-4 − 31px offset + 6px radius) */
-  .timeline-container::before {
-    left: -2px;
+  /* Mobile dot is 12×12px at left:-31px top:8px — recalculate line position */
+  .timeline-item:not(:last-child)::after {
+    left: -26px;    /* dot centre: -31px + 6px = -25px; line left-edge = -26px */
+    top: 14px;      /* dot centre: 8px + 6px = 14px */
+    bottom: -38px;  /* gap(24px) + next-dot-centre(14px) = 38px */
   }
 
   .timeline-dot {
@@ -1171,6 +1181,21 @@ h6,
   .feature-icon-box {
     margin-left: auto;
     margin-right: auto;
+  }
+
+  /* About Us section — center headings and text on mobile */
+  #about .col-lg-5 {
+    text-align: center;
+  }
+
+  /* Our Philosophy (Founder section) — center heading and reduce description font */
+  #founder .col-lg-8 > h6,
+  #founder .col-lg-8 > h2 {
+    text-align: center;
+  }
+
+  #founder .founder-narrative p {
+    font-size: 0.95rem !important;
   }
 
   .feature-card,
@@ -1273,6 +1298,25 @@ h6,
   background: #0077b5 !important;
   border-color: #0077b5 !important;
   box-shadow: 0 6px 16px rgba(0, 119, 181, 0.35) !important;
+}
+
+.social-icon-threads:hover {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.social-icon-x:hover {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .social-icon-threads:hover,
+[data-theme="dark"] .social-icon-x:hover {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #000 !important;
 }
 
 /* ── Founder Photo Slots ── */
