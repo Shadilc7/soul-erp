@@ -1,9 +1,5 @@
 module InstituteAdmin
-  class GeneralSettingsController < ApplicationController
-    layout "institute_admin"
-
-    before_action :authenticate_user!
-    before_action :check_admin_access
+  class GeneralSettingsController < InstituteAdmin::BaseController
     before_action :set_institute
 
     def index
@@ -21,14 +17,8 @@ module InstituteAdmin
 
     private
 
-    def check_admin_access
-      unless current_user.is_a?(User) && current_user.institute_admin?
-        redirect_to root_path, alert: "You must be an institute admin to access this area."
-      end
-    end
-
     def set_institute
-      @institute = current_user.institute
+      @institute = current_institute
     end
 
     def institute_params
