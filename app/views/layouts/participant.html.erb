@@ -460,7 +460,7 @@
   <body>
     <div data-controller="sidebar">
       <!-- Sidebar -->
-      <div id="sidebar" class="sidebar" data-sidebar-target="content">
+      <div id="sidebar" class="sidebar" data-sidebar-target="sidebar">
         <div class="sidebar-header d-flex align-items-center">
           <%= link_to participant_portal_root_path, class: "text-decoration-none d-flex align-items-center" do %>
             <i class="bi bi-book text-white fs-4 me-2"></i>
@@ -510,7 +510,7 @@
       <div class="sidebar-backdrop" data-sidebar-target="backdrop" data-action="click->sidebar#hide"></div>
 
       <!-- Main Content -->
-      <div id="main-content">
+      <div id="main-content" data-sidebar-target="mainContent">
         <!-- Topbar -->
         <div class="topbar d-flex align-items-center justify-content-between">
           <button class="hamburger-btn d-lg-none" data-action="sidebar#toggle">
