@@ -7,7 +7,11 @@ module InstituteAdmin
     end
 
     def update
-      if @institute.update(institute_params)
+      permitted = institute_params
+      if permitted.delete(:remove_logo) == "1"
+        @institute.logo.purge
+      end
+      if @institute.update(permitted)
         redirect_to institute_admin_general_settings_path, notice: "Institute settings were successfully updated."
       else
         flash.now[:alert] = "Unable to update institute settings."
@@ -26,7 +30,7 @@ module InstituteAdmin
                                         :contact_number, :email, :active,
                                         :registered_poc, :service_started_on, :owner_name,
                                         :age_of_service, :billing_type, :expiry_date,
-                                        :other_details)
+                                        :other_details, :logo, :remove_logo)
       # Note: institution_type is intentionally excluded as requested
     end
   end

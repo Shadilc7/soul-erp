@@ -1,6 +1,7 @@
 module ParticipantPortal
   class AssignmentsController < ParticipantPortal::BaseController
     before_action :set_assignment, except: [ :index ]
+    before_action :prevent_student_view_mutation, only: [ :take_assignment, :submit ]
     before_action :check_date_availability, only: [ :take_assignment, :submit ]
 
     def index
@@ -178,6 +179,13 @@ module ParticipantPortal
 
     def set_assignment
       @assignment = Assignment.find(params[:id])
+    end
+
+    def prevent_student_view_mutation
+      if viewing_as_student?
+        redirect_to participant_portal_assignments_path,
+          alert: "You are in view-only mode. Assignments cannot be submitted while viewing a student's profile."
+      end
     end
 
     def check_date_availability

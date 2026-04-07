@@ -131,14 +131,50 @@
         </div>
       </div>
 
-      <div class="col-md-6 mb-3 guardian-field" style="display: <%= @user&.participant&.guardian? ? 'block' : 'none' %>;">
+      <div class="col-md-12 mb-3 guardian-field" style="display: <%= @user&.participant&.guardian? ? 'block' : 'none' %>;">
         <div class="form-group">
-          <%= participant_form.label :guardian_for_participant_id, "Student", class: "form-label" %>
-          <%= participant_form.collection_select :guardian_for_participant_id, 
-              @user&.participant&.guardian? && @user&.participant&.guardian_for_participant ? [@user.participant.guardian_for_participant] : [],
-              :id, :full_name,
-              { prompt: "Select Student" }, 
-              { class: "form-select", id: "guardian_student_select" } %>
+          <label class="form-label fw-semibold">Linked Students</label>
+
+          <!-- Section pick — triggers student list load for guardian -->
+          <div class="mb-3">
+            <label class="form-label text-muted small">Filter by Section</label>
+            <select id="guardian_section_filter" class="form-select form-select-sm"
+                    onchange="loadStudentsForGuardian(this.value)">
+              <option value=""> Select a section </option>
+              <% @sections.each do |s| %>
+                <option value="<%= s.id %>"><%= s.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <!-- Student checklist (populated via JS) -->
+          <div id="guardian_students_container"
+               style="max-height:260px;overflow-y:auto;border:1px solid #dee2e6;border-radius:8px;padding:10px;background:#fafafa;">
+            <% if @linked_student_ids.present? %>
+              <%# Preload existing students for edit page %>
+              <% existing_students = Participant.where(id: @linked_student_ids).includes(:user, :section) %>
+              <% existing_students.each do |st| %>
+                <div class="form-check mb-2">
+                  <input class="form-check-input student-checkbox" type="checkbox"
+                         name="user[student_participant_ids][]"
+                         value="<%= st.id %>"
+                         id="student_<%= st.id %>"
+                         checked>
+                  <label class="form-check-label" for="student_<%= st.id %>">
+                    <span class="fw-medium"><%= st.user.full_name %></span>
+                    <small class="text-muted">— <%= st.section&.name || "No section" %></small>
+                  </label>
+                </div>
+              <% end %>
+            <% else %>
+              <p class="text-muted small mb-0" id="guardian_students_placeholder">
+                Select a section above to see available students.
+              </p>
+            <% end %>
+          </div>
+
+          <%# Hidden field ensures an empty array is submitted when no checkboxes are checked %>
+          <input type="hidden" name="user[student_participant_ids][]" value="">
         </div>
       </div>
 
@@ -202,113 +238,80 @@
 <% end %>
 
 <script>
+  // IDs of students already linked (populated by server for edit page)
+  const prelinkedStudentIds = new Set(<%= @linked_student_ids.to_json %>);
+
   function toggleParticipantFields() {
     const participantType = document.getElementById('participant_type_select').value;
-    const guardianFields = document.querySelectorAll('.guardian-field');
-    const employeeFields = document.querySelectorAll('.employee-field');
-    const sectionFields = document.querySelectorAll('.section-field');
-    
-    // Hide all conditional fields first
-    employeeFields.forEach(field => field.style.display = 'none');
-    guardianFields.forEach(field => field.style.display = 'none');
-    
-    // Always show section field by default
-    sectionFields.forEach(field => field.style.display = 'block');
-    
-    // Show fields based on participant type
+    const guardianFields  = document.querySelectorAll('.guardian-field');
+    const employeeFields  = document.querySelectorAll('.employee-field');
+
+    employeeFields.forEach(f => f.style.display = 'none');
+    guardianFields.forEach(f => f.style.display = 'none');
+
     if (participantType === 'employee') {
-      employeeFields.forEach(field => field.style.display = 'block');
+      employeeFields.forEach(f => f.style.display = 'block');
     } else if (participantType === 'guardian') {
-      // Make guardian fields visible
-      guardianFields.forEach(field => field.style.display = 'block');
-      
-      // Load students if section is selected
-      const sectionSelect = document.getElementById('participant_section_select');
-      if (sectionSelect && sectionSelect.value) {
-        loadStudentsForSection(sectionSelect.value);
-      }
-    } else {
-      // For student type, clear and hide student selection
-      const studentSelect = document.getElementById('guardian_student_select');
-      if (studentSelect) {
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
+      guardianFields.forEach(f => f.style.display = 'block');
+      const guardianFilter = document.getElementById('guardian_section_filter');
+      if (guardianFilter && guardianFilter.value) {
+        loadStudentsForGuardian(guardianFilter.value);
       }
     }
   }
   
   function handleSectionChange(sectionId) {
-    // Always update the hidden section ID field
     document.getElementById('user_section_id').value = sectionId;
-    
-    // Only load students if participant type is guardian
-    const participantType = document.getElementById('participant_type_select').value;
-    if (participantType === 'guardian') {
-      loadStudentsForSection(sectionId);
-    }
+    // Guardian student list uses its own filter dropdown — no action needed here
   }
-  
-  function loadStudentsForSection(sectionId) {
+
+  // Renders checkboxes for students in the chosen section.
+  // Already-linked students (prelinkedStudentIds) and currently-checked items stay checked.
+  function loadStudentsForGuardian(sectionId) {
+    const container = document.getElementById('guardian_students_container');
+    if (!container) return;
+
     if (!sectionId) {
-      const studentSelect = document.getElementById('guardian_student_select');
-      if (studentSelect) {
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-      }
+      container.innerHTML = '<p class="text-muted small mb-0">Select a section above to see available students.</p>';
       return;
     }
-    
-    // Check if participant type is guardian, if not, don't load students
-    const participantType = document.getElementById('participant_type_select').value;
-    if (participantType !== 'guardian') {
-      return;
-    }
-    
-    const studentSelect = document.getElementById('guardian_student_select');
-    if (!studentSelect) return;
-    
-    // Show loading state
-    studentSelect.innerHTML = '<option value="">Loading students...</option>';
-    
-    // Fetch students for the selected section
+
+    container.innerHTML = '<p class="text-muted small mb-0"><i class="bi bi-hourglass-split me-1"></i>Loading…</p>';
+
     fetch(`/institute_admin/sections/${sectionId}/participants.json`)
       .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+        if (!response.ok) throw new Error('Network error');
         return response.json();
       })
       .then(data => {
-        if (!studentSelect) return;
-        
-        // Clear existing options
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-        
-        // Ensure the guardian field is visible
-        const guardianFields = document.querySelectorAll('.guardian-field');
-        guardianFields.forEach(field => field.style.display = 'block');
-        
-        if (data.length === 0) {
-          studentSelect.innerHTML = '<option value="">No students found</option>';
+        if (!data.length) {
+          container.innerHTML = '<p class="text-muted small mb-0">No students found in this section.</p>';
           return;
         }
-        
-        // Add new options
+
+        const currentlyChecked = new Set(
+          [...document.querySelectorAll('.student-checkbox:checked')].map(el => parseInt(el.value))
+        );
+
+        container.innerHTML = '';
         data.forEach(student => {
-          const option = document.createElement('option');
-          option.value = student.id;
-          option.textContent = student.full_name || `Student ${student.id}`;
-          
-          // If editing a guardian, select the current student
-          <% if @user&.participant&.guardian? && @user&.participant&.guardian_for_participant_id.present? %>
-            if (student.id === <%= @user.participant.guardian_for_participant_id %>) {
-              option.selected = true;
-            }
-          <% end %>
-          
-          studentSelect.appendChild(option);
+          const checked = prelinkedStudentIds.has(student.id) || currentlyChecked.has(student.id);
+          const div = document.createElement('div');
+          div.className = 'form-check mb-2';
+          div.innerHTML = `
+            <input class="form-check-input student-checkbox" type="checkbox"
+                   name="user[student_participant_ids][]"
+                   value="${student.id}"
+                   id="student_${student.id}"
+                   ${checked ? 'checked' : ''}>
+            <label class="form-check-label" for="student_${student.id}">
+              <span class="fw-medium">${student.full_name || 'Student ' + student.id}</span>
+            </label>`;
+          container.appendChild(div);
         });
       })
-      .catch(error => {
-        console.error('Error fetching students:', error);
+      .catch(() => {
+        container.innerHTML = '<p class="text-danger small mb-0">Failed to load students. Please try again.</p>';
       });
   }
   
@@ -316,40 +319,21 @@
   document.addEventListener('DOMContentLoaded', function() {
     <% if !@user.new_record? && @user.participant.participant_type.present? %>
       const participantTypeSelect = document.getElementById('participant_type_select');
-      
-      // Check if the select element exists
       if (participantTypeSelect) {
         participantTypeSelect.value = '<%= @user.participant.participant_type %>';
-        
-        // Immediately apply styles for employee fields if participant is an employee
+
         <% if @user.participant.employee? %>
-          document.querySelectorAll('.employee-field').forEach(field => {
-            field.style.display = 'block';
-          });
+          document.querySelectorAll('.employee-field').forEach(f => f.style.display = 'block');
         <% end %>
-        
-        // Immediately apply styles for guardian fields if participant is a guardian
+
         <% if @user.participant.guardian? %>
-          document.querySelectorAll('.guardian-field').forEach(field => {
-            field.style.display = 'block';
-          });
-          
-          // If we have a section ID for the guardian's student, load students for that section
-          <% if @user.participant.guardian_for_participant&.section_id.present? %>
-            const sectionSelect = document.getElementById('participant_section_select');
-            if (sectionSelect) {
-              sectionSelect.value = '<%= @user.participant.guardian_for_participant.section_id %>';
-              loadStudentsForSection(sectionSelect.value);
-            }
-          <% end %>
+          document.querySelectorAll('.guardian-field').forEach(f => f.style.display = 'block');
         <% end %>
       }
     <% end %>
-    
-    // Always call toggleParticipantFields to ensure fields are properly displayed
+
     toggleParticipantFields();
-    
-    // Add additional event listener to participant type change
+
     const participantTypeSelect = document.getElementById('participant_type_select');
     if (participantTypeSelect) {
       participantTypeSelect.addEventListener('change', toggleParticipantFields);

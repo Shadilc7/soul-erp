@@ -2,10 +2,21 @@ class Participant < ApplicationRecord
   belongs_to :user
   belongs_to :institute
   has_one :guardian, dependent: :destroy
-  has_many :assignment_responses, dependent: :destroy
-  has_many :assignment_response_logs, dependent: :destroy
+
+  # Many-to-many: a guardian participant can be linked to multiple students
+  has_many :guardian_student_links, foreign_key: :guardian_participant_id, dependent: :destroy
+  has_many :student_participants, through: :guardian_student_links, source: :student_participant
+
+  # Inverse: a student participant can have multiple guardians
+  has_many :student_guardian_links, class_name: "GuardianStudentLink", foreign_key: :student_participant_id, dependent: :destroy
+  has_many :guardian_participants, through: :student_guardian_links, source: :guardian_participant
+
+  # Kept for backward compatibility — returns the first linked student (if any)
   belongs_to :guardian_for_participant, class_name: "Participant", optional: true
   has_many :guardians, class_name: "Participant", foreign_key: "guardian_for_participant_id"
+
+  has_many :assignment_responses, dependent: :destroy
+  has_many :assignment_response_logs, dependent: :destroy
 
   # Get section through user
   has_one :section, through: :user

@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_08_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_07_191101) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "assignment_participants", force: :cascade do |t|
     t.bigint "assignment_id", null: false
@@ -125,6 +153,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_000000) do
     t.string "certificate_left_footer"
     t.string "certificate_right_footer"
     t.index ["institute_id"], name: "index_certificate_configurations_on_institute_id"
+  end
+
+  create_table "guardian_student_links", force: :cascade do |t|
+    t.bigint "guardian_participant_id", null: false
+    t.bigint "student_participant_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["guardian_participant_id", "student_participant_id"], name: "idx_guardian_student_unique", unique: true
+    t.index ["guardian_participant_id"], name: "index_guardian_student_links_on_guardian_participant_id"
+    t.index ["student_participant_id"], name: "index_guardian_student_links_on_student_participant_id"
   end
 
   create_table "guardians", force: :cascade do |t|
@@ -373,6 +411,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_000000) do
     t.index ["section_id"], name: "index_users_on_section_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "assignment_participants", "assignments"
   add_foreign_key "assignment_participants", "participants"
   add_foreign_key "assignment_question_sets", "assignments"
@@ -392,6 +432,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_000000) do
   add_foreign_key "attendances", "training_programs"
   add_foreign_key "attendances", "users", column: "marked_by_id"
   add_foreign_key "certificate_configurations", "institutes"
+  add_foreign_key "guardian_student_links", "participants", column: "guardian_participant_id"
+  add_foreign_key "guardian_student_links", "participants", column: "student_participant_id"
   add_foreign_key "guardians", "participants"
   add_foreign_key "guardians", "users"
   add_foreign_key "individual_certificates", "assignments"

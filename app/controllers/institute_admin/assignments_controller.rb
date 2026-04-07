@@ -4,7 +4,6 @@ module InstituteAdmin
 
     def index
       @assignments = current_institute.assignments
-        .includes(:sections, :participants, :questions, :question_sets)
         .order(created_at: :desc)
     end
 

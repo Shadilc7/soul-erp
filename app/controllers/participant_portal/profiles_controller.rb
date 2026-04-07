@@ -2,6 +2,7 @@ module ParticipantPortal
   class ProfilesController < ParticipantPortal::BaseController
     def show
       @participant = current_participant
+      @training_programs = @participant.all_training_programs.includes(trainer: :user)
     end
 
     def student_info
@@ -12,10 +13,10 @@ module ParticipantPortal
         return
       end
 
-      @student = @participant.guardian_for_participant
+      @student = @participant.student_participants.includes(:user, :section).find_by(id: params[:student_id])
       unless @student
         redirect_to participant_portal_profile_path,
-          alert: "No student information found."
+          alert: "Student not found."
       end
     end
   end

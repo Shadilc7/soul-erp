@@ -114,7 +114,7 @@ module InstituteAdmin
         # Filter to include only active student participants using association
         @participants = @section.participants
                                 .includes(:user)
-                                .where(status: :active)
+                                .where(status: :active, participant_type: :student)
 
         # If no participants found via association, try direct SQL query
         if @participants.empty?

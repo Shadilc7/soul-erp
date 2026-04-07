@@ -323,7 +323,7 @@ module InstituteAdmin
       @certificate_configurations = current_institute.certificate_configurations.active
 
       # Build base query
-      base = IndividualCertificate.includes(:participant, :assignment, :certificate_configuration)
+      base = IndividualCertificate.includes(participant: [ :user, :section ], assignment: [], certificate_configuration: [])
                    .where(institute_id: current_institute.id)
 
       # Apply section filter (via participant's section)
@@ -1977,7 +1977,7 @@ module InstituteAdmin
       g.write(graph_file.path)
 
       # Generate the PDF in memory
-      pdf_content = Prawn::Document.new(page_size: "A4", margin: [ 50, 30, 30, 30 ]) do |pdf| # More space at top
+      pdf_content = Prawn::Document.new(page_size: "A4", margin: [ 40, 30, 30, 30 ]) do |pdf|
         # Draw a subtle border on all pages
         pdf.repeat(:all) do
           pdf.stroke_color "888888"
@@ -2020,14 +2020,41 @@ module InstituteAdmin
         dark_color = "222222"
         border_color = "888888"
 
-        # Header
+        # Header — logo immediately left of title, centred as a unit on the page
+        institute = certificate.participant.user.institute
+        title_text = config.name.present? ? config.name.upcase : "CERTIFICATE OF ACHIEVEMENT"
+        logo_w = 48
+        logo_h = 48
 
-        # Certificate configuration name at top
-        pdf.move_down 20
-        pdf.font_size 22
-        pdf.fill_color primary_color
-        pdf.text (config.name.present? ? config.name.upcase : "CERTIFICATE OF ACHIEVEMENT"), align: :center, style: :bold
-        pdf.move_down 8
+        if institute&.logo&.attached?
+          begin
+            inst_logo_path = ActiveStorage::Blob.service.path_for(institute.logo.key)
+            pdf.move_down 20
+            # Correct prawn-table syntax: image hash + plain string, styled via block
+            header_data = [ [
+              { image: inst_logo_path, fit: [ logo_w, logo_h ] },
+              title_text
+            ] ]
+            pdf.table(header_data, position: :center,
+                      cell_style: { borders: [], padding: [ 0, 8, 0, 0 ] }) do |t|
+              t.column(0).width = logo_w + 4
+              t.row(0).column(1).font_style = :bold
+              t.row(0).column(1).size = 20
+              t.row(0).column(1).valign = :center
+              t.row(0).column(1).padding = [ 0, 0, 0, 8 ]
+            end
+          rescue => e
+            Rails.logger.warn "Certificate: could not embed institute logo: #{e.message}"
+            pdf.font_size 22
+            pdf.fill_color primary_color
+            pdf.text title_text, align: :center, style: :bold
+          end
+        else
+          pdf.font_size 22
+          pdf.fill_color primary_color
+          pdf.text title_text, align: :center, style: :bold
+        end
+        pdf.move_down 6
 
         # Certificate details
         if config.details.present?

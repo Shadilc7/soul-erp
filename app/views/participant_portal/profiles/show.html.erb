@@ -127,70 +127,69 @@
       </div>
     </div>
 
-    <!-- Guardian Information (shown only for guardians) -->
+    <!-- Student Information (shown only for guardians) -->
     <% if @participant.guardian? %>
-      <div class="col-12 col-lg-6">
-        <div class="profile-card h-100">
-          <div class="card-header-modern">
-            <div class="header-icon-small">
-              <i class="bi bi-people-fill"></i>
+      <% students = @participant.student_participants.includes(:user, :section) %>
+      <% students.each do |st| %>
+        <div class="col-12 col-lg-6">
+          <div class="profile-card h-100">
+            <div class="card-header-modern">
+              <div class="header-icon-small">
+                <i class="bi bi-person-fill"></i>
+              </div>
+              <h5 class="card-title-modern">Student Information</h5>
             </div>
-            <h5 class="card-title-modern">Guardian Information</h5>
-          </div>
-          <div class="card-body-modern">
-            <div class="info-list">
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-person"></i>
+            <div class="card-body-modern">
+              <div class="info-list">
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="bi bi-person"></i>
+                  </div>
+                  <div class="info-content">
+                    <small class="info-label">Student Name</small>
+                    <span class="info-value"><%= st.user.full_name %></span>
+                  </div>
                 </div>
-                <div class="info-content">
-                  <small class="info-label">Student Name</small>
-                  <span class="info-value">
-                    <%= @participant.guardian_for_participant&.user&.full_name || "Not assigned" %>
-                  </span>
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                  </div>
+                  <div class="info-content">
+                    <small class="info-label">Student's Section</small>
+                    <span class="info-value"><%= st.section&.name || "Not assigned" %></span>
+                  </div>
                 </div>
-              </div>
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-grid-3x3-gap-fill"></i>
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="bi bi-heart-fill"></i>
+                  </div>
+                  <div class="info-content">
+                    <small class="info-label">Relationship</small>
+                    <span class="info-value">Guardian</span>
+                  </div>
                 </div>
-                <div class="info-content">
-                  <small class="info-label">Student's Section</small>
-                  <span class="info-value">
-                    <%= @participant.guardian_for_participant&.section&.name || "Not assigned" %>
-                  </span>
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="bi bi-calendar-check"></i>
+                  </div>
+                  <div class="info-content">
+                    <small class="info-label">Enrollment Date</small>
+                    <span class="info-value">
+                      <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-heart-fill"></i>
+                <div class="info-item full-width">
+                  <%= link_to participant_portal_student_info_path(student_id: st.id), class: "btn-view-info" do %>
+                    <i class="bi bi-mortarboard me-2"></i>
+                    View Complete Student Information
+                  <% end %>
                 </div>
-                <div class="info-content">
-                  <small class="info-label">Relationship</small>
-                  <span class="info-value">Guardian</span>
-                </div>
-              </div>
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-calendar-check"></i>
-                </div>
-                <div class="info-content">
-                  <small class="info-label">Enrollment Date</small>
-                  <span class="info-value">
-                    <%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %>
-                  </span>
-                </div>
-              </div>
-              <div class="info-item full-width">
-                <%= link_to participant_portal_student_info_path, class: "btn-view-info" do %>
-                  <i class="bi bi-mortarboard me-2"></i>
-                  View Complete Student Information
-                <% end %>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      <% end %>
     <% end %>
 
     <!-- Employee Information (shown only for employees) -->
@@ -286,7 +285,7 @@
                 </tr>
               </thead>
               <tbody>
-                <% @participant.all_training_programs.each do |program| %>
+                <% @training_programs.each do |program| %>
                   <tr>
                     <td><span class="program-name"><%= program.title %></span></td>
                     <td><span class="text-value"><%= program.trainer.user.full_name %></span></td>

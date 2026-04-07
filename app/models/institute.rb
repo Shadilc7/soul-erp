@@ -1,4 +1,7 @@
 class Institute < ApplicationRecord
+  # Logo attachment
+  has_one_attached :logo
+
   # Associations
   has_many :users, dependent: :destroy
   has_many :sections, dependent: :destroy

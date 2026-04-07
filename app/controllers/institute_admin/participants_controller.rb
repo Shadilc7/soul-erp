@@ -7,7 +7,7 @@ module InstituteAdmin
     before_action :set_sections, only: [ :new, :create, :edit, :update ]
 
     def index
-      @participants = current_institute.participants.includes(:section, user: :section).order(created_at: :desc)
+      @participants = current_institute.participants.includes(:section, :guardian_for_participant, user: :section).order(created_at: :desc)
       @sections = current_institute.sections.order(:name)
 
       # Filter by approval status
@@ -48,6 +48,7 @@ module InstituteAdmin
     def new
       @user = User.new
       @user.build_participant
+      @linked_student_ids = []
     end
 
     def create
@@ -64,14 +65,28 @@ module InstituteAdmin
         @user.section_id = params[:user][:participant_attributes][:section_id]
       end
 
-      # For guardians, set section ID based on the selected student's section
-      if params[:user][:participant_attributes][:participant_type] == "guardian" &&
-         params[:user][:participant_attributes][:guardian_for_participant_id].present?
-        student = Participant.find(params[:user][:participant_attributes][:guardian_for_participant_id])
-        @user.section_id = student.section_id if student.present?
+      # For guardians, set section from first selected student
+      if params[:user][:participant_attributes][:participant_type] == "guardian"
+        student_ids = Array(params[:user][:student_participant_ids]).reject(&:blank?).map(&:to_i)
+        if student_ids.any?
+          first_student = Participant.find_by(id: student_ids.first)
+          @user.section_id = first_student.section_id if first_student
+          # Store first student in legacy column too
+          @user.participant.guardian_for_participant_id = student_ids.first
+        end
       end
 
       if @user.save
+        # Create join table records for all selected students
+        if params[:user][:participant_attributes][:participant_type] == "guardian"
+          student_ids = Array(params[:user][:student_participant_ids]).reject(&:blank?).map(&:to_i)
+          student_ids.each do |sid|
+            GuardianStudentLink.find_or_create_by!(
+              guardian_participant_id: @user.participant.id,
+              student_participant_id: sid
+            )
+          end
+        end
         redirect_to institute_admin_participants_path, notice: "Participant was successfully created."
       else
         set_sections
@@ -81,27 +96,15 @@ module InstituteAdmin
 
     def edit
       @user = @participant.user
-
-      # Ensure institute is set for participant
       @participant.institute = current_institute
-
-      # Ensure participant attributes are properly loaded
-      if @participant.guardian? && @participant.guardian_for_participant.nil? && @participant.guardian_for_participant_id.present?
-        # Try to load the guardian_for_participant if it exists but isn't loaded
-        @participant.guardian_for_participant = Participant.find_by(id: @participant.guardian_for_participant_id)
-
-        # If we found the associated student, also load their section
-        if @participant.guardian_for_participant
-          @participant.guardian_for_participant.section = Section.find_by(id: @participant.guardian_for_participant.section_id)
-        end
-      end
+      # Preload linked students for the form
+      @linked_student_ids = @participant.student_participants.pluck(:id)
     end
 
     def update
       @user = User.find(params[:id])
       @participant = @user.participant
 
-      # Ensure institute is set for participant
       @participant.institute = current_institute if @participant
 
       # Set section ID for students and employees
@@ -109,16 +112,34 @@ module InstituteAdmin
         @user.section_id = params[:user][:participant_attributes][:section_id]
       end
 
-      # For guardians, set section ID based on the selected student's section
-      if params[:user][:participant_attributes][:participant_type] == "guardian" &&
-         params[:user][:participant_attributes][:guardian_for_participant_id].present?
-        student = Participant.find(params[:user][:participant_attributes][:guardian_for_participant_id])
-        @user.section_id = student.section_id if student.present?
+      # For guardians, set section from first selected student
+      if params[:user][:participant_attributes][:participant_type] == "guardian"
+        student_ids = Array(params[:user][:student_participant_ids]).reject(&:blank?).map(&:to_i)
+        if student_ids.any?
+          first_student = Participant.find_by(id: student_ids.first)
+          @user.section_id = first_student.section_id if first_student
+        end
       end
 
       if @user.update(user_params)
+        # Sync guardian-student join table
+        if @participant.guardian?
+          student_ids = Array(params[:user][:student_participant_ids]).reject(&:blank?).map(&:to_i)
+          # Remove deselected links
+          @participant.guardian_student_links.where.not(student_participant_id: student_ids).destroy_all
+          # Add new links
+          student_ids.each do |sid|
+            GuardianStudentLink.find_or_create_by!(
+              guardian_participant_id: @participant.id,
+              student_participant_id: sid
+            )
+          end
+          # Keep legacy column in sync with first student
+          @participant.update_column(:guardian_for_participant_id, student_ids.first)
+        end
         redirect_to "#{institute_admin_participants_path}/?approved=#{@user.active}", notice: "Participant was successfully updated."
       else
+        @linked_student_ids = @participant.student_participants.pluck(:id)
         set_sections
         render :edit, status: :unprocessable_entity
       end

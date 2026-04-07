@@ -230,7 +230,11 @@ Rails.application.routes.draw do
         end
       end
       resource :profile, only: [ :show ]
-      get "my_student", to: "profiles#student_info", as: :student_info
+      get "my_student/:student_id", to: "profiles#student_info", as: :student_info
+
+      # Guardian student-view switcher
+      post "student_view/:student_id", to: "student_views#switch", as: :switch_to_student_view
+      delete "student_view", to: "student_views#return_to_guardian", as: :return_to_guardian_view
     end
   end
 end

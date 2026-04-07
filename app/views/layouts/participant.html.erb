@@ -442,6 +442,318 @@
           margin-left: 0 !important;
         }
       }
+
+      /* ── Profile Switcher ─────────────────────────────── */
+      .profile-switcher {
+        position: relative;
+      }
+
+      .profile-avatar-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        background: linear-gradient(135deg, #6366f1, #818cf8) padding-box,
+                    linear-gradient(135deg, #6366f1, #a78bfa) border-box;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+        letter-spacing: 0.5px;
+      }
+
+      .profile-avatar-btn.viewing-student {
+        background: linear-gradient(135deg, #0ea5e9, #38bdf8) padding-box,
+                    linear-gradient(135deg, #0ea5e9, #7dd3fc) border-box;
+      }
+
+      .profile-avatar-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+      }
+
+      .profile-avatar-btn .switch-indicator {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #f59e0b;
+        border: 2px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .profile-avatar-btn .switch-indicator i {
+        font-size: 6px;
+        color: #fff;
+        line-height: 1;
+      }
+
+      .profile-dropdown {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: 280px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.06);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        z-index: 9999;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .profile-dropdown.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+      }
+
+      .pd-header {
+        padding: 16px;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        color: #fff;
+      }
+
+      .pd-header.student-header {
+        background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+      }
+
+      .pd-header-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+
+      .pd-header-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        line-height: 1.2;
+      }
+
+      .pd-header-role {
+        font-size: 0.75rem;
+        opacity: 0.85;
+        margin-top: 2px;
+      }
+
+      .pd-section-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        padding: 10px 16px 4px;
+      }
+
+      .pd-student-card {
+        margin: 0 12px 10px;
+        border-radius: 12px;
+        border: 1.5px solid rgba(14, 165, 233, 0.2);
+        background: rgba(14, 165, 233, 0.04);
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .pd-student-card:hover {
+        border-color: rgba(14, 165, 233, 0.45);
+        background: rgba(14, 165, 233, 0.08);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+      }
+
+      .pd-student-card.active-view {
+        border-color: #0ea5e9;
+        background: rgba(14, 165, 233, 0.1);
+      }
+
+      .pd-student-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .pd-student-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #1e293b;
+        line-height: 1.2;
+      }
+
+      .pd-student-meta {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-top: 1px;
+      }
+
+      .pd-student-badge {
+        margin-left: auto;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 20px;
+        background: #0ea5e9;
+        color: #fff;
+        white-space: nowrap;
+      }
+
+      .pd-divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 4px 0;
+      }
+
+      .pd-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+      }
+
+      .pd-action:hover {
+        background: #f8fafc;
+        color: #1e293b;
+      }
+
+      .pd-action i {
+        width: 20px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 1rem;
+      }
+
+      .pd-action:hover i {
+        color: #6366f1;
+      }
+
+      .pd-action.danger:hover {
+        background: #fff5f5;
+        color: #ef4444;
+      }
+
+      .pd-action.danger:hover i {
+        color: #ef4444;
+      }
+
+      /* ── Student-View Banner ──────────────────────────── */
+      .student-view-banner {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: #fff;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 0.875rem;
+        flex-wrap: wrap;
+      }
+
+      .student-view-banner .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .student-view-banner .banner-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+
+      .student-view-banner .banner-label {
+        font-weight: 400;
+        opacity: 0.9;
+        font-size: 0.78rem;
+      }
+
+      .student-view-banner .banner-name {
+        font-weight: 700;
+      }
+
+      .banner-return-btn {
+        background: rgba(255,255,255,0.2);
+        border: 1.5px solid rgba(255,255,255,0.5);
+        color: #fff;
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .banner-return-btn:hover {
+        background: rgba(255,255,255,0.35);
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 576px) {
+        .profile-dropdown {
+          width: calc(100vw - 24px);
+          right: -8px;
+        }
+
+        .student-view-banner {
+          padding: 8px 14px;
+          font-size: 0.8rem;
+        }
+      }
     </style>
 
     <%= yield :styles %>
@@ -516,10 +828,148 @@
           <button class="hamburger-btn d-lg-none" data-action="sidebar#toggle">
             <i class="bi bi-list"></i>
           </button>
+
           <div class="d-flex align-items-center gap-3 ms-auto">
-            <span class="text-secondary small fw-500">Welcome back!</span>
+            <!-- Viewing-as-student quick label (desktop) -->
+            <% if viewing_as_student? %>
+              <span class="d-none d-sm-inline-flex align-items-center gap-1 px-3 py-1 rounded-pill"
+                    style="background:rgba(14,165,233,0.1);color:#0ea5e9;font-size:0.75rem;font-weight:600;border:1px solid rgba(14,165,233,0.25);">
+                <i class="bi bi-eye-fill me-1"></i>
+                Viewing: <%= current_participant.user.full_name.split.first %>
+              </span>
+            <% end %>
+
+            <!-- Profile Switcher -->
+            <div class="profile-switcher" id="profileSwitcher">
+              <button class="profile-avatar-btn <%= 'viewing-student' if viewing_as_student? %>"
+                      id="profileAvatarBtn"
+                      aria-label="Profile menu"
+                      aria-expanded="false">
+                <%= current_participant.user.full_name.split.map { |w| w[0] }.first(2).join.upcase %>
+                <% if own_participant.guardian? %>
+                  <span class="switch-indicator"><i class="bi bi-arrow-left-right"></i></span>
+                <% end %>
+              </button>
+
+              <div class="profile-dropdown" id="profileDropdown" role="menu">
+                <!-- Header: shows whose profile is currently active -->
+                <% if viewing_as_student? %>
+                  <div class="pd-header student-header d-flex align-items-center gap-3">
+                    <div class="pd-header-avatar">
+                      <%= current_participant.user.full_name.split.map { |w| w[0] }.first(2).join.upcase %>
+                    </div>
+                    <div>
+                      <div class="pd-header-name"><%= current_participant.user.full_name %></div>
+                      <div class="pd-header-role">
+                        <i class="bi bi-eye-fill me-1"></i>Viewing as student (read-only)
+                      </div>
+                    </div>
+                  </div>
+                <% else %>
+                  <div class="pd-header d-flex align-items-center gap-3">
+                    <div class="pd-header-avatar">
+                      <%= own_participant.user.full_name.split.map { |w| w[0] }.first(2).join.upcase %>
+                    </div>
+                    <div>
+                      <div class="pd-header-name"><%= own_participant.user.full_name %></div>
+                      <div class="pd-header-role">
+                        <i class="bi bi-person-fill me-1"></i><%= own_participant.participant_type.titleize %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+
+                <!-- My Profile link -->
+                <%= link_to participant_portal_profile_path, class: "pd-action", role: "menuitem" do %>
+                  <i class="bi bi-person-circle"></i>
+                  My Profile
+                <% end %>
+
+                <!-- Student profiles (only for guardians) -->
+                <% if own_participant.guardian? && own_participant.student_participants.exists? %>
+                  <% students = own_participant.student_participants.includes(:user, :section) %>
+                  <div class="pd-divider"></div>
+                  <div class="pd-section-label"><%= students.size == 1 ? "Linked Student" : "Linked Students" %></div>
+
+                  <% students.each do |student| %>
+                    <% is_viewing_this = viewing_as_student? && session[:viewing_student_id].to_i == student.id %>
+                    <% if is_viewing_this %>
+                      <!-- Currently viewing this student -->
+                      <%= button_to participant_portal_return_to_guardian_view_path,
+                            method: :delete,
+                            class: "pd-student-card active-view w-100",
+                            style: "border: none;",
+                            form: { style: "margin: 0 12px 6px; display: block;" } do %>
+                        <div class="pd-student-avatar">
+                          <%= student.user.full_name.split.map { |w| w[0] }.first(2).join.upcase %>
+                        </div>
+                        <div style="min-width:0;">
+                          <div class="pd-student-name"><%= student.user.full_name %></div>
+                          <div class="pd-student-meta">
+                            <%= student.section&.name || "No section" %> &bull; <%= student.participant_type.titleize %>
+                          </div>
+                        </div>
+                        <span class="pd-student-badge">Viewing</span>
+                      <% end %>
+                    <% else %>
+                      <!-- Not viewing this student — offer to switch -->
+                      <%= button_to participant_portal_switch_to_student_view_path(student_id: student.id),
+                            method: :post,
+                            class: "pd-student-card w-100",
+                            style: "border: none;",
+                            form: { style: "margin: 0 12px 6px; display: block;" } do %>
+                        <div class="pd-student-avatar">
+                          <%= student.user.full_name.split.map { |w| w[0] }.first(2).join.upcase %>
+                        </div>
+                        <div style="min-width:0;">
+                          <div class="pd-student-name"><%= student.user.full_name %></div>
+                          <div class="pd-student-meta">
+                            <%= student.section&.name || "No section" %> &bull; <%= student.participant_type.titleize %>
+                          </div>
+                        </div>
+                        <span class="pd-student-badge" style="background:#94a3b8;">Switch</span>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+
+                  <% if viewing_as_student? %>
+                    <div class="pd-divider"></div>
+                    <%= button_to participant_portal_return_to_guardian_view_path, method: :delete,
+                          class: "pd-action",
+                          style: "color:#0ea5e9;",
+                          role: "menuitem" do %>
+                      <i class="bi bi-arrow-left-circle" style="color:#0ea5e9;"></i>
+                      Return to My Profile
+                    <% end %>
+                  <% end %>
+                <% end %>
+
+                <div class="pd-divider"></div>
+                <%= button_to destroy_user_session_path, method: :delete,
+                      class: "pd-action danger", role: "menuitem" do %>
+                  <i class="bi bi-box-arrow-right"></i>
+                  Sign Out
+                <% end %>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Student-View Banner (full-width, below topbar) -->
+        <% if viewing_as_student? %>
+          <div class="student-view-banner">
+            <div class="banner-left">
+              <div class="banner-icon"><i class="bi bi-eye-fill"></i></div>
+              <div>
+                <div class="banner-label">Guardian view mode — read only</div>
+                <div class="banner-name"><%= current_participant.user.full_name %></div>
+              </div>
+            </div>
+            <%= button_to participant_portal_return_to_guardian_view_path, method: :delete, class: "banner-return-btn" do %>
+              <i class="bi bi-arrow-left"></i> Return to my profile
+            <% end %>
+          </div>
+        <% end %>
 
         <!-- Content -->
         <div class="content-wrapper">
@@ -531,5 +981,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <%= yield :scripts %>
+
+    <script>
+      // ── Profile Switcher Dropdown ──────────────────────
+      // AbortController lets us cancel all listeners before re-attaching,
+      // preventing duplicate handlers when both DOMContentLoaded and turbo:load fire.
+      let _profileSwitcherAbort = null;
+
+      function initProfileSwitcher() {
+        if (_profileSwitcherAbort) _profileSwitcherAbort.abort();
+        _profileSwitcherAbort = new AbortController();
+        const signal = _profileSwitcherAbort.signal;
+
+        const btn      = document.getElementById('profileAvatarBtn');
+        const dropdown = document.getElementById('profileDropdown');
+        if (!btn || !dropdown) return;
+
+        function open()  { dropdown.classList.add('open');    btn.setAttribute('aria-expanded', 'true'); }
+        function close() { dropdown.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.contains('open') ? close() : open();
+        }, { signal });
+
+        document.addEventListener('click', (e) => {
+          if (!document.getElementById('profileSwitcher')?.contains(e.target)) close();
+        }, { signal });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close();
+        }, { signal });
+      }
+
+      document.addEventListener('DOMContentLoaded', initProfileSwitcher);
+      document.addEventListener('turbo:load', initProfileSwitcher);
+    </script>
   </body>
 </html>

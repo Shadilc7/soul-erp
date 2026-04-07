@@ -991,7 +991,12 @@
             <button class="hamburger-btn mobile-toggle" data-action="click->sidebar#toggle">
               <i class="bi bi-list"></i>
             </button>
-            <span class="topbar-institute-name">
+            <span class="topbar-institute-name d-flex align-items-center gap-2">
+              <% if current_institute&.logo&.attached? %>
+                <%= image_tag url_for(current_institute.logo),
+                      alt: "#{current_institute.name} logo",
+                      style: "height:32px;max-width:80px;object-fit:contain;border-radius:4px;" %>
+              <% end %>
               <%= current_institute&.name.presence || "Institute Admin Portal" %>
             </span>
           </div>
