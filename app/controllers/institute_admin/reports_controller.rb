@@ -1692,7 +1692,7 @@ module InstituteAdmin
       responses = AssignmentResponse.where(
         participant: participant,
         assignment: assignment
-      ).includes(:question)
+      )
 
       # Group responses by date
       responses_by_date = responses.group_by { |r| r.response_date.to_date }
@@ -1841,7 +1841,7 @@ module InstituteAdmin
         cert_responses = AssignmentResponse.where(
           participant: cert_participant,
           assignment: assignment
-        ).includes(:question)
+        )
 
         cert_responses_by_date = cert_responses.group_by { |r| r.response_date.to_date }
 
