@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_13_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_13_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -246,6 +246,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_13_120000) do
     t.string "pin_code"
     t.string "district"
     t.string "state"
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "place"
     t.index ["institute_id"], name: "index_participants_on_institute_id"
     t.index ["phone_number"], name: "index_participants_on_phone_number"
     t.index ["section_id"], name: "index_participants_on_section_id"

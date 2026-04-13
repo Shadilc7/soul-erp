@@ -50,6 +50,9 @@ class RegistrationsController < Devise::RegistrationsController
         :section_id,
         :participant_type,
         :address,
+        :address_line1,
+        :address_line2,
+        :place,
         :pin_code,
         :district,
         :state
