@@ -54,7 +54,7 @@ module BulkAssignmentResponseImport
                                    .reject(&:blank?)
 
     # ---- Resolve assignment once for the entire file ---------------------
-    title_to_find = assignment_title || rows.first&.[]( "Assignment Title")&.strip
+    title_to_find = assignment_title || rows.first&.[]("Assignment Title")&.strip
     raise "Assignment title not found in CSV and not provided" if title_to_find.blank?
 
     assignment = Assignment.where(institute: institute)
@@ -166,7 +166,7 @@ module BulkAssignmentResponseImport
               response.answer = response.selected_options.join(", ")
             when "multiple_choice", "dropdown", "rating"
               response.answer = answer
-              response.selected_options = [answer].compact
+              response.selected_options = [ answer ].compact
             when "yes_or_no"
               # Normalise to "Yes" / "No"
               response.answer = answer.downcase.start_with?("y") ? "Yes" : "No"

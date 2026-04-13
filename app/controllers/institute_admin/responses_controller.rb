@@ -14,7 +14,6 @@ module InstituteAdmin
         @participants = @section.participants
                               .includes(:user)
                               .where(status: :active)
-                              .where(participant_type: "student")
         Rails.logger.debug "Found #{@participants.count} participants for section #{@section.id}"
       end
 

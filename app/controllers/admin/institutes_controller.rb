@@ -30,7 +30,11 @@ module Admin
     end
 
     def update
-      if @institute.update(institute_params)
+      permitted = institute_params
+      if permitted.delete(:remove_logo) == "1" && @institute.logo.attached?
+        @institute.logo.purge
+      end
+      if @institute.update(permitted)
         redirect_to admin_institute_path(@institute), notice: "Institute was successfully updated."
       else
         render :edit, status: :unprocessable_entity
@@ -91,7 +95,7 @@ module Admin
     def institute_params
       params.require(:institute).permit(:name, :code, :description, :address, :contact_number, :email, :active, :institution_type,
                                        :registered_poc, :service_started_on, :owner_name, :age_of_service,
-                                       :billing_type, :expiry_date, :other_details)
+                                       :billing_type, :expiry_date, :other_details, :logo, :remove_logo)
     end
   end
 end

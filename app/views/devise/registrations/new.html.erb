@@ -248,7 +248,8 @@
                         [], 
                         { prompt: "Select Section" },
                         { class: "form-select icon-input #{p.object.errors[:section_id].any? ? 'is-invalid' : ''}", 
-                          data: { sections_target: "sectionSelect" } } %>
+                          data: { sections_target: "sectionSelect",
+                                  preselected_section_id: p.object.section_id } } %>
                     <%= p.label :section_id, "Section" %>
                     <% if p.object.errors[:section_id].any? %>
                       <div class="invalid-feedback"><%= p.object.errors[:section_id].first %></div>
@@ -738,8 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .password-toggle {
       position: absolute;
       right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 16px;
       background: none;
       border: none;
       color: #6c757d;
@@ -751,6 +751,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .password-toggle:hover {
       color: #00B67A;
+    }
+
+    /* Ensure invalid-feedback is not clipped in position-relative password wrappers */
+    .form-floating.position-relative {
+      overflow: visible;
     }
 
     .password-toggle i {

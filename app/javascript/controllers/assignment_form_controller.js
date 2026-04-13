@@ -358,6 +358,12 @@ export default class extends Controller {
     
     if (checkbox.checked) {
       console.log(`Fetching participants for section ${sectionId}`)
+
+      // Guard: skip if container already exists (prevents duplicates from rapid clicks or toggleAll)
+      if (document.getElementById(participantsContainerId)) {
+        console.log(`Container for section ${sectionId} already exists, skipping fetch`)
+        return
+      }
       
       // Show loading indicator
       if (this.hasSectionParticipantsContainerTarget) {
@@ -389,6 +395,12 @@ export default class extends Controller {
           }
           
           if (this.hasSectionParticipantsContainerTarget) {
+            // Guard: skip if container was already inserted by a concurrent fetch
+            if (document.getElementById(participantsContainerId)) {
+              console.log(`Container for section ${sectionId} already exists after fetch, skipping insert`)
+              return
+            }
+
             if (participants.length === 0) {
               const emptyHtml = `
                 <div id="section_${sectionId}_participants" class="card border mb-3">
@@ -500,8 +512,9 @@ export default class extends Controller {
                  checked
                  data-action="change->assignment-form#updateCounter change->assignment-form#updateSectionSelectAll"
                  data-section-id="${sectionId}">
-          <label class="form-check-label" for="participant_${participant.id}">
+          <label class="form-check-label d-flex align-items-center gap-2" for="participant_${participant.id}">
             ${participantName}
+            ${participant.participant_type ? `<span class="badge bg-secondary" style="font-size:0.7em;">${participant.participant_type.charAt(0).toUpperCase() + participant.participant_type.slice(1)}</span>` : ''}
           </label>
         </div>
       `

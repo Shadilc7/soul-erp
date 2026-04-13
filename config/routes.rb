@@ -90,6 +90,7 @@ Rails.application.routes.draw do
           get :reassign_users
           post :reassign_users
           get :participants
+          post :duplicate
         end
       end
 

@@ -4,8 +4,14 @@ export default class extends Controller {
   static targets = [ "instituteSelect", "sectionSelect" ]
 
   connect() {
-    // Initialize with empty sections
-    this.updateSections([])
+    // If institute already selected (e.g. validation failure re-render), load its sections
+    const instituteId = this.instituteSelectTarget.value
+    if (instituteId) {
+      const preselectedSectionId = this.sectionSelectTarget.dataset.preselectedSectionId
+      this._fetchAndPopulate(instituteId, preselectedSectionId)
+    } else {
+      this.updateSections([])
+    }
   }
 
   fetchSections() {
@@ -15,10 +21,14 @@ export default class extends Controller {
       return
     }
 
+    this._fetchAndPopulate(instituteId, null)
+  }
+
+  _fetchAndPopulate(instituteId, preselectedSectionId) {
     fetch(`/sections/fetch?institute_id=${instituteId}`)
       .then(response => response.json())
       .then(sections => {
-        this.updateSections(sections)
+        this.updateSections(sections, preselectedSectionId)
       })
       .catch(error => {
         console.error("Error fetching sections:", error)
@@ -26,15 +36,16 @@ export default class extends Controller {
       })
   }
 
-  updateSections(sections) {
+  updateSections(sections, preselectedSectionId = null) {
     const options = [
       `<option value="">Select Section</option>`
     ]
-    
+
     sections.forEach(section => {
-      options.push(`<option value="${section.id}">${section.name}</option>`)
+      const selected = preselectedSectionId && String(section.id) === String(preselectedSectionId) ? ' selected' : ''
+      options.push(`<option value="${section.id}"${selected}>${section.name}</option>`)
     })
-    
+
     this.sectionSelectTarget.innerHTML = options.join('')
   }
-} 
+}

@@ -8,7 +8,7 @@ module InstituteAdmin
 
     def update
       permitted = institute_params
-      if permitted.delete(:remove_logo) == "1"
+      if permitted.delete(:remove_logo) == "1" && @institute.logo.attached?
         @institute.logo.purge
       end
       if @institute.update(permitted)

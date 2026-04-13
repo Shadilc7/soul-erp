@@ -428,7 +428,12 @@
         <div class="sidebar-header d-flex align-items-center">
           <%= link_to trainer_portal_root_path, class: "text-decoration-none d-flex align-items-center" do %>
             <i class="bi bi-mortarboard-fill text-white fs-4 me-2"></i>
-            <h5 class="mb-0 text-white">BeYa</h5>
+            <div>
+              <h5 class="mb-0 text-white">BeYa</h5>
+              <% if current_institute %>
+                <small class="text-white-50" style="font-size:0.72em;line-height:1;"><%= current_institute.name %></small>
+              <% end %>
+            </div>
           <% end %>
         </div>
 

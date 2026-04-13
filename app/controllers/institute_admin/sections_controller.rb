@@ -6,7 +6,7 @@ module InstituteAdmin
     skip_before_action :verify_authenticity_token, only: [ :fetch ]
     skip_before_action :require_institute_admin, only: [ :fetch ]
 
-    before_action :set_section, only: [ :show, :edit, :update, :destroy ]
+    before_action :set_section, only: [ :show, :edit, :update, :destroy, :duplicate ]
 
     def index
       @sections = current_institute.sections
@@ -31,7 +31,7 @@ module InstituteAdmin
       @section = current_institute.sections.build(section_params)
 
       if @section.save
-        redirect_to institute_admin_section_path(@section), notice: "Section was successfully created."
+        redirect_to institute_admin_sections_path, notice: "Section was successfully created."
       else
         render :new, status: :unprocessable_entity
       end
@@ -42,7 +42,7 @@ module InstituteAdmin
 
     def update
       if @section.update(section_params)
-        redirect_to institute_admin_section_path(@section), notice: "Section was successfully updated."
+        redirect_to institute_admin_sections_path, notice: "Section was successfully updated."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -94,6 +94,19 @@ module InstituteAdmin
       end
     end
 
+    def duplicate
+      new_section = @section.dup
+      new_section.name = "#{@section.name} (copy)"
+      new_section.code = "#{@section.code}_copy" if @section.code.present?
+
+      if new_section.save
+        redirect_to institute_admin_sections_path, notice: "Section was successfully duplicated."
+      else
+        redirect_to institute_admin_sections_path,
+          alert: new_section.errors.full_messages.first || "Unable to duplicate section."
+      end
+    end
+
     def fetch
       @sections = if params[:institute_id].present?
         institute = Institute.find(params[:institute_id])
@@ -111,10 +124,10 @@ module InstituteAdmin
       begin
         @section = current_institute.sections.find(params[:id])
 
-        # Filter to include only active student participants using association
+        # Include all active participants (students, guardians, employees)
         @participants = @section.participants
                                 .includes(:user)
-                                .where(status: :active, participant_type: :student)
+                                .where(status: :active)
 
         # If no participants found via association, try direct SQL query
         if @participants.empty?
@@ -122,7 +135,6 @@ module InstituteAdmin
           @participants = Participant.joins(:user)
                                     .where(users: { section_id: @section.id })
                                     .where(participants: { status: :active })
-                                    .where(participants: { participant_type: "student" })
         end
 
         # Map participant data for the response
@@ -131,7 +143,8 @@ module InstituteAdmin
             id: p.id,
             full_name: p.user&.full_name || "Participant #{p.id}",
             user_id: p.user&.id,
-            email: p.user&.email
+            email: p.user&.email,
+            participant_type: p.participant_type
           }
         }
 

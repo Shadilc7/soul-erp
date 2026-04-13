@@ -89,6 +89,19 @@
     color: white;
   }
   
+  .btn-copy {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(67, 233, 123, 0.3);
+  }
+  
+  .btn-copy:hover {
+    background: linear-gradient(135deg, #38d96a 0%, #2de0c0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(67, 233, 123, 0.4);
+    color: white;
+  }
+  
   .btn-reassign {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     color: white;
@@ -174,6 +187,13 @@
                   <% end %>
                   <%= link_to edit_institute_admin_section_path(section), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                     <i class="bi bi-pencil"></i>
+                  <% end %>
+                  <%= button_to duplicate_institute_admin_section_path(section),
+                      method: :post,
+                      class: "btn action-btn btn-copy me-2",
+                      form: { style: 'display: inline-block' },
+                      title: "Duplicate" do %>
+                    <i class="bi bi-copy"></i>
                   <% end %>
                   <% if section.participants_count > 0 %>
                     <%= link_to reassign_users_institute_admin_section_path(section), 

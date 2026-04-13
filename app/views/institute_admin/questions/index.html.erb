@@ -127,6 +127,7 @@
         <table class="table table-hover">
           <thead>
             <tr>
+              <th>#</th>
               <th>Title</th>
               <th>Display Name</th>
               <th>Type</th>
@@ -135,8 +136,9 @@
             </tr>
           </thead>
           <tbody>
-            <% @questions.each do |question| %>
+            <% @questions.each_with_index do |question, index| %>
               <tr>
+                <td><%= index + 1 %></td>
                 <td><%= question.title %></td>
                 <td><%= question.display_name.present? ? question.display_name : "<em class='text-muted'>Not set</em>".html_safe %></td>
                 <td>

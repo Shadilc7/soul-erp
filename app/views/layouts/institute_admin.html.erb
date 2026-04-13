@@ -993,7 +993,7 @@
             </button>
             <span class="topbar-institute-name d-flex align-items-center gap-2">
               <% if current_institute&.logo&.attached? %>
-                <%= image_tag url_for(current_institute.logo),
+                <%= image_tag rails_blob_path(current_institute.logo, only_path: true),
                       alt: "#{current_institute.name} logo",
                       style: "height:32px;max-width:80px;object-fit:contain;border-radius:4px;" %>
               <% end %>
