@@ -29,9 +29,28 @@
           <p class="fs-5"><%= @participant.date_of_birth&.strftime("%B %d, %Y") %></p>
         </div>
 
+        <% if @participant.address.present? %>
         <div class="mb-4">
           <h6 class="text-muted mb-2">Address</h6>
-          <p class="fs-5"><%= @participant.address.present? ? @participant.address : "Not provided" %></p>
+          <p class="fs-5" style="white-space: pre-line;"><%= @participant.address %></p>
+        </div>
+        <% end %>
+
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Address Line 1</h6>
+          <p class="fs-5"><%= @participant.address_line1.present? ? @participant.address_line1 : "Not provided" %></p>
+        </div>
+
+        <% if @participant.address_line2.present? %>
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Address Line 2</h6>
+          <p class="fs-5"><%= @participant.address_line2 %></p>
+        </div>
+        <% end %>
+
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Place / Town</h6>
+          <p class="fs-5"><%= @participant.place.present? ? @participant.place : "Not provided" %></p>
         </div>
 
         <div class="mb-4">

@@ -179,10 +179,38 @@
       </div>
 
       <!-- Address Information -->
+      <div class="col-md-12 mb-2">
+        <div class="form-group">
+          <%= participant_form.label :address_line1, "Address Line 1", class: "form-label" %>
+          <%= participant_form.text_field :address_line1,
+              class: "form-control #{'is-invalid' if participant_form.object.errors[:address_line1].any?}",
+              placeholder: "House / Flat No., Building Name" %>
+          <% if participant_form.object.errors[:address_line1].any? %>
+            <div class="invalid-feedback"><%= participant_form.object.errors[:address_line1].first %></div>
+          <% end %>
+          <small class="text-muted">House / Flat No., Building Name</small>
+        </div>
+      </div>
+
+      <div class="col-md-12 mb-2">
+        <div class="form-group">
+          <%= participant_form.label :address_line2, "Address Line 2 (Optional)", class: "form-label" %>
+          <%= participant_form.text_field :address_line2,
+              class: "form-control",
+              placeholder: "Street, Locality, Area" %>
+          <small class="text-muted">Street, Locality, Area</small>
+        </div>
+      </div>
+
       <div class="col-md-12 mb-3">
         <div class="form-group">
-          <%= participant_form.label :address, "Address", class: "form-label" %>
-          <%= participant_form.text_area :address, class: "form-control", rows: 3, placeholder: "Enter full address" %>
+          <%= participant_form.label :place, "Place / Town", class: "form-label" %>
+          <%= participant_form.text_field :place,
+              class: "form-control #{'is-invalid' if participant_form.object.errors[:place].any?}",
+              placeholder: "Enter place or town" %>
+          <% if participant_form.object.errors[:place].any? %>
+            <div class="invalid-feedback"><%= participant_form.object.errors[:place].first %></div>
+          <% end %>
         </div>
       </div>
 
@@ -190,21 +218,40 @@
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <%= participant_form.label :pin_code, "PIN Code", class: "form-label" %>
-            <%= participant_form.text_field :pin_code, class: "form-control", placeholder: "Enter PIN code" %>
-          </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-          <div class="form-group">
-            <%= participant_form.label :district, "District", class: "form-label" %>
-            <%= participant_form.text_field :district, class: "form-control", placeholder: "Enter district" %>
+            <div class="position-relative">
+              <%= participant_form.text_field :pin_code,
+                  id: "ia_pin_code",
+                  class: "form-control",
+                  placeholder: "6-digit PIN",
+                  maxlength: 6,
+                  inputmode: "numeric",
+                  pattern: "[0-9]{6}" %>
+              <span id="ia-pin-spinner" class="d-none position-absolute top-50 end-0 translate-middle-y me-2">
+                <span class="spinner-border spinner-border-sm text-success" role="status"></span>
+              </span>
+            </div>
           </div>
         </div>
 
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <%= participant_form.label :state, "State", class: "form-label" %>
-            <%= participant_form.text_field :state, class: "form-control", placeholder: "Enter state" %>
+            <%= participant_form.select :state,
+                options_for_select(["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Andaman and Nicobar Islands","Chandigarh","Dadra and Nagar Haveli and Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry"].map { |s| [s, s] }, participant_form.object.state.presence || "Kerala"),
+                { prompt: "Select State" },
+                { class: "form-select", id: "ia_state" } %>
+          </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <%= participant_form.label :district, "District", class: "form-label" %>
+            <select name="user[participant_attributes][district]"
+                    id="ia_district"
+                    class="form-select"
+                    data-current="<%= participant_form.object.district.to_s %>">
+              <option value="">Select District</option>
+            </select>
           </div>
         </div>
       </div>
@@ -339,4 +386,105 @@
       participantTypeSelect.addEventListener('change', toggleParticipantFields);
     }
   });
+</script>
+
+<script>
+(function () {
+  var SD = {
+    "Andhra Pradesh":["Alluri Sitharama Raju","Anakapalli","Ananthapuramu","Annamayya","Bapatla","Chittoor","Eluru","East Godavari","Guntur","Kadapa","Kakinada","Konaseema","Krishna","Kurnool","Manyam","N T Rama Rao","Nandyal","Nellore","Palnadu","Prakasam","Sri Sathya Sai","Srikakulam","Tirupati","Visakhapatnam","Vizianagaram","West Godavari"],
+    "Arunachal Pradesh":["Anjaw","Changlang","Dibang Valley","East Kameng","East Siang","Kamle","Kra Daadi","Kurung Kumey","Lepa Rada","Lohit","Longding","Lower Dibang Valley","Lower Siang","Lower Subansiri","Namsai","Pakke Kessang","Papum Pare","Shi Yomi","Siang","Tawang","Tirap","Upper Dibang Valley","Upper Siang","Upper Subansiri","West Kameng","West Siang"],
+    "Assam":["Bajali","Baksa","Barpeta","Biswanath","Bongaigaon","Cachar","Charaideo","Chirang","Darrang","Dhemaji","Dhubri","Dibrugarh","Dima Hasao","Goalpara","Golaghat","Hailakandi","Hojai","Jorhat","Kamrup Metropolitan","Kamrup Rural","Karbi Anglong","Karimganj","Kokrajhar","Lakhimpur","Majuli","Morigaon","Nagaon","Nalbari","Sivasagar","Sonitpur","South Salmara-Mankachar","Tamulpur","Tinsukia","Udalguri","West Karbi Anglong"],
+    "Bihar":["Araria","Arwal","Aurangabad","Banka","Begusarai","Bhagalpur","Bhojpur","Buxar","Darbhanga","East Champaran","Gaya","Gopalganj","Jamui","Jehanabad","Kaimur","Katihar","Khagaria","Kishanganj","Lakhisarai","Madhepura","Madhubani","Munger","Muzaffarpur","Nalanda","Nawada","Patna","Purnia","Rohtas","Saharsa","Samastipur","Saran","Sheikhpura","Sheohar","Sitamarhi","Siwan","Supaul","Vaishali","West Champaran"],
+    "Chhattisgarh":["Balod","Baloda Bazar","Balrampur","Bastar","Bemetara","Bijapur","Bilaspur","Dantewada","Dhamtari","Durg","Gariaband","Gaurela-Pendra-Marwahi","Janjgir-Champa","Jashpur","Kabirdham","Kanker","Khairagarh","Kondagaon","Korba","Koriya","Mahasamund","Manendragarh","Mohla-Manpur","Mungeli","Narayanpur","Raigarh","Raipur","Rajnandgaon","Sakti","Sarangarh-Bilaigarh","Sukma","Surajpur","Surguja"],
+    "Goa":["North Goa","South Goa"],
+    "Gujarat":["Ahmedabad","Amreli","Anand","Arvalli","Banaskantha","Bharuch","Bhavnagar","Botad","Chhota Udaipur","Dahod","Devbhumi Dwarka","Gandhinagar","Gir Somnath","Jamnagar","Junagadh","Kheda","Kutch","Mahisagar","Mehsana","Morbi","Narmada","Navsari","Panchmahal","Patan","Porbandar","Rajkot","Sabarkantha","Surat","Surendranagar","Tapi","Vadodara","Valsad","Dang"],
+    "Haryana":["Ambala","Bhiwani","Charkhi Dadri","Faridabad","Fatehabad","Gurugram","Hisar","Jhajjar","Jind","Kaithal","Karnal","Kurukshetra","Mahendragarh","Nuh","Palwal","Panchkula","Panipat","Rewari","Rohtak","Sirsa","Sonipat","Yamunanagar"],
+    "Himachal Pradesh":["Bilaspur","Chamba","Hamirpur","Kangra","Kinnaur","Kullu","Lahaul and Spiti","Mandi","Shimla","Sirmaur","Solan","Una"],
+    "Jharkhand":["Bokaro","Chatra","Deoghar","Dhanbad","Dumka","East Singhbhum","Garhwa","Giridih","Godda","Gumla","Hazaribagh","Jamtara","Khunti","Koderma","Latehar","Lohardaga","Pakur","Palamu","Ramgarh","Ranchi","Sahibganj","Seraikela Kharsawan","Simdega","West Singhbhum"],
+    "Karnataka":["Bagalkote","Ballari","Belagavi","Bengaluru Rural","Bengaluru Urban","Bidar","Chamarajanagara","Chikkaballapur","Chikkamagaluru","Chitradurga","Dakshina Kannada","Davangere","Dharwad","Gadag","Hassan","Haveri","Kalaburagi","Kodagu","Kolar","Koppal","Mandya","Mysuru","Raichur","Ramanagara","Shivamogga","Tumakuru","Udupi","Uttara Kannada","Vijayapura","Vijayanagara","Yadgir"],
+    "Kerala":["Alappuzha","Ernakulam","Idukki","Kannur","Kasaragod","Kollam","Kottayam","Kozhikode","Malappuram","Palakkad","Pathanamthitta","Thiruvananthapuram","Thrissur","Wayanad"],
+    "Madhya Pradesh":["Agar Malwa","Alirajpur","Anuppur","Ashoknagar","Balaghat","Barwani","Betul","Bhind","Bhopal","Burhanpur","Chhatarpur","Chhindwara","Damoh","Datia","Dewas","Dhar","Dindori","Guna","Gwalior","Harda","Hoshangabad","Indore","Jabalpur","Jhabua","Katni","Khandwa","Khargone","Mandla","Mandsaur","Morena","Narsinghpur","Neemuch","Niwari","Panna","Raisen","Rajgarh","Ratlam","Rewa","Sagar","Satna","Sehore","Seoni","Shahdol","Shajapur","Sheopur","Shivpuri","Sidhi","Singrauli","Tikamgarh","Ujjain","Umaria","Vidisha"],
+    "Maharashtra":["Ahmednagar","Akola","Amravati","Aurangabad","Beed","Bhandara","Buldhana","Chandrapur","Dhule","Gadchiroli","Gondia","Hingoli","Jalgaon","Jalna","Kolhapur","Latur","Mumbai City","Mumbai Suburban","Nagpur","Nanded","Nandurbar","Nashik","Osmanabad","Palghar","Parbhani","Pune","Raigad","Ratnagiri","Sangli","Satara","Sindhudurg","Solapur","Thane","Wardha","Washim","Yavatmal"],
+    "Manipur":["Bishnupur","Chandel","Churachandpur","Imphal East","Imphal West","Jiribam","Kakching","Kamjong","Kangpokpi","Noney","Pherzawl","Senapati","Tamenglong","Tengnoupal","Thoubal","Ukhrul"],
+    "Meghalaya":["East Garo Hills","East Jaintia Hills","East Khasi Hills","Eastern West Khasi Hills","North Garo Hills","Ri Bhoi","South Garo Hills","South West Garo Hills","South West Khasi Hills","West Garo Hills","West Jaintia Hills","West Khasi Hills"],
+    "Mizoram":["Aizawl","Champhai","Hnahthial","Khawzawl","Kolasib","Lawngtlai","Lunglei","Mamit","Saiha","Saitual","Serchhip"],
+    "Nagaland":["Chumoukedima","Dimapur","Kiphire","Kohima","Longleng","Mokokchung","Mon","Niuland","Noklak","Peren","Phek","Tseminyu","Tuensang","Wokha","Zunheboto"],
+    "Odisha":["Angul","Balangir","Balasore","Bargarh","Bhadrak","Boudh","Cuttack","Deogarh","Dhenkanal","Gajapati","Ganjam","Jagatsinghpur","Jajpur","Jharsuguda","Kalahandi","Kandhamal","Kendrapara","Kendujhar","Khordha","Koraput","Malkangiri","Mayurbhanj","Nabarangpur","Nayagarh","Nuapada","Puri","Rayagada","Sambalpur","Subarnapur","Sundergarh"],
+    "Punjab":["Amritsar","Barnala","Bathinda","Faridkot","Fatehgarh Sahib","Fazilka","Ferozepur","Gurdaspur","Hoshiarpur","Jalandhar","Kapurthala","Ludhiana","Malerkotla","Mansa","Moga","Mohali","Muktsar","Nawanshahr","Pathankot","Patiala","Rupnagar","Sangrur","Tarn Taran"],
+    "Rajasthan":["Ajmer","Alwar","Banswara","Baran","Barmer","Bharatpur","Bhilwara","Bikaner","Bundi","Chittorgarh","Churu","Dausa","Dholpur","Dungarpur","Hanumangarh","Jaipur","Jaisalmer","Jalore","Jhalawar","Jhunjhunu","Jodhpur","Karauli","Kota","Nagaur","Pali","Pratapgarh","Rajsamand","Sawai Madhopur","Sikar","Sirohi","Sri Ganganagar","Tonk","Udaipur"],
+    "Sikkim":["East Sikkim","North Sikkim","Pakyong","Soreng","South Sikkim","West Sikkim"],
+    "Tamil Nadu":["Ariyalur","Chengalpattu","Chennai","Coimbatore","Cuddalore","Dharmapuri","Dindigul","Erode","Kallakurichi","Kancheepuram","Kanniyakumari","Karur","Krishnagiri","Madurai","Mayiladuthurai","Nagapattinam","Namakkal","Nilgiris","Perambalur","Pudukkottai","Ramanathapuram","Ranipet","Salem","Sivaganga","Tenkasi","Thanjavur","Theni","Thoothukudi","Tiruchirappalli","Tirunelveli","Tirupattur","Tiruppur","Tiruvallur","Tiruvannamalai","Tiruvarur","Vellore","Villupuram","Virudhunagar"],
+    "Telangana":["Adilabad","Bhadradri Kothagudem","Hanamkonda","Hyderabad","Jagtial","Jangaon","Jayashankar Bhupalpally","Jogulamba Gadwal","Kamareddy","Karimnagar","Khammam","Komaram Bheem","Mahabubabad","Mahabubnagar","Mancherial","Medak","Medchal-Malkajgiri","Mulugu","Nagarkurnool","Nalgonda","Narayanpet","Nirmal","Nizamabad","Peddapalli","Rajanna Sircilla","Rangareddy","Sangareddy","Siddipet","Suryapet","Vikarabad","Wanaparthy","Warangal","Yadadri Bhuvanagiri"],
+    "Tripura":["Dhalai","Gomati","Khowai","North Tripura","Sepahijala","South Tripura","Unakoti","West Tripura"],
+    "Uttar Pradesh":["Agra","Aligarh","Ambedkar Nagar","Amethi","Amroha","Auraiya","Ayodhya","Azamgarh","Baghpat","Bahraich","Ballia","Balrampur","Banda","Barabanki","Bareilly","Basti","Bijnor","Budaun","Bulandshahr","Chandauli","Chitrakoot","Deoria","Etah","Etawah","Farrukhabad","Fatehpur","Firozabad","Gautam Buddha Nagar","Ghaziabad","Ghazipur","Gonda","Gorakhpur","Hamirpur","Hapur","Hardoi","Hathras","Jalaun","Jaunpur","Jhansi","Kannauj","Kanpur Dehat","Kanpur Nagar","Kasganj","Kaushambi","Kheri","Kushinagar","Lalitpur","Lucknow","Maharajganj","Mahoba","Mainpuri","Mathura","Mau","Meerut","Mirzapur","Moradabad","Muzaffarnagar","Pilibhit","Pratapgarh","Prayagraj","Rae Bareli","Rampur","Saharanpur","Sambhal","Sant Kabeer Nagar","Sant Ravidas Nagar","Shahjahanpur","Shamli","Shrawasti","Siddharthnagar","Sitapur","Sonbhadra","Sultanpur","Unnao","Varanasi"],
+    "Uttarakhand":["Almora","Bageshwar","Chamoli","Champawat","Dehradun","Haridwar","Nainital","Pauri Garhwal","Pithoragarh","Rudraprayag","Tehri Garhwal","Udham Singh Nagar","Uttarkashi"],
+    "West Bengal":["Alipurduar","Bankura","Birbhum","Cooch Behar","Dakshin Dinajpur","Darjeeling","Hooghly","Howrah","Jalpaiguri","Jhargram","Kalimpong","Kolkata","Malda","Murshidabad","Nadia","North 24 Parganas","Paschim Bardhaman","Paschim Medinipur","Purba Bardhaman","Purba Medinipur","Purulia","South 24 Parganas","Uttar Dinajpur"],
+    "Andaman and Nicobar Islands":["Nicobar","North and Middle Andaman","South Andaman"],
+    "Chandigarh":["Chandigarh"],
+    "Dadra and Nagar Haveli and Daman and Diu":["Dadra and Nagar Haveli","Daman","Diu"],
+    "Delhi":["Central Delhi","East Delhi","New Delhi","North Delhi","North East Delhi","North West Delhi","Shahdara","South Delhi","South East Delhi","South West Delhi","West Delhi"],
+    "Jammu and Kashmir":["Anantnag","Bandipora","Baramulla","Budgam","Doda","Ganderbal","Jammu","Kathua","Kishtwar","Kulgam","Kupwara","Poonch","Pulwama","Rajouri","Ramban","Reasi","Samba","Shopian","Srinagar","Udhampur"],
+    "Ladakh":["Kargil","Leh"],
+    "Lakshadweep":["Lakshadweep"],
+    "Puducherry":["Karaikal","Mahe","Puducherry","Yanam"]
+  };
+
+  function populateIaDistricts(state, selected) {
+    var sel = document.getElementById('ia_district');
+    if (!sel) return;
+    var districts = SD[state] || [];
+    sel.innerHTML = '<option value="">Select District</option>' +
+      districts.map(function(d) {
+        return '<option value="' + d + '"' + (d === selected ? ' selected' : '') + '>' + d + '</option>';
+      }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var stateEl   = document.getElementById('ia_state');
+    var distEl    = document.getElementById('ia_district');
+    var pinEl     = document.getElementById('ia_pin_code');
+    var spinner   = document.getElementById('ia-pin-spinner');
+
+    if (stateEl) {
+      stateEl.addEventListener('change', function () {
+        populateIaDistricts(this.value, '');
+      });
+      // On load: populate districts (handles validation re-render)
+      if (stateEl.value) {
+        var current = distEl ? (distEl.dataset.current || '') : '';
+        populateIaDistricts(stateEl.value, current);
+      }
+    }
+
+    if (pinEl) {
+      pinEl.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').substring(0, 6);
+        if (this.value.length !== 6) return;
+        var pin = this.value;
+        if (spinner) spinner.classList.remove('d-none');
+        fetch('https://api.postalpincode.in/pincode/' + pin)
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (spinner) spinner.classList.add('d-none');
+            if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length) {
+              var po       = data[0].PostOffice[0];
+              var apiState = po.State;
+              var apiDist  = po.District;
+              if (stateEl) {
+                var opt = Array.from(stateEl.options).find(function (o) {
+                  return o.value.toLowerCase() === apiState.toLowerCase();
+                });
+                if (opt) stateEl.value = opt.value;
+              }
+              var matched = (SD[apiState] || []).find(function (d) {
+                return d.toLowerCase() === apiDist.toLowerCase();
+              }) || apiDist;
+              populateIaDistricts(apiState, matched);
+            }
+          })
+          .catch(function () { if (spinner) spinner.classList.add('d-none'); });
+      });
+    }
+  });
+}());
 </script> 

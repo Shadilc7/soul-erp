@@ -285,6 +285,9 @@ module InstituteAdmin
           :enrollment_date,
           :guardian_for_participant_id,
           :address,
+          :address_line1,
+          :address_line2,
+          :place,
           :pin_code,
           :district,
           :state
