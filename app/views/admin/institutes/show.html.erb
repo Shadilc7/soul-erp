@@ -146,6 +146,17 @@
           <h6 class="text-muted mb-2">Other Details</h6>
           <p class="fs-5"><%= @institute.other_details.present? ? @institute.other_details : "Not specified" %></p>
         </div>
+
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Logo</h6>
+          <% if @institute.logo.attached? %>
+            <%= image_tag rails_blob_path(@institute.logo, only_path: true),
+                  alt: "#{@institute.name} logo",
+                  style: "max-height:100px;max-width:200px;object-fit:contain;border:1px solid #dee2e6;border-radius:6px;padding:6px;background:#fff;" %>
+          <% else %>
+            <p class="text-muted mb-0">No logo uploaded</p>
+          <% end %>
+        </div>
       </div>
     </div>
 
