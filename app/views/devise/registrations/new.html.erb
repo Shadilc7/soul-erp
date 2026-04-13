@@ -1118,10 +1118,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       .input-group-text {
-        height: auto;
-        padding: 0.75rem 0.9rem;
+        padding: 0.5rem 0.75rem;
         font-size: 0.9rem;
-        min-width: 72px;
+        min-width: unset;
+        justify-content: center;
+      }
+
+      /* Hide +91 text on mobile — show icon only */
+      .input-group-text span {
+        display: none;
+      }
+
+      .input-group-text i {
+        font-size: 1.1rem;
       }
 
       .form-control,
@@ -1207,11 +1216,6 @@ document.addEventListener('DOMContentLoaded', function() {
       .form-control,
       .form-select {
         font-size: 0.9rem;
-      }
-
-      /* Stack phone prefix + input vertically if very tight */
-      .input-group-text span {
-        display: none;
       }
     }
   </style>
