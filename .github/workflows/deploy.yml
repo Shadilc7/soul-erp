@@ -21,21 +21,27 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
+
+            # Load rbenv into PATH
+            export HOME=/home/ubuntu
+            export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH"
+            eval "$(rbenv init -)"
+
             cd /home/ubuntu/apps/soul-erp
-            
+
             echo "📦 Pulling latest code..."
             git pull origin main
-            
+
             echo "💎 Installing gems..."
             bundle install --without development test
-            
+
             echo "🗄️ Running migrations..."
             RAILS_ENV=production bundle exec rails db:migrate
-            
+
             echo "🎨 Precompiling assets..."
             RAILS_ENV=production bundle exec rails assets:precompile
-            
-            echo "🔄 Restarting..."
+
+            echo "🔄 Restarting app..."
             sudo systemctl restart soul-erp
-            
-            echo "✅ Deployed successfully!"
+
+            echo "✅ Deployed successfully! https://beya.in"
