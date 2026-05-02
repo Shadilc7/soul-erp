@@ -91,7 +91,7 @@
 
       #sidebar.collapsed .sidebar-header h5,
       #sidebar.collapsed .sidebar-header .hamburger-btn,
-      #sidebar.collapsed .sidebar-header i.bi-building-fill,
+      #sidebar.collapsed .sidebar-header .sidebar-logo,
       #sidebar.collapsed .nav-link span,
       #sidebar.collapsed .btn span,
       #sidebar.collapsed .submenu-toggle-icon {
@@ -811,8 +811,7 @@
             <i class="bi bi-list"></i>
           </button>
           <%= link_to institute_admin_root_path, class: "text-decoration-none d-flex align-items-center" do %>
-            <i class="bi bi-building-fill text-white fs-4 me-2"></i>
-            <h5 class="mb-0 text-white">BeYa</h5>
+            <%= image_tag "beya_logo_white.png", alt: "BeYa", class: "sidebar-logo", style: "height:28px;max-width:100px;object-fit:contain;" %>
           <% end %>
         </div>
 

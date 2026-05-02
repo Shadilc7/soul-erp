@@ -75,7 +75,7 @@
 
       #sidebar.collapsed .sidebar-header h5,
       #sidebar.collapsed .sidebar-header .hamburger-btn,
-      #sidebar.collapsed .sidebar-header i.bi-buildings-fill,
+      #sidebar.collapsed .sidebar-header .sidebar-logo,
       #sidebar.collapsed .nav-link span,
       #sidebar.collapsed .btn span {
         opacity: 0;
@@ -558,8 +558,7 @@
             <i class="bi bi-list"></i>
           </button>
           <%= link_to admin_root_path, class: "text-decoration-none d-flex align-items-center" do %>
-            <i class="bi bi-buildings-fill text-white fs-4 me-2"></i>
-            <h5 class="mb-0 text-white">BeYa</h5>
+            <%= image_tag "beya_logo_white.png", alt: "BeYa", class: "sidebar-logo", style: "height:28px;max-width:100px;object-fit:contain;" %>
           <% end %>
         </div>
 
