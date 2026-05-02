@@ -62,7 +62,7 @@
       }
 
       .sidebar.collapsed .sidebar-header h5,
-      .sidebar.collapsed .sidebar-header i.bi-book,
+      .sidebar.collapsed .sidebar-header .sidebar-logo,
       .sidebar.collapsed .nav-link span,
       .sidebar.collapsed .signout-btn span {
         opacity: 0;
@@ -775,13 +775,7 @@
       <div id="sidebar" class="sidebar" data-sidebar-target="sidebar">
         <div class="sidebar-header d-flex align-items-center">
           <%= link_to participant_portal_root_path, class: "text-decoration-none d-flex align-items-center" do %>
-            <i class="bi bi-book text-white fs-4 me-2"></i>
-            <div>
-              <h5 class="mb-0 text-white">BeYa</h5>
-              <% if current_institute %>
-                <small class="text-white-50" style="font-size:0.72em;line-height:1;"><%= current_institute.name %></small>
-              <% end %>
-            </div>
+            <%= image_tag "beya_logo_white.png", alt: "BeYa", class: "sidebar-logo", style: "height:28px;max-width:100px;object-fit:contain;" %>
           <% end %>
         </div>
 
@@ -833,6 +827,18 @@
           <button class="hamburger-btn d-lg-none" data-action="sidebar#toggle">
             <i class="bi bi-list"></i>
           </button>
+
+          <!-- Institute logo + name (left of topbar) -->
+          <span class="d-flex align-items-center gap-2 ms-2 ms-lg-0">
+            <% if current_institute&.logo&.attached? %>
+              <%= image_tag rails_blob_path(current_institute.logo, only_path: true),
+                    alt: "#{current_institute.name} logo",
+                    style: "height:30px;max-width:80px;object-fit:contain;border-radius:4px;" %>
+            <% end %>
+            <span class="fw-semibold text-dark d-none d-sm-inline" style="font-size:0.95rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <%= current_institute&.name %>
+            </span>
+          </span>
 
           <div class="d-flex align-items-center gap-3 ms-auto">
             <!-- Viewing-as-student quick label (desktop) -->
