@@ -40,8 +40,11 @@ class Participant < ApplicationRecord
     employee: "employee"
   }, default: :student
 
-  # Simplified phone number validation
-  validates :phone_number, presence: true
+  # Phone number: required only if user has no email
+  validates :phone_number, presence: { message: "is required when email is not provided" },
+                           if: :phone_required?
+  validates :phone_number, format: { with: /\A\d{10}\z/, message: "must be a valid 10-digit number" },
+                           allow_blank: true
   validates :date_of_birth, presence: true
   validates :institute_id, presence: true
   validates :section_id, presence: true
@@ -133,6 +136,10 @@ class Participant < ApplicationRecord
   end
 
   private
+
+  def phone_required?
+    user&.email.blank?
+  end
 
   def sync_user_associations
     return unless user.present?

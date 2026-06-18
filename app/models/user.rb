@@ -11,6 +11,11 @@ class User < ApplicationRecord
     super
   end
 
+  # Make email optional (Devise's :validatable requires this override)
+  def email_required?
+    false
+  end
+
   belongs_to :institute, optional: true
   has_one :trainer, dependent: :destroy
   has_one :participant, dependent: :destroy
@@ -27,11 +32,16 @@ class User < ApplicationRecord
   }, default: :participant
 
   validates :username, uniqueness: true, allow_nil: true
-  validates :email, presence: true, uniqueness: true
+  validates :email, uniqueness: { case_sensitive: false }, allow_blank: true,
+                    format: { with: URI::MailTo::EMAIL_REGEXP, message: "is not a valid email address" }, allow_nil: true
   validates :first_name, presence: true, length: { maximum: 50 }, if: :requires_first_name?
   validates :phone, format: { with: /\A\d{10}\z/, message: "must be a valid 10-digit number" },
                    allow_blank: true,
                    uniqueness: { case_sensitive: false }
+  validate :email_or_phone_required, if: :participant?
+
+  # Nilify blank email to avoid uniqueness conflicts on empty strings
+  before_validation :nilify_blank_email
 
   attr_accessor :login
 
@@ -102,5 +112,17 @@ class User < ApplicationRecord
 
   def requires_first_name?
     participant? || trainer?
+  end
+
+  def nilify_blank_email
+    self.email = nil if email.blank?
+  end
+
+  def email_or_phone_required
+    phone_number = participant&.phone_number
+    if email.blank? && phone_number.blank?
+      errors.add(:base, "Either email or phone number must be provided")
+      errors.add(:email, "or phone number must be provided") if errors[:email].empty?
+    end
   end
 end

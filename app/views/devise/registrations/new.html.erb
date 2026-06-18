@@ -72,8 +72,7 @@
                   </div>
                   <%= f.email_field :email, 
                       class: "form-control icon-input #{resource.errors[:email].any? ? 'is-invalid' : ''}", 
-                      placeholder: "Email",
-                      required: true %>
+                      placeholder: "Email" %>
                   <%= f.label :email, "Email Address" %>
                   <% if resource.errors[:email].any? %>
                     <div class="invalid-feedback"><%= resource.errors[:email].first %></div>
@@ -98,8 +97,7 @@
                       <div class="form-floating flex-grow-1">
                         <%= p.text_field :phone_number, 
                             class: "form-control #{p.object.errors[:phone_number].any? ? 'is-invalid' : ''}", 
-                            placeholder: "Phone Number",
-                            required: true %>
+                            placeholder: "Phone Number" %>
                         <%= p.label :phone_number, "Phone Number" %>
                         <% if p.object.errors[:phone_number].any? %>
                           <div class="invalid-feedback">
@@ -110,7 +108,7 @@
                     </div>
                     <small class="form-hint">
                       <i class="bi bi-info-circle"></i>
-                      Enter 10 digits without country code
+                      Enter 10 digits without country code. At least one of Email or Phone is required.
                     </small>
                   </div>
 
@@ -377,28 +375,21 @@ function toggleRegistrationPassword(fieldId, iconId) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const participantTypeSelect = document.querySelector('select[name="user[participant_attributes][participant_type]"]');
-  const sectionSelect = document.querySelector('select[name="user[participant_attributes][section_id]"]');
-  
-  function toggleFields() {
-    const selectedType = participantTypeSelect.value;
-    const sectionField = sectionSelect.closest('.form-floating');
-    
-    if (selectedType === 'student' || selectedType === 'employee') {
-      sectionField.style.display = 'block';
-    } else if (selectedType === 'guardian') {
-      sectionField.style.display = 'none';
-    } else {
-      sectionField.style.display = 'block';
-    }
-  }
-  
-  if (participantTypeSelect) {
-    participantTypeSelect.addEventListener('change', toggleFields);
-    toggleFields();
+// Use event delegation — survives Turbo DOM replacements
+document.addEventListener('change', function(e) {
+  if (e.target.matches('select[name="user[participant_attributes][participant_type]"]')) {
+    var sectionSelect = document.querySelector('select[name="user[participant_attributes][section_id]"]');
+    if (!sectionSelect) return;
+    var sectionField = sectionSelect.closest('.form-floating');
+    if (!sectionField) return;
+    sectionField.style.display = (e.target.value === 'guardian') ? 'none' : 'block';
   }
 });
+// Run on page load for initial state
+(function() {
+  var pt = document.querySelector('select[name="user[participant_attributes][participant_type]"]');
+  if (pt) pt.dispatchEvent(new Event('change', {bubbles: true}));
+})();
 </script>
 
 <script>
@@ -452,57 +443,54 @@ document.addEventListener('DOMContentLoaded', function() {
       }).join('');
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    var stateEl    = document.getElementById('reg_state');
-    var districtEl = document.getElementById('reg_district');
-    var pinEl      = document.getElementById('reg_pin_code');
-    var spinner    = document.getElementById('pin-spinner');
-
-    // Populate districts when state changes
-    if (stateEl) {
-      stateEl.addEventListener('change', function () {
-        populateDistricts(this.value, '');
-      });
-      // On load: if state is already set (e.g. validation re-render), populate districts
-      if (stateEl.value) {
-        var current = districtEl ? (districtEl.dataset.current || '') : '';
-        populateDistricts(stateEl.value, current);
-      }
-    }
-
-    // PIN auto-fill via India Post API
-    if (pinEl) {
-      pinEl.addEventListener('input', function () {
-        this.value = this.value.replace(/\D/g, '').substring(0, 6);
-        if (this.value.length !== 6) return;
-        var pin = this.value;
-        if (spinner) spinner.classList.remove('d-none');
-        fetch('https://api.postalpincode.in/pincode/' + pin)
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (spinner) spinner.classList.add('d-none');
-            if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length) {
-              var po       = data[0].PostOffice[0];
-              var apiState = po.State;
-              var apiDist  = po.District;
-              // Set state
-              if (stateEl) {
-                var opt = Array.from(stateEl.options).find(function (o) {
-                  return o.value.toLowerCase() === apiState.toLowerCase();
-                });
-                if (opt) stateEl.value = opt.value;
-              }
-              // Populate + select district
-              var matched = (SD[apiState] || []).find(function (d) {
-                return d.toLowerCase() === apiDist.toLowerCase();
-              }) || apiDist;
-              populateDistricts(apiState, matched);
-            }
-          })
-          .catch(function () { if (spinner) spinner.classList.add('d-none'); });
-      });
+  // Event delegation for state change — works after Turbo re-renders
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'reg_state') {
+      populateDistricts(e.target.value, '');
     }
   });
+
+  // Event delegation for PIN code input — works after Turbo re-renders
+  document.addEventListener('input', function (e) {
+    if (e.target.id !== 'reg_pin_code') return;
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
+    if (e.target.value.length !== 6) return;
+    var pin = e.target.value;
+    var spinner = document.getElementById('pin-spinner');
+    if (spinner) spinner.classList.remove('d-none');
+    fetch('https://api.postalpincode.in/pincode/' + pin)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (spinner) spinner.classList.add('d-none');
+        if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length) {
+          var po       = data[0].PostOffice[0];
+          var apiState = po.State;
+          var apiDist  = po.District;
+          var stateEl  = document.getElementById('reg_state');
+          if (stateEl) {
+            var opt = Array.from(stateEl.options).find(function (o) {
+              return o.value.toLowerCase() === apiState.toLowerCase();
+            });
+            if (opt) stateEl.value = opt.value;
+          }
+          var matched = (SD[apiState] || []).find(function (d) {
+            return d.toLowerCase() === apiDist.toLowerCase();
+          }) || apiDist;
+          populateDistricts(apiState, matched);
+        }
+      })
+      .catch(function () { if (spinner) spinner.classList.add('d-none'); });
+  });
+
+  // On initial load / Turbo re-render: populate districts if state is pre-filled
+  (function initDistricts() {
+    var stateEl = document.getElementById('reg_state');
+    var districtEl = document.getElementById('reg_district');
+    if (stateEl && stateEl.value) {
+      var current = districtEl ? (districtEl.dataset.current || '') : '';
+      populateDistricts(stateEl.value, current);
+    }
+  })();
 }());
 </script>
 
