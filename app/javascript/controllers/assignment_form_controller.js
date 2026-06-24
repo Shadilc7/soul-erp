@@ -172,7 +172,11 @@ export default class extends Controller {
     // Skip if the target doesn't exist
     if (!this.hasParticipantsCounterTarget) return;
     
-    const count = document.querySelectorAll('input[name="assignment[participant_ids][]"]:checked').length
+    // Only count visible (non-filtered) checked participants
+    const count = Array.from(document.querySelectorAll('input[name="assignment[participant_ids][]"]:checked')).filter(cb => {
+      const parentItem = cb.closest('[data-participant-type]')
+      return !parentItem || parentItem.style.display !== 'none'
+    }).length
     this.participantsCounterTarget.textContent = `${count} Selected`
     this.validateForm()
   }
@@ -502,8 +506,11 @@ export default class extends Controller {
       
       console.log(`Participant ${participant.id} name:`, participantName)
       
+      const pType = participant.participant_type || 'student'
+      const badgeClass = pType === 'student' ? 'info' : pType === 'guardian' ? 'warning' : 'secondary'
+      
       return `
-        <div class="form-check">
+        <div class="form-check" data-participant-type="${pType}">
           <input type="checkbox" 
                  name="assignment[participant_ids][]" 
                  value="${participant.id}" 
@@ -514,7 +521,7 @@ export default class extends Controller {
                  data-section-id="${sectionId}">
           <label class="form-check-label d-flex align-items-center gap-2" for="participant_${participant.id}">
             ${participantName}
-            ${participant.participant_type ? `<span class="badge bg-secondary" style="font-size:0.7em;">${participant.participant_type.charAt(0).toUpperCase() + participant.participant_type.slice(1)}</span>` : ''}
+            <span class="badge bg-${badgeClass} bg-opacity-75" style="font-size:0.7em;">${pType.charAt(0).toUpperCase() + pType.slice(1)}</span>
           </label>
         </div>
       `
@@ -544,6 +551,16 @@ export default class extends Controller {
           </div>
         </div>
         <div class="card-body">
+          <div class="mb-2">
+            <select class="form-select form-select-sm section-participant-type-filter"
+                    data-section-id="${sectionId}"
+                    data-action="change->assignment-form#filterSectionParticipantsByType">
+              <option value="all">All Types</option>
+              <option value="student">Students</option>
+              <option value="guardian">Guardians</option>
+              <option value="employee">Employees</option>
+            </select>
+          </div>
           ${participantsHtml}
         </div>
       </div>
@@ -559,14 +576,58 @@ export default class extends Controller {
     this.selectAllSectionsTarget.checked = totalSections === checkedSections
   }
 
+  filterSectionParticipantsByType(event) {
+    const selectedType = event.target.value
+    const sectionId = event.target.dataset.sectionId
+    const container = sectionId
+      ? document.getElementById(`section_${sectionId}_participants`)
+      : event.target.closest('.card')
+    if (!container) return
+
+    container.querySelectorAll('[data-participant-type]').forEach(item => {
+      if (selectedType === 'all' || item.dataset.participantType === selectedType) {
+        item.style.display = ''
+      } else {
+        item.style.display = 'none'
+        // Uncheck hidden participants so they are not submitted
+        const cb = item.querySelector('input[type="checkbox"]')
+        if (cb) cb.checked = false
+      }
+    })
+
+    // Update the participant count badge to reflect visible items
+    const visibleItems = container.querySelectorAll('[data-participant-type]:not([style*="display: none"])')
+    const badge = container.querySelector('.badge.bg-secondary')
+    if (badge) {
+      badge.textContent = `${visibleItems.length} participants`
+    }
+
+    // Update select-all checkbox for this section
+    if (sectionId) {
+      const selectAll = document.getElementById(`select_all_participants_${sectionId}`)
+      if (selectAll) {
+        const visibleCheckboxes = Array.from(container.querySelectorAll(`.section-${sectionId}-participant`)).filter(cb => {
+          const parent = cb.closest('[data-participant-type]')
+          return !parent || parent.style.display !== 'none'
+        })
+        const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length
+        selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible === visibleCheckboxes.length
+      }
+    }
+  }
+
   toggleSectionParticipants(event) {
     console.log("Toggle section participants")
     const checkbox = event.target
     const sectionId = checkbox.dataset.sectionId
     const checked = checkbox.checked
     
+    // Only toggle visible (filtered) participant checkboxes
     this.element.querySelectorAll(`.section-${sectionId}-participant`).forEach(participantCheckbox => {
-      participantCheckbox.checked = checked
+      const parentItem = participantCheckbox.closest('[data-participant-type]')
+      if (!parentItem || parentItem.style.display !== 'none') {
+        participantCheckbox.checked = checked
+      }
     })
     
     // Only call updateParticipantsCounter if it exists and we have the target
@@ -732,8 +793,12 @@ export default class extends Controller {
   toggleAllParticipants(event) {
     console.log("Toggle all participants:", event.target.checked)
     const checked = event.target.checked
+    // Only toggle visible (filtered) participant checkboxes
     this.element.querySelectorAll('.participant-checkbox').forEach(checkbox => {
-      checkbox.checked = checked
+      const parentItem = checkbox.closest('[data-participant-type]')
+      if (!parentItem || parentItem.style.display !== 'none') {
+        checkbox.checked = checked
+      }
     })
     this.updateParticipantsCounter()
     
@@ -743,12 +808,37 @@ export default class extends Controller {
     }
   }
 
+  filterParticipantsByType(event) {
+    const selectedType = event.target.value
+    const participantItems = this.element.querySelectorAll('[data-participant-type]')
+    
+    participantItems.forEach(item => {
+      if (selectedType === 'all' || item.dataset.participantType === selectedType) {
+        item.style.display = ''
+      } else {
+        item.style.display = 'none'
+        // Uncheck hidden participants so they are not submitted
+        const cb = item.querySelector('input[type="checkbox"]')
+        if (cb) cb.checked = false
+      }
+    })
+
+    // Update select all checkbox state based on visible items only
+    this.updateSelectAllRecipients()
+    this.updateParticipantsCounter()
+  }
+
   updateSelectAllRecipients() {
     // Skip if the target doesn't exist
     if (!this.hasSelectAllRecipientsTarget) return;
     
-    const totalParticipants = this.element.querySelectorAll('.participant-checkbox').length
-    const checkedParticipants = this.element.querySelectorAll('.participant-checkbox:checked').length
+    // Only count visible participant checkboxes
+    const visibleCheckboxes = Array.from(this.element.querySelectorAll('.participant-checkbox')).filter(cb => {
+      const parentItem = cb.closest('[data-participant-type]')
+      return !parentItem || parentItem.style.display !== 'none'
+    })
+    const totalParticipants = visibleCheckboxes.length
+    const checkedParticipants = visibleCheckboxes.filter(cb => cb.checked).length
     this.selectAllRecipientsTarget.checked = totalParticipants === checkedParticipants && totalParticipants > 0
   }
 

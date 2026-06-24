@@ -4,6 +4,7 @@ module InstituteAdmin
 
     def index
       @assignments = current_institute.assignments
+        .preload(:questions, :question_sets)
         .order(created_at: :desc)
     end
 

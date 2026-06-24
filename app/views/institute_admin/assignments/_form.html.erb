@@ -151,16 +151,25 @@
         </div>
         <div class="card-body p-0">
           <!-- Individual Selection -->
-          <div class="p-3 <%= @assignment.assignment_type == 'individual' ? '' : 'd-none' %>"
+           <div class="p-3 <%= @assignment.assignment_type == 'individual' ? '' : 'd-none' %>"
                data-assignment-form-target="individualView">
-            <div class="d-flex justify-content-end mb-3">
+            <div class="mb-3">
+              <select id="participant-type-filter" class="form-select form-select-sm"
+                      data-action="change->assignment-form#filterParticipantsByType">
+                <option value="all">All Types</option>
+                <option value="student">Students</option>
+                <option value="guardian">Guardians</option>
+                <option value="employee">Employees</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-end mb-2">
               <span class="badge bg-primary" data-assignment-form-target="participantsCounter">
                 <%= @assignment.participants.count %> Selected
               </span>
             </div>
             <div class="recipients-list">
-              <% current_institute.participants.active.each do |participant| %>
-                <div class="form-check">
+              <% current_institute.participants.active.includes(:user).each do |participant| %>
+                <div class="form-check" data-participant-type="<%= participant.participant_type %>">
                   <%= check_box_tag 'assignment[participant_ids][]', participant.id,
                       @assignment.participant_ids.include?(participant.id),
                       class: "form-check-input participant-checkbox",
@@ -168,9 +177,10 @@
                       data: { 
                         action: "change->assignment-form#updateParticipantsCounter change->assignment-form#updateSelectAllRecipients"
                       } %>
-                  <%= label_tag "participant_#{participant.id}",
-                      participant.user&.full_name || "Participant #{participant.id}",
-                      class: "form-check-label small" %>
+                  <%= label_tag "participant_#{participant.id}", class: "form-check-label small d-flex align-items-center gap-2" do %>
+                    <%= participant.user&.full_name || "Participant #{participant.id}" %>
+                    <span class="badge bg-<%= participant.student? ? 'info' : participant.guardian? ? 'warning' : 'secondary' %> bg-opacity-75" style="font-size: 0.7em;"><%= participant.participant_type&.capitalize %></span>
+                  <% end %>
                 </div>
               <% end %>
             </div>
@@ -254,8 +264,18 @@
                       </div>
                     </div>
                     <div class="card-body">
+                      <div class="mb-2">
+                        <select class="form-select form-select-sm section-participant-type-filter"
+                                data-section-id="<%= section.id %>"
+                                data-action="change->assignment-form#filterSectionParticipantsByType">
+                          <option value="all">All Types</option>
+                          <option value="student">Students</option>
+                          <option value="guardian">Guardians</option>
+                          <option value="employee">Employees</option>
+                        </select>
+                      </div>
                       <% section.participants.includes(:user).each do |participant| %>
-                        <div class="form-check">
+                        <div class="form-check" data-participant-type="<%= participant.participant_type %>">
                           <%= check_box_tag 'assignment[participant_ids][]',
                               participant.id,
                               @assignment.participant_ids.include?(participant.id),
@@ -265,9 +285,10 @@
                                 action: "change->assignment-form#updateCounter change->assignment-form#updateSectionSelectAll",
                                 section_id: section.id
                               } %>
-                          <%= label_tag "participant_#{participant.id}",
-                              participant.user&.full_name || "Participant #{participant.id}",
-                              class: "form-check-label small" %>
+                          <%= label_tag "participant_#{participant.id}", class: "form-check-label small d-flex align-items-center gap-2" do %>
+                            <%= participant.user&.full_name || "Participant #{participant.id}" %>
+                            <span class="badge bg-<%= participant.student? ? 'info' : participant.guardian? ? 'warning' : 'secondary' %> bg-opacity-75" style="font-size: 0.7em;"><%= participant.participant_type&.capitalize %></span>
+                          <% end %>
                         </div>
                       <% end %>
                     </div>
