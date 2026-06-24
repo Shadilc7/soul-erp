@@ -375,21 +375,6 @@ function toggleRegistrationPassword(fieldId, iconId) {
   }
 }
 
-// Use event delegation — survives Turbo DOM replacements
-document.addEventListener('change', function(e) {
-  if (e.target.matches('select[name="user[participant_attributes][participant_type]"]')) {
-    var sectionSelect = document.querySelector('select[name="user[participant_attributes][section_id]"]');
-    if (!sectionSelect) return;
-    var sectionField = sectionSelect.closest('.form-floating');
-    if (!sectionField) return;
-    sectionField.style.display = (e.target.value === 'guardian') ? 'none' : 'block';
-  }
-});
-// Run on page load for initial state
-(function() {
-  var pt = document.querySelector('select[name="user[participant_attributes][participant_type]"]');
-  if (pt) pt.dispatchEvent(new Event('change', {bubbles: true}));
-})();
 </script>
 
 <script>
