@@ -133,8 +133,7 @@
                     </div>
                     <%= p.text_field :address_line1,
                         class: "form-control icon-input #{p.object.errors[:address_line1].any? ? 'is-invalid' : ''}",
-                        placeholder: "Address Line 1",
-                        required: true %>
+                        placeholder: "Address Line 1" %>
                     <%= p.label :address_line1, "Address Line 1" %>
                     <% if p.object.errors[:address_line1].any? %>
                       <div class="invalid-feedback"><%= p.object.errors[:address_line1].first %></div>
@@ -161,8 +160,7 @@
                     </div>
                     <%= p.text_field :place,
                         class: "form-control icon-input #{p.object.errors[:place].any? ? 'is-invalid' : ''}",
-                        placeholder: "Place",
-                        required: true %>
+                        placeholder: "Place" %>
                     <%= p.label :place, "Place / Town / Village" %>
                     <% if p.object.errors[:place].any? %>
                       <div class="invalid-feedback"><%= p.object.errors[:place].first %></div>
@@ -181,8 +179,7 @@
                             placeholder: "PIN Code",
                             id: "reg_pin_code",
                             maxlength: "6",
-                            inputmode: "numeric",
-                            required: true %>
+                            inputmode: "numeric" %>
                         <%= p.label :pin_code, "PIN Code" %>
                         <span id="pin-spinner" class="d-none" style="position:absolute;right:12px;top:18px;z-index:5;">
                           <span class="spinner-border spinner-border-sm text-success" role="status"></span>
@@ -221,8 +218,7 @@
                         { include_blank: "Select District" },
                         { class: "form-select icon-input #{p.object.errors[:district].any? ? 'is-invalid' : ''}",
                           id: "reg_district",
-                          data: { current: p.object.district.to_s },
-                          required: true } %>
+                          data: { current: p.object.district.to_s } } %>
                     <%= p.label :district, "District" %>
                     <% if p.object.errors[:district].any? %>
                       <div class="invalid-feedback"><%= p.object.errors[:district].first %></div>
