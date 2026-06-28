@@ -18,6 +18,11 @@ class RegistrationsController < Devise::RegistrationsController
     build_resource(sign_up_params)
     resource.role = :participant
 
+    # Sync participant phone_number to user's phone field for login
+    if params[:user][:participant_attributes][:phone_number].present?
+      resource.phone = params[:user][:participant_attributes][:phone_number]
+    end
+
     # Set the institute_id from participant's institute_id
     if params[:user][:participant_attributes][:institute_id].present?
       resource.institute_id = params[:user][:participant_attributes][:institute_id]
