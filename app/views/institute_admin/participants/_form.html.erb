@@ -135,9 +135,36 @@
         <div class="form-group">
           <label class="form-label fw-semibold">Linked Students</label>
 
-          <!-- Section pick — triggers student list load for guardian -->
+          <!-- Selected students summary (persists across section switches) -->
+          <div id="selected_students_summary" class="mb-3" style="<%= @linked_student_ids.blank? ? 'display:none;' : '' %>">
+            <label class="form-label text-muted small">Selected Students</label>
+            <div id="selected_students_list" style="display:flex;flex-wrap:wrap;gap:8px;">
+              <% if @linked_student_ids.present? %>
+                <% Participant.where(id: @linked_student_ids).includes(:user, :section).each do |st| %>
+                  <span class="badge bg-primary d-inline-flex align-items-center gap-1 px-3 py-2" 
+                        id="selected_badge_<%= st.id %>" style="font-size:0.85rem;border-radius:20px;">
+                    <%= st.user.full_name %>
+                    <small class="opacity-75">(<%= st.section&.name || "No section" %>)</small>
+                    <button type="button" class="btn-close btn-close-white ms-1" 
+                            style="font-size:0.6rem;" onclick="removeStudent(<%= st.id %>)" aria-label="Remove"></button>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Hidden inputs container for form submission -->
+          <div id="student_hidden_inputs">
+            <% if @linked_student_ids.present? %>
+              <% @linked_student_ids.each do |sid| %>
+                <input type="hidden" name="user[student_participant_ids][]" value="<%= sid %>" id="hidden_student_<%= sid %>">
+              <% end %>
+            <% end %>
+          </div>
+
+          <!-- Section filter — browse students by section -->
           <div class="mb-3">
-            <label class="form-label text-muted small">Filter by Section</label>
+            <label class="form-label text-muted small">Browse by Section to add students</label>
             <select id="guardian_section_filter" class="form-select form-select-sm"
                     onchange="loadStudentsForGuardian(this.value)">
               <option value=""> Select a section </option>
@@ -147,33 +174,15 @@
             </select>
           </div>
 
-          <!-- Student checklist (populated via JS) -->
+          <!-- Student checklist (populated via JS per section) -->
           <div id="guardian_students_container"
                style="max-height:260px;overflow-y:auto;border:1px solid #dee2e6;border-radius:8px;padding:10px;background:#fafafa;">
-            <% if @linked_student_ids.present? %>
-              <%# Preload existing students for edit page %>
-              <% existing_students = Participant.where(id: @linked_student_ids).includes(:user, :section) %>
-              <% existing_students.each do |st| %>
-                <div class="form-check mb-2">
-                  <input class="form-check-input student-checkbox" type="checkbox"
-                         name="user[student_participant_ids][]"
-                         value="<%= st.id %>"
-                         id="student_<%= st.id %>"
-                         checked>
-                  <label class="form-check-label" for="student_<%= st.id %>">
-                    <span class="fw-medium"><%= st.user.full_name %></span>
-                    <small class="text-muted">— <%= st.section&.name || "No section" %></small>
-                  </label>
-                </div>
-              <% end %>
-            <% else %>
-              <p class="text-muted small mb-0" id="guardian_students_placeholder">
-                Select a section above to see available students.
-              </p>
-            <% end %>
+            <p class="text-muted small mb-0" id="guardian_students_placeholder">
+              Select a section above to browse and add students.
+            </p>
           </div>
 
-          <%# Hidden field ensures an empty array is submitted when no checkboxes are checked %>
+          <%# Hidden field ensures an empty array is submitted when no students selected %>
           <input type="hidden" name="user[student_participant_ids][]" value="">
         </div>
       </div>
@@ -285,103 +294,172 @@
 <% end %>
 
 <script>
-  // IDs of students already linked (populated by server for edit page)
-  const prelinkedStudentIds = new Set(<%= @linked_student_ids.to_json %>);
+  // Track selected students: Map<id, {name, sectionName}>
+  var selectedStudents = new Map();
 
-  function toggleParticipantFields() {
-    const participantType = document.getElementById('participant_type_select').value;
-    const guardianFields  = document.querySelectorAll('.guardian-field');
-    const employeeFields  = document.querySelectorAll('.employee-field');
+  // Initialize from server-rendered data
+  <% if @linked_student_ids.present? %>
+    <% Participant.where(id: @linked_student_ids).includes(:user, :section).each do |st| %>
+      selectedStudents.set(<%= st.id %>, {
+        name: "<%= j(st.user.full_name) %>",
+        sectionName: "<%= j(st.section&.name || 'No section') %>"
+      });
+    <% end %>
+  <% end %>
 
-    employeeFields.forEach(f => f.style.display = 'none');
-    guardianFields.forEach(f => f.style.display = 'none');
+  window.toggleParticipantFields = function() {
+    var participantType = document.getElementById('participant_type_select').value;
+    var guardianFields  = document.querySelectorAll('.guardian-field');
+    var employeeFields  = document.querySelectorAll('.employee-field');
+
+    employeeFields.forEach(function(f) { f.style.display = 'none'; });
+    guardianFields.forEach(function(f) { f.style.display = 'none'; });
 
     if (participantType === 'employee') {
-      employeeFields.forEach(f => f.style.display = 'block');
+      employeeFields.forEach(function(f) { f.style.display = 'block'; });
     } else if (participantType === 'guardian') {
-      guardianFields.forEach(f => f.style.display = 'block');
-      const guardianFilter = document.getElementById('guardian_section_filter');
-      if (guardianFilter && guardianFilter.value) {
-        loadStudentsForGuardian(guardianFilter.value);
-      }
+      guardianFields.forEach(function(f) { f.style.display = 'block'; });
     }
   }
   
-  function handleSectionChange(sectionId) {
+  window.handleSectionChange = function(sectionId) {
     document.getElementById('user_section_id').value = sectionId;
-    // Guardian student list uses its own filter dropdown — no action needed here
   }
 
-  // Renders checkboxes for students in the chosen section.
-  // Already-linked students (prelinkedStudentIds) and currently-checked items stay checked.
-  function loadStudentsForGuardian(sectionId) {
-    const container = document.getElementById('guardian_students_container');
+  // Add a student to the selection
+  window.addStudent = function(id, name, sectionName) {
+    if (selectedStudents.has(id)) return;
+    selectedStudents.set(id, { name: name, sectionName: sectionName });
+    renderSelectedStudents();
+  }
+
+  // Remove a student from the selection
+  window.removeStudent = function(id) {
+    selectedStudents.delete(id);
+    renderSelectedStudents();
+    // Uncheck the checkbox if visible
+    var cb = document.getElementById('student_' + id);
+    if (cb) cb.checked = false;
+  }
+
+  // Render the selected students badges and hidden inputs
+  window.renderSelectedStudents = function() {
+    var summary = document.getElementById('selected_students_summary');
+    var list = document.getElementById('selected_students_list');
+    var hiddenContainer = document.getElementById('student_hidden_inputs');
+
+    if (selectedStudents.size === 0) {
+      summary.style.display = 'none';
+      list.innerHTML = '';
+      hiddenContainer.innerHTML = '';
+      return;
+    }
+
+    summary.style.display = '';
+    list.innerHTML = '';
+    hiddenContainer.innerHTML = '';
+
+    selectedStudents.forEach(function(data, id) {
+      // Badge
+      var badge = document.createElement('span');
+      badge.className = 'badge bg-primary d-inline-flex align-items-center gap-1 px-3 py-2';
+      badge.id = 'selected_badge_' + id;
+      badge.style.cssText = 'font-size:0.85rem;border-radius:20px;';
+      badge.innerHTML = data.name + ' <small class="opacity-75">(' + data.sectionName + ')</small>' +
+        '<button type="button" class="btn-close btn-close-white ms-1" style="font-size:0.6rem;" onclick="removeStudent(' + id + ')" aria-label="Remove"></button>';
+      list.appendChild(badge);
+
+      // Hidden input
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'user[student_participant_ids][]';
+      input.value = id;
+      input.id = 'hidden_student_' + id;
+      hiddenContainer.appendChild(input);
+    });
+  }
+
+  // Handle checkbox toggle in the browse list
+  window.handleStudentCheckbox = function(checkbox, name, sectionName) {
+    var id = parseInt(checkbox.value);
+    if (checkbox.checked) {
+      addStudent(id, name, sectionName);
+    } else {
+      removeStudent(id);
+    }
+  }
+
+  // Load students for a section (browse mode — doesn't wipe selections)
+  window.loadStudentsForGuardian = function(sectionId) {
+    var container = document.getElementById('guardian_students_container');
     if (!container) return;
 
     if (!sectionId) {
-      container.innerHTML = '<p class="text-muted small mb-0">Select a section above to see available students.</p>';
+      container.innerHTML = '<p class="text-muted small mb-0">Select a section above to browse and add students.</p>';
       return;
     }
 
     container.innerHTML = '<p class="text-muted small mb-0"><i class="bi bi-hourglass-split me-1"></i>Loading…</p>';
 
-    fetch(`/institute_admin/sections/${sectionId}/participants.json`)
-      .then(response => {
+    // Get section name from the dropdown
+    var filterEl = document.getElementById('guardian_section_filter');
+    var sectionName = filterEl.options[filterEl.selectedIndex].text;
+
+    fetch('/institute_admin/sections/' + sectionId + '/participants.json')
+      .then(function(response) {
         if (!response.ok) throw new Error('Network error');
         return response.json();
       })
-      .then(data => {
-        if (!data.length) {
+      .then(function(data) {
+        var students = data.filter(function(p) { return p.participant_type === 'student'; });
+        if (!students.length) {
           container.innerHTML = '<p class="text-muted small mb-0">No students found in this section.</p>';
           return;
         }
 
-        const currentlyChecked = new Set(
-          [...document.querySelectorAll('.student-checkbox:checked')].map(el => parseInt(el.value))
-        );
-
         container.innerHTML = '';
-        data.forEach(student => {
-          const checked = prelinkedStudentIds.has(student.id) || currentlyChecked.has(student.id);
-          const div = document.createElement('div');
+        students.forEach(function(student) {
+          var isSelected = selectedStudents.has(student.id);
+          var div = document.createElement('div');
           div.className = 'form-check mb-2';
-          div.innerHTML = `
-            <input class="form-check-input student-checkbox" type="checkbox"
-                   name="user[student_participant_ids][]"
-                   value="${student.id}"
-                   id="student_${student.id}"
-                   ${checked ? 'checked' : ''}>
-            <label class="form-check-label" for="student_${student.id}">
-              <span class="fw-medium">${student.full_name || 'Student ' + student.id}</span>
-            </label>`;
+          var studentName = student.full_name || ('Student ' + student.id);
+          div.innerHTML =
+            '<input class="form-check-input student-checkbox" type="checkbox"' +
+            ' value="' + student.id + '"' +
+            ' id="student_' + student.id + '"' +
+            ' onchange="handleStudentCheckbox(this, \'' + studentName.replace(/'/g, "\\'") + '\', \'' + sectionName.replace(/'/g, "\\'") + '\')"' +
+            (isSelected ? ' checked' : '') + '>' +
+            '<label class="form-check-label" for="student_' + student.id + '">' +
+            '<span class="fw-medium">' + studentName + '</span>' +
+            '</label>';
           container.appendChild(div);
         });
       })
-      .catch(() => {
+      .catch(function() {
         container.innerHTML = '<p class="text-danger small mb-0">Failed to load students. Please try again.</p>';
       });
   }
   
   // Initialize fields on page load
   document.addEventListener('DOMContentLoaded', function() {
+    var participantTypeSelect = document.getElementById('participant_type_select');
+
     <% if !@user.new_record? && @user.participant.participant_type.present? %>
-      const participantTypeSelect = document.getElementById('participant_type_select');
       if (participantTypeSelect) {
         participantTypeSelect.value = '<%= @user.participant.participant_type %>';
 
         <% if @user.participant.employee? %>
-          document.querySelectorAll('.employee-field').forEach(f => f.style.display = 'block');
+          document.querySelectorAll('.employee-field').forEach(function(f) { f.style.display = 'block'; });
         <% end %>
 
         <% if @user.participant.guardian? %>
-          document.querySelectorAll('.guardian-field').forEach(f => f.style.display = 'block');
+          document.querySelectorAll('.guardian-field').forEach(function(f) { f.style.display = 'block'; });
         <% end %>
       }
     <% end %>
 
     toggleParticipantFields();
 
-    const participantTypeSelect = document.getElementById('participant_type_select');
     if (participantTypeSelect) {
       participantTypeSelect.addEventListener('change', toggleParticipantFields);
     }
