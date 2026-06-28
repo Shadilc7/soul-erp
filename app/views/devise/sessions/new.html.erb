@@ -101,6 +101,12 @@ function togglePassword() {
 
 <% content_for :styles do %>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    .login-container {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
     /* Animated Background */
     .animated-bg {
       position: fixed;
@@ -623,19 +629,13 @@ function togglePassword() {
 
     .login-form-container {
       width: 100%;
-      max-width: 450px;
-      background: linear-gradient(145deg, 
-                  rgba(230, 255, 245, 0.95) 0%, 
-                  rgba(255, 255, 255, 0.98) 30%,
-                  rgba(240, 255, 250, 0.95) 70%,
-                  rgba(220, 255, 240, 0.95) 100%);
+      max-width: 440px;
+      background: #ffffff;
       padding: 3rem;
       border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
-                  0 0 0 1px rgba(0, 182, 122, 0.2),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(0, 182, 122, 0.25);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3),
+                  0 0 0 1px rgba(0, 182, 122, 0.1);
+      border: 1px solid rgba(0, 182, 122, 0.15);
       position: relative;
       overflow: hidden;
     }
@@ -646,10 +646,10 @@ function togglePassword() {
       top: 0;
       left: 0;
       right: 0;
-      height: 6px;
+      height: 4px;
       background: linear-gradient(90deg, #00B67A 0%, #00d68f 50%, #98D8AA 100%);
       border-radius: 24px 24px 0 0;
-      box-shadow: 0 2px 10px rgba(0, 182, 122, 0.5);
+      box-shadow: 0 1px 10px rgba(0, 182, 122, 0.2);
     }
 
     .login-form-container::after {
@@ -659,7 +659,7 @@ function togglePassword() {
       left: 0;
       right: 0;
       height: 150px;
-      background: radial-gradient(ellipse at bottom, rgba(0, 182, 122, 0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse at bottom, rgba(0, 182, 122, 0.03) 0%, transparent 70%);
       pointer-events: none;
     }
 
@@ -669,18 +669,18 @@ function togglePassword() {
     }
 
     .form-header h2 {
-      color: #1a1f36;
-      font-size: 2rem;
+      color: #0f172a;
+      font-size: 2.25rem;
       margin-bottom: 0.5rem;
       font-weight: 700;
       letter-spacing: -0.5px;
     }
 
     .form-header p {
-      color: #8898aa;
+      color: #64748b;
       font-size: 0.95rem;
       margin: 0;
-      font-weight: 500;
+      font-weight: 400;
     }
 
     .form-group {
@@ -691,35 +691,35 @@ function togglePassword() {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      color: #1a1f36;
+      color: #475569;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       margin-bottom: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     .form-label i {
       color: #00B67A;
       font-size: 1.1rem;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     .form-input {
       width: 100%;
       padding: 1.1rem 1.2rem;
-      border: 2px solid #e3e8ee;
+      border: 1.5px solid #cbd5e1;
       border-radius: 12px;
-      background-color: #f7fafc;
+      background-color: #f8fafc;
       font-size: 0.95rem;
-      color: #1a1f36;
+      color: #0f172a;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-sizing: border-box;
       font-weight: 500;
     }
 
     .form-input::placeholder {
-      color: #a0aec0;
+      color: #94a3b8;
       font-weight: 400;
     }
 
@@ -727,8 +727,7 @@ function togglePassword() {
       outline: none;
       border-color: #00B67A;
       background-color: #ffffff;
-      box-shadow: 0 0 0 4px rgba(0, 182, 122, 0.08),
-                  0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 0 4px rgba(0, 182, 122, 0.08);
       transform: translateY(-1px);
     }
 
@@ -743,7 +742,7 @@ function togglePassword() {
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: #6c757d;
+      color: #64748b;
       cursor: pointer;
       padding: 0.5rem;
       display: flex;
@@ -773,9 +772,8 @@ function togglePassword() {
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      margin-top: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 182, 122, 0.3),
-                  0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-top: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 182, 122, 0.3);
       position: relative;
       overflow: hidden;
     }
@@ -797,8 +795,7 @@ function togglePassword() {
 
     .login-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 182, 122, 0.4),
-                  0 4px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 25px rgba(0, 182, 122, 0.5);
     }
 
     .login-btn:active {
@@ -812,7 +809,7 @@ function togglePassword() {
     }
 
     .forgot-password {
-      color: #8898aa;
+      color: #64748b;
       text-decoration: none;
       font-size: 0.875rem;
       display: inline-flex;
