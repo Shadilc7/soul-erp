@@ -8,7 +8,7 @@ class CustomFailure < Devise::FailureApp
       http_auth
     else
       # Set the flash alert so the user sees the error message on the login page
-      flash[:alert] = i18n_message unless flash[:alert].present?
+      flash[:alert] = "Invalid user or user not approved."
       redirect
     end
   end
