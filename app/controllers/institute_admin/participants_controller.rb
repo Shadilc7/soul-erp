@@ -246,14 +246,7 @@ module InstituteAdmin
     def set_participant
       # Try to find the participant directly through the institute's participants
       @participant = current_institute.participants.find_by(id: params[:id])
-
-      # If not found, try to find through the user
-      if @participant.nil?
-        @user = current_institute.users.find_by(id: params[:id])
-        @participant = @user&.participant
-      else
-        @user = @participant.user
-      end
+      @user = @participant.user
 
       # Raise RecordNotFound if neither approach found a participant
       raise ActiveRecord::RecordNotFound unless @participant && @user
