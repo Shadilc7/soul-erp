@@ -3,7 +3,7 @@ require "securerandom"
 
 module InstituteAdmin
   class ParticipantsController < InstituteAdmin::BaseController
-    before_action :set_participant, only: [ :show, :edit, :update, :destroy, :toggle_status ]
+    before_action :set_participant, only: [ :show, :edit, :destroy, :toggle_status ]
     before_action :set_sections, only: [ :new, :create, :edit, :update ]
 
     def index
@@ -182,7 +182,6 @@ module InstituteAdmin
     end
 
     def toggle_status
-      @user = User.find(params[:id])
       # Toggle the active status
       @user.active = !@user.active
 

@@ -371,18 +371,18 @@
                     <% end %>
                   </td>
                   <td>
-                    <%= link_to institute_admin_participant_path(participant.user), class: "btn action-btn btn-view me-2", title: "View" do %>
+                    <%= link_to institute_admin_participant_path(participant), class: "btn action-btn btn-view me-2", title: "View" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
-                    <%= link_to edit_institute_admin_participant_path(participant.user), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
+                    <%= link_to edit_institute_admin_participant_path(participant), class: "btn action-btn btn-edit me-2", title: "Edit" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
                     <button type="button" class="btn action-btn btn-delete me-2" title="Delete" 
-                            onclick="showDeleteModal('<%= participant.user.full_name %>', '<%= institute_admin_participant_path(participant.user) %>')">
+                            onclick="showDeleteModal('<%= participant.user.full_name %>', '<%= institute_admin_participant_path(participant) %>')">
                       <i class="bi bi-trash"></i>
                     </button>
                     <button type="button" class="btn btn-approve" 
-                            onclick="showApproveModal('<%= participant.user.full_name %>', '<%= toggle_status_institute_admin_participant_path(participant.user) %>')">
+                            onclick="showApproveModal('<%= participant.user.full_name %>', '<%= toggle_status_institute_admin_participant_path(participant) %>')">
                       <i class="bi bi-check-circle"></i> Approve
                     </button>
                   </td>
