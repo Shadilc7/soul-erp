@@ -4,7 +4,34 @@
     <meta charset="utf-8">
     <title><%= content_for?(:title) ? yield(:title) : "Report" %></title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+Malayalam:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+      <% if File.exist?(Rails.root.join("app/assets/fonts/NotoSansMalayalam-Regular.ttf")) %>
+        @font-face {
+          font-family: 'Noto Sans Malayalam';
+          src: url('data:font/ttf;base64,<%= Base64.strict_encode64(File.binread(Rails.root.join("app/assets/fonts/NotoSansMalayalam-Regular.ttf"))) %>') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
+      <% end %>
+
+      <% if File.exist?(Rails.root.join("app/assets/fonts/NotoSansArabic-Regular.ttf")) %>
+        @font-face {
+          font-family: 'Noto Sans Arabic';
+          src: url('data:font/ttf;base64,<%= Base64.strict_encode64(File.binread(Rails.root.join("app/assets/fonts/NotoSansArabic-Regular.ttf"))) %>') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
+      <% end %>
+
+      <% if File.exist?(Rails.root.join("app/assets/fonts/NotoSansDevanagari-Regular.ttf")) %>
+        @font-face {
+          font-family: 'Noto Sans Devanagari';
+          src: url('data:font/ttf;base64,<%= Base64.strict_encode64(File.binread(Rails.root.join("app/assets/fonts/NotoSansDevanagari-Regular.ttf"))) %>') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
+      <% end %>
       
       body {
         font-family: 'Roboto', 'Noto Sans Malayalam', 'Noto Sans Arabic', 'Noto Sans Devanagari', sans-serif;
