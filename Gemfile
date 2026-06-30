@@ -82,3 +82,5 @@ gem "gruff"
 
 # Add csv gem to avoid deprecation warning in Ruby 3.4+
 gem "csv"
+gem 'grover'
+gem 'puppeteer-ruby'

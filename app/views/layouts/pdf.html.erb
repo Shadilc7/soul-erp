@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title><%= content_for?(:title) ? yield(:title) : "Report" %></title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+Malayalam:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap');
+      
+      body {
+        font-family: 'Roboto', 'Noto Sans Malayalam', 'Noto Sans Arabic', 'Noto Sans Devanagari', sans-serif;
+        color: #333;
+        font-size: 12px;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .report-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      
+      .report-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+      }
+      
+      .institute-name {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 0;
+      }
+      
+      .generated-date {
+        font-size: 10px;
+        color: #666;
+        margin: 0;
+      }
+      
+      .filter-info {
+        margin: 0 auto 20px auto;
+        width: 70%;
+      }
+      
+      .filter-info table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      .filter-info td {
+        padding: 5px 10px;
+        border: none;
+      }
+      
+      .filter-info td:first-child {
+        text-align: right;
+        font-weight: bold;
+        width: 40%;
+      }
+      
+      .filter-info td:last-child {
+        text-align: left;
+      }
+      
+      .report-data {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      
+      .report-data th, .report-data td {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+      
+      .report-data th {
+        background-color: #EEEEEE;
+        font-weight: bold;
+      }
+      
+      .report-data tr:nth-child(even) {
+        background-color: #F5F5F5;
+      }
+      
+      .empty-state {
+        text-align: center;
+        font-style: italic;
+        color: #666;
+        padding: 20px;
+        border: 1px solid #000;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
