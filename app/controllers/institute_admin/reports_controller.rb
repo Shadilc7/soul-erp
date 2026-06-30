@@ -1422,11 +1422,11 @@ module InstituteAdmin
     end
 
     def render_section_feedback_report_pdf
-      submission_status = params[:submission_status] || "submitted"
-      report_title = submission_status == "submitted" ? "Section Feedback Report" : "Not Submitted Section Feedback Report"
+      @submission_status = params[:submission_status] || "submitted"
+      @report_title = @submission_status == "submitted" ? "Section Feedback Report" : "Not Submitted Section Feedback Report"
 
       # Get filter information for the report header
-      date_range_text = case @date_range
+      @date_range_text = case @date_range
       when "today"
                           "Today (#{Date.current.strftime('%b %d, %Y')})"
       when "yesterday"
@@ -1441,179 +1441,59 @@ module InstituteAdmin
                           "All Dates"
       end
 
-      section_text = if @section_id.present? && @section_id != "all"
+      @section_text = if @section_id.present? && @section_id != "all"
                       section = current_institute.sections.find(@section_id)
                       "Section: #{section.name}"
       else
                       "All Sections"
       end
 
-      # Generate PDF using Prawn directly
-      pdf = generate_section_feedback_pdf(
-        report_title: report_title,
-        date_range: date_range_text,
-        section: section_text,
-        institute_name: current_institute.name,
-        submission_status: submission_status
+      # Render the HTML template to a string
+      html = render_to_string(
+        template: "institute_admin/reports/section_feedback_report",
+        formats: [ :html ],
+        layout: "pdf"
       )
+
+      # Generate PDF using Ferrum
+      require 'ferrum'
+      require 'tempfile'
+
+      pdf_data = nil
+      browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
+      begin
+        Tempfile.create(['report', '.html']) do |tempfile|
+          tempfile.write(html)
+          tempfile.flush
+          browser.go_to("file://#{tempfile.path}")
+          pdf_data = browser.pdf(
+            format: :A4,
+            margin_top: 0.4,
+            margin_bottom: 0.4,
+            margin_left: 0.4,
+            margin_right: 0.4
+          )
+        end
+      ensure
+        browser.quit
+      end
+
+      # Decode Base64 if needed (Ferrum returns Base64 encoded string)
+      if pdf_data.present? && !pdf_data.start_with?('%PDF')
+        require 'base64'
+        pdf_data = Base64.decode64(pdf_data)
+      end
 
       # Check if the user wants to download or preview
       disposition = params[:download] == "true" ? "attachment" : "inline"
 
-      send_data pdf.render,
+      send_data pdf_data,
         filename: "section_feedback_report_#{Date.current.strftime('%Y%m%d')}.pdf",
         type: "application/pdf",
         disposition: disposition
     end
 
-    def generate_section_feedback_pdf(options = {})
-      require "prawn"
-      require "prawn/table"
 
-      pdf = Prawn::Document.new(
-        page_size: "A4",
-        margin: [ 30, 30, 30, 30 ],
-        info: {
-          Title: options[:report_title],
-          Author: current_institute.name,
-          Subject: "Section Feedback Report",
-          Creator: "BeYa",
-          CreationDate: Time.now
-        }
-      )
-
-      # Add logo if present
-      if current_institute.respond_to?(:logo) &&
-         current_institute.logo.present? &&
-         current_institute.logo.respond_to?(:attached?) &&
-         current_institute.logo.attached?
-        begin
-          logo_path = ActiveStorage::Blob.service.path_for(current_institute.logo.key)
-          pdf.image logo_path, position: :center, width: 120
-        rescue => e
-          # Skip logo if it can't be processed
-          Rails.logger.warn "Failed to add logo to PDF: #{e.message}"
-        end
-      end
-
-      # Report header
-      pdf.font_size(18) { pdf.text options[:report_title], align: :center, style: :bold }
-      pdf.move_down 10
-
-      # Institute info
-      pdf.font_size(14) { pdf.text options[:institute_name], align: :center, style: :bold }
-      pdf.font_size(10) { pdf.text "Generated on #{Date.current.strftime('%B %d, %Y')}", align: :center, color: "666666" }
-      pdf.move_down 20
-
-      # Filter info
-      filter_data = [
-        [ "Date Range:", options[:date_range] ],
-        [ "Section:", options[:section] ]
-      ]
-
-      pdf.table(filter_data, width: pdf.bounds.width * 0.7, position: :center) do
-        cells.borders = []
-        column(0).font_style = :bold
-        column(0).width = 100
-        column(0).align = :right
-        column(1).align = :left
-        cells.padding = [ 5, 10 ]
-      end
-
-      pdf.move_down 20
-
-      # Report data
-      if options[:submission_status] == "submitted"
-        if @submitted_feedbacks.any?
-          # Table header
-          header = [ "Date", "Participant", "Section", "Training Program", "Rating", "Content" ]
-
-          # Table data
-          data = []
-          @submitted_feedbacks.each do |feedback|
-            row = [
-              feedback.created_at.strftime("%b %d, %Y"),
-              feedback.participant.full_name,
-              feedback.participant.section.name,
-              feedback.training_program.title,
-              feedback.rating,
-              feedback.content
-            ]
-
-            data << row
-          end
-
-          # Generate table
-          pdf.table([ header ] + data, header: true, width: pdf.bounds.width) do
-            cells.padding = [ 8, 10 ]
-
-            row(0).font_style = :bold
-            row(0).background_color = "EEEEEE"
-
-            # Zebra striping
-            rows(1..data.length).each_with_index do |row, i|
-              row.background_color = "F5F5F5" if i.even?
-            end
-          end
-        else
-          pdf.text "No submitted feedbacks found for the selected criteria.", align: :center, style: :italic, color: "666666"
-          pdf.stroke do
-            pdf.rectangle [ 0, pdf.cursor ], pdf.bounds.width, 50
-          end
-        end
-      else
-        if @not_submitted_participants.any?
-          # Table header
-          header = [ "Participant", "Section", "Email" ]
-
-          # Table data
-          data = []
-          @not_submitted_participants.each do |participant|
-            row = [
-              participant.full_name,
-              participant.section.name,
-              participant.email
-            ]
-
-            data << row
-          end
-
-          # Generate table
-          pdf.table([ header ] + data, header: true, width: pdf.bounds.width) do
-            cells.padding = [ 8, 10 ]
-
-            row(0).font_style = :bold
-            row(0).background_color = "EEEEEE"
-
-            # Zebra striping
-            rows(1..data.length).each_with_index do |row, i|
-              row.background_color = "F5F5F5" if i.even?
-            end
-          end
-        else
-          pdf.text "No pending submissions found for the selected criteria.", align: :center, style: :italic, color: "666666"
-          pdf.stroke do
-            pdf.rectangle [ 0, pdf.cursor ], pdf.bounds.width, 50
-          end
-        end
-      end
-
-      # Footer
-      pdf.number_pages "Page <page> of <total>",
-                       at: [ pdf.bounds.right - 150, 0 ],
-                       width: 150,
-                       align: :right,
-                       size: 9
-
-      # Add footer note
-      pdf.go_to_page(pdf.page_count)
-      pdf.move_down 10
-      pdf.horizontal_rule
-      pdf.move_down 5
-      pdf.text "This is a system generated report.", align: :center, size: 9, color: "666666"
-
-      pdf
-    end
 
     def render_individual_feedback_report_pdf
       submission_status = params[:submission_status] || "submitted"
