@@ -43,7 +43,7 @@
             <% case question.question_type %>
             <% when "short_answer" %>
               <%= text_field_tag "responses[#{question.id}][answer]",
-                  nil,
+                  @responses&.dig(question.id.to_s, "answer"),
                   class: "form-control",
                   required: question.required?,
                   data: { 
@@ -52,7 +52,7 @@
                   } %>
             <% when "paragraph" %>
               <%= text_area_tag "responses[#{question.id}][answer]",
-                  nil,
+                  @responses&.dig(question.id.to_s, "answer"),
                   class: "form-control",
                   rows: 4,
                   required: question.required?,
@@ -66,7 +66,7 @@
                   <div class="form-check">
                     <%= radio_button_tag "responses[#{question.id}][answer]",
                         option.text,
-                        false,
+                        @responses&.dig(question.id.to_s, "answer") == option.text,
                         class: "form-check-input",
                         required: question.required?,
                         data: { 
@@ -80,10 +80,11 @@
             <% when "checkboxes" %>
               <div class="options-list">
                 <% question.options.each do |option| %>
+                  <% selected_options = @responses&.dig(question.id.to_s, "selected_options") || [] %>
                   <div class="form-check">
                     <%= check_box_tag "responses[#{question.id}][selected_options][]",
                         option.text,
-                        false,
+                        selected_options.include?(option.text),
                         class: "form-check-input",
                         required: question.required?,
                         data: { 
@@ -96,7 +97,7 @@
               </div>
             <% when "dropdown" %>
               <%= select_tag "responses[#{question.id}][answer]",
-                  options_for_select(question.options.pluck(:text)),
+                  options_for_select(question.options.pluck(:text), @responses&.dig(question.id.to_s, "answer")),
                   include_blank: "Select an option",
                   class: "form-select",
                   required: question.required?,
@@ -106,7 +107,7 @@
                   } %>
             <% when "date" %>
               <%= date_field_tag "responses[#{question.id}][answer]",
-                  nil,
+                  @responses&.dig(question.id.to_s, "answer"),
                   class: "form-control",
                   required: question.required?,
                   data: { 
@@ -115,7 +116,7 @@
                   } %>
             <% when "time" %>
               <%= time_field_tag "responses[#{question.id}][answer]",
-                  nil,
+                  @responses&.dig(question.id.to_s, "answer"),
                   class: "form-control",
                   required: question.required?,
                   data: { 
@@ -124,7 +125,7 @@
                   } %>
             <% when "number" %>
               <%= number_field_tag "responses[#{question.id}][answer]",
-                  nil,
+                  @responses&.dig(question.id.to_s, "answer"),
                   class: "form-control",
                   required: question.required?,
                   placeholder: "Enter a number",
@@ -137,7 +138,7 @@
                 <div class="form-check form-check-inline">
                   <%= radio_button_tag "responses[#{question.id}][answer]",
                       "Yes",
-                      false,
+                      @responses&.dig(question.id.to_s, "answer") == "Yes",
                       class: "form-check-input",
                       required: question.required?,
                       data: { 
@@ -149,7 +150,7 @@
                 <div class="form-check form-check-inline">
                   <%= radio_button_tag "responses[#{question.id}][answer]",
                       "No",
-                      false,
+                      @responses&.dig(question.id.to_s, "answer") == "No",
                       class: "form-check-input",
                       required: question.required?,
                       data: { 

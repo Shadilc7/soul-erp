@@ -1,0 +1,11 @@
+one:
+  user: one
+  institute: one
+  enrollment_date: 2025-01-01
+  status: 0
+
+two:
+  user: two
+  institute: two
+  enrollment_date: 2025-01-01
+  status: 0

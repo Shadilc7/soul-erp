@@ -6,6 +6,7 @@
              id="star<%= i %>_<%= question.id %>" 
              name="responses[<%= question.id %>][answer]" 
              value="<%= i %>" 
+             <%= 'checked' if @responses&.dig(question.id.to_s, 'answer').to_i == i %>
              <%= 'required' if question.required? %>
              data-action="change->assignment-form#validateField"
              data-question-id="<%= question.id %>"

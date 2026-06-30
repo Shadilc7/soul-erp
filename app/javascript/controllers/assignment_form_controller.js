@@ -691,15 +691,34 @@ export default class extends Controller {
       
       console.log(`Setting up rating for question ${questionId} with ${inputs.length} inputs and ${labels.length} labels`);
       
-      // Add click event to each label
+      // Get initial checked input
+      const initialCheckedInput = Array.from(inputs).find(input => input.checked);
+      const initialValue = initialCheckedInput ? parseInt(initialCheckedInput.value) : 0;
+      
+      // Initialize stars to the correct state (checked or unchecked)
       labels.forEach(label => {
         const starIcon = label.querySelector('i');
+        const starNum = parseInt(label.getAttribute('for').split('_')[0].replace('star', ''));
         
-        // Replace with empty star initially
         if (starIcon) {
-          starIcon.classList.remove('bi-star-fill');
-          starIcon.classList.add('bi-star');
+          if (starNum <= initialValue) {
+            starIcon.classList.remove('bi-star');
+            starIcon.classList.add('bi-star-fill');
+            starIcon.style.color = '#FFD700';
+          } else {
+            starIcon.classList.remove('bi-star-fill');
+            starIcon.classList.add('bi-star');
+            starIcon.style.color = '#ddd';
+          }
         }
+      });
+      
+      if (initialValue > 0 && valueDisplay) {
+        valueDisplay.textContent = `${initialValue} ${initialValue === 1 ? 'star' : 'stars'} selected`;
+      }
+
+      // Add click event to each label
+      labels.forEach(label => {
         
         label.addEventListener('click', (event) => {
           event.preventDefault();

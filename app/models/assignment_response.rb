@@ -40,8 +40,10 @@ class AssignmentResponse < ApplicationRecord
   private
 
   def validate_response_format
+    return unless question&.required?
+
     case question.question_type
-    when "multiple_choice", "dropdown", "rating"
+    when "multiple_choice", "dropdown", "rating", "yes_or_no"
       errors.add(:answer, "must be present") if answer.blank?
     when "checkboxes"
       errors.add(:selected_options, "must be present") if selected_options.blank?
