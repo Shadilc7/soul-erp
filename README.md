@@ -172,5 +172,5 @@ Certificate lifecycle supports:
 ## Development Notes
 
 - The app uses role-based layout templates and Stimulus controllers for portal interactions.
-- Charts are rendered with Chart.js loaded from CDN.
+- Charts are rendered with Chart.js loaded from CDN
 - Attendance, response, and feedback workflows enforce uniqueness and date-based constraints at model level.
