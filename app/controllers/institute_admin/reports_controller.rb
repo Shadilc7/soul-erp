@@ -1454,13 +1454,34 @@ module InstituteAdmin
         layout: "pdf"
       )
 
-      # Generate PDF using Grover
-      pdf = Grover.new(html, format: 'A4', margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }).to_pdf
+      # Generate PDF using Ferrum
+      require 'ferrum'
+      require 'tempfile'
+      
+      pdf_data = nil
+      browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
+      begin
+        # Write to tempfile because very large Base64 URLs can sometimes truncate in Chrome
+        Tempfile.create(['report', '.html']) do |tempfile|
+          tempfile.write(html)
+          tempfile.flush
+          browser.go_to("file://#{tempfile.path}")
+          pdf_data = browser.pdf(
+            format: :A4,
+            margin_top: 0.4,
+            margin_bottom: 0.4,
+            margin_left: 0.4,
+            margin_right: 0.4
+          )
+        end
+      ensure
+        browser.quit
+      end
 
       # Check if the user wants to download or preview
       disposition = params[:download] == "true" ? "attachment" : "inline"
 
-      send_data pdf,
+      send_data pdf_data,
         filename: "section_feedback_report_#{Date.current.strftime('%Y%m%d')}.pdf",
         type: "application/pdf",
         disposition: disposition
