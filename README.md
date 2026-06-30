@@ -105,15 +105,6 @@ App runs at: `http://localhost:3000`
 ```bash
 bin/rails db:seed
 ```
-
-## Seeded Admin Account
-
-`db/seeds.rb` creates a master admin when no users exist:
-- Email: `masteradmin@example.com`
-- Password: `admin123`
-
-Change this password immediately in non-local environments.
-
 ## Authentication & Routing Notes
 
 - Login path: `/login`
