@@ -1451,7 +1451,8 @@ module InstituteAdmin
       # Render the HTML template as a string
       html = render_to_string(
         template: "institute_admin/reports/section_feedback_report",
-        layout: "pdf"
+        layout: "pdf",
+        formats: [:html]
       )
 
       # Generate PDF using Ferrum
