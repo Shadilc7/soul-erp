@@ -1457,23 +1457,21 @@ module InstituteAdmin
 
       # Generate PDF using Ferrum
       require 'ferrum'
-      require 'tempfile'
+      require 'base64'
 
       pdf_data = nil
       browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
       begin
-        Tempfile.create(['report', '.html']) do |tempfile|
-          tempfile.write(html)
-          tempfile.flush
-          browser.go_to("file://#{tempfile.path}")
-          pdf_data = browser.pdf(
-            format: :A4,
-            margin_top: 0.4,
-            margin_bottom: 0.4,
-            margin_left: 0.4,
-            margin_right: 0.4
-          )
-        end
+        base64_html = Base64.strict_encode64(html)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          margin_top: 0.4,
+          margin_bottom: 0.4,
+          margin_left: 0.4,
+          margin_right: 0.4
+        )
       ensure
         browser.quit
       end
