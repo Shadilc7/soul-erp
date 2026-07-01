@@ -114,85 +114,8 @@
         </div>
 
         <%= turbo_frame_tag "assignment_content" do %>
-          <div class="modern-card-body">
-            <% if @assignments.any? %>
-              <div class="assignments-list">
-                <% @assignments.each do |assignment| %>
-                  <div class="assignment-item">
-                    <div class="assignment-header">
-                      <div>
-                        <h6 class="assignment-title"><%= assignment.title %></h6>
-                        <p class="assignment-description"><%= assignment.description %></p>
-                      </div>
-                      <% if assignment.answered_by_on_date?(current_participant, @selected_date) %>
-                        <span class="badge status-completed">
-                          <i class="bi bi-check-circle-fill me-1"></i>Completed
-                        </span>
-                      <% else %>
-                        <% if @selected_date <= Date.current %>
-                          <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: @selected_date),
-                              class: "btn btn-start-assignment",
-                              data: { turbo_frame: "_top" } do %>
-                            <i class="bi bi-play-fill me-1"></i>Start Assignment
-                          <% end %>
-                        <% else %>
-                          <span class="badge status-upcoming">
-                            <i class="bi bi-clock-fill me-1"></i>Upcoming
-                          </span>
-                        <% end %>
-                      <% end %>
-                    </div>
-
-                    <div class="assignment-meta">
-                      <div class="meta-item">
-                        <i class="bi bi-calendar-range"></i>
-                        <span>
-                          <%= assignment.start_date.strftime("%b %d") %> - 
-                          <%= assignment.end_date.strftime("%b %d, %Y") %>
-                        </span>
-                      </div>
-                      <div class="meta-item">
-                        <i class="bi bi-question-circle"></i>
-                        <span>
-                          <%= pluralize(
-                            assignment.questions.count + 
-                            assignment.question_sets.sum { |qs| qs.questions.count },
-                            'question'
-                          ) %>
-                        </span>
-                      </div>
-                      <div class="meta-item">
-                        <i class="bi bi-check2-circle"></i>
-                        <span>
-                          <%= assignment.completed_days(current_participant) %> of 
-                          <%= assignment.total_days %> days completed
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="progress-wrapper">
-                      <div class="progress-info">
-                        <span class="progress-label">Progress</span>
-                        <span class="progress-percent"><%= assignment.completion_percentage(current_participant) %>%</span>
-                      </div>
-                      <div class="progress-bar-modern">
-                        <div class="progress-fill" 
-                             style="width: <%= assignment.completion_percentage(current_participant) %>%">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            <% else %>
-              <div class="empty-state">
-                <div class="empty-icon">
-                  <i class="bi bi-calendar-x"></i>
-                </div>
-                <p class="empty-text">No assignments available for <%= @selected_date.strftime("%B %d, %Y") %></p>
-              </div>
-            <% end %>
-          </div>
+          <%= render partial: "participant_portal/dashboard/daily_assignments",
+                     locals: { assignments: @assignments, selected_date: @selected_date } %>
         <% end %>
       </div>
     </div>

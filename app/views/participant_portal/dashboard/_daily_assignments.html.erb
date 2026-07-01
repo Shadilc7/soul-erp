@@ -1,64 +1,66 @@
-<div class="card-body">
+<div class="modern-card-body">
   <% if assignments.any? %>
     <div class="assignments-list">
       <% assignments.each do |assignment| %>
-        <div class="card assignment-card mb-3 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <div>
-                <h6 class="card-title mb-1"><%= assignment.title %></h6>
-                <p class="text-muted small mb-0"><%= assignment.description %></p>
-              </div>
-              <% if assignment.answered_by_on_date?(current_participant, selected_date) %>
-                <span class="badge bg-success">Completed</span>
-              <% else %>
-                <% if selected_date <= Date.current %>
-                  <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: selected_date),
-                      class: "btn btn-primary btn-sm",
-                      data: { turbo_frame: "_top" } do %>
-                    <i class="bi bi-play-fill me-1"></i>Start Assignment
-                  <% end %>
-                <% else %>
-                  <span class="badge bg-warning">Upcoming</span>
+        <div class="assignment-item">
+          <div class="assignment-header">
+            <div>
+              <h6 class="assignment-title"><%= assignment.title %></h6>
+              <p class="assignment-description"><%= assignment.description %></p>
+            </div>
+            <% if assignment.answered_by_on_date?(current_participant, selected_date) %>
+              <span class="badge status-completed">
+                <i class="bi bi-check-circle-fill me-1"></i>Completed
+              </span>
+            <% else %>
+              <% if selected_date <= Date.current %>
+                <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: selected_date),
+                    class: "btn btn-start-assignment",
+                    data: { turbo_frame: "_top" } do %>
+                  <i class="bi bi-play-fill me-1"></i>Start Assignment
                 <% end %>
+              <% else %>
+                <span class="badge status-upcoming">
+                  <i class="bi bi-clock-fill me-1"></i>Upcoming
+                </span>
               <% end %>
-            </div>
+            <% end %>
+          </div>
 
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-calendar-range text-primary me-2"></i>
-                  <small>
-                    <%= assignment.start_date.strftime("%b %d") %> - 
-                    <%= assignment.end_date.strftime("%b %d, %Y") %>
-                  </small>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-question-circle text-primary me-2"></i>
-                  <small>
-                    <%= pluralize(
-                      assignment.questions.count + 
-                      assignment.question_sets.sum { |qs| qs.questions.count },
-                      'question'
-                    ) %>
-                  </small>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-check2-circle text-primary me-2"></i>
-                  <small>
-                    <%= assignment.completed_days(current_participant) %> of 
-                    <%= assignment.total_days %> days completed
-                  </small>
-                </div>
-              </div>
+          <div class="assignment-meta">
+            <div class="meta-item">
+              <i class="bi bi-calendar-range"></i>
+              <span>
+                <%= assignment.start_date.strftime("%b %d") %> - 
+                <%= assignment.end_date.strftime("%b %d, %Y") %>
+              </span>
             </div>
+            <div class="meta-item">
+              <i class="bi bi-question-circle"></i>
+              <span>
+                <%= pluralize(
+                  assignment.questions.count + 
+                  assignment.question_sets.sum { |qs| qs.questions.count },
+                  'question'
+                ) %>
+              </span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-check2-circle"></i>
+              <span>
+                <%= assignment.completed_days(current_participant) %> of 
+                <%= assignment.total_days %> days completed
+              </span>
+            </div>
+          </div>
 
-            <div class="progress-indicator mb-3">
-              <div class="progress-bar bg-success" 
+          <div class="progress-wrapper">
+            <div class="progress-info">
+              <span class="progress-label">Progress</span>
+              <span class="progress-percent"><%= assignment.completion_percentage(current_participant) %>%</span>
+            </div>
+            <div class="progress-bar-modern">
+              <div class="progress-fill" 
                    style="width: <%= assignment.completion_percentage(current_participant) %>%">
               </div>
             </div>
@@ -67,9 +69,11 @@
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-5">
-      <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
-      <p class="text-muted mb-0">No assignments available for <%= selected_date.strftime("%B %d, %Y") %></p>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+      <p class="empty-text">No assignments available for <%= selected_date.strftime("%B %d, %Y") %></p>
     </div>
   <% end %>
-</div> 
+</div>

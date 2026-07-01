@@ -1,0 +1,11 @@
+required_question:
+  institute: one
+  title: "Required Short Answer Question"
+  question_type: 0 # short_answer
+  required: true
+
+optional_question:
+  institute: one
+  title: "Optional Short Answer Question"
+  question_type: 0 # short_answer
+  required: false

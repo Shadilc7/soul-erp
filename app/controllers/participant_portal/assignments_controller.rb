@@ -100,6 +100,9 @@ module ParticipantPortal
         return
       end
 
+      validation_errors = []
+      success = false
+
       begin
         ActiveRecord::Base.transaction do
           all_saved = true
@@ -136,24 +139,31 @@ module ParticipantPortal
               saved_response_ids << response.id
             else
               Rails.logger.error("Failed to save response: #{response.errors.full_messages.join(', ')}")
+              validation_errors << "#{question.title}: #{response.errors.full_messages.join(', ')}"
               all_saved = false
-              break
             end
           end
 
-          if all_saved
+          if all_saved && validation_errors.empty?
             AssignmentResponseLog.log_responses(
               participant: current_participant,
               assignment: @assignment,
               response_ids: saved_response_ids,
               response_date: @selected_date
             )
-
-            redirect_to participant_portal_root_path(date: @selected_date),
-                        notice: "Assignment submitted successfully!"
+            success = true
           else
             raise ActiveRecord::Rollback
           end
+        end
+
+        if success
+          redirect_to participant_portal_root_path(date: @selected_date),
+                      notice: "Assignment submitted successfully!"
+        else
+          flash.now[:alert] = "Please fix the following errors:<br>#{validation_errors.join('<br>')}".html_safe
+          @questions = @assignment.all_questions
+          render :take_assignment, status: :unprocessable_entity
         end
       rescue ActiveRecord::RecordNotUnique => e
         # Likely caused by a concurrent submission; handle gracefully and inform the user
