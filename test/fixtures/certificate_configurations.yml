@@ -3,13 +3,13 @@
 one:
   name: MyString
   details: MyText
-  duration_period: 1
+  duration_period: 10
   institute: one
-  status: 1
+  status: 0
 
 two:
   name: MyString
   details: MyText
-  duration_period: 1
+  duration_period: 10
   institute: two
-  status: 1
+  status: 0
