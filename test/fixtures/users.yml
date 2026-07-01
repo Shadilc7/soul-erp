@@ -6,6 +6,12 @@
 #
 one:
   email: user_one@example.com
+  role: 1
+  institute: one
+  active: true
 
 two:
   email: user_two@example.com
+  role: 3
+  institute: two
+  active: true
