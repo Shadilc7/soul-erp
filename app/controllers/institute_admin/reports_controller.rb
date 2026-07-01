@@ -1494,13 +1494,15 @@ module InstituteAdmin
 
 
     def render_individual_feedback_report_pdf
-      submission_status = params[:submission_status] || "submitted"
-      report_title = submission_status == "submitted" ? "Individual Feedback Report" : "Not Submitted Individual Feedback Report"
+      @submission_status = params[:submission_status] || "submitted"
+      @report_title = @submission_status == "submitted" ? "Individual Feedback Report" : "Not Submitted Individual Feedback Report"
 
       participant = current_institute.participants.find(@participant_id)
+      @participant_text = participant.full_name
+      @section_text = participant.section.name
 
       # Get filter information for the report header
-      date_range_text = case @date_range
+      @date_range_text = case @date_range
       when "today"
                           "Today (#{Date.current.strftime('%b %d, %Y')})"
       when "yesterday"
@@ -1515,28 +1517,50 @@ module InstituteAdmin
                           "All Dates"
       end
 
-      assignment_text = if @training_program_id.present? && @training_program_id != "all"
+      @assignment_text = if @training_program_id.present? && @training_program_id != "all"
                         training_program = current_institute.training_programs.find(@training_program_id)
                         "Training Program: #{training_program.title}"
       else
                         "All Training Programs"
       end
 
-      # Generate PDF using Prawn directly
-      pdf = generate_individual_feedback_pdf(
-        report_title: report_title,
-        date_range: date_range_text,
-        participant: participant.full_name,
-        section: participant.section.name,
-        assignment: assignment_text,
-        institute_name: current_institute.name,
-        submission_status: submission_status
+      # Render the HTML template to a string
+      html = render_to_string(
+        template: "institute_admin/reports/individual_feedback_report",
+        formats: [ :html ],
+        layout: "pdf"
       )
+
+      # Generate PDF using Ferrum
+      require 'ferrum'
+      require 'base64'
+
+      pdf_data = nil
+      browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
+      begin
+        base64_html = Base64.strict_encode64(html)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          margin_top: 0.4,
+          margin_bottom: 0.4,
+          margin_left: 0.4,
+          margin_right: 0.4
+        )
+      ensure
+        browser.quit
+      end
+
+      # Decode Base64 if needed (Ferrum returns Base64 encoded string)
+      if pdf_data.present? && !pdf_data.start_with?('%PDF')
+        pdf_data = Base64.decode64(pdf_data)
+      end
 
       # Check if the user wants to download or preview
       disposition = params[:download] == "true" ? "attachment" : "inline"
 
-      send_data pdf.render,
+      send_data pdf_data,
         filename: "individual_feedback_report_#{Date.current.strftime('%Y%m%d')}.pdf",
         type: "application/pdf",
         disposition: disposition
