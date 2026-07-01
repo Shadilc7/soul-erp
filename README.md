@@ -172,5 +172,15 @@ Certificate lifecycle supports:
 ## Development Notes
 
 - The app uses role-based layout templates and Stimulus controllers for portal interactions.
-- Charts are rendered with Chart.js loaded from CDN
+- Charts are rendered with Chart.js loaded from CDN.
 - Attendance, response, and feedback workflows enforce uniqueness and date-based constraints at model level.
+
+### Key Architectural & Recent Improvements
+
+- **Local/Sandboxed PDF Rendering**: Fonts (`Noto Sans Malayalam`, `Noto Sans Arabic`, and `Noto Sans Devanagari`) are embedded directly into `app/views/layouts/pdf.html.erb` as Base64-encoded `@font-face` blocks. This ensures that Malayalam, Devanagari, and Arabic characters render correctly in sandboxed production environments without making external HTTP requests.
+- **Robust Assignment Submissions**:
+  - Validations for question response presence are skipped if a question is not marked as `required`.
+  - Submissions run inside a database transaction. If validation fails, errors are collected, a rollback is executed, and the take assignment page is re-rendered with status `:unprocessable_entity`.
+  - User progress is preserved upon validation failure by reading values from the `@responses` parameter hash across all question types (text, checkbox, radio, rating, dropdown, date/time, yes/no).
+- **Aligned Turbo Stream Layouts**: The `_daily_assignments.html.erb` partial was modernized to use the premium glassmorphism layout, ensuring consistent styling when loading date-specific assignments asynchronously.
+- **Improved Test suite & Fixtures**: Rebuilt and corrected legacy fixture files (`trainers.yml`, `users.yml`, `training_programs.yml`, `participants.yml`, etc.) to run cleanly with `bin/rails test`.
