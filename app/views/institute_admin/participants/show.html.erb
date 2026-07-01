@@ -2,7 +2,7 @@
   <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Participant Details</h5>
     <div>
-      <%= link_to edit_institute_admin_participant_path(@user), class: "btn btn-outline-custom me-2" do %>
+      <%= link_to edit_institute_admin_participant_path(@participant), class: "btn btn-outline-custom me-2" do %>
         <i class="bi bi-pencil"></i> Edit
       <% end %>
       <%= link_to institute_admin_participants_path, class: "btn btn-outline-custom" do %>
@@ -143,8 +143,8 @@
             <h6 class="text-muted mb-2">Guardian For</h6>
             <% if @participant.guardian_for_participant %>
               <p class="fs-5">
-                <%= link_to @participant.guardian_for_participant.user.full_name, 
-                    institute_admin_participant_path(@participant.guardian_for_participant.user) %>
+                <%= link_to @participant.guardian_for_participant.user.full_name,
+                    institute_admin_participant_path(@participant.guardian_for_participant) %>
                 <small class="text-muted d-block">
                   Section: <%= @participant.guardian_for_participant.section&.name || "Not Assigned" %>
                 </small>
@@ -181,4 +181,4 @@
       </div>
     <% end %>
   </div>
-</div> 
+</div>
