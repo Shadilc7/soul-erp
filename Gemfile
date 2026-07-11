@@ -67,8 +67,6 @@ end
 
 gem "devise", "~> 4.9"
 
-gem "pry-byebug"
-
 gem "prawn"
 gem "prawn-table"
 

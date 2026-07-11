@@ -33,7 +33,7 @@ The app is role-driven and provides dedicated portals for:
 
 ## Tech Stack
 
-- Ruby `3.3.5`
+- Ruby `3.4.10`
 - Rails `8.0.x`
 - PostgreSQL (`pg` gem)
 - Devise authentication
@@ -63,7 +63,7 @@ Core entities in the data model:
 
 ### 1. Prerequisites
 
-- Ruby `3.3.5`
+- Ruby `3.4.10`
 - Bundler
 - PostgreSQL running locally
 
