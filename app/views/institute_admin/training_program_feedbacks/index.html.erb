@@ -9,8 +9,23 @@
       </div>
       <p class="text-muted small mb-0">Review feedback submissions, rating distributions, and user comments.</p>
     </div>
-    <div class="header-actions">
-      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium w-100 w-md-auto justify-content-center" do %>
+    <div class="header-actions d-flex flex-wrap align-items-center gap-2">
+      <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, format: :pdf, rating: params[:rating], participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
+                  target: "_blank", 
+                  title: "Export PDF Report using Ferrum" do %>
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+        <span>Export PDF</span>
+      <% end %>
+
+      <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, format: :csv, rating: params[:rating], participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
+                  title: "Export CSV Data" do %>
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        <span>Export CSV</span>
+      <% end %>
+
+      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" do %>
         <i class="bi bi-arrow-left"></i>
         <span>Back to Programs</span>
       <% end %>
@@ -73,52 +88,100 @@
 
   <!-- FILLED MULTI-CRITERIA FILTER TOOLBAR -->
   <div class="filled-toolbar mb-4">
-    <div class="row g-3 align-items-center">
-      <!-- Search Input -->
-      <div class="col-12 col-md-5 col-lg-4">
-        <div class="input-group">
-          <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
-          <input type="text" id="feedbackSearchInput" class="form-control border-start-0 ps-0" placeholder="Search name or comment..." onkeyup="filterFeedbacksTable()">
+    <%= form_with url: institute_admin_training_program_training_program_feedbacks_path(@training_program), method: :get, local: true, id: "feedbackFilterForm" do |f| %>
+      <div class="row g-3 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" id="feedbackSearchInput" class="form-control border-start-0 ps-0" placeholder="Search name or comment..." value="<%= params[:search] %>">
+          </div>
+        </div>
+
+        <!-- User Type Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person-badge"></i></span>
+            <select name="participant_type" id="userTypeFilter" class="form-select border-start-0 ps-0" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:participant_type].blank? %>>All User Types</option>
+              <option value="student" <%= 'selected' if params[:participant_type] == 'student' %>>Student</option>
+              <option value="guardian" <%= 'selected' if params[:participant_type] == 'guardian' %>>Guardian</option>
+              <option value="employee" <%= 'selected' if params[:participant_type] == 'employee' %>>Employee</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Rating Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-warning border-end-0"><i class="bi bi-star-fill"></i></span>
+            <select name="rating" id="ratingFilter" class="form-select border-start-0 ps-0" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:rating].blank? %>>All Ratings</option>
+              <option value="5" <%= 'selected' if params[:rating] == '5' %>>5 Stars ★★★★★</option>
+              <option value="4" <%= 'selected' if params[:rating] == '4' %>>4 Stars ★★★★☆</option>
+              <option value="3" <%= 'selected' if params[:rating] == '3' %>>3 Stars ★★★☆☆</option>
+              <option value="2" <%= 'selected' if params[:rating] == '2' %>>2 Stars ★★☆☆☆</option>
+              <option value="1" <%= 'selected' if params[:rating] == '1' %>>1 Star ★☆☆☆☆</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submitted Date Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-calendar-event"></i></span>
+            <select name="date_range" id="dateRangeFilter" class="form-select border-start-0 ps-0" onchange="toggleCustomDateInputs(this)">
+              <option value="all" <%= 'selected' if params[:date_range].blank? || params[:date_range] == 'all' %>>All Submitted Dates</option>
+              <option value="today" <%= 'selected' if params[:date_range] == 'today' %>>Today</option>
+              <option value="yesterday" <%= 'selected' if params[:date_range] == 'yesterday' %>>Yesterday</option>
+              <option value="last_7_days" <%= 'selected' if params[:date_range] == 'last_7_days' %>>Last 7 Days</option>
+              <option value="this_month" <%= 'selected' if params[:date_range] == 'this_month' %>>This Month</option>
+              <option value="custom" <%= 'selected' if params[:date_range] == 'custom' %>>Custom Date Range</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submit & Reset Action Buttons -->
+        <div class="col-12 col-md-2 col-lg-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+            <i class="bi bi-funnel-fill"></i>
+            <span>Filter</span>
+          </button>
+          <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program), class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center px-2.5", title: "Reset All Filters" do %>
+            <i class="bi bi-arrow-counterclockwise"></i>
+          <% end %>
         </div>
       </div>
 
-      <!-- User Type Filter -->
-      <div class="col-12 col-sm-6 col-md-3 col-lg-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person-badge"></i></span>
-          <select id="userTypeFilter" class="form-select border-start-0 ps-0" onchange="filterFeedbacksTable()">
-            <option value="all" <%= 'selected' if params[:participant_type].blank? %>>All User Types</option>
-            <option value="student" <%= 'selected' if params[:participant_type] == 'student' %>>Student</option>
-            <option value="guardian" <%= 'selected' if params[:participant_type] == 'guardian' %>>Guardian</option>
-            <option value="employee" <%= 'selected' if params[:participant_type] == 'employee' %>>Employee</option>
-          </select>
+      <!-- CUSTOM DATE RANGE INPUTS (Collapsible row when Custom is selected) -->
+      <div id="customDateRow" class="row g-3 mt-1 align-items-center <%= 'd-none' unless params[:date_range] == 'custom' %>">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 offset-lg-7">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white text-muted">From</span>
+            <input type="date" name="start_date" id="startDateInput" class="form-control" value="<%= params[:start_date] %>">
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white text-muted">To</span>
+            <input type="date" name="end_date" id="endDateInput" class="form-control" value="<%= params[:end_date] %>">
+          </div>
         </div>
       </div>
-
-      <!-- Rating Filter -->
-      <div class="col-12 col-sm-6 col-md-3 col-lg-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white text-warning border-end-0"><i class="bi bi-star-fill"></i></span>
-          <select id="ratingFilter" class="form-select border-start-0 ps-0" onchange="filterFeedbacksTable()">
-            <option value="all" <%= 'selected' if params[:rating].blank? %>>All Star Ratings</option>
-            <option value="5" <%= 'selected' if params[:rating] == '5' %>>5 Stars ★★★★★</option>
-            <option value="4" <%= 'selected' if params[:rating] == '4' %>>4 Stars ★★★★☆</option>
-            <option value="3" <%= 'selected' if params[:rating] == '3' %>>3 Stars ★★★☆☆</option>
-            <option value="2" <%= 'selected' if params[:rating] == '2' %>>2 Stars ★★☆☆☆</option>
-            <option value="1" <%= 'selected' if params[:rating] == '1' %>>1 Star ★☆☆☆☆</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Reset Action Button -->
-      <div class="col-12 col-md-1 col-lg-2 text-md-end">
-        <button type="button" class="btn btn-outline-secondary w-100 d-inline-flex align-items-center justify-content-center gap-1" onclick="resetFeedbackFilters()" title="Reset Filters">
-          <i class="bi bi-arrow-counterclockwise"></i>
-          <span>Reset</span>
-        </button>
-      </div>
-    </div>
+    <% end %>
   </div>
+
+  <script>
+    function toggleCustomDateInputs(selectElem) {
+      const customRow = document.getElementById('customDateRow');
+      if (selectElem.value === 'custom') {
+        customRow.classList.remove('d-none');
+      } else {
+        customRow.classList.add('d-none');
+        selectElem.form.submit();
+      }
+    }
+  </script>
 
   <!-- MAIN DATA CARD -->
   <div class="table-card">
