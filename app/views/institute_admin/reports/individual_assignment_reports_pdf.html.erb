@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Individual Assignment Report</title>
+  <style>
+    <%= Rails.root.join('app/assets/stylesheets/assignment_pdf_report.css').read.html_safe %>
+  </style>
+</head>
+<body>
+  <!-- HERO HEADER -->
+  <div class="report-header">
+    <h1><%= current_institute.name %></h1>
+    <p>Individual Assignment Submissions Report</p>
+    <div class="report-meta">
+      Generated on <%= Time.current.strftime("%B %d, %Y at %I:%M %p") %> | Participant: <%= @participant_title || "All Participants" %> | Section: <%= @section_title || "All Sections" %>
+    </div>
+  </div>
+
+  <!-- KPI SUMMARY GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Assigned</div>
+      <div class="kpi-value primary"><%= @total_assigned_count || 0 %></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Submitted</div>
+      <div class="kpi-value success"><%= @submitted_count || 0 %></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pending</div>
+      <div class="kpi-value warning"><%= @pending_count || 0 %></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Completion Rate</div>
+      <div class="kpi-value info"><%= @participation_rate || 0 %>%</div>
+    </div>
+  </div>
+
+  <!-- REPORT DATA TABLE -->
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th style="width: 35px;" class="text-center">#</th>
+        <th style="width: 80px;">Date</th>
+        <th>Participant Name</th>
+        <th style="width: 100px;">Section</th>
+        <th>Assignment Title</th>
+        <th style="width: 90px;" class="text-center">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @report_rows.blank? %>
+        <tr>
+          <td colspan="6" class="text-center py-4" style="color: #64748b;">
+            No individual assignment records match the selected filter criteria.
+          </td>
+        </tr>
+      <% else %>
+        <% @report_rows.each_with_index do |row, index| %>
+          <tr>
+            <td class="text-center" style="font-weight: 600; color: #64748b;"><%= index + 1 %></td>
+            <td><%= row[:date].present? ? row[:date].strftime("%b %d, %Y") : "-" %></td>
+            <td style="font-weight: 600; color: #0f172a;">
+              <%= row[:participant_name] %>
+              <% if row[:participant_email].present? %>
+                <br><span style="font-size: 8px; color: #64748b; font-weight: normal;"><%= row[:participant_email] %></span>
+              <% end %>
+            </td>
+            <td><span class="badge badge-section"><%= row[:section_name] %></span></td>
+            <td><%= row[:assignment_title] %></td>
+            <td class="text-center">
+              <% if row[:status] == 'submitted' %>
+                <span class="badge badge-submitted">Submitted</span>
+              <% else %>
+                <span class="badge badge-pending">Pending</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+
+  <!-- REPORT FOOTER -->
+  <div class="report-footer">
+    <div>Soul ERP — Institute Academic Reporting System</div>
+    <div>Page 1 of 1</div>
+  </div>
+</body>
+</html>

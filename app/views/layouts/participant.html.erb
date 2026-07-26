@@ -833,7 +833,7 @@
 
           <!-- Institute logo + name (left of topbar) -->
           <span class="d-flex align-items-center gap-2 ms-2 ms-lg-0">
-            <% if current_institute&.logo&.attached? %>
+            <% if current_institute&.logo&.attached? && ActiveStorage::Blob.service.exist?(current_institute.logo.key) %>
               <%= image_tag rails_blob_path(current_institute.logo, only_path: true),
                     alt: "#{current_institute.name} logo",
                     style: "height:30px;max-width:80px;object-fit:contain;border-radius:4px;" %>
