@@ -1,55 +1,300 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom py-3">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Feedbacks for <%= @training_program.title %></h5>
-      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary" do %>
-        <i class="bi bi-arrow-left"></i> Back to Programs
+<div class="container-fluid p-0">
+
+  <!-- PAGE HEADER -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom gap-3">
+    <div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <h3 class="fw-bold text-dark mb-0">Program Feedbacks</h3>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold"><%= @training_program.title %></span>
+      </div>
+      <p class="text-muted small mb-0">Review feedback submissions, rating distributions, and user comments.</p>
+    </div>
+    <div class="header-actions">
+      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium w-100 w-md-auto justify-content-center" do %>
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Programs</span>
       <% end %>
     </div>
   </div>
 
-  <div class="card-body">
-    <% if @feedbacks.any? %>
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Participant</th>
-              <th>Rating</th>
-              <th>Feedback</th>
-              <th>Submitted On</th>
+  <!-- KPI SUMMARY ROW -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Total Feedbacks</div>
+          <div class="h4 fw-bold mb-0 text-dark"><%= @total_feedbacks_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-primary">
+          <i class="bi bi-chat-square-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Average Rating</div>
+          <div class="h4 fw-bold mb-0 text-warning d-flex align-items-center gap-1">
+            <span><%= @avg_rating %></span>
+            <i class="bi bi-star-fill fs-6"></i>
+          </div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-warning">
+          <i class="bi bi-star"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">5-Star Reviews</div>
+          <div class="h4 fw-bold mb-0 text-success"><%= @five_star_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-success">
+          <i class="bi bi-hand-thumbs-up"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">User Categories</div>
+          <div class="h4 fw-bold mb-0 text-info"><%= @participant_types_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-info">
+          <i class="bi bi-people"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILLED MULTI-CRITERIA FILTER TOOLBAR -->
+  <div class="filled-toolbar mb-4">
+    <div class="row g-3 align-items-center">
+      <!-- Search Input -->
+      <div class="col-12 col-md-5 col-lg-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" id="feedbackSearchInput" class="form-control border-start-0 ps-0" placeholder="Search name or comment..." onkeyup="filterFeedbacksTable()">
+        </div>
+      </div>
+
+      <!-- User Type Filter -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person-badge"></i></span>
+          <select id="userTypeFilter" class="form-select border-start-0 ps-0" onchange="filterFeedbacksTable()">
+            <option value="all" <%= 'selected' if params[:participant_type].blank? %>>All User Types</option>
+            <option value="student" <%= 'selected' if params[:participant_type] == 'student' %>>Student</option>
+            <option value="guardian" <%= 'selected' if params[:participant_type] == 'guardian' %>>Guardian</option>
+            <option value="employee" <%= 'selected' if params[:participant_type] == 'employee' %>>Employee</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Rating Filter -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-warning border-end-0"><i class="bi bi-star-fill"></i></span>
+          <select id="ratingFilter" class="form-select border-start-0 ps-0" onchange="filterFeedbacksTable()">
+            <option value="all" <%= 'selected' if params[:rating].blank? %>>All Star Ratings</option>
+            <option value="5" <%= 'selected' if params[:rating] == '5' %>>5 Stars ★★★★★</option>
+            <option value="4" <%= 'selected' if params[:rating] == '4' %>>4 Stars ★★★★☆</option>
+            <option value="3" <%= 'selected' if params[:rating] == '3' %>>3 Stars ★★★☆☆</option>
+            <option value="2" <%= 'selected' if params[:rating] == '2' %>>2 Stars ★★☆☆☆</option>
+            <option value="1" <%= 'selected' if params[:rating] == '1' %>>1 Star ★☆☆☆☆</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Reset Action Button -->
+      <div class="col-12 col-md-1 col-lg-2 text-md-end">
+        <button type="button" class="btn btn-outline-secondary w-100 d-inline-flex align-items-center justify-content-center gap-1" onclick="resetFeedbackFilters()" title="Reset Filters">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          <span>Reset</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN DATA CARD -->
+  <div class="table-card">
+    <!-- Table Header Info Bar -->
+    <div class="table-card-header d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-chat-left-text text-primary fs-5"></i>
+        <h6 class="fw-bold mb-0 text-dark">Feedback Responses</h6>
+      </div>
+      <span class="badge bg-light text-secondary border px-2.5 py-1" id="visibleFeedbackCount">
+        Showing <%= @feedbacks.count %> of <%= @total_feedbacks_count %>
+      </span>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-responsive">
+      <table class="table align-middle mb-0" id="feedbacksTable">
+        <thead class="table-light">
+          <tr>
+            <th style="min-width: 200px;">Participant</th>
+            <th style="min-width: 140px;">User Type</th>
+            <th style="min-width: 130px;">Rating</th>
+            <th style="min-width: 320px;">Feedback Comment</th>
+            <th style="min-width: 160px;">Submitted On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @feedbacks.empty? %>
+            <tr id="emptyStateRow">
+              <td colspan="5" class="text-center py-5">
+                <div class="text-muted mb-2"><i class="bi bi-chat-square-quote fs-1"></i></div>
+                <h6 class="fw-bold text-dark mb-1">No Feedback Records Found</h6>
+                <p class="text-muted small mb-0">No feedbacks match the current filters or none have been submitted yet.</p>
+              </td>
             </tr>
-          </thead>
-          <tbody>
+          <% else %>
             <% @feedbacks.each do |feedback| %>
-              <tr>
+              <% 
+                participant = feedback.participant
+                user = participant&.user
+                user_type = participant&.participant_type.presence || 'student'
+                content_length = feedback.content.to_s.length
+              %>
+              <tr class="feedback-row" 
+                  data-name="<%= user&.full_name.to_s.downcase %>" 
+                  data-content="<%= feedback.content.to_s.downcase %>" 
+                  data-user-type="<%= user_type.downcase %>" 
+                  data-rating="<%= feedback.rating %>">
+                
+                <!-- PARTICIPANT COLUMN -->
                 <td>
-                  <%= link_to institute_admin_participant_path(feedback.participant) do %>
-                    <%= feedback.participant.user.full_name %>
-                  <% end %>
-                </td>
-                <td>
-                  <div class="d-flex">
-                    <% feedback.rating.times do %>
-                      <i class="bi bi-star-fill text-warning"></i>
-                    <% end %>
-                    <% (5 - feedback.rating).times do %>
-                      <i class="bi bi-star text-muted"></i>
-                    <% end %>
+                  <div class="d-flex align-items-center gap-2.5">
+                    <div class="institute-avatar bg-light text-primary border fw-bold">
+                      <%= user&.first_name.to_s.first.upcase.presence || "P" %>
+                    </div>
+                    <div>
+                      <%= link_to institute_admin_participant_path(participant), class: "fw-semibold text-dark text-decoration-none hover-primary d-block" do %>
+                        <%= user&.full_name.presence || "Unknown User" %>
+                      <% end %>
+                      <% if user&.email.present? %>
+                        <div class="text-muted small" style="font-size: 0.75rem;"><%= user.email %></div>
+                      <% elsif participant&.phone_number.present? %>
+                        <div class="text-muted small" style="font-size: 0.75rem;"><%= participant.phone_number %></div>
+                      <% end %>
+                    </div>
                   </div>
                 </td>
-                <td><%= feedback.content %></td>
-                <td><%= feedback.created_at.strftime("%b %d, %Y %I:%M %p") %></td>
+
+                <!-- USER TYPE COLUMN -->
+                <td>
+                  <% case user_type.to_s.downcase %>
+                  <% when 'student' %>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-mortarboard-fill me-1"></i> Student
+                    </span>
+                  <% when 'guardian' %>
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-person-heart me-1"></i> Guardian
+                    </span>
+                  <% when 'employee' %>
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-briefcase-fill me-1"></i> Employee
+                    </span>
+                  <% else %>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-person-fill me-1"></i> <%= user_type.titleize %>
+                    </span>
+                  <% end %>
+                </td>
+
+                <!-- RATING COLUMN -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="d-inline-flex gap-1 text-warning" style="font-size: 0.9rem;">
+                      <% feedback.rating.times do %>
+                        <i class="bi bi-star-fill"></i>
+                      <% end %>
+                      <% (5 - feedback.rating).times do %>
+                        <i class="bi bi-star text-light-emphasis"></i>
+                      <% end %>
+                    </div>
+                    <span class="fw-bold small text-secondary"><%= feedback.rating %>.0</span>
+                  </div>
+                </td>
+
+                <!-- FULL FEEDBACK COMMENT COLUMN (MULTI-LINE WRAPPED) -->
+                <td class="feedback-comment-cell">
+                  <div class="p-3 bg-light rounded-3 border-start border-3 border-primary shadow-xs position-relative">
+                    <i class="bi bi-quote text-primary opacity-50 fs-5 d-block mb-1"></i>
+                    
+                    <div class="feedback-full-text text-dark fs-6" style="white-space: pre-wrap; word-break: break-word; line-height: 1.6;">
+                      <%= feedback.content %>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- SUBMITTED ON COLUMN -->
+                <td class="text-muted small">
+                  <div class="d-flex align-items-center gap-1 text-dark fw-medium">
+                    <i class="bi bi-calendar-event text-secondary"></i>
+                    <span><%= feedback.created_at.strftime("%b %d, %Y") %></span>
+                  </div>
+                  <span class="d-block text-muted ms-3" style="font-size: 0.725rem;"><%= feedback.created_at.strftime("%I:%M %p") %></span>
+                </td>
               </tr>
             <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <div class="text-center py-4">
-        <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
-        <p class="text-muted mb-0">No feedbacks submitted yet for this training program.</p>
-      </div>
-    <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div> 
+</div>
+
+<!-- LIVE CLIENT-SIDE FILTERING SCRIPT -->
+<script>
+  function filterFeedbacksTable() {
+    const searchVal = document.getElementById('feedbackSearchInput').value.toLowerCase().trim();
+    const typeVal = document.getElementById('userTypeFilter').value.toLowerCase();
+    const ratingVal = document.getElementById('ratingFilter').value;
+
+    const rows = document.querySelectorAll('#feedbacksTable tbody tr.feedback-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const content = row.getAttribute('data-content') || '';
+      const userType = row.getAttribute('data-user-type') || '';
+      const rating = row.getAttribute('data-rating') || '';
+
+      const matchesSearch = !searchVal || name.includes(searchVal) || content.includes(searchVal);
+      const matchesType = (typeVal === 'all') || (userType === typeVal);
+      const matchesRating = (ratingVal === 'all') || (rating === ratingVal);
+
+      if (matchesSearch && matchesType && matchesRating) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    const emptyState = document.getElementById('emptyStateRow');
+    if (emptyState) {
+      emptyState.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    const countBadge = document.getElementById('visibleFeedbackCount');
+    if (countBadge) {
+      countBadge.textContent = `Showing ${visibleCount} of <%= @total_feedbacks_count %>`;
+    }
+  }
+
+  function resetFeedbackFilters() {
+    document.getElementById('feedbackSearchInput').value = '';
+    document.getElementById('userTypeFilter').value = 'all';
+    document.getElementById('ratingFilter').value = 'all';
+    filterFeedbacksTable();
+  }
+</script>
