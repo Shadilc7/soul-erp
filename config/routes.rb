@@ -150,7 +150,7 @@ Rails.application.routes.draw do
           get "assignment_reports_menu"
           get "assignment_reports"
           get "individual_assignment_reports"
-          post "export_async"
+          match "export_async", via: [ :get, :post, :delete ]
           get "export_status"
           get "download_export"
           get "feedback_reports_menu"

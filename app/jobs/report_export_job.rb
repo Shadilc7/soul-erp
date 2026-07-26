@@ -12,20 +12,35 @@ class ReportExportJob < ApplicationJob
     controller.instance_variable_set(:@current_institute, institute)
     controller.define_singleton_method(:current_institute) { institute }
 
-    # Stage 2: Data Aggregation & Calculations (40%)
-    controller.send(:fetch_individual_assignment_reports)
-    report_rows = controller.instance_variable_get(:@report_rows) || []
-    total_rows = [ report_rows.size, 1 ].max
-
-    update_progress(export_token, "processing", 40, "Aggregated #{total_rows} report records...")
-
-    # Stage 3: Rendering PDF or Formatting CSV (70%)
-    if report_type == "individual_assignment_pdf"
+    case report_type
+    when "assignment_pdf"
+      controller.send(:fetch_assignment_reports)
+      report_rows = controller.instance_variable_get(:@report_rows) || []
+      update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} assignment records...")
+      update_progress(export_token, "processing", 70, "Rendering PDF layout with Ferrum...")
+      file_data = controller.send(:generate_assignment_pdf_with_ferrum)
+      content_type = "application/pdf"
+      filename = "assignment_report_#{Date.current.strftime('%Y%m%d')}.pdf"
+    when "assignment_csv"
+      controller.send(:fetch_assignment_reports)
+      report_rows = controller.instance_variable_get(:@report_rows) || []
+      update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} assignment records...")
+      update_progress(export_token, "processing", 75, "Formatting CSV spreadsheet output...")
+      file_data = controller.send(:generate_assignment_csv)
+      content_type = "text/csv"
+      filename = "assignment_report_#{Date.current.strftime('%Y%m%d')}.csv"
+    when "individual_assignment_pdf"
+      controller.send(:fetch_individual_assignment_reports)
+      report_rows = controller.instance_variable_get(:@report_rows) || []
+      update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} report records...")
       update_progress(export_token, "processing", 70, "Rendering PDF layout with Ferrum...")
       file_data = controller.send(:generate_individual_assignment_pdf_with_ferrum)
       content_type = "application/pdf"
       filename = "individual_assignment_report_#{Date.current.strftime('%Y%m%d')}.pdf"
-    else
+    else # "individual_assignment_csv"
+      controller.send(:fetch_individual_assignment_reports)
+      report_rows = controller.instance_variable_get(:@report_rows) || []
+      update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} report records...")
       update_progress(export_token, "processing", 75, "Formatting CSV spreadsheet output...")
       file_data = controller.send(:generate_individual_assignment_csv)
       content_type = "text/csv"

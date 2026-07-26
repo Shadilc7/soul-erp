@@ -1086,9 +1086,10 @@ module InstituteAdmin
       CSV.generate(headers: true) do |csv|
         if params[:submission_status] == "submitted"
           # Generate submitted feedbacks CSV
-          csv << [ "Date", "Participant", "Section", "Training Program", "Rating", "Content" ]
-          @submitted_feedbacks.each do |feedback|
+          csv << [ "#", "Date", "Participant", "Section", "Training Program", "Rating", "Content" ]
+          @submitted_feedbacks.each_with_index do |feedback, index|
             csv << [
+              index + 1,
               feedback.created_at.strftime("%B %d, %Y"),
               feedback.participant.full_name,
               feedback.participant.section.name,
@@ -1099,9 +1100,10 @@ module InstituteAdmin
           end
         else
           # Generate not submitted feedbacks CSV
-          csv << [ "Participant", "Section", "Email" ]
-          @not_submitted_participants.each do |participant|
+          csv << [ "#", "Participant", "Section", "Email" ]
+          @not_submitted_participants.each_with_index do |participant, index|
             csv << [
+              index + 1,
               participant.full_name,
               participant.section.name,
               participant.email
@@ -1115,10 +1117,11 @@ module InstituteAdmin
       require "csv"
 
       CSV.generate(headers: true) do |csv|
-        csv << [ "Date", "Participant", "Email", "Section", "Assignment", "Status" ]
+        csv << [ "#", "Date", "Participant", "Email", "Section", "Assignment", "Status" ]
 
-        (@report_rows || []).each do |row|
+        (@report_rows || []).each_with_index do |row, index|
           csv << [
+            index + 1,
             row[:date].present? ? row[:date].strftime("%B %d, %Y") : "Pending",
             row[:participant_name],
             row[:participant_email],
