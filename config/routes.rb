@@ -109,6 +109,9 @@ Rails.application.routes.draw do
         member do
           post :duplicate
         end
+        collection do
+          post :reorder
+        end
       end
       resources :question_sets
       resources :training_programs do

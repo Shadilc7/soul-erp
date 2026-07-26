@@ -3,7 +3,55 @@ module InstituteAdmin
     before_action :set_question, only: [ :show, :edit, :update, :destroy ]
 
     def index
-      @questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      @institute = current_institute
+      @all_questions = @institute.questions.includes(:options).order(position: :asc, created_at: :desc)
+      @questions = @all_questions
+      @question_types = Question.question_types.keys
+
+      if params[:search].present?
+        query = "%#{params[:search].downcase}%"
+        @questions = @questions.where("LOWER(title) LIKE :q OR LOWER(display_name) LIKE :q", q: query)
+      end
+
+      if params[:question_type].present?
+        @questions = @questions.where(question_type: params[:question_type])
+      end
+
+      if params[:status].present?
+        is_active = params[:status] == "active"
+        @questions = @questions.where(active: is_active)
+      end
+
+      # KPI Metrics (Calculated on filtered set)
+      @total_questions_count = @questions.count
+      @active_questions_count = @questions.where(active: true).count
+      @types_count = @questions.pluck(:question_type).compact.uniq.count
+      @required_questions_count = @questions.where(required: true).count
+
+      respond_to do |format|
+        format.html
+        format.csv {
+          send_data generate_questions_csv(@questions),
+                    filename: "questions_bank_#{Date.current}.csv",
+                    type: "text/csv"
+        }
+        format.pdf {
+          pdf_data = generate_questions_pdf_with_ferrum
+          send_data pdf_data,
+                    filename: "questions_bank_#{Date.current}.pdf",
+                    type: "application/pdf",
+                    disposition: "inline"
+        }
+      end
+    end
+
+    def reorder
+      if params[:question_ids].is_a?(Array)
+        params[:question_ids].each_with_index do |id, index|
+          current_institute.questions.where(id: id).update_all(position: index + 1)
+        end
+      end
+      render json: { status: "success", message: "Question order updated successfully." }
     end
 
     def show
@@ -180,6 +228,7 @@ module InstituteAdmin
         :question_type,
         :required,
         :max_rating,
+        :position,
         options_attributes: [ :id, :text, :correct, :_destroy ]
       )
     end
@@ -202,6 +251,73 @@ module InstituteAdmin
         if option.text.blank? && !option.marked_for_destruction?
           option.text = "Option #{Time.now.to_i}"
         end
+      end
+    end
+
+    def generate_questions_csv(questions)
+      require "csv"
+      CSV.generate(headers: true) do |csv|
+        csv << [ "#", "Title", "Display Name", "Question Type", "Status", "Required", "Options Count", "Created Date" ]
+        questions.each_with_index do |q, idx|
+          csv << [
+            idx + 1,
+            q.title,
+            q.display_name.presence || "Not Set",
+            q.question_type.titleize,
+            q.active? ? "Active" : "Inactive",
+            q.required? ? "Yes" : "No",
+            q.options.count,
+            q.created_at.strftime("%Y-%m-%d %H:%M")
+          ]
+        end
+      end
+    end
+
+    def generate_questions_pdf_with_ferrum
+      require "ferrum"
+      require "base64"
+
+      html_content = render_to_string(
+        template: "institute_admin/questions/pdf",
+        formats: [ :html ],
+        layout: false,
+        locals: {
+          questions: @questions,
+          total_count: @total_questions_count,
+          active_count: @active_questions_count,
+          types_count: @types_count,
+          required_count: @required_questions_count,
+          institute: current_institute
+        }
+      )
+
+      browser = Ferrum::Browser.new(
+        timeout: 15,
+        window_size: [ 1200, 1600 ],
+        browser_options: {
+          "no-sandbox": nil,
+          "disable-gpu": nil,
+          "disable-dev-shm-usage": nil
+        }
+      )
+
+      begin
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          landscape: false,
+          print_background: true
+        )
+
+        if pdf_data.present? && !pdf_data.start_with?("%PDF")
+          pdf_data = Base64.decode64(pdf_data)
+        end
+
+        pdf_data
+      ensure
+        browser.quit
       end
     end
   end
