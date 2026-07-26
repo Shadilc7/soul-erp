@@ -13,20 +13,41 @@
       <h3 class="fw-bold text-dark mb-0" style="letter-spacing: -0.3px;">Individual Assignment Reports</h3>
     </div>
     <div class="header-actions d-flex flex-wrap align-items-center gap-2">
+      <!-- Standard Instant Exports -->
       <%= link_to individual_assignment_reports_institute_admin_reports_path(format: :pdf, specific_date: params[:specific_date], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date], section_id: params[:section_id], participant_id: params[:participant_id], assignment_id: params[:assignment_id], submission_status: params[:submission_status], search: params[:search]), 
                   class: "btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
                   target: "_blank", 
-                  title: "Export PDF Report" do %>
+                  title: "Export Instant PDF Report" do %>
         <i class="bi bi-file-earmark-pdf-fill"></i>
-        <span>Export PDF</span>
+        <span>PDF</span>
       <% end %>
 
       <%= link_to individual_assignment_reports_institute_admin_reports_path(format: :csv, specific_date: params[:specific_date], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date], section_id: params[:section_id], participant_id: params[:participant_id], assignment_id: params[:assignment_id], submission_status: params[:submission_status], search: params[:search]), 
                   class: "btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
-                  title: "Export CSV Data" do %>
+                  title: "Export Instant CSV Data" do %>
         <i class="bi bi-file-earmark-spreadsheet-fill"></i>
-        <span>Export CSV</span>
+        <span>CSV</span>
       <% end %>
+
+      <!-- Background Job Async Export Buttons -->
+      <div class="btn-group shadow-sm rounded-3" role="group">
+        <button type="button" 
+                class="btn btn-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 fw-medium border-0" 
+                style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);"
+                onclick="startAsyncExport('individual_assignment_pdf');"
+                title="Generate PDF in Background Job">
+          <i class="bi bi-cpu-fill text-warning"></i>
+          <span>Async PDF</span>
+        </button>
+        <button type="button" 
+                class="btn btn-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 fw-medium border-0 border-start border-indigo-subtle" 
+                style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);"
+                onclick="startAsyncExport('individual_assignment_csv');"
+                title="Generate CSV in Background Job">
+          <i class="bi bi-file-earmark-spreadsheet-fill text-success"></i>
+          <span>Async CSV</span>
+        </button>
+      </div>
 
       <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1.5 rounded-3 px-3 py-2 fw-medium" do %>
         <i class="bi bi-arrow-left"></i>
@@ -278,7 +299,118 @@
   </div>
 </div>
 
+<!-- ASYNC BACKGROUND EXPORT PROGRESS MODAL -->
+<div class="modal fade" id="asyncExportModal" tabindex="-1" aria-labelledby="asyncExportModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="background: #ffffff;">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-3 rounded-3" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+            <i class="bi bi-cpu-fill fs-3" id="asyncExportIcon"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="asyncExportModalLabel">Exporting Report</h5>
+          </div>
+        </div>
+        <button type="button" class="btn-close" aria-label="Close" id="asyncExportCloseBtn" onclick="minimizeAsyncModal();"></button>
+      </div>
+
+      <div class="modal-body p-4 text-center">
+        <!-- Progress Percentage Header -->
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <span class="text-secondary small fw-semibold" id="asyncExportStage">Initializing worker...</span>
+          <span class="badge bg-indigo text-white fw-bold px-2.5 py-1 rounded-pill" id="asyncExportPercent" style="background-color: #6366f1;">0%</span>
+        </div>
+
+        <!-- Animated Modern Progress Bar -->
+        <div class="progress rounded-pill mb-3" style="height: 12px; background-color: #f1f5f9;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" 
+               id="asyncProgressBar" 
+               role="progressbar" 
+               style="width: 0%; background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%); transition: width 0.4s ease;"></div>
+        </div>
+
+        <p class="text-muted small mb-0" id="asyncExportMessage">Your request has been enqueued. Please wait while the background worker builds the export file.</p>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-center">
+        <a href="#" id="asyncDownloadBtn" class="btn btn-success d-none d-inline-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow-sm fw-semibold">
+          <i class="bi bi-cloud-arrow-down-fill fs-5"></i>
+          <span>Download File Now</span>
+        </a>
+        <button type="button" class="btn btn-outline-secondary px-3 py-1.5 rounded-3 small text-muted d-inline-flex align-items-center gap-1.5" id="asyncCancelBtn" onclick="minimizeAsyncModal();">
+          <span>Minimize Window</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MINIMIZED FLOATING PROGRESS WIDGET -->
+<div id="minimizedProgressWidget" 
+     class="d-none position-fixed bottom-0 end-0 m-4 p-3 bg-white rounded-4 shadow-lg border d-flex align-items-center gap-3" 
+     style="z-index: 1065; min-width: 300px; border-color: rgba(99, 102, 241, 0.25) !important;">
+  <div class="p-2 rounded-3 text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);" id="minimizedIconBox">
+    <i class="bi bi-cpu-fill fs-5" id="minimizedIcon"></i>
+  </div>
+  <div class="flex-grow-1 overflow-hidden">
+    <div class="d-flex align-items-center justify-content-between">
+      <span class="fw-bold text-dark small" id="minimizedTitle">Exporting...</span>
+      <span class="badge bg-indigo text-white fw-bold px-2 py-0.5 rounded-pill small" id="minimizedPercent" style="background-color: #6366f1;">0%</span>
+    </div>
+    <div class="progress rounded-pill mt-1" style="height: 6px; background-color: #f1f5f9;">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" id="minimizedProgressBar" style="width: 0%; background: #6366f1; transition: width 0.4s ease;"></div>
+    </div>
+  </div>
+  <button type="button" class="btn btn-sm btn-light rounded-circle p-1.5 lh-1 shadow-sm" title="Maximize Progress Window" onclick="maximizeAsyncModal();">
+    <i class="bi bi-arrows-angle-expand text-primary fs-6"></i>
+  </button>
+  <button type="button" class="btn btn-sm btn-light rounded-circle p-1.5 lh-1 text-muted shadow-sm" title="Dismiss Widget" onclick="dismissWidget();">
+    <i class="bi bi-x-lg"></i>
+  </button>
+</div>
+
 <script>
+  let pollInterval = null;
+
+  function showAsyncModal() {
+    const modalElement = document.getElementById('asyncExportModal');
+    if (!modalElement) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        modal.show();
+        return;
+      } catch (e) { console.warn('Bootstrap modal init error, using fallback', e); }
+    }
+    modalElement.classList.add('show');
+    modalElement.style.display = 'block';
+    document.body.classList.add('modal-open');
+    let backdrop = document.getElementById('customModalBackdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'customModalBackdrop';
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+  }
+
+  function hideAsyncModal() {
+    const modalElement = document.getElementById('asyncExportModal');
+    if (!modalElement) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+      } catch (e) { /* ignore */ }
+    }
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    const backdrop = document.getElementById('customModalBackdrop');
+    if (backdrop) backdrop.remove();
+  }
+
   function toggleCustomDates(value) {
     const customRow = document.getElementById('customDateRow');
     if (customRow) {
@@ -316,5 +448,113 @@
         console.error('Error fetching participants:', error);
         form.submit();
       });
+  }
+
+  function minimizeAsyncModal() {
+    hideAsyncModal();
+    const widget = document.getElementById('minimizedProgressWidget');
+    if (widget) widget.classList.remove('d-none');
+  }
+
+  function maximizeAsyncModal() {
+    dismissWidget();
+    showAsyncModal();
+  }
+
+  function dismissWidget() {
+    const widget = document.getElementById('minimizedProgressWidget');
+    if (widget) widget.classList.add('d-none');
+  }
+
+  function startAsyncExport(exportType) {
+    // Reset UI state
+    document.getElementById('asyncProgressBar').style.width = '5%';
+    document.getElementById('asyncExportPercent').innerText = '5%';
+    document.getElementById('asyncExportStage').innerText = 'Enqueuing Background Job...';
+    document.getElementById('asyncExportMessage').innerText = 'Enqueuing background export request...';
+    document.getElementById('asyncDownloadBtn').classList.add('d-none');
+    document.getElementById('asyncExportIcon').className = 'bi bi-cpu-fill fs-3';
+
+    document.getElementById('minimizedProgressBar').style.width = '5%';
+    document.getElementById('minimizedPercent').innerText = '5%';
+    document.getElementById('minimizedIcon').className = 'bi bi-cpu-fill fs-5';
+
+    showAsyncModal();
+
+    // Collect current filter parameters
+    const form = document.getElementById('individualReportsForm');
+    const formData = new FormData(form || undefined);
+    formData.append('export_type', exportType);
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('/institute_admin/reports/export_async', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.export_token) {
+        pollExportStatus(data.export_token);
+      } else {
+        document.getElementById('asyncExportStage').innerText = 'Error';
+        document.getElementById('asyncExportMessage').innerText = 'Failed to enqueue export job.';
+      }
+    })
+    .catch(err => {
+      console.error('Export enqueue error:', err);
+      document.getElementById('asyncExportStage').innerText = 'Error';
+      document.getElementById('asyncExportMessage').innerText = 'Network error while triggering export.';
+    });
+  }
+
+  function pollExportStatus(exportToken) {
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = setInterval(() => {
+      fetch(`/institute_admin/reports/export_status?export_token=${exportToken}`)
+        .then(res => res.json())
+        .then(data => {
+          const percent = data.progress || 0;
+          document.getElementById('asyncProgressBar').style.width = `${percent}%`;
+          document.getElementById('asyncExportPercent').innerText = `${percent}%`;
+          document.getElementById('asyncExportMessage').innerText = data.message || 'Processing...';
+
+          document.getElementById('minimizedProgressBar').style.width = `${percent}%`;
+          document.getElementById('minimizedPercent').innerText = `${percent}%`;
+
+          if (data.status === 'processing') {
+            document.getElementById('asyncExportStage').innerText = 'Background Processing...';
+          } else if (data.status === 'completed') {
+            clearInterval(pollInterval);
+            document.getElementById('asyncExportStage').innerText = 'Export Ready!';
+            document.getElementById('asyncExportIcon').className = 'bi bi-check-circle-fill text-success fs-3';
+            document.getElementById('minimizedIcon').className = 'bi bi-check-circle-fill text-success fs-5';
+            
+            const downloadBtn = document.getElementById('asyncDownloadBtn');
+            downloadBtn.href = data.download_url;
+            downloadBtn.classList.remove('d-none');
+
+            // Trigger direct download automatically
+            window.location.href = data.download_url;
+
+            // Automatically dismiss both modal & widget after brief completion visual indicator
+            setTimeout(() => {
+              hideAsyncModal();
+              dismissWidget();
+            }, 1200);
+          } else if (data.status === 'failed') {
+            clearInterval(pollInterval);
+            document.getElementById('asyncExportStage').innerText = 'Failed';
+            document.getElementById('asyncExportIcon').className = 'bi bi-exclamation-triangle-fill text-danger fs-3';
+            document.getElementById('minimizedIcon').className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
+          }
+        })
+        .catch(err => console.error('Error polling status:', err));
+    }, 600);
   }
 </script>

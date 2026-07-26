@@ -461,6 +461,43 @@ module InstituteAdmin
       end
     end
 
+    def export_async
+      export_token = SecureRandom.hex(12)
+      report_type = params[:export_type] || "individual_assignment_pdf"
+
+      Rails.cache.write("export_progress_#{export_token}", { status: "queued", progress: 5, message: "Enqueuing background export..." }, expires_in: 30.minutes)
+
+      ReportExportJob.perform_later(export_token, report_type, params.permit!.to_h, current_institute.id)
+
+      render json: { export_token: export_token, status: "queued" }
+    end
+
+    def export_status
+      export_token = params[:export_token]
+      progress_info = Rails.cache.read("export_progress_#{export_token}") || { status: "queued", progress: 5, message: "Preparing job..." }
+
+      if progress_info[:status] == "completed"
+        progress_info[:download_url] = download_export_institute_admin_reports_path(export_token: export_token)
+      end
+
+      render json: progress_info
+    end
+
+    def download_export
+      export_token = params[:export_token]
+      file_info = Rails.cache.read("export_file_#{export_token}")
+
+      if file_info.present?
+        response.headers["Content-Length"] = file_info[:data].bytesize.to_s
+        send_data file_info[:data],
+                  filename: file_info[:filename],
+                  type: file_info[:content_type],
+                  disposition: "attachment"
+      else
+        redirect_to individual_assignment_reports_institute_admin_reports_path, alert: "Export file expired or not found."
+      end
+    end
+
     def certificate_stats
       # Get certificates for current institute only
       base_query = IndividualCertificate.joins(:certificate_configuration)
