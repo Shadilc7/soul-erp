@@ -1,342 +1,229 @@
-<% content_for :styles do %>
-  <style>
-    .institutes-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 16px 16px 0 0;
-      padding: 2rem;
-      color: white;
-      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
-    }
-    .institutes-header h4 {
-      font-weight: 600;
-      margin: 0;
-      font-size: 1.75rem;
-    }
-    .institutes-header .subtitle {
-      opacity: 0.9;
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
-    }
-    .btn-add-institute {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      backdrop-filter: blur(10px);
-      font-weight: 500;
-      padding: 0.625rem 1.5rem;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-    .btn-add-institute:hover {
-      background: rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      color: white;
-    }
-    .institutes-card {
-      border: none;
-      border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
-    }
-    .institutes-table {
-      margin: 0;
-    }
-    .institutes-table thead th {
-      background: #f8f9fa;
-      border: none;
-      color: #495057;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.5px;
-      padding: 1rem 1.25rem;
-    }
-    .institutes-table tbody td {
-      padding: 1.25rem;
-      vertical-align: middle;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .institutes-table tbody tr {
-      transition: all 0.2s ease;
-    }
-    .institutes-table tbody tr:hover {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
-      transform: scale(1.005);
-    }
-    .institute-name {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 1rem;
-    }
-    .institute-code {
-      font-family: 'Courier New', monospace;
-      background: #f8f9fa;
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #667eea;
-      font-weight: 600;
-    }
-    .institute-contact {
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-    .status-badge {
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: 500;
-      font-size: 0.8rem;
-      letter-spacing: 0.3px;
-    }
-    .status-active {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-    }
-    .status-inactive {
-      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-      color: white;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .action-btn {
-      width: 40px;
-      height: 40px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      border: none;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .action-btn::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.4s, height 0.4s;
-    }
-    .action-btn:hover::before {
-      width: 100px;
-      height: 100px;
-    }
-    .action-btn i {
-      font-size: 16px;
-      position: relative;
-      z-index: 1;
-    }
-    .btn-view {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    .btn-view:hover {
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      transform: translateY(-2px);
-      color: white;
-    }
-    .btn-edit {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-    .btn-edit:hover {
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
-      transform: translateY(-2px);
-      color: white;
-    }
+<div class="container-fluid p-0">
 
-    /* Mobile Responsive Styles */
-    @media (max-width: 768px) {
-      .institutes-header {
-        padding: 1.25rem;
-        border-radius: 12px 12px 0 0;
-      }
-      
-      .institutes-header h4 {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .institutes-header .subtitle {
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-      }
-      
-      .institutes-header > div {
-        flex-direction: column;
-        align-items: flex-start !important;
-      }
-      
-      .btn-add-institute {
-        width: 100%;
-        justify-content: center;
-        padding: 0.75rem 1rem;
-        margin-top: 0.75rem;
-      }
-      
-      /* Card view for mobile instead of table */
-      .institutes-table thead {
-        display: none;
-      }
-      
-      .institutes-table tbody tr {
-        display: block;
-        margin-bottom: 1rem;
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
-      
-      .institutes-table tbody tr:hover {
-        transform: none;
-        background: white;
-      }
-      
-      .institutes-table tbody td {
-        display: block;
-        padding: 0.5rem 0;
-        border: none;
-        text-align: left !important;
-      }
-      
-      .institutes-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #6c757d;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-      
-      .institutes-table tbody td:first-child {
-        padding-top: 0;
-      }
-      
-      .institutes-table tbody td:last-child {
-        padding-bottom: 0;
-        border-bottom: none;
-      }
-      
-      .institute-name {
-        font-size: 1.1rem;
-        margin-top: 0.25rem;
-      }
-      
-      .institute-code {
-        display: inline-block;
-        margin-top: 0.25rem;
-      }
-      
-      .institute-contact {
-        margin-top: 0.25rem;
-      }
-      
-      .status-badge {
-        display: inline-block;
-        margin-top: 0.25rem;
-      }
-      
-      .action-buttons {
-        justify-content: flex-start !important;
-        margin-top: 0.5rem;
-      }
-      
-      .action-btn {
-        width: 44px;
-        height: 44px;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .institutes-header {
-        padding: 1rem;
-      }
-      
-      .institutes-header h4 {
-        font-size: 1.1rem;
-      }
-      
-      .institutes-card {
-        border-radius: 12px;
-      }
-    }
-  </style>
-<% end %>
-
-<div class="institutes-card">
-  <div class="institutes-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h4 class="mb-1">Institutes Management</h4>
-        <div class="subtitle"><i class="bi bi-buildings me-2"></i>Manage all institutes in the system</div>
-      </div>
-      <%= link_to new_admin_institute_path, class: "btn btn-add-institute" do %>
-        <i class="bi bi-plus-lg me-2"></i> Add New Institute
+  <!-- STANDARD PAGE HEADER (Title on left, CTA Top Right) -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">Institutes Directory</h3>
+      <p class="text-muted small mb-0">Manage multi-tenant institutes, tenant codes, and administrative access.</p>
+    </div>
+    <div class="header-actions">
+      <%= link_to new_admin_institute_path, class: "btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 shadow-sm fw-medium px-3 py-2 rounded-3 w-100 w-sm-auto" do %>
+        <i class="bi bi-plus-lg"></i>
+        <span>Register New Institute</span>
       <% end %>
     </div>
   </div>
 
-  <div class="card-body p-0">
+  <!-- KPI SUMMARY ROW -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Total Institutes</div>
+          <div class="h4 fw-bold mb-0 text-dark"><%= @institutes.count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-primary">
+          <i class="bi bi-buildings"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Active Institutes</div>
+          <div class="h4 fw-bold mb-0 text-success"><%= @institutes.count(&:active?) %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Inactive / Suspended</div>
+          <div class="h4 fw-bold mb-0 text-warning"><%= @institutes.count { |i| !i.active? } %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-warning">
+          <i class="bi bi-pause-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Institute Types</div>
+          <div class="h4 fw-bold mb-0 text-info"><%= @institutes.map(&:institution_type).reject(&:blank?).uniq.count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-info">
+          <i class="bi bi-diagram-3"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN TABLE CARD -->
+  <div class="table-card">
+    <!-- Header Toolbar: Search & Filter -->
+    <div class="table-card-header d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+      <div class="search-group">
+        <i class="bi bi-search"></i>
+        <input type="text" id="instituteSearchInput" class="form-control" placeholder="Search institute by name or code..." onkeyup="filterInstitutesTable()">
+      </div>
+
+      <div class="d-flex align-items-center gap-2 status-filter-wrapper">
+        <span class="text-muted small fw-medium d-none d-sm-inline">Status:</span>
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-secondary active" onclick="setStatusFilter('all', this)">All</button>
+          <button type="button" class="btn btn-outline-success" onclick="setStatusFilter('active', this)">Active</button>
+          <button type="button" class="btn btn-outline-danger" onclick="setStatusFilter('inactive', this)">Inactive</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
     <div class="table-responsive">
-      <table class="table institutes-table">
+      <table class="table institutes-table align-middle" id="institutesTable">
         <thead>
           <tr>
-            <th>Institute Name</th>
-            <th>Code</th>
+            <th>Institute</th>
+            <th>Tenant Code</th>
+            <th>Type</th>
             <th>Contact</th>
             <th>Status</th>
-            <th class="text-center">Actions</th>
+            <th class="text-end pe-4">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <% @institutes.each do |institute| %>
+          <% if @institutes.empty? %>
             <tr>
-              <td data-label="Institute Name">
-                <div class="institute-name">
-                  <i class="bi bi-building me-2 text-muted"></i><%= institute.name %>
-                </div>
-              </td>
-              <td data-label="Code">
-                <span class="institute-code"><%= institute.code %></span>
-              </td>
-              <td data-label="Contact">
-                <div class="institute-contact">
-                  <i class="bi bi-telephone me-2"></i><%= institute.contact_number %>
-                </div>
-              </td>
-              <td data-label="Status">
-                <span class="status-badge <%= institute.active? ? 'status-active' : 'status-inactive' %>">
-                  <i class="bi <%= institute.active? ? 'bi-check-circle' : 'bi-x-circle' %> me-1"></i>
-                  <%= institute.active? ? 'Active' : 'Inactive' %>
-                </span>
-              </td>
-              <td data-label="Actions">
-                <div class="action-buttons justify-content-center">
-                  <%= link_to admin_institute_path(institute), class: "action-btn btn-view", title: "View Details" do %>
-                    <i class="bi bi-eye"></i>
-                  <% end %>
-                  <%= link_to edit_admin_institute_path(institute), class: "action-btn btn-edit", title: "Edit Institute" do %>
-                    <i class="bi bi-pencil"></i>
-                  <% end %>
-                </div>
+              <td colspan="6" class="text-center py-5">
+                <div class="text-muted mb-2"><i class="bi bi-buildings fs-1"></i></div>
+                <h6 class="fw-bold text-dark mb-1">No Institutes Found</h6>
+                <p class="text-muted small mb-3">Get started by creating your first institute.</p>
+                <%= link_to new_admin_institute_path, class: "btn btn-primary btn-sm rounded-2 px-3" do %>
+                  <i class="bi bi-plus-lg me-1"></i> Add Institute
+                <% end %>
               </td>
             </tr>
+          <% else %>
+            <% @institutes.each do |institute| %>
+              <tr class="institute-row" data-name="<%= institute.name.downcase %>" data-code="<%= (institute.code || '').downcase %>" data-status="<%= institute.active? ? 'active' : 'inactive' %>">
+                <td>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="institute-avatar">
+                      <%= institute.name.presence ? institute.name.strip.first.upcase : 'I' %>
+                    </div>
+                    <div>
+                      <div class="fw-semibold text-dark mb-0" style="font-size: 0.9rem;"><%= institute.name %></div>
+                      <div class="text-muted small"><%= institute.email.presence || 'No email provided' %></div>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="code-pill"><%= institute.code %></span>
+                </td>
+
+                <td>
+                  <% if institute.institution_type.present? %>
+                    <span class="badge bg-light text-secondary border px-2 py-1 font-monospace" style="font-size: 0.75rem;">
+                      <%= institute.institution_type.titleize %>
+                    </span>
+                  <% else %>
+                    <span class="text-muted small">—</span>
+                  <% end %>
+                </td>
+
+                <td>
+                  <div class="small text-dark fw-medium">
+                    <%= institute.contact_number.presence || 'N/A' %>
+                  </div>
+                  <% if institute.owner_name.present? %>
+                    <div class="text-muted extra-small" style="font-size: 0.75rem;">
+                      Owner: <%= institute.owner_name %>
+                    </div>
+                  <% end %>
+                </td>
+
+                <td>
+                  <% if institute.active? %>
+                    <span class="status-badge-active">
+                      <i class="bi bi-check-circle-fill"></i> Active
+                    </span>
+                  <% else %>
+                    <span class="status-badge-inactive">
+                      <i class="bi bi-x-circle-fill"></i> Inactive
+                    </span>
+                  <% end %>
+                </td>
+
+                <td class="text-end pe-4">
+                  <div class="d-flex align-items-center justify-content-end gap-1">
+                    <!-- Login as Admin -->
+                    <%= link_to login_as_institute_admin_admin_institute_path(institute), 
+                                data: { turbo_method: :post, bs_toggle: "tooltip" }, 
+                                class: "action-icon-link impersonate", 
+                                title: "Login as Institute Admin" do %>
+                      <i class="bi bi-box-arrow-in-right"></i>
+                    <% end %>
+
+                    <!-- View -->
+                    <%= link_to admin_institute_path(institute), 
+                                data: { bs_toggle: "tooltip" }, 
+                                class: "action-icon-link", 
+                                title: "View Details" do %>
+                      <i class="bi bi-eye"></i>
+                    <% end %>
+
+                    <!-- Edit -->
+                    <%= link_to edit_admin_institute_path(institute), 
+                                data: { bs_toggle: "tooltip" }, 
+                                class: "action-icon-link", 
+                                title: "Edit Institute" do %>
+                      <i class="bi bi-pencil"></i>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
           <% end %>
         </tbody>
       </table>
     </div>
   </div>
-</div> 
+
+</div>
+
+<!-- Filter JavaScript -->
+<script>
+  let currentStatusFilter = 'all';
+
+  function filterInstitutesTable() {
+    const searchVal = document.getElementById('instituteSearchInput').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.institute-row');
+
+    rows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const code = row.getAttribute('data-code') || '';
+      const status = row.getAttribute('data-status') || '';
+
+      const matchesSearch = name.includes(searchVal) || code.includes(searchVal);
+      const matchesStatus = (currentStatusFilter === 'all') || (status === currentStatusFilter);
+
+      row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+    });
+  }
+
+  function setStatusFilter(status, btnElement) {
+    currentStatusFilter = status;
+    const btnGroup = btnElement.parentElement;
+    btnGroup.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    filterInstitutesTable();
+  }
+</script>
+ 
