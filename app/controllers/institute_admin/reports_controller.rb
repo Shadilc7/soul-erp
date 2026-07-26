@@ -736,6 +736,29 @@ module InstituteAdmin
       end
     end
 
+    def self.ferrum_browser
+      @ferrum_browser ||= Ferrum::Browser.new(
+        timeout: 15,
+        window_size: [ 1200, 1600 ],
+        browser_options: {
+          "no-sandbox": nil,
+          "disable-gpu": nil,
+          "disable-dev-shm-usage": nil
+        }
+      )
+    end
+
+    def self.reset_ferrum_browser!
+      if @ferrum_browser
+        begin
+          @ferrum_browser.quit
+        rescue StandardError
+          nil
+        end
+        @ferrum_browser = nil
+      end
+    end
+
     def generate_assignment_pdf_with_ferrum
       html_content = render_to_string(
         template: "institute_admin/reports/assignment_reports_pdf",
@@ -746,15 +769,7 @@ module InstituteAdmin
         }
       )
 
-      browser = Ferrum::Browser.new(
-        timeout: 15,
-        window_size: [ 1200, 1600 ],
-        browser_options: {
-          "no-sandbox": nil,
-          "disable-gpu": nil,
-          "disable-dev-shm-usage": nil
-        }
-      )
+      browser = self.class.ferrum_browser
 
       begin
         base64_html = Base64.strict_encode64(html_content)
@@ -766,13 +781,18 @@ module InstituteAdmin
           print_background: true
         )
 
-        if pdf_data.present? && !pdf_data.start_with?("%PDF")
-          pdf_data = Base64.decode64(pdf_data)
-        end
-
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
         pdf_data
-      ensure
-        browser.quit
+      rescue StandardError => e
+        Rails.logger.error("Ferrum PDF error: #{e.message}. Re-initializing Chrome instance...")
+        self.class.reset_ferrum_browser!
+        browser = self.class.ferrum_browser
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(format: :A4, landscape: false, print_background: true)
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
       end
     end
 
@@ -1342,15 +1362,7 @@ module InstituteAdmin
         }
       )
 
-      browser = Ferrum::Browser.new(
-        timeout: 15,
-        window_size: [ 1200, 1600 ],
-        browser_options: {
-          "no-sandbox": nil,
-          "disable-gpu": nil,
-          "disable-dev-shm-usage": nil
-        }
-      )
+      browser = self.class.ferrum_browser
 
       begin
         base64_html = Base64.strict_encode64(html_content)
@@ -1362,13 +1374,18 @@ module InstituteAdmin
           print_background: true
         )
 
-        if pdf_data.present? && !pdf_data.start_with?("%PDF")
-          pdf_data = Base64.decode64(pdf_data)
-        end
-
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
         pdf_data
-      ensure
-        browser.quit
+      rescue StandardError => e
+        Rails.logger.error("Ferrum PDF error: #{e.message}. Re-initializing Chrome instance...")
+        self.class.reset_ferrum_browser!
+        browser = self.class.ferrum_browser
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(format: :A4, landscape: false, print_background: true)
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
       end
     end
 
