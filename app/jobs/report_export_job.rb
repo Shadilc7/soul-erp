@@ -17,7 +17,7 @@ class ReportExportJob < ApplicationJob
       controller.send(:fetch_assignment_reports)
       report_rows = controller.instance_variable_get(:@report_rows) || []
       update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} assignment records...")
-      update_progress(export_token, "processing", 70, "Rendering PDF layout with Ferrum...")
+      update_progress(export_token, "processing", 70, "Rendering PDF layout...")
       file_data = controller.send(:generate_assignment_pdf_with_ferrum)
       content_type = "application/pdf"
       filename = "assignment_report_#{Date.current.strftime('%Y%m%d')}.pdf"
@@ -33,7 +33,7 @@ class ReportExportJob < ApplicationJob
       controller.send(:fetch_individual_assignment_reports)
       report_rows = controller.instance_variable_get(:@report_rows) || []
       update_progress(export_token, "processing", 40, "Aggregated #{report_rows.size} report records...")
-      update_progress(export_token, "processing", 70, "Rendering PDF layout with Ferrum...")
+      update_progress(export_token, "processing", 70, "Rendering PDF layout...")
       file_data = controller.send(:generate_individual_assignment_pdf_with_ferrum)
       content_type = "application/pdf"
       filename = "individual_assignment_report_#{Date.current.strftime('%Y%m%d')}.pdf"

@@ -13,7 +13,7 @@
       <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, format: :pdf, rating: params[:rating], participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
                   class: "btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
                   target: "_blank", 
-                  title: "Export PDF Report using Ferrum" do %>
+                  title: "Export PDF Report" do %>
         <i class="bi bi-file-earmark-pdf-fill"></i>
         <span>Export PDF</span>
       <% end %>
