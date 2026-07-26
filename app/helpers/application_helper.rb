@@ -1,4 +1,5 @@
 module ApplicationHelper
+  include Pagy::Frontend
   def active_link?(controller_name)
     case controller_name
     when "dashboard"

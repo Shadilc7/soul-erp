@@ -594,6 +594,97 @@ body {
   color: #ffffff !important;
 }
 
+/* Sleek Modern Breadcrumb System */
+.breadcrumb-modern {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+}
+
+.breadcrumb-modern .breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.breadcrumb-modern .breadcrumb-item a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb-modern .breadcrumb-item a:hover {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.breadcrumb-modern .breadcrumb-item.active {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
+  content: "›";
+  font-size: 1rem;
+  line-height: 1;
+  color: #cbd5e1;
+  padding: 0 0.45rem;
+  float: none;
+}
+
+/* Mobile Responsive Optimizations for ERP Reports */
+@media (max-width: 767.98px) {
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .header-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    font-size: 0.8125rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .filled-toolbar {
+    padding: 0.85rem !important;
+  }
+
+  .filled-toolbar .input-group {
+    width: 100%;
+  }
+
+  .table-card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pagy-bootstrap-nav {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 0.25rem;
+  }
+
+  .pagy-bootstrap-nav .pagination {
+    flex-wrap: nowrap;
+    margin-bottom: 0;
+  }
+}
+
 
 
 
