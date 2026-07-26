@@ -76,7 +76,7 @@ module InstituteAdmin
     def generate_feedbacks_csv(feedbacks)
       require "csv"
       CSV.generate(headers: true) do |csv|
-        csv << [ "SI No", "Participant Name", "Email", "Phone", "User Type", "Rating", "Feedback Comment", "Submitted Date" ]
+        csv << [ "#", "Participant Name", "Email", "Phone", "User Type", "Rating", "Feedback Comment", "Submitted Date" ]
         feedbacks.each_with_index do |feedback, idx|
           participant = feedback.participant
           user = participant&.user

@@ -201,6 +201,7 @@
       <table class="table align-middle mb-0" id="feedbacksTable">
         <thead class="table-light">
           <tr>
+            <th style="width: 50px;" class="text-center">#</th>
             <th style="min-width: 200px;">Participant</th>
             <th style="min-width: 140px;">User Type</th>
             <th style="min-width: 130px;">Rating</th>
@@ -211,14 +212,14 @@
         <tbody>
           <% if @feedbacks.empty? %>
             <tr id="emptyStateRow">
-              <td colspan="5" class="text-center py-5">
+              <td colspan="6" class="text-center py-5">
                 <div class="text-muted mb-2"><i class="bi bi-chat-square-quote fs-1"></i></div>
                 <h6 class="fw-bold text-dark mb-1">No Feedback Records Found</h6>
                 <p class="text-muted small mb-0">No feedbacks match the current filters or none have been submitted yet.</p>
               </td>
             </tr>
           <% else %>
-            <% @feedbacks.each do |feedback| %>
+            <% @feedbacks.each_with_index do |feedback, idx| %>
               <% 
                 participant = feedback.participant
                 user = participant&.user
@@ -231,6 +232,9 @@
                   data-user-type="<%= user_type.downcase %>" 
                   data-rating="<%= feedback.rating %>">
                 
+                <!-- SL NO COLUMN -->
+                <td class="text-center fw-semibold text-secondary" style="font-size: 0.85rem;"><%= idx + 1 %></td>
+
                 <!-- PARTICIPANT COLUMN -->
                 <td>
                   <div class="d-flex align-items-center gap-2.5">
