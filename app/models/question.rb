@@ -1,5 +1,9 @@
 class Question < ApplicationRecord
-  belongs_to :institute
+  belongs_to :institute, optional: true
+  belongs_to :question_category, optional: true
+
+  has_many :question_bundle_items, dependent: :destroy
+  has_many :question_bundles, through: :question_bundle_items
   has_many :question_set_items, dependent: :restrict_with_error
   has_many :question_sets, through: :question_set_items
   has_many :options, dependent: :destroy
@@ -47,6 +51,19 @@ class Question < ApplicationRecord
   # Add a method to determine if the question is a rating
   def rating?
     question_type == "rating"
+  end
+
+  def duration_days
+    return 0 unless start_date && end_date
+    (end_date - start_date).to_i + 1
+  end
+
+  def effective_days_in_bundle(bundle)
+    return duration_days unless start_date && end_date && bundle&.start_date && bundle&.end_date
+    eff_start = [start_date.to_date, bundle.start_date.to_date].max
+    eff_end = [end_date.to_date, bundle.end_date.to_date].min
+    return 0 if eff_start > eff_end
+    (eff_end - eff_start).to_i + 1
   end
 
   private

@@ -1,0 +1,22 @@
+<turbo-stream action="remove" target="bundle_item_<%= @bundle.id %>_<%= @question_id %>">
+</turbo-stream>
+
+<turbo-stream action="replace" target="bundle_count_<%= @bundle.id %>">
+  <template>
+    <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium" id="bundle_count_<%= @bundle.id %>" data-bundle-count-id="<%= @bundle.id %>">
+      <%= @bundle.questions.count %> <%= "question".pluralize(@bundle.questions.count) %>
+    </span>
+  </template>
+</turbo-stream>
+
+<turbo-stream action="remove_attribute" target="question_select_<%= @question_id %>_bundle_<%= @bundle.id %>" attribute="disabled">
+</turbo-stream>
+
+<turbo-stream action="remove" target="q_<%= @question_id %>_b_badge_<%= @bundle.id %>">
+</turbo-stream>
+
+<turbo-stream action="append" target="toast-container">
+  <template>
+    <%= render partial: "admin/question_bundles/toast", formats: [:html], locals: { message: "Question removed from #{@bundle.name}", type: "success" } %>
+  </template>
+</turbo-stream>

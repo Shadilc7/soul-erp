@@ -1,0 +1,30 @@
+<turbo-stream action="append" target="bundle_items_<%= @bundle.id %>">
+  <template>
+    <%= render partial: "admin/question_bundles/bundle_question_item", formats: [:html], locals: { bundle: @bundle, item: @item, idx: @bundle.question_bundle_items.count - 1 } %>
+  </template>
+</turbo-stream>
+
+<turbo-stream action="replace" target="bundle_count_<%= @bundle.id %>">
+  <template>
+    <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium" id="bundle_count_<%= @bundle.id %>" data-bundle-count-id="<%= @bundle.id %>">
+      <%= @bundle.questions.count %> <%= "question".pluralize(@bundle.questions.count) %>
+    </span>
+  </template>
+</turbo-stream>
+
+<turbo-stream action="set_attribute" target="question_select_<%= @question.id %>_bundle_<%= @bundle.id %>" attribute="disabled" value="disabled">
+</turbo-stream>
+
+<turbo-stream action="append" target="question_badges_<%= @question.id %>">
+  <template>
+    <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate bundle-badge-item" id="q_<%= @question.id %>_b_badge_<%= @bundle.id %>" style="max-width: 140px;">
+      <i class="bi bi-layers me-1"></i><%= @bundle.name %>
+    </span>
+  </template>
+</turbo-stream>
+
+<turbo-stream action="append" target="toast-container">
+  <template>
+    <%= render partial: "admin/question_bundles/toast", formats: [:html], locals: { message: "Question added to #{@bundle.name}", type: "success" } %>
+  </template>
+</turbo-stream>

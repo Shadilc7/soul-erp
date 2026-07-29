@@ -1,0 +1,56 @@
+<% idx = local_assigns[:idx] || 0 %>
+<% bundle = local_assigns[:bundle] %>
+<% item = local_assigns[:item] %>
+<% q = item.question %>
+
+<div class="bundle-question-item bg-white p-3 rounded-3 border d-flex align-items-center justify-content-between shadow-sm" 
+     id="bundle_item_<%= bundle.id %>_<%= q.id %>"
+     draggable="true"
+     data-question-id="<%= q.id %>"
+     data-action="dragstart->bundle-builder#bundleItemDragStart dragend->bundle-builder#bundleItemDragEnd"
+     style="cursor: grab;">
+  <div class="d-flex align-items-center gap-2">
+    <!-- 3 Horizontal Lines Drag Handle -->
+    <i class="bi bi-list fs-5 text-secondary me-1 drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
+
+    <!-- Re-order buttons for Bundle items -->
+    <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-1">
+      <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" data-bundle-id="<%= bundle.id %>" data-action="click->bundle-builder#moveBundleItemUp">
+        <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+      </button>
+      <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" data-bundle-id="<%= bundle.id %>" data-action="click->bundle-builder#moveBundleItemDown">
+        <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+      </button>
+    </div>
+
+    <!-- Serial Number Badge -->
+    <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold bundle-item-serial" style="font-size: 0.75rem;">
+      #<%= idx + 1 %>
+    </span>
+
+    <div class="ms-1">
+      <div class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><%= q.title %></div>
+      <div class="d-flex align-items-center gap-2 mt-0.5">
+        <span class="text-muted" style="font-size: 0.75rem;"><%= q.question_type.titleize %></span>
+        <% if q.start_date.present? && q.end_date.present? %>
+          <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">
+            <i class="bi bi-calendar-range me-1"></i><%= q.start_date.strftime("%d/%m/%Y") %> – <%= q.end_date.strftime("%d/%m/%Y") %>
+          </span>
+          <span class="badge bg-secondary-subtle text-dark border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;" title="Total Active Duration">
+            <i class="bi bi-clock-history me-1 text-muted"></i><%= q.duration_days %> days
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" 
+          class="btn btn-sm btn-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-sm ms-2" 
+          style="width: 26px; height: 26px; min-width: 26px;"
+          title="Remove from bundle" 
+          data-bundle-id="<%= bundle.id %>" 
+          data-question-id="<%= q.id %>" 
+          data-action="click->bundle-builder#removeQuestion">
+    <i class="bi bi-x-lg" style="font-size: 0.75rem;"></i>
+  </button>
+</div>

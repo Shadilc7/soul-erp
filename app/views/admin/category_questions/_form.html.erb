@@ -1,0 +1,200 @@
+<%= form_with(model: [:admin, category, question], local: true, data: { controller: "question-form nested-form" }) do |f| %>
+  <% if question.errors.any? %>
+    <div class="alert alert-danger rounded-3">
+      <h6 class="font-weight-bold mb-1">Please fix the following errors:</h6>
+      <ul class="mb-0 ps-3">
+        <% question.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Question Title -->
+  <div class="mb-4">
+    <%= f.label :title, "Question Title / Statement", class: "form-label font-weight-bold" %>
+    <%= f.text_field :title, 
+        class: "form-control form-control-lg rounded-3",
+        placeholder: "Enter question title",
+        required: true,
+        data: { 
+          question_form_target: "titleInput",
+          action: "input->question-form#validateForm"
+        } %>
+  </div>
+
+  <!-- Display Name & Dates Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <%= f.label :display_name, "Display Name (Optional)", class: "form-label font-weight-bold" %>
+      <%= f.text_field :display_name, class: "form-control rounded-3", placeholder: "Short name for reports or certificates" %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.label :start_date, "Start Date", class: "form-label font-weight-bold" %>
+      <%= f.text_field :start_date, class: "form-control rounded-3 datepicker", value: (question.start_date || category.start_date.to_date)&.strftime("%Y-%m-%d") %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.label :end_date, "End Date", class: "form-label font-weight-bold" %>
+      <%= f.text_field :end_date, class: "form-control rounded-3 datepicker", value: (question.end_date || category.end_date.to_date)&.strftime("%Y-%m-%d") %>
+    </div>
+  </div>
+
+  <!-- Question Description -->
+  <div class="mb-4">
+    <%= f.label :description, "Description / Instructions (Optional)", class: "form-label font-weight-bold" %>
+    <%= f.text_area :description, class: "form-control rounded-3", rows: 3, placeholder: "Add helpful instructions or explanations..." %>
+  </div>
+
+  <!-- Question Type Selection -->
+  <div class="mb-4">
+    <%= f.label :question_type, "Question Type", class: "form-label font-weight-bold" %>
+    <%= f.select :question_type,
+        options_for_select(Question.question_types.keys.map { |k| [k.titleize, k] }, question.question_type),
+        { include_blank: "Select Question Type" },
+        { class: "form-select rounded-3", required: true, data: { action: "change->question-form#handleTypeChange" } } %>
+  </div>
+
+  <!-- Rating options (for rating type) -->
+  <div class="row mb-4 rating-options" style="<%= question.rating? ? '' : 'display: none;' %>">
+    <div class="col-md-6">
+      <%= f.label :max_rating, "Maximum Rating (1-10 stars)", class: "form-label font-weight-bold" %>
+      <%= f.select :max_rating, 
+                     options_for_select((1..10).map { |n| [pluralize(n, "star"), n] }, question.max_rating || 5),
+                     {}, 
+                     { class: "form-select rounded-3" } %>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label font-weight-bold">Preview</label>
+      <div class="rating-preview d-flex align-items-center h-100">
+        <% (1..5).each do |_i| %>
+          <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Answer Options -->
+  <div class="answer-options-wrapper mb-4" data-question-form-target="optionsWrapper">
+    <!-- Short Answer Preview -->
+    <div class="answer-preview short-answer d-none p-3 bg-light rounded-3 border" data-question-form-target="shortAnswerPreview">
+      <input type="text" class="form-control" placeholder="Short answer text preview..." disabled>
+    </div>
+
+    <!-- Paragraph Preview -->
+    <div class="answer-preview paragraph d-none p-3 bg-light rounded-3 border" data-question-form-target="paragraphPreview">
+      <textarea class="form-control" rows="3" placeholder="Long answer text preview..." disabled></textarea>
+    </div>
+
+    <!-- Multiple Choice / Checkbox Options -->
+    <div class="options-container p-3 bg-light rounded-3 border" style="<%= question.requires_options? ? '' : 'display: none;' %>" data-question-form-target="optionsSection">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <label class="form-label text-muted small text-uppercase font-weight-bold mb-0">Answer Options</label>
+        <button type="button" class="btn btn-primary btn-sm rounded-3 d-inline-flex align-items-center gap-1" data-action="nested-form#add">
+          <i class="bi bi-plus-lg"></i> Add Option
+        </button>
+      </div>
+
+      <template data-nested-form-target="template">
+        <%= f.fields_for :options, Option.new, child_index: 'NEW_RECORD' do |option| %>
+          <div class="option-item mb-2 p-2 bg-white rounded-3 border">
+            <div class="d-flex align-items-center gap-2">
+              <div class="option-indicator text-muted">
+                <i class="bi bi-circle"></i>
+              </div>
+              <%= option.text_field :text, 
+                  class: "form-control form-control-sm rounded-2",
+                  placeholder: "Option text",
+                  required: true,
+                  value: option.object.text.presence || "Option #{Time.now.to_i}" %>
+              <div class="form-check me-2">
+                <%= option.check_box :correct, class: "form-check-input" %>
+                <label class="form-check-label small text-muted">Correct</label>
+              </div>
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-2" data-action="nested-form#remove">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </template>
+
+      <div data-nested-form-target="items">
+        <%= f.fields_for :options do |option| %>
+          <div class="option-item mb-2 p-2 bg-white rounded-3 border">
+            <div class="d-flex align-items-center gap-2">
+              <div class="option-indicator text-muted">
+                <i class="bi bi-circle"></i>
+              </div>
+              <%= option.text_field :text, 
+                  class: "form-control form-control-sm rounded-2",
+                  placeholder: "Option text",
+                  required: true,
+                  value: option.object.text.presence || "Option #{Time.now.to_i}" %>
+              <div class="form-check me-2">
+                <%= option.check_box :correct, class: "form-check-input" %>
+                <label class="form-check-label small text-muted">Correct</label>
+              </div>
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-2" data-action="nested-form#remove">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Date Preview -->
+    <div class="answer-preview date d-none p-3 bg-light rounded-3 border" data-question-form-target="datePreview">
+      <input type="date" class="form-control" disabled>
+    </div>
+
+    <!-- Time Preview -->
+    <div class="answer-preview time d-none p-3 bg-light rounded-3 border" data-question-form-target="timePreview">
+      <input type="time" class="form-control" disabled>
+    </div>
+
+    <!-- Number Preview -->
+    <div class="answer-preview number d-none p-3 bg-light rounded-3 border" data-question-form-target="numberPreview">
+      <input type="number" class="form-control" disabled placeholder="Enter a number preview...">
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
+        <i class="bi bi-asterisk fs-4 text-primary"></i>
+        <div>
+          <h6 class="mb-0 font-weight-bold">Required Question</h6>
+          <div class="form-check form-switch mt-1">
+            <%= f.check_box :required, class: "form-check-input", data: { action: "change->question-form#toggleRequired" } %>
+            <label class="form-check-label small text-muted">Require responses for this question</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
+        <i class="bi bi-toggle-on fs-4 text-success"></i>
+        <div>
+          <h6 class="mb-0 font-weight-bold">Active Status</h6>
+          <div class="form-check form-switch mt-1">
+            <%= f.check_box :active, class: "form-check-input", id: "activeQuestionSwitch" %>
+            <label class="form-check-label small text-muted", for="activeQuestionSwitch">Active in Question Bank</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+    <%= link_to "Cancel", builder_admin_question_category_path(category), class: "btn btn-outline-secondary rounded-3 px-4" %>
+    <%= f.submit question.new_record? ? "Create Question" : "Update Question", 
+        class: "btn btn-primary rounded-3 px-4",
+        data: { question_form_target: "submitButton" } %>
+  </div>
+<% end %>

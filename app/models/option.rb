@@ -1,5 +1,5 @@
 class Option < ApplicationRecord
-  belongs_to :question
+  belongs_to :question, counter_cache: true
 
   # Add default value at the application level
   attribute :text, :string, default: -> { "Option #{Time.now.to_i}" }

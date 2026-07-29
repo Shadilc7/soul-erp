@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_26_221000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_29_231000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -255,6 +255,39 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_26_221000) do
     t.index ["user_id"], name: "index_participants_on_user_id"
   end
 
+  create_table "question_bundle_items", force: :cascade do |t|
+    t.bigint "question_bundle_id", null: false
+    t.bigint "question_id", null: false
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_bundle_id", "question_id"], name: "idx_qb_items_unique", unique: true
+    t.index ["question_bundle_id"], name: "index_question_bundle_items_on_question_bundle_id"
+    t.index ["question_id"], name: "index_question_bundle_items_on_question_id"
+  end
+
+  create_table "question_bundles", force: :cascade do |t|
+    t.bigint "question_category_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_category_id"], name: "index_question_bundles_on_question_category_id"
+  end
+
+  create_table "question_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.datetime "start_date", null: false
+    t.datetime "end_date", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "question_set_items", force: :cascade do |t|
     t.bigint "question_set_id", null: false
     t.bigint "question_id", null: false
@@ -279,7 +312,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_26_221000) do
   end
 
   create_table "questions", force: :cascade do |t|
-    t.bigint "institute_id", null: false
+    t.bigint "institute_id"
     t.string "title", null: false
     t.text "description"
     t.integer "question_type", default: 0, null: false
@@ -290,7 +323,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_26_221000) do
     t.integer "max_rating", default: 5
     t.string "display_name"
     t.integer "position", default: 0
+    t.bigint "question_category_id"
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "options_count", default: 0, null: false
     t.index ["institute_id"], name: "index_questions_on_institute_id"
+    t.index ["question_category_id"], name: "index_questions_on_question_category_id"
   end
 
   create_table "registration_settings", force: :cascade do |t|
@@ -569,10 +607,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_26_221000) do
   add_foreign_key "participants", "institutes"
   add_foreign_key "participants", "sections"
   add_foreign_key "participants", "users"
+  add_foreign_key "question_bundle_items", "question_bundles"
+  add_foreign_key "question_bundle_items", "questions"
+  add_foreign_key "question_bundles", "question_categories"
   add_foreign_key "question_set_items", "question_sets"
   add_foreign_key "question_set_items", "questions"
   add_foreign_key "question_sets", "institutes"
   add_foreign_key "questions", "institutes"
+  add_foreign_key "questions", "question_categories"
   add_foreign_key "sections", "institutes"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

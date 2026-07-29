@@ -67,6 +67,27 @@ Rails.application.routes.draw do
       resources :training_programs
       resources :assignments
       resource :registration_setting, only: [ :edit, :update ]
+
+      resources :question_categories do
+        member do
+          get :builder
+        end
+        resources :questions, controller: "category_questions" do
+          collection do
+            post :reorder
+          end
+          member do
+            post :duplicate
+          end
+        end
+        resources :bundles, controller: "question_bundles" do
+          member do
+            post :add_question
+            delete "remove_question/:question_id", action: :remove_question, as: :remove_question
+            post :reorder_questions
+          end
+        end
+      end
     end
   end
 
