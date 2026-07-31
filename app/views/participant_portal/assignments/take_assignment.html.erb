@@ -23,149 +23,171 @@
                  method: :post,
                  data: { controller: "assignment-form", turbo: false }) do |f| %>
       <div class="card-body">
-        <% @questions.each do |question| %>
-          <div class="question-item mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <label class="form-label mb-0">
-                <%= question.title %>
-                <% if question.required? %>
-                  <span class="text-danger">*</span>
-                <% end %>
-              </label>
+        <% if @grouped_questions.present? %>
+          <% @grouped_questions.each do |group_name, group_questions| %>
+            <div class="bundle-group mb-4">
+              <% if @grouped_questions.keys.size > 1 || group_name != "Questions" %>
+                <div class="bundle-header bg-light p-3 rounded mb-3 border-start border-4 border-primary d-flex align-items-center justify-content-between">
+                  <h6 class="mb-0 fw-bold text-primary">
+                    <i class="bi bi-collection me-2"></i><%= group_name %>
+                  </h6>
+                  <span class="badge bg-primary bg-opacity-10 text-primary">
+                    <%= pluralize(group_questions.size, 'Question') %>
+                  </span>
+                </div>
+              <% end %>
+
+              <% group_questions.each do |question| %>
+                <div class="question-item mb-4">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <label class="form-label mb-0">
+                      <%= question.title %>
+                      <% if question.required? %>
+                        <span class="text-danger">*</span>
+                      <% end %>
+                    </label>
+                    <% if question.duration_days.present? %>
+                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
+                        <i class="bi bi-clock-history me-1"></i> <%= pluralize(question.duration_days, 'Day') %>
+                      </span>
+                    <% end %>
+                  </div>
+
+                  <% if question.description.present? %>
+                    <div class="mb-2">
+                      <small class="form-text text-muted"><%= question.description %></small>
+                    </div>
+                  <% end %>
+
+                  <% case question.question_type %>
+                  <% when "short_answer" %>
+                    <%= text_field_tag "responses[#{question.id}][answer]",
+                        @responses&.dig(question.id.to_s, "answer"),
+                        class: "form-control",
+                        required: question.required?,
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "paragraph" %>
+                    <%= text_area_tag "responses[#{question.id}][answer]",
+                        @responses&.dig(question.id.to_s, "answer"),
+                        class: "form-control",
+                        rows: 4,
+                        required: question.required?,
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "multiple_choice" %>
+                    <div class="options-list">
+                      <% question.options.each do |option| %>
+                        <div class="form-check">
+                          <%= radio_button_tag "responses[#{question.id}][answer]",
+                              option.text,
+                              @responses&.dig(question.id.to_s, "answer") == option.text,
+                              class: "form-check-input",
+                              required: question.required?,
+                              data: { 
+                                action: "input->assignment-form#validateField",
+                                question_id: question.id
+                              } %>
+                          <%= label_tag nil, option.text, class: "form-check-label" %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% when "checkboxes" %>
+                    <div class="options-list">
+                      <% question.options.each do |option| %>
+                        <% selected_options = @responses&.dig(question.id.to_s, "selected_options") || [] %>
+                        <div class="form-check">
+                          <%= check_box_tag "responses[#{question.id}][selected_options][]",
+                              option.text,
+                              selected_options.include?(option.text),
+                              class: "form-check-input",
+                              required: question.required?,
+                              data: { 
+                                action: "input->assignment-form#validateField",
+                                question_id: question.id
+                              } %>
+                          <%= label_tag nil, option.text, class: "form-check-label" %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% when "dropdown" %>
+                    <%= select_tag "responses[#{question.id}][answer]",
+                        options_for_select(question.options.pluck(:text), @responses&.dig(question.id.to_s, "answer")),
+                        include_blank: "Select an option",
+                        class: "form-select",
+                        required: question.required?,
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "date" %>
+                    <%= date_field_tag "responses[#{question.id}][answer]",
+                        @responses&.dig(question.id.to_s, "answer"),
+                        class: "form-control",
+                        required: question.required?,
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "time" %>
+                    <%= time_field_tag "responses[#{question.id}][answer]",
+                        @responses&.dig(question.id.to_s, "answer"),
+                        class: "form-control",
+                        required: question.required?,
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "number" %>
+                    <%= number_field_tag "responses[#{question.id}][answer]",
+                        @responses&.dig(question.id.to_s, "answer"),
+                        class: "form-control",
+                        required: question.required?,
+                        placeholder: "Enter a number",
+                        data: { 
+                          action: "input->assignment-form#validateField",
+                          question_id: question.id
+                        } %>
+                  <% when "yes_or_no" %>
+                    <div class="yes-no-container">
+                      <div class="form-check form-check-inline">
+                        <%= radio_button_tag "responses[#{question.id}][answer]",
+                            "Yes",
+                            @responses&.dig(question.id.to_s, "answer") == "Yes",
+                            class: "form-check-input",
+                            required: question.required?,
+                            data: { 
+                              action: "input->assignment-form#validateField",
+                              question_id: question.id
+                            } %>
+                        <%= label_tag nil, "Yes", class: "form-check-label" %>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <%= radio_button_tag "responses[#{question.id}][answer]",
+                            "No",
+                            @responses&.dig(question.id.to_s, "answer") == "No",
+                            class: "form-check-input",
+                            required: question.required?,
+                            data: { 
+                              action: "input->assignment-form#validateField",
+                              question_id: question.id
+                            } %>
+                        <%= label_tag nil, "No", class: "form-check-label" %>
+                      </div>
+                    </div>
+                  <% when "rating" %>
+                    <div class="rating-container">
+                      <%= render 'rating_question', question: question %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
-
-            <% if question.description.present? %>
-              <div class="mb-2">
-                <small class="form-text text-muted"><%= question.description %></small>
-              </div>
-            <% end %>
-
-            <% case question.question_type %>
-            <% when "short_answer" %>
-              <%= text_field_tag "responses[#{question.id}][answer]",
-                  @responses&.dig(question.id.to_s, "answer"),
-                  class: "form-control",
-                  required: question.required?,
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "paragraph" %>
-              <%= text_area_tag "responses[#{question.id}][answer]",
-                  @responses&.dig(question.id.to_s, "answer"),
-                  class: "form-control",
-                  rows: 4,
-                  required: question.required?,
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "multiple_choice" %>
-              <div class="options-list">
-                <% question.options.each do |option| %>
-                  <div class="form-check">
-                    <%= radio_button_tag "responses[#{question.id}][answer]",
-                        option.text,
-                        @responses&.dig(question.id.to_s, "answer") == option.text,
-                        class: "form-check-input",
-                        required: question.required?,
-                        data: { 
-                          action: "input->assignment-form#validateField",
-                          question_id: question.id
-                        } %>
-                    <%= label_tag nil, option.text, class: "form-check-label" %>
-                  </div>
-                <% end %>
-              </div>
-            <% when "checkboxes" %>
-              <div class="options-list">
-                <% question.options.each do |option| %>
-                  <% selected_options = @responses&.dig(question.id.to_s, "selected_options") || [] %>
-                  <div class="form-check">
-                    <%= check_box_tag "responses[#{question.id}][selected_options][]",
-                        option.text,
-                        selected_options.include?(option.text),
-                        class: "form-check-input",
-                        required: question.required?,
-                        data: { 
-                          action: "input->assignment-form#validateField",
-                          question_id: question.id
-                        } %>
-                    <%= label_tag nil, option.text, class: "form-check-label" %>
-                  </div>
-                <% end %>
-              </div>
-            <% when "dropdown" %>
-              <%= select_tag "responses[#{question.id}][answer]",
-                  options_for_select(question.options.pluck(:text), @responses&.dig(question.id.to_s, "answer")),
-                  include_blank: "Select an option",
-                  class: "form-select",
-                  required: question.required?,
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "date" %>
-              <%= date_field_tag "responses[#{question.id}][answer]",
-                  @responses&.dig(question.id.to_s, "answer"),
-                  class: "form-control",
-                  required: question.required?,
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "time" %>
-              <%= time_field_tag "responses[#{question.id}][answer]",
-                  @responses&.dig(question.id.to_s, "answer"),
-                  class: "form-control",
-                  required: question.required?,
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "number" %>
-              <%= number_field_tag "responses[#{question.id}][answer]",
-                  @responses&.dig(question.id.to_s, "answer"),
-                  class: "form-control",
-                  required: question.required?,
-                  placeholder: "Enter a number",
-                  data: { 
-                    action: "input->assignment-form#validateField",
-                    question_id: question.id
-                  } %>
-            <% when "yes_or_no" %>
-              <div class="yes-no-container">
-                <div class="form-check form-check-inline">
-                  <%= radio_button_tag "responses[#{question.id}][answer]",
-                      "Yes",
-                      @responses&.dig(question.id.to_s, "answer") == "Yes",
-                      class: "form-check-input",
-                      required: question.required?,
-                      data: { 
-                        action: "input->assignment-form#validateField",
-                        question_id: question.id
-                      } %>
-                  <%= label_tag nil, "Yes", class: "form-check-label" %>
-                </div>
-                <div class="form-check form-check-inline">
-                  <%= radio_button_tag "responses[#{question.id}][answer]",
-                      "No",
-                      @responses&.dig(question.id.to_s, "answer") == "No",
-                      class: "form-check-input",
-                      required: question.required?,
-                      data: { 
-                        action: "input->assignment-form#validateField",
-                        question_id: question.id
-                      } %>
-                  <%= label_tag nil, "No", class: "form-check-label" %>
-                </div>
-              </div>
-            <% when "rating" %>
-              <div class="rating-container">
-                <%= render 'rating_question', question: question %>
-              </div>
-            <% end %>
-          </div>
+          <% end %>
         <% end %>
       </div>
 

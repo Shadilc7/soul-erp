@@ -10,6 +10,104 @@ export default class extends Controller {
     this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
     this.draggedCard = null
     this.draggedBundleItem = null
+    this.initSortable()
+  }
+
+  initSortable() {
+    if (typeof Sortable === "undefined") return
+
+    // 1. Question Pool Sortable for Touch & Mobile
+    const poolContainer = this.element.querySelector("#question-pool-container")
+    if (poolContainer && !poolContainer._sortable) {
+      poolContainer._sortable = Sortable.create(poolContainer, {
+        group: {
+          name: "question_pool",
+          pull: "clone",
+          put: false
+        },
+        animation: 150,
+        sort: true,
+        handle: ".drag-handle",
+        onEnd: async (evt) => {
+          this.updatePoolSerialNumbers()
+          await this.saveQuestionOrder()
+
+          const targetBundle = evt.to.closest('[data-bundle-id]')
+          if (targetBundle && evt.to !== poolContainer) {
+            const questionId = evt.item.dataset.questionId
+            const bundleId = targetBundle.dataset.bundleId
+            const bundleName = targetBundle.dataset.bundleName || ""
+            if (evt.item.parentNode) evt.item.parentNode.removeChild(evt.item)
+            if (questionId && bundleId) {
+              await this.assignQuestionToBundle(questionId, bundleId, bundleName, targetBundle)
+            }
+          }
+        }
+      })
+    }
+
+    // 2. Bundle Items Sortable for touch re-ordering & drop
+    const bundleContainers = this.element.querySelectorAll(".bundle-items-container")
+    bundleContainers.forEach(container => {
+      this.initBundleContainerSortable(container)
+    })
+  }
+
+  initBundleContainerSortable(container) {
+    if (typeof Sortable === "undefined" || !container || container._sortable) return
+
+    container._sortable = Sortable.create(container, {
+      group: {
+        name: "question_pool",
+        pull: false,
+        put: true
+      },
+      animation: 150,
+      handle: ".drag-handle",
+      onAdd: async (evt) => {
+        const itemEl = evt.item
+        const questionId = itemEl.dataset.questionId
+        const bundleId = container.dataset.bundleId
+        const bundleCard = container.closest('[data-bundle-id]')
+        const bundleName = bundleCard?.dataset.bundleName || ""
+
+        if (itemEl.parentNode) itemEl.parentNode.removeChild(itemEl)
+
+        if (questionId && bundleId) {
+          await this.assignQuestionToBundle(questionId, bundleId, bundleName, container)
+        }
+      },
+      onUpdate: async (evt) => {
+        const bundleId = container.dataset.bundleId
+        this.updateBundleSerialNumbers(container)
+        await this.saveBundleQuestionsOrder(bundleId, container)
+      }
+    })
+  }
+
+  switchMobileTab(event) {
+    const targetTab = event.currentTarget.dataset.tabTarget
+    const poolCol = this.element.querySelector("#question-pool-column")
+    const bundlesCol = this.element.querySelector("#bundles-column")
+    const tabBtns = this.element.querySelectorAll("[data-tab-target]")
+
+    tabBtns.forEach(btn => {
+      if (btn.dataset.tabTarget === targetTab) {
+        btn.classList.add("active", "btn-primary")
+        btn.classList.remove("btn-outline-primary")
+      } else {
+        btn.classList.remove("active", "btn-primary")
+        btn.classList.add("btn-outline-primary")
+      }
+    })
+
+    if (targetTab === "pool") {
+      poolCol?.classList.remove("d-none-mobile")
+      bundlesCol?.classList.add("d-none-mobile")
+    } else {
+      poolCol?.classList.add("d-none-mobile")
+      bundlesCol?.classList.remove("d-none-mobile")
+    }
   }
 
   // --- Search & Filter ---
@@ -337,6 +435,15 @@ export default class extends Controller {
 
   // --- Helper Methods ---
   async assignQuestionToBundle(questionId, bundleId, bundleName, zone) {
+    if (!questionId || !bundleId) return
+
+    const lockKey = `${questionId}_${bundleId}`
+    if (!this.pendingAssignments) this.pendingAssignments = new Set()
+    if (this.pendingAssignments.has(lockKey)) {
+      return
+    }
+    this.pendingAssignments.add(lockKey)
+
     try {
       const response = await fetch(`/admin/question_categories/${this.categoryIdValue}/bundles/${bundleId}/add_question`, {
         method: "POST",
@@ -367,6 +474,8 @@ export default class extends Controller {
     } catch (err) {
       console.error(err)
       this.showToast("An error occurred while adding question to bundle", "danger")
+    } finally {
+      this.pendingAssignments.delete(lockKey)
     }
   }
 

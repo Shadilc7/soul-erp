@@ -128,10 +128,35 @@ function initializeBootstrapComponents() {
 }
 
 /**
+ * Clean up lingering Bootstrap modals and backdrops for Turbo
+ */
+function cleanupModalBackdrops() {
+  try {
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.querySelectorAll('.modal.show').forEach(modalEl => {
+      try {
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+      } catch (e) {}
+      modalEl.classList.remove('show');
+      modalEl.style.display = 'none';
+      modalEl.setAttribute('aria-hidden', 'true');
+    });
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  } catch (error) {
+    console.error('Error cleaning up modal backdrops:', error);
+  }
+}
+
+/**
  * Clean up Bootstrap component instances before navigation
  */
 function cleanupBootstrapComponents() {
   try {
+    cleanupModalBackdrops();
+
     // Clean up tooltips
     const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltips.forEach(element => {
@@ -190,6 +215,7 @@ function setupDynamicOptionFields() {
 // Initialize components when Turbo loads a page
 document.addEventListener('turbo:load', () => {
   console.log('Turbo load: Initializing components');
+  cleanupModalBackdrops();
   
   // Use requestAnimationFrame to batch DOM operations and reduce reflows
   requestAnimationFrame(() => {
@@ -203,10 +229,39 @@ document.addEventListener('turbo:load', () => {
 // Reset initialization flag when starting navigation
 document.addEventListener('turbo:visit', () => {
   pageInitialized = false;
+  cleanupModalBackdrops();
+});
+
+// Clean up lingering modal backdrops before Turbo caches page snapshot
+document.addEventListener('turbo:before-cache', () => {
+  cleanupModalBackdrops();
 });
 
 // Clean up components before navigation
 document.addEventListener('turbo:before-render', () => {
   console.log('Cleaning up components before navigation');
   cleanupBootstrapComponents();
+});
+
+// Close modal backdrop automatically when submitting forms inside modals
+document.addEventListener('submit', (e) => {
+  if (e.target.closest('.modal')) {
+    cleanupModalBackdrops();
+  }
+});
+
+// Immediately hide Bootstrap modal instance when Turbo begins form submission
+document.addEventListener('turbo:submit-start', (e) => {
+  const modalEl = e.target.closest('.modal');
+  if (modalEl) {
+    try {
+      const instance = bootstrap.Modal.getInstance(modalEl);
+      if (instance) instance.hide();
+    } catch (err) {}
+    cleanupModalBackdrops();
+  }
+});
+
+document.addEventListener('turbo:submit-end', () => {
+  cleanupModalBackdrops();
 });

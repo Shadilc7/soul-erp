@@ -40,15 +40,7 @@ module Admin
       existing_item = @bundle.question_bundle_items.find_by(question_id: @question.id)
 
       if existing_item
-        @message = "Question already added to #{@bundle.name}"
-        respond_to do |format|
-          format.turbo_stream {
-            render turbo_stream: turbo_stream.append("toast-container", partial: "admin/question_bundles/toast", formats: [:html], locals: { message: @message, type: "warning" })
-          }
-          format.json {
-            render json: { status: "warning", message: @message }, status: :ok
-          }
-        end
+        render_already_added_warning
         return
       end
 
@@ -69,11 +61,10 @@ module Admin
           }
         end
       else
-        respond_to do |format|
-          format.turbo_stream { render turbo_stream: turbo_stream.append("toast-container", partial: "admin/question_bundles/toast", formats: [:html], locals: { message: @item.errors.full_messages.to_sentence, type: "danger" }) }
-          format.json { render json: { status: "error", message: @item.errors.full_messages.to_sentence }, status: :unprocessable_entity }
-        end
+        render_already_added_warning
       end
+    rescue ActiveRecord::RecordNotUnique
+      render_already_added_warning
     end
 
     def remove_question
@@ -122,6 +113,18 @@ module Admin
 
     def bundle_params
       params.require(:question_bundle).permit(:name, :description, :start_date, :end_date, :position)
+    end
+
+    def render_already_added_warning
+      @message = "Question already added to #{@bundle&.name || 'bundle'}"
+      respond_to do |format|
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.append("toast-container", partial: "admin/question_bundles/toast", formats: [:html], locals: { message: @message, type: "warning" })
+        }
+        format.json {
+          render json: { status: "warning", message: @message }, status: :ok
+        }
+      end
     end
   end
 end

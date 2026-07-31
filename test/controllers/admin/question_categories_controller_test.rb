@@ -6,17 +6,18 @@ class Admin::QuestionCategoriesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @admin = users(:master_admin)
     sign_in @admin
+    @bank = QuestionBank.create!(name: "Test Bank")
     @category = QuestionCategory.create!(
+      question_bank: @bank,
       name: "Test Category",
-      start_date: Date.current,
-      end_date: Date.current + 30.days
+      duration_days: 30
     )
   end
 
   test "should get index" do
     get admin_question_categories_path
     assert_response :success
-    assert_select "h2", text: /Master Question Bank/
+    assert_select "h2", text: /Question Categories/
   end
 
   test "should get builder" do

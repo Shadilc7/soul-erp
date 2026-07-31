@@ -87,6 +87,7 @@ module ParticipantPortal
     def take_assignment
       @selected_date = parse_date(params[:date])
       @questions = @assignment.all_questions
+      @grouped_questions = @assignment.questions_grouped_by_bundle
     end
 
     def submit
@@ -163,6 +164,7 @@ module ParticipantPortal
         else
           flash.now[:alert] = "Please fix the following errors:<br>#{validation_errors.join('<br>')}".html_safe
           @questions = @assignment.all_questions
+          @grouped_questions = @assignment.questions_grouped_by_bundle
           render :take_assignment, status: :unprocessable_entity
         end
       rescue ActiveRecord::RecordNotUnique => e
@@ -175,12 +177,14 @@ module ParticipantPortal
         else
           flash.now[:alert] = "Some responses were already recorded by a concurrent submission. Please review and try again."
           @questions = @assignment.all_questions
+          @grouped_questions = @assignment.questions_grouped_by_bundle
           render :take_assignment, status: :conflict and return
         end
       rescue => e
         Rails.logger.error("Error in submit action: #{e.message}")
         flash.now[:alert] = "Error submitting assignment. Please try again."
         @questions = @assignment.all_questions
+        @grouped_questions = @assignment.questions_grouped_by_bundle
         render :take_assignment, status: :unprocessable_entity
       end
     end

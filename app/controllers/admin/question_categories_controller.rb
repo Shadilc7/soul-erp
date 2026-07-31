@@ -3,18 +3,27 @@ module Admin
     before_action :set_category, only: [ :show, :edit, :update, :destroy, :builder ]
 
     def index
-      @categories = QuestionCategory.ordered
+      @question_banks = QuestionBank.ordered
+      @categories = QuestionCategory.includes(:question_bank).ordered
+
+      if params[:question_bank_id].present?
+        @selected_bank = QuestionBank.find_by(id: params[:question_bank_id])
+        @categories = @categories.where(question_bank_id: params[:question_bank_id])
+      end
 
       if params[:search].present?
         query = "%#{params[:search].downcase}%"
         @categories = @categories.where("LOWER(name) LIKE :q OR LOWER(description) LIKE :q", q: query)
       end
 
-      # KPI Summary
-      @total_categories_count = @categories.count
+      category_ids = @categories.pluck(:id)
+      @total_categories_count = category_ids.size
       @active_categories_count = @categories.where(active: true).count
-      @total_questions_count = Question.where(question_category_id: @categories.pluck(:id)).count
-      @total_bundles_count = QuestionBundle.where(question_category_id: @categories.pluck(:id)).count
+      @total_questions_count = Question.where(question_category_id: category_ids).count
+      @total_bundles_count = QuestionBundle.where(question_category_id: category_ids).count
+
+      @questions_count_by_category_id = Question.where(question_category_id: category_ids).group(:question_category_id).count
+      @bundles_count_by_category_id = QuestionBundle.where(question_category_id: category_ids).group(:question_category_id).count
     end
 
     def show
@@ -23,8 +32,8 @@ module Admin
 
     def new
       @category = QuestionCategory.new(
-        start_date: Date.current,
-        end_date: Date.current + 30.days
+        question_bank_id: params[:question_bank_id] || QuestionBank.first&.id,
+        duration_days: 30
       )
     end
 
@@ -58,9 +67,9 @@ module Admin
     end
 
     def builder
-      @questions = @category.questions.includes(:options, :question_bundles).order(position: :asc, created_at: :desc)
+      @questions = @category.questions.includes(:question_bundles).order(position: :asc, created_at: :desc)
       @bundles = @category.question_bundles.includes(:question_bundle_items).ordered
-      @new_question = @category.questions.build
+      @new_question = @category.questions.build(duration_days: 1)
       @new_bundle = @category.question_bundles.build
     end
 
@@ -71,7 +80,7 @@ module Admin
     end
 
     def category_params
-      params.require(:question_category).permit(:name, :description, :start_date, :end_date, :active)
+      params.require(:question_category).permit(:question_bank_id, :name, :description, :duration_days, :active)
     end
   end
 end

@@ -3,14 +3,17 @@
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
       <h2 class="h3 font-weight-bold text-dark mb-1 d-flex align-items-center gap-2">
-        <i class="bi bi-journal-bookmark text-primary"></i> Master Question Bank
+        <i class="bi bi-journal-bookmark text-primary"></i> Question Categories
       </h2>
-      <p class="text-muted mb-0">Create master categories, construct questions, and split into dynamic date-based bundles.</p>
+      <p class="text-muted mb-0">Manage category modules inside Question Banks and split questions into dynamic section bundles.</p>
     </div>
-    <div>
-      <%= link_to new_admin_question_category_path, class: "btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2" do %>
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to admin_question_banks_path, class: "btn btn-outline-secondary rounded-3 px-3 py-2" do %>
+        <i class="bi bi-bank me-1"></i> Manage Question Banks
+      <% end %>
+      <%= link_to new_admin_question_category_path(question_bank_id: params[:question_bank_id]), class: "btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2" do %>
         <i class="bi bi-plus-lg"></i>
-        <span>Create Question Category</span>
+        <span>Create Category</span>
       <% end %>
     </div>
   </div>
@@ -78,14 +81,17 @@
   <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
     <div class="card-body p-3">
       <%= form_with url: admin_question_categories_path, method: :get, class: "row g-3 align-items-center" do |f| %>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
+          <%= f.select :question_bank_id, options_from_collection_for_select(@question_banks, :id, :name, params[:question_bank_id]), { prompt: "All Question Banks" }, { class: "form-select bg-light", onchange: "this.form.submit()" } %>
+        </div>
+        <div class="col-12 col-md-5">
           <div class="input-group">
             <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
             <%= f.text_field :search, value: params[:search], class: "form-control bg-light border-start-0 ps-0", placeholder: "Search category name or description..." %>
           </div>
         </div>
-        <div class="col-12 col-md-6 d-flex justify-content-md-end gap-2">
-          <% if params[:search].present? %>
+        <div class="col-12 col-md-3 d-flex justify-content-md-end gap-2">
+          <% if params[:search].present? || params[:question_bank_id].present? %>
             <%= link_to admin_question_categories_path, class: "btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 rounded-3" do %>
               <i class="bi bi-x-circle"></i> Clear Filter
             <% end %>
@@ -99,7 +105,13 @@
   <!-- Categories Table Card -->
   <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center justify-content-between">
-      <h5 class="card-title font-weight-bold mb-0 text-dark">Question Categories</h5>
+      <h5 class="card-title font-weight-bold mb-0 text-dark">
+        <% if @selected_bank %>
+          Categories in "<%= @selected_bank.name %>"
+        <% else %>
+          All Question Categories
+        <% end %>
+      </h5>
       <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"><%= @categories.size %> total</span>
     </div>
     <div class="table-responsive">
@@ -107,8 +119,9 @@
         <thead class="table-light border-bottom">
           <tr>
             <th class="ps-4" style="width: 50px;">#</th>
+            <th>Question Bank</th>
             <th>Category Name</th>
-            <th>Validity Period</th>
+            <th>Duration</th>
             <th>Questions</th>
             <th>Custom Bundles</th>
             <th>Status</th>
@@ -121,27 +134,29 @@
               <tr>
                 <td class="ps-4 text-muted small fw-semibold"><%= index + 1 %></td>
                 <td>
+                  <span class="badge bg-light text-dark border px-2.5 py-1">
+                    <i class="bi bi-bank me-1 text-primary"></i> <%= cat.question_bank&.name || "Default" %>
+                  </span>
+                </td>
+                <td>
                   <div class="fw-bold text-dark"><%= cat.name %></div>
                   <% if cat.description.present? %>
                     <div class="text-muted small text-truncate" style="max-width: 320px;"><%= cat.description %></div>
                   <% end %>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center gap-1 text-secondary small">
-                    <i class="bi bi-calendar-range text-primary"></i>
-                    <span><%= cat.start_date.strftime("%d/%m/%Y") %></span>
-                    <span class="text-muted">→</span>
-                    <span><%= cat.end_date.strftime("%d/%m/%Y") %></span>
-                  </div>
+                  <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 fw-semibold">
+                    <i class="bi bi-clock-history me-1"></i> <%= cat.duration_days %> days
+                  </span>
                 </td>
                 <td>
                   <span class="badge bg-info-subtle text-info fw-semibold rounded-pill px-2.5 py-1">
-                    <i class="bi bi-question-circle me-1"></i> <%= cat.questions.size %> questions
+                    <i class="bi bi-question-circle me-1"></i> <%= @questions_count_by_category_id[cat.id] || 0 %> questions
                   </span>
                 </td>
                 <td>
                   <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold rounded-pill px-2.5 py-1">
-                    <i class="bi bi-layers me-1"></i> <%= cat.question_bundles.size %> bundles
+                    <i class="bi bi-layers me-1"></i> <%= @bundles_count_by_category_id[cat.id] || 0 %> bundles
                   </span>
                 </td>
                 <td>
@@ -168,11 +183,11 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="7" class="text-center py-5 text-muted">
+              <td colspan="8" class="text-center py-5 text-muted">
                 <i class="bi bi-folder-x fs-1 d-block mb-2 opacity-50"></i>
                 <p class="mb-2 fw-medium">No Question Categories found.</p>
                 <p class="small text-muted mb-3">Get started by creating your first Question Category.</p>
-                <%= link_to new_admin_question_category_path, class: "btn btn-sm btn-primary rounded-3 px-3 py-2" do %>
+                <%= link_to new_admin_question_category_path(question_bank_id: params[:question_bank_id]), class: "btn btn-sm btn-primary rounded-3 px-3 py-2" do %>
                   <i class="bi bi-plus-lg me-1"></i> Create Category
                 <% end %>
               </td>

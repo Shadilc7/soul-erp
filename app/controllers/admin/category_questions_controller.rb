@@ -111,8 +111,7 @@ module Admin
         :max_rating,
         :position,
         :active,
-        :start_date,
-        :end_date,
+        :duration_days,
         options_attributes: [ :id, :text, :value, :correct, :_destroy ]
       )
     end

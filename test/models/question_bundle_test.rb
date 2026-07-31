@@ -4,8 +4,7 @@ class QuestionBundleTest < ActiveSupport::TestCase
   setup do
     @category = QuestionCategory.create!(
       name: "Master Test Category",
-      start_date: Date.current,
-      end_date: Date.current + 30.days
+      duration_days: 30
     )
   end
 
@@ -18,7 +17,8 @@ class QuestionBundleTest < ActiveSupport::TestCase
     bundle = @category.question_bundles.create!(name: "Part 1")
     question = @category.questions.create!(
       title: "Sample Question 1",
-      question_type: "short_answer"
+      question_type: "short_answer",
+      duration_days: 1
     )
 
     bundle.questions << question

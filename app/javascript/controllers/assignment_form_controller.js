@@ -5,7 +5,7 @@ export default class extends Controller {
     "titleInput", "startDate", "endDate", "submitButton",
     "typeSelect", "individualView", "sectionView",
     "sectionSelect", "sectionParticipantsView", "sectionParticipantsList",
-    "sectionParticipantsCounter", "participantsCounter",
+    "sectionParticipantsCounter", "participantsCounter", "participantBreakdown",
     "questionsCounter",
     "selectAllQuestions",
     "selectAllSections",
@@ -169,15 +169,54 @@ export default class extends Controller {
   }
 
   updateParticipantsCounter() {
-    // Skip if the target doesn't exist
     if (!this.hasParticipantsCounterTarget) return;
     
     // Only count visible (non-filtered) checked participants
-    const count = Array.from(document.querySelectorAll('input[name="assignment[participant_ids][]"]:checked')).filter(cb => {
+    const checkedCheckboxes = Array.from(document.querySelectorAll('input[name="assignment[participant_ids][]"]:checked')).filter(cb => {
       const parentItem = cb.closest('[data-participant-type]')
       return !parentItem || parentItem.style.display !== 'none'
-    }).length
+    })
+
+    const count = checkedCheckboxes.length
     this.participantsCounterTarget.textContent = `${count} Selected`
+
+    // Count by distinct participant type
+    if (this.hasParticipantBreakdownTarget) {
+      if (count === 0) {
+        this.participantBreakdownTarget.classList.add('d-none')
+        this.participantBreakdownTarget.innerHTML = ''
+      } else {
+        const typeCounts = {}
+        checkedCheckboxes.forEach(cb => {
+          const parentItem = cb.closest('[data-participant-type]')
+          const pType = (parentItem && parentItem.dataset.participantType) ? parentItem.dataset.participantType : 'member'
+          typeCounts[pType] = (typeCounts[pType] || 0) + 1
+        })
+
+        const pillsHtml = Object.entries(typeCounts).map(([type, cnt]) => {
+          let badgeClass = 'bg-secondary-subtle text-secondary border-secondary-subtle'
+          let formattedType = type.charAt(0).toUpperCase() + type.slice(1)
+
+          if (type === 'student') {
+            badgeClass = 'bg-info-subtle text-info border-info-subtle'
+            formattedType = 'Student'
+          } else if (type === 'guardian') {
+            badgeClass = 'bg-warning-subtle text-warning border-warning-subtle'
+            formattedType = 'Guardian'
+          } else if (type === 'employee') {
+            badgeClass = 'bg-success-subtle text-success border-success-subtle'
+            formattedType = 'Employee'
+          }
+
+          const pluralType = cnt === 1 ? formattedType : (formattedType + 's')
+          return `<span class="badge ${badgeClass} border rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.725rem;">${cnt} ${pluralType}</span>`
+        }).join('')
+
+        this.participantBreakdownTarget.classList.remove('d-none')
+        this.participantBreakdownTarget.innerHTML = pillsHtml
+      }
+    }
+
     this.validateForm()
   }
 
@@ -321,12 +360,28 @@ export default class extends Controller {
   }
 
   updateSelectAllQuestions() {
-    // Skip if the target doesn't exist
-    if (!this.hasSelectAllQuestionsTarget) return;
-    
     const totalQuestions = this.element.querySelectorAll('.question-checkbox').length
     const checkedQuestions = this.element.querySelectorAll('.question-checkbox:checked').length
-    this.selectAllQuestionsTarget.checked = totalQuestions === checkedQuestions
+
+    if (this.hasSelectAllQuestionsTarget) {
+      this.selectAllQuestionsTarget.checked = totalQuestions > 0 && totalQuestions === checkedQuestions
+    }
+
+    this.updateBundleSelectAllCheckboxes()
+  }
+
+  updateBundleSelectAllCheckboxes() {
+    const bundleContainers = this.element.querySelectorAll('.bundle-questions-container')
+    bundleContainers.forEach(container => {
+      const containerId = container.id
+      const bIdx = containerId.replace('bundle_group_', '')
+      const bundleToggle = document.getElementById(`bundle_toggle_${bIdx}`)
+      if (bundleToggle) {
+        const totalInBundle = container.querySelectorAll('.question-checkbox').length
+        const checkedInBundle = container.querySelectorAll('.question-checkbox:checked').length
+        bundleToggle.checked = totalInBundle > 0 && totalInBundle === checkedInBundle
+      }
+    })
   }
 
   toggleAllSections(event) {

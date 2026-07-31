@@ -598,9 +598,14 @@
               <span>Institute Admins</span>
             <% end %>
 
+            <%= link_to admin_question_banks_path, class: "nav-link #{'active' if active_link?('question_banks')}" do %>
+              <i class="bi bi-bank"></i>
+              <span>Question Banks</span>
+            <% end %>
+
             <%= link_to admin_question_categories_path, class: "nav-link #{'active' if active_link?('question_categories') || active_link?('category_questions')}" do %>
               <i class="bi bi-journal-bookmark"></i>
-              <span>Question Bank</span>
+              <span>Question Categories</span>
             <% end %>
 
             <%= link_to edit_admin_registration_setting_path, class: "nav-link #{'active' if active_link?('registration_settings')}" do %>
@@ -660,6 +665,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
       function initFlatpickr() {
         if (typeof flatpickr !== "undefined") {

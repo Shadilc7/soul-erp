@@ -3,6 +3,7 @@ class Assignment < ApplicationRecord
 
   belongs_to :institute
   belongs_to :section, optional: true
+  belongs_to :question_category, optional: true
 
   has_many :assignment_sections, dependent: :destroy
   has_many :sections, through: :assignment_sections
@@ -124,9 +125,105 @@ class Assignment < ApplicationRecord
   end
 
   def all_questions
-    # Combine direct questions and questions from question sets
-    questions.order(:created_at) +
-    question_sets.includes(:questions).flat_map { |qs| qs.questions.order(:created_at) }
+    if assignment_questions.where.not(order_number: nil).any?
+      questions.joins(:assignment_questions).order("assignment_questions.order_number ASC, questions.id ASC")
+    else
+      questions.order(:created_at) +
+      question_sets.includes(:questions).flat_map { |qs| qs.questions.order(:created_at) }
+    end
+  end
+
+  def questions_grouped_by_bundle
+    assigned_q_ids = questions.pluck(:id)
+    return {} if assigned_q_ids.empty?
+
+    groups = {}
+
+    if question_category.present?
+      bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
+      bundled_q_ids = []
+
+      bundles.each do |bundle|
+        b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| assigned_q_ids.include?(q.id) }
+        if b_questions.any?
+          groups[bundle.name] = b_questions
+          bundled_q_ids.concat(b_questions.map(&:id))
+        end
+      end
+
+      unbundled_ids = assigned_q_ids - bundled_q_ids
+      if unbundled_ids.any?
+        unbundled_questions = if assignment_questions.where.not(order_number: nil).any?
+                                questions.includes(:options).where(id: unbundled_ids).joins(:assignment_questions).order("assignment_questions.order_number ASC, questions.id ASC").to_a
+                              else
+                                questions.includes(:options).where(id: unbundled_ids).order(:created_at).to_a
+                              end
+
+        cat_unbundled = unbundled_questions.select { |q| q.question_category_id == question_category_id }
+        inst_unbundled = unbundled_questions.reject { |q| q.question_category_id == question_category_id }
+
+        if cat_unbundled.any?
+          groups["General Questions"] = cat_unbundled
+        end
+
+        if inst_unbundled.any?
+          groups["Institution Custom Questions"] = inst_unbundled
+        end
+      end
+    else
+      groups["Questions"] = questions.includes(:options).to_a
+    end
+
+    groups
+  end
+
+  def edit_questions_grouped_by_bundle
+    inst_q_ids = institute&.questions&.pluck(:id) || []
+    assigned_q_ids = questions.pluck(:id)
+    cat_q_ids = question_category&.questions&.pluck(:id) || []
+    all_available_ids = (cat_q_ids + assigned_q_ids + inst_q_ids).uniq
+
+    return {} if all_available_ids.empty?
+
+    q_order_map = assignment_questions.pluck(:question_id, :order_number).to_h
+    groups = {}
+
+    if question_category.present?
+      bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
+      bundled_q_ids = []
+
+      bundles.each do |bundle|
+        b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| all_available_ids.include?(q.id) }
+        if b_questions.any?
+          b_questions.sort_by! { |q| q_order_map[q.id] || 999_999 }
+          groups[bundle.name] = b_questions
+          bundled_q_ids.concat(b_questions.map(&:id))
+        end
+      end
+
+      remaining_ids = all_available_ids - bundled_q_ids
+      if remaining_ids.any?
+        remaining_questions = Question.includes(:options).where(id: remaining_ids).to_a
+        remaining_questions.sort_by! { |q| q_order_map[q.id] || 999_999 }
+
+        cat_remaining = remaining_questions.select { |q| q.question_category_id == question_category_id }
+        inst_remaining = remaining_questions.reject { |q| q.question_category_id == question_category_id }
+
+        if cat_remaining.any?
+          groups["General Questions"] = cat_remaining
+        end
+
+        if inst_remaining.any?
+          groups["Institution Custom Questions"] = inst_remaining
+        end
+      end
+
+      groups
+    else
+      all_q = Question.includes(:options).where(id: all_available_ids).to_a
+      all_q.sort_by! { |q| q_order_map[q.id] || 999_999 }
+      { "Institution Questions" => all_q }
+    end
   end
 
   def status
@@ -144,17 +241,23 @@ class Assignment < ApplicationRecord
   private
 
   def validate_associations
-    if persisted? # Only validate associations after initial save
-      if questions.empty? && question_sets.empty?
+    if persisted? && !skip_association_validation
+      q_count = assignment_questions.reject(&:marked_for_destruction?).size
+      qs_count = assignment_question_sets.reject(&:marked_for_destruction?).size
+      if q_count == 0 && qs_count == 0
         errors.add(:base, "Must have at least one question or question set")
       end
 
       if assignment_type == "section"
-        if section_id.blank? && sections.empty?
+        sec_count = assignment_sections.reject(&:marked_for_destruction?).size
+        if section_id.blank? && sections.empty? && sec_count == 0
           errors.add(:base, "Must select at least one section")
         end
-      elsif assignment_type == "individual" && participants.empty?
-        errors.add(:base, "Must select at least one participant")
+      elsif assignment_type == "individual"
+        part_count = assignment_participants.reject(&:marked_for_destruction?).size
+        if participants.empty? && part_count == 0
+          errors.add(:base, "Must select at least one participant")
+        end
       end
     end
   end

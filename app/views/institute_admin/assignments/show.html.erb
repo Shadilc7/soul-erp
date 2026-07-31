@@ -1,229 +1,360 @@
-<div class="container-fluid py-4">
-  <!-- Header Card -->
-  <div class="card card-custom mb-4">
-    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
+  <!-- Top Navigation & Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to institute_admin_assignments_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Back to Assignments
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          <%= @assignment.title %>
+        </li>
+      </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to edit_institute_admin_assignment_path(@assignment), class: "btn btn-sm btn-primary rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5" do %>
+        <i class="bi bi-pencil me-1"></i> Edit Assignment
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Header Banner Card -->
+  <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
       <div>
-        <h5 class="mb-0">Assignment Details</h5>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h2 class="fw-bold text-white mb-0 h3 h2-md"><%= @assignment.title %></h2>
+          <span class="badge <%= @assignment.active? ? 'bg-success-subtle text-success border border-success' : 'bg-secondary-subtle text-secondary border' %> rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+            <%= @assignment.active? ? 'Active' : 'Inactive' %>
+          </span>
+        </div>
+        <p class="text-white-50 mb-0 small text-md-normal">
+          <%= @assignment.description.presence || "No description provided for this assignment." %>
+        </p>
       </div>
-      <div class="d-flex gap-2">
-        <%= link_to edit_institute_admin_assignment_path(@assignment), class: "btn btn-custom-secondary" do %>
-          <i class="bi bi-pencil me-1"></i> Edit
+
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        <% if @assignment.question_category.present? %>
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+            <i class="bi bi-folder2 me-1 text-primary"></i> <%= @assignment.question_category.name %>
+          </span>
         <% end %>
-        <%= link_to institute_admin_assignments_path, class: "btn btn-outline-custom" do %>
-          <i class="bi bi-arrow-left me-1"></i> Back
-        <% end %>
+
+        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+          <i class="bi bi-calendar-range me-1 text-info"></i> 
+          <%= @assignment.start_date.strftime("%b %d") %> – <%= @assignment.end_date.strftime("%b %d, %Y") %>
+        </span>
+
+        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+          <% if @assignment.assignment_type == 'section' %>
+            <i class="bi bi-people me-1 text-warning"></i> Section
+          <% else %>
+            <i class="bi bi-person me-1 text-info"></i> Individual
+          <% end %>
+        </span>
       </div>
     </div>
   </div>
 
-  <!-- Content -->
+  <!-- Main Workspace Grid -->
   <div class="row g-4">
-    <!-- Left Column -->
+    <!-- Left / Primary Column: Bundles & Questions -->
     <div class="col-lg-8">
-      <!-- Basic Info Card -->
-      <div class="card card-custom mb-4">
-        <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><%= @assignment.title %></h5>
-          <span class="badge <%= @assignment.active? ? 'bg-success' : 'bg-secondary' %>">
-            <%= @assignment.active? ? 'Active' : 'Inactive' %>
-          </span>
-        </div>
-        <div class="card-body">
-          <% if @assignment.description.present? %>
-            <p class="text-muted mb-4"><%= @assignment.description %></p>
-          <% end %>
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-layers-fill text-warning"></i> Question Bundles & Items
+            </h5>
+            <span class="text-muted small">Category bundle structure and question sequence as imported.</span>
+          </div>
 
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="detail-item">
-                <label class="text-muted small">Start Date</label>
-                <div class="fs-5"><%= @assignment.start_date.strftime("%B %d, %Y") %></div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="detail-item">
-                <label class="text-muted small">End Date</label>
-                <div class="fs-5"><%= @assignment.end_date.strftime("%B %d, %Y") %></div>
-              </div>
-            </div>
-            <div class="col-12">
-              <div class="detail-item">
-                <label class="text-muted small">Assignment Type</label>
-                <div class="fs-5">
-                  <% if @assignment.assignment_type == 'section' %>
-                    <i class="bi bi-people me-1"></i> Section Assignment
-                  <% else %>
-                    <i class="bi bi-person me-1"></i> Individual Assignment
-                  <% end %>
-                </div>
-              </div>
-            </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3 py-1 fw-semibold" onclick="toggleAllShowBundles(this)" data-expanded="true">
+              <i class="bi bi-arrows-collapse me-1"></i> Collapse All
+            </button>
+            <span class="badge bg-primary rounded-pill px-3 py-1.5 fw-semibold">
+              <i class="bi bi-patch-question me-1"></i>
+              <%= pluralize(@assignment.all_questions.size, 'Question') %>
+            </span>
           </div>
         </div>
-      </div>
 
-      <!-- Questions Card -->
-      <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0">Questions</h5>
-        </div>
-        <div class="card-body">
-          <% if @assignment.questions.any? %>
-            <div class="list-group">
-              <% @assignment.questions.each do |question| %>
-                <div class="list-group-item list-group-item-action">
-                  <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1"><%= question.title %></h6>
-                    <small class="text-muted"><%= question.question_type&.titleize %></small>
+        <div class="card-body p-3 p-md-4">
+          <% if @grouped_questions.present? && @grouped_questions.any? %>
+            <div class="row g-4">
+              <% @grouped_questions.each_with_index do |(group_name, questions), b_idx| %>
+                <div class="col-12">
+                  <div class="card border rounded-4 bg-white shadow-sm p-3">
+                    <!-- Bundle Header with Collapse Toggle -->
+                    <div class="card-header bg-light border-0 rounded-3 p-3 mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer bundle-header-toggle" 
+                         data-bs-toggle="collapse" 
+                         data-bs-target="#show_bundle_collapse_<%= b_idx %>" 
+                         aria-expanded="true">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-chevron-down text-secondary transition-transform collapse-chevron"></i>
+                        <i class="bi bi-layers-fill text-primary"></i>
+                        <h6 class="fw-bold text-dark mb-0 fs-6"><%= group_name %></h6>
+                      </div>
+
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold">
+                        <%= pluralize(questions.size, 'question') %>
+                      </span>
+                    </div>
+
+                    <!-- Questions List in Bundle Collapse -->
+                    <div class="collapse show bundle-collapse-container mt-3" id="show_bundle_collapse_<%= b_idx %>">
+                      <div class="d-flex flex-column gap-3">
+                      <% questions.each_with_index do |q, q_idx| %>
+                        <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all">
+                          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                              <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                #<%= q_idx + 1 %>
+                              </span>
+
+                              <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                                <%= q.question_type&.titleize %>
+                              </span>
+
+                              <% if q.duration_days.present? && q.duration_days.to_i > 0 %>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
+                                  <i class="bi bi-clock-history me-1"></i> <%= pluralize(q.duration_days, 'Day') %>
+                                </span>
+                              <% end %>
+
+                              <% if q.required? %>
+                                <span class="badge bg-danger-subtle text-danger fw-semibold" style="font-size: 0.7rem;">
+                                  Required
+                                </span>
+                              <% end %>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1 d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#viewAssignmentQuestionModal<%= q.id %>">
+                              <i class="bi bi-eye"></i> View Details
+                            </button>
+                          </div>
+
+                          <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;"><%= q.title %></h6>
+                          
+                          <% if q.description.present? %>
+                            <p class="text-muted small mb-2"><%= q.description %></p>
+                          <% end %>
+
+                          <% if q.requires_options? && q.options.any? %>
+                            <div class="text-muted small mt-1">
+                              <i class="bi bi-list-check me-1 text-primary"></i> <%= q.options.size %> Answer Options
+                            </div>
+                          <% elsif q.rating? %>
+                            <div class="text-muted small mt-1">
+                              <i class="bi bi-star-fill me-1 text-warning"></i> Max Scale: <%= q.max_rating || 5 %> Stars
+                            </div>
+                          <% end %>
+                        </div>
+
+                        <!-- Modal: Question Details -->
+                        <div class="modal fade" id="viewAssignmentQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                              <div class="modal-header border-bottom-0 pb-0">
+                                <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+                                  <i class="bi bi-eye-fill text-primary"></i> Question Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                              </div>
+
+                              <div class="modal-body p-4">
+                                <div class="mb-3">
+                                  <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1" style="font-size: 0.75rem;">
+                                      <%= q.question_type&.titleize %>
+                                    </span>
+                                    <span class="badge bg-light text-dark border">
+                                      <%= group_name %>
+                                    </span>
+                                  </div>
+                                  
+                                  <h4 class="fw-bold text-dark mb-2"><%= q.title %></h4>
+                                  
+                                  <% if q.description.present? %>
+                                    <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+                                  <% end %>
+                                </div>
+
+                                <% if q.requires_options? && q.options.any? %>
+                                  <div class="mb-3">
+                                    <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                                    <div class="list-group rounded-3">
+                                      <% q.options.each_with_index do |opt, opt_idx| %>
+                                        <div class="list-group-item d-flex align-items-center justify-content-between">
+                                          <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                          <% if opt.correct? %>
+                                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">
+                                              <i class="bi bi-check-circle me-1"></i>Correct Answer
+                                            </span>
+                                          <% end %>
+                                        </div>
+                                      <% end %>
+                                    </div>
+                                  </div>
+                                <% elsif q.rating? %>
+                                  <div class="mb-3">
+                                    <h6 class="fw-semibold text-dark mb-1">Rating Scale: Up to <%= q.max_rating || 5 %> Stars</h6>
+                                  </div>
+                                <% end %>
+                              </div>
+
+                              <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
                   </div>
                 </div>
-              <% end %>
+              </div>
+            <% end %>
             </div>
           <% else %>
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              No questions assigned.
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-journal-x fs-1 opacity-50 d-block mb-2 text-warning"></i>
+              <p class="mb-0">No questions found for this assignment.</p>
             </div>
           <% end %>
         </div>
       </div>
     </div>
 
-    <!-- Right Column -->
+    <!-- Right Column: Recipients & Metadata -->
     <div class="col-lg-4">
-      <!-- Recipients Card -->
-      <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0">Recipients</h5>
+      <div class="d-flex flex-column gap-4">
+        <!-- Recipients Card -->
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between">
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-people-fill text-primary"></i> Assignment Recipients
+            </h5>
+            <span class="badge bg-primary rounded-pill px-2.5 py-1">
+              <%= @assignment.participants.count %>
+            </span>
+          </div>
+
+          <div class="card-body p-3">
+            <% if @assignment.assignment_type == 'section' %>
+              <div class="p-3 bg-light-subtle border rounded-3 mb-3">
+                <label class="text-muted small fw-semibold text-uppercase d-block mb-1">Target Section</label>
+                <div class="d-flex align-items-center text-primary fw-bold fs-6">
+                  <i class="bi bi-diagram-3 me-2"></i> <%= @assignment.section&.name || 'All Sections' %>
+                </div>
+              </div>
+            <% end %>
+
+            <% if @assignment.participants.any? %>
+              <div class="list-group list-group-flush border rounded-3 overflow-auto" style="max-height: 400px;">
+                <% @assignment.participants.includes(:user).each do |participant| %>
+                  <div class="list-group-item p-2.5 border-bottom-0">
+                    <div class="d-flex align-items-center gap-2.5">
+                      <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        <%= participant.user.first_name&.first || 'U' %>
+                      </div>
+                      <div class="flex-grow-1 text-truncate">
+                        <div class="fw-semibold text-dark text-truncate" style="font-size: 0.9rem;">
+                          <%= participant.user.full_name %>
+                        </div>
+                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">
+                          <%= participant.user.email %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="text-center py-4 text-muted bg-light rounded-3 border">
+                <i class="bi bi-person-x fs-2 opacity-50 d-block mb-1"></i>
+                <span class="small">No participants assigned yet.</span>
+                <div class="mt-2">
+                  <%= link_to edit_institute_admin_assignment_path(@assignment), class: "btn btn-sm btn-outline-primary rounded-3 px-3" do %>
+                    <i class="bi bi-person-plus me-1"></i> Add Recipients
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
         </div>
-        <div class="card-body p-0">
-          <% if @assignment.assignment_type == 'section' %>
-            <div class="p-3 border-bottom">
-              <h6 class="text-muted mb-2">Section</h6>
-              <div class="d-flex align-items-center">
-                <i class="bi bi-people-fill me-2 text-primary"></i>
-                <span class="fs-5"><%= @assignment.section&.name || 'Not assigned' %></span>
+
+        <!-- Assignment Timeline Info Card -->
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-white border-bottom p-3 rounded-top-4">
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-clock-history text-info"></i> Timeline & Settings
+            </h5>
+          </div>
+
+          <div class="card-body p-3">
+            <div class="d-flex flex-column gap-3">
+              <div class="d-flex justify-content-between align-items-center p-2.5 bg-light rounded-3">
+                <span class="text-muted small">Start Date:</span>
+                <span class="fw-bold text-dark"><%= @assignment.start_date.strftime("%B %d, %Y") %></span>
               </div>
-            </div>
-            
-            <div class="p-3">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="text-muted mb-0">Section Participants</h6>
-                <span class="badge bg-secondary">
-                  <%= @assignment.participants.count %> participants
+
+              <div class="d-flex justify-content-between align-items-center p-2.5 bg-light rounded-3">
+                <span class="text-muted small">End Date:</span>
+                <span class="fw-bold text-dark"><%= @assignment.end_date.strftime("%B %d, %Y") %></span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center p-2.5 bg-light rounded-3">
+                <span class="text-muted small">Total Days Active:</span>
+                <span class="badge bg-info-subtle text-info border border-info rounded-pill px-3 py-1 fw-bold">
+                  <%= @assignment.total_days %> Days
                 </span>
               </div>
-              <div class="list-group list-group-flush">
-                <% @assignment.participants.includes(:user).each do |participant| %>
-                  <div class="list-group-item px-0">
-                    <div class="d-flex align-items-center">
-                      <div class="participant-avatar me-2">
-                        <i class="bi bi-person-circle text-muted"></i>
-                      </div>
-                      <div>
-                        <div><%= participant.user.full_name %></div>
-                        <small class="text-muted"><%= participant.user.email %></small>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
             </div>
-          <% else %>
-            <div class="p-3">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="text-muted mb-0">Individual Participants</h6>
-                <span class="badge bg-secondary">
-                  <%= @assignment.participants.count %> participants
-                </span>
-              </div>
-              <div class="list-group list-group-flush">
-                <% @assignment.participants.includes(:user).each do |participant| %>
-                  <div class="list-group-item px-0">
-                    <div class="d-flex align-items-center">
-                      <div class="participant-avatar me-2">
-                        <i class="bi bi-person-circle text-muted"></i>
-                      </div>
-                      <div>
-                        <div><%= participant.user.full_name %></div>
-                        <small class="text-muted"><%= participant.user.email %></small>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<script>
+  function toggleAllShowBundles(btn) {
+    const isExpanded = btn.getAttribute('data-expanded') !== 'false';
+    const collapseContainers = document.querySelectorAll('.bundle-collapse-container');
+    
+    collapseContainers.forEach(container => {
+      const bsCollapse = bootstrap.Collapse.getOrCreateInstance(container, { toggle: false });
+      if (isExpanded) {
+        bsCollapse.hide();
+      } else {
+        bsCollapse.show();
+      }
+    });
+
+    if (isExpanded) {
+      btn.setAttribute('data-expanded', 'false');
+      btn.innerHTML = '<i class="bi bi-arrows-expand me-1"></i> Expand All';
+    } else {
+      btn.setAttribute('data-expanded', 'true');
+      btn.innerHTML = '<i class="bi bi-arrows-collapse me-1"></i> Collapse All';
+    }
+  }
+</script>
+
 <% content_for :styles do %>
   <style>
-    .card-custom {
-      border-radius: 0.5rem;
-      border: 1px solid rgba(0,0,0,.1);
+    .cursor-pointer { cursor: pointer; }
+    .transition-transform { transition: transform 0.2s ease-in-out; }
+    .bundle-header-toggle[aria-expanded="false"] .collapse-chevron {
+      transform: rotate(-90deg);
     }
-
-    .card-header-custom {
-      background-color: white;
-      border-bottom: 1px solid rgba(0,0,0,.1);
-      padding: 1rem;
-    }
-
-    .detail-item {
-      padding: 1rem;
-      background-color: #f8f9fa;
-      border-radius: 0.5rem;
-    }
-
-    .list-group-item {
-      border-left: none;
-      border-right: none;
-    }
-
-    .list-group-item:first-child {
-      border-top: none;
-    }
-
-    .list-group-item:last-child {
-      border-bottom: none;
-    }
-
-    .participant-avatar {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .badge {
-      padding: 0.5rem 1rem;
-      font-weight: 500;
-    }
-
-    .btn-custom-secondary {
-      background-color: #f8f9fa;
-      border-color: #e9ecef;
-      color: var(--bs-primary);
-    }
-
-    .btn-custom-secondary:hover {
-      background-color: #e9ecef;
-      border-color: #dee2e6;
-    }
-
-    .breadcrumb-item a {
-      color: var(--bs-primary);
-      text-decoration: none;
-    }
-
-    .breadcrumb-item a:hover {
-      text-decoration: underline;
+    .bundle-header-toggle[aria-expanded="true"] .collapse-chevron {
+      transform: rotate(0deg);
     }
   </style>
-<% end %> 
+<% end %>

@@ -16,6 +16,11 @@
   <% end %>
 
   <div class="col-12">
+    <%= f.label :question_bank_id, "Question Bank", class: "form-label fw-semibold text-dark" %>
+    <%= f.collection_select :question_bank_id, QuestionBank.ordered, :id, :name, { prompt: "-- Select Question Bank --" }, { class: "form-select rounded-3", required: true } %>
+  </div>
+
+  <div class="col-12">
     <%= f.label :name, "Category Name", class: "form-label fw-semibold text-dark" %>
     <%= f.text_field :name, class: "form-control rounded-3", placeholder: "e.g., Mathematics Q1 2026 / Medical Training Module A", required: true %>
   </div>
@@ -26,17 +31,13 @@
   </div>
 
   <div class="col-12 col-md-6">
-    <%= f.label :start_date, "Validity Start Date", class: "form-label fw-semibold text-dark" %>
-    <%= f.text_field :start_date, class: "form-control rounded-3 datepicker", value: category.start_date&.strftime("%Y-%m-%d"), required: true %>
+    <%= f.label :duration_days, "No. of Days (Validity / Duration)", class: "form-label fw-semibold text-dark" %>
+    <%= f.number_field :duration_days, class: "form-control rounded-3", min: 1, placeholder: "e.g. 5, 10, 20, 30", required: true %>
+    <div class="form-text text-muted">Enter total active duration in days (e.g. 5 days, 10 days, 30 days).</div>
   </div>
 
-  <div class="col-12 col-md-6">
-    <%= f.label :end_date, "Validity End Date", class: "form-label fw-semibold text-dark" %>
-    <%= f.text_field :end_date, class: "form-control rounded-3 datepicker", value: category.end_date&.strftime("%Y-%m-%d"), required: true %>
-  </div>
-
-  <div class="col-12">
-    <div class="form-check form-switch mt-2">
+  <div class="col-12 col-md-6 d-flex align-items-center">
+    <div class="form-check form-switch mt-3">
       <%= f.check_box :active, class: "form-check-input", role: "switch", id: "activeSwitch" %>
       <%= f.label :active, "Active Category", class: "form-check-label fw-semibold text-dark", for: "activeSwitch" %>
     </div>

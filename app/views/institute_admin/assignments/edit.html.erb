@@ -1,16 +1,49 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Edit Assignment</h5>
-    <%= link_to institute_admin_assignment_path(@assignment), class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-arrow-left"></i> Back
-    <% end %>
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
+  <!-- Top Navigation & Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to institute_admin_assignments_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Back to Assignments
+          <% end %>
+        </li>
+        <li class="breadcrumb-item">
+          <%= link_to institute_admin_assignment_path(@assignment), class: "text-decoration-none text-muted fw-medium" do %>
+            <%= @assignment.title %>
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          Edit
+        </li>
+      </ol>
+    </nav>
+
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.8rem;">
+      <i class="bi bi-pencil-square me-1"></i> Edit Assignment Builder
+    </span>
   </div>
 
-  <div class="card-body py-4">
-    <div class="row justify-content-center">
-      <div class="col-xxl-10">
-        <%= render 'form' %>
+  <!-- Header Banner Card -->
+  <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+      <div>
+        <h2 class="fw-bold text-white mb-1 h3 h2-md">Edit: <%= @assignment.title %></h2>
+        <p class="text-white-50 mb-0 small text-md-normal">Modify assignment dates, select bundle questions, or configure assigned participants and sections.</p>
+      </div>
+
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        <% if @assignment.question_category.present? %>
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+            <i class="bi bi-folder2 me-1 text-primary"></i> <%= @assignment.question_category.name %>
+          </span>
+        <% end %>
+        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+          <i class="bi bi-patch-question me-1 text-info"></i> <%= @assignment.questions.count %> Selected Questions
+        </span>
       </div>
     </div>
   </div>
+
+  <%= render 'form' %>
 </div>

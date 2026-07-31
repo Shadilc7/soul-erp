@@ -23,21 +23,17 @@
         } %>
   </div>
 
-  <!-- Display Name & Dates Row -->
+  <!-- Display Name & Duration Row -->
   <div class="row g-3 mb-4">
     <div class="col-md-6">
       <%= f.label :display_name, "Display Name (Optional)", class: "form-label font-weight-bold" %>
       <%= f.text_field :display_name, class: "form-control rounded-3", placeholder: "Short name for reports or certificates" %>
     </div>
 
-    <div class="col-md-3">
-      <%= f.label :start_date, "Start Date", class: "form-label font-weight-bold" %>
-      <%= f.text_field :start_date, class: "form-control rounded-3 datepicker", value: (question.start_date || category.start_date.to_date)&.strftime("%Y-%m-%d") %>
-    </div>
-
-    <div class="col-md-3">
-      <%= f.label :end_date, "End Date", class: "form-label font-weight-bold" %>
-      <%= f.text_field :end_date, class: "form-control rounded-3 datepicker", value: (question.end_date || category.end_date.to_date)&.strftime("%Y-%m-%d") %>
+    <div class="col-md-6">
+      <%= f.label :duration_days, "No. of Days (Active Duration)", class: "form-label font-weight-bold" %>
+      <%= f.number_field :duration_days, class: "form-control rounded-3", min: 1, value: (question.duration_days || 1), placeholder: "e.g. 1, 2, 5 days", required: true %>
+      <div class="form-text text-muted">Number of days this question will appear in assignments.</div>
     </div>
   </div>
 
@@ -164,28 +160,22 @@
   <!-- Settings -->
   <div class="row g-3 mb-4">
     <div class="col-md-6">
-      <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
-        <i class="bi bi-asterisk fs-4 text-primary"></i>
-        <div>
-          <h6 class="mb-0 font-weight-bold">Required Question</h6>
-          <div class="form-check form-switch mt-1">
-            <%= f.check_box :required, class: "form-check-input", data: { action: "change->question-form#toggleRequired" } %>
-            <label class="form-check-label small text-muted">Require responses for this question</label>
-          </div>
+      <div class="p-3 bg-light rounded-3 border">
+        <div class="form-check form-switch m-0 d-flex align-items-center">
+          <%= f.check_box :required, class: "form-check-input my-0", id: "requiredQuestionSwitch", data: { action: "change->question-form#toggleRequired" } %>
+          <label class="form-check-label font-weight-bold text-dark ms-2 mb-0" for="requiredQuestionSwitch">Required Question</label>
         </div>
+        <div class="small text-muted mt-1 ps-4">Participants must answer this question to submit their response.</div>
       </div>
     </div>
 
     <div class="col-md-6">
-      <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
-        <i class="bi bi-toggle-on fs-4 text-success"></i>
-        <div>
-          <h6 class="mb-0 font-weight-bold">Active Status</h6>
-          <div class="form-check form-switch mt-1">
-            <%= f.check_box :active, class: "form-check-input", id: "activeQuestionSwitch" %>
-            <label class="form-check-label small text-muted", for="activeQuestionSwitch">Active in Question Bank</label>
-          </div>
+      <div class="p-3 bg-light rounded-3 border">
+        <div class="form-check form-switch m-0 d-flex align-items-center">
+          <%= f.check_box :active, class: "form-check-input my-0", id: "activeQuestionSwitch" %>
+          <label class="form-check-label font-weight-bold text-dark ms-2 mb-0" for="activeQuestionSwitch">Active Question</label>
         </div>
+        <div class="small text-muted mt-1 ps-4">Active questions are available in categories and assignments.</div>
       </div>
     </div>
   </div>

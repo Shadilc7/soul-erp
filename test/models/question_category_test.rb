@@ -1,28 +1,26 @@
 require "test_helper"
 
 class QuestionCategoryTest < ActiveSupport::TestCase
-  test "should be valid with name, start_date and end_date" do
+  test "should be valid with name and duration_days" do
     cat = QuestionCategory.new(
       name: "Mathematics Q1",
-      start_date: Date.current,
-      end_date: Date.current + 30.days
+      duration_days: 30
     )
     assert cat.valid?
   end
 
   test "should require name" do
-    cat = QuestionCategory.new(start_date: Date.current, end_date: Date.current + 10.days)
+    cat = QuestionCategory.new(duration_days: 10)
     assert_not cat.valid?
     assert_includes cat.errors[:name], "can't be blank"
   end
 
-  test "end date cannot be before start date" do
+  test "duration_days must be positive" do
     cat = QuestionCategory.new(
-      name: "Invalid Dates",
-      start_date: Date.current,
-      end_date: Date.current - 5.days
+      name: "Invalid Duration",
+      duration_days: 0
     )
     assert_not cat.valid?
-    assert_includes cat.errors[:end_date], "must be after or equal to the start date"
+    assert_includes cat.errors[:duration_days], "must be greater than 0"
   end
 end

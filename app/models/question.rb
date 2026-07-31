@@ -16,6 +16,7 @@ class Question < ApplicationRecord
 
   validates :title, presence: true
   validates :question_type, presence: true
+  validates :duration_days, presence: true, numericality: { greater_than: 0 }
   validate :validate_options_and_answers, if: :should_validate_options?
 
   # Add an attribute to control options validation
@@ -51,19 +52,6 @@ class Question < ApplicationRecord
   # Add a method to determine if the question is a rating
   def rating?
     question_type == "rating"
-  end
-
-  def duration_days
-    return 0 unless start_date && end_date
-    (end_date - start_date).to_i + 1
-  end
-
-  def effective_days_in_bundle(bundle)
-    return duration_days unless start_date && end_date && bundle&.start_date && bundle&.end_date
-    eff_start = [start_date.to_date, bundle.start_date.to_date].max
-    eff_end = [end_date.to_date, bundle.end_date.to_date].min
-    return 0 if eff_start > eff_end
-    (eff_end - eff_start).to_i + 1
   end
 
   private

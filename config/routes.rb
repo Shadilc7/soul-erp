@@ -68,6 +68,7 @@ Rails.application.routes.draw do
       resources :assignments
       resource :registration_setting, only: [ :edit, :update ]
 
+      resources :question_banks
       resources :question_categories do
         member do
           get :builder
@@ -160,6 +161,9 @@ Rails.application.routes.draw do
         end
       end
       resources :assignments do
+        collection do
+          post :import_question_bank
+        end
         resources :responses, only: [ :index, :show ]
       end
       resources :responses do

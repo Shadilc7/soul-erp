@@ -1,4 +1,17 @@
-<div class="container-fluid px-4 py-4" data-controller="bundle-builder" data-bundle-builder-category-id-value="<%= @category.id %>">
+<style>
+  @media (max-width: 991.98px) {
+    .d-none-mobile { display: none !important; }
+  }
+  .drag-handle {
+    touch-action: none;
+    cursor: grab;
+  }
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+</style>
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4" data-controller="bundle-builder" data-bundle-builder-category-id-value="<%= @category.id %>">
   <!-- Top Navigation & Breadcrumb -->
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
     <nav aria-label="breadcrumb">
@@ -20,28 +33,41 @@
   </div>
 
   <!-- Header Banner -->
-  <div class="card border-0 shadow-sm rounded-4 text-white p-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+  <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
       <div>
-        <h2 class="fw-bold text-white mb-1"><%= @category.name %></h2>
-        <p class="text-white-50 mb-0"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
+        <h2 class="fw-bold text-white mb-1 h3 h2-md"><%= @category.name %></h2>
+        <p class="text-white-50 mb-0 small text-md-normal"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
       </div>
 
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center flex-wrap gap-2">
         <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-          <i class="bi bi-calendar-range me-1 text-info"></i> <%= @category.start_date.strftime("%d/%m/%Y") %> – <%= @category.end_date.strftime("%d/%m/%Y") %>
+          <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name || "Master Question Bank" %>
         </span>
-        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-flex align-items-center gap-2 shadow-sm" do %>
+        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
+          <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
+        </span>
+        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-flex align-items-center gap-2 shadow-sm ms-auto ms-sm-0" do %>
           <i class="bi bi-plus-lg fs-6"></i> <span>Add New Question</span>
         <% end %>
       </div>
     </div>
   </div>
 
+  <!-- Mobile Tab Switcher Bar (< 992px) -->
+  <div class="d-lg-none mb-3 btn-group w-100 shadow-sm rounded-3">
+    <button type="button" class="btn btn-primary active py-2 fw-semibold" data-tab-target="pool" data-action="click->bundle-builder#switchMobileTab">
+      <i class="bi bi-card-list me-1"></i> Question Pool (<%= @questions.size %>)
+    </button>
+    <button type="button" class="btn btn-outline-primary py-2 fw-semibold" data-tab-target="bundles" data-action="click->bundle-builder#switchMobileTab">
+      <i class="bi bi-layers me-1"></i> Custom Bundles (<%= @bundles.size %>)
+    </button>
+  </div>
+
   <!-- Builder Workspace Grid -->
   <div class="row g-4">
     <!-- Left Column: Question Pool -->
-    <div class="col-lg-5 col-xl-4">
+    <div class="col-lg-5 col-xl-4" id="question-pool-column">
       <div class="card border-0 shadow-sm rounded-4 h-100 bg-light-subtle">
         <div class="card-header bg-white border-bottom p-3 rounded-top-4">
           <div class="d-flex align-items-center justify-content-between mb-2">
@@ -183,7 +209,7 @@
             <!-- Modals container outside #question-pool-container -->
             <div id="question-modals-container">
               <% @questions.each do |q| %>
-                <div class="modal fade" id="viewQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
+                <div class="modal fade" id="viewQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content rounded-4 border-0 shadow-lg">
                       <div class="modal-header border-bottom-0 pb-0">
@@ -226,14 +252,12 @@
                           </div>
                         <% end %>
 
-                        <% if q.start_date.present? && q.end_date.present? %>
-                          <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
-                            <span class="text-muted small">Valid Active Period:</span>
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
-                              <i class="bi bi-calendar-range me-1"></i><%= q.start_date.strftime("%d/%m/%Y") %> – <%= q.end_date.strftime("%d/%m/%Y") %> (<%= q.duration_days %> days)
-                            </span>
-                          </div>
-                        <% end %>
+                        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                          <span class="text-muted small">Active Question Duration:</span>
+                          <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                            <i class="bi bi-clock-history me-1"></i><%= q.duration_days %> days
+                          </span>
+                        </div>
                       </div>
                       <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
@@ -260,7 +284,7 @@
     </div>
 
     <!-- Right Column: Custom Bundles -->
-    <div class="col-lg-7 col-xl-8">
+    <div class="col-lg-7 col-xl-8 d-none-mobile" id="bundles-column">
       <div class="card border-0 shadow-sm rounded-4 h-100">
         <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div>
@@ -275,9 +299,9 @@
         </div>
 
         <!-- Bundles Grid / Timeline -->
-        <div class="card-body p-4 overflow-auto" style="max-height: 720px;">
+        <div class="card-body p-2 p-sm-3 p-md-4 overflow-auto" style="max-height: 720px;">
           <% if @bundles.size > 0 %>
-            <div class="row g-4">
+            <div class="row g-3 g-md-4">
               <% @bundles.each do |bundle| %>
                 <div class="col-12">
                   <div class="card border rounded-4 bg-white shadow-sm p-2"
@@ -286,19 +310,15 @@
                        data-bundle-name="<%= bundle.name %>"
                        data-action="dragover->bundle-builder#dragOver dragleave->bundle-builder#dragLeave drop->bundle-builder#drop">
                     <!-- Bundle Card Header -->
-                    <div class="card-header bg-light border-0 rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between">
-                      <div>
-                        <h6 class="fw-bold text-dark mb-0 fs-6"><%= bundle.name %></h6>
-                        <% if bundle.description.present? %>
-                          <div class="text-muted small mt-1"><%= bundle.description %></div>
-                        <% end %>
+                    <div class="card-header bg-light border-0 rounded-3 p-2.5 p-sm-3 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <div class="d-flex align-items-center flex-wrap gap-2 me-auto">
+                        <h6 class="fw-bold text-dark mb-0 fs-6 me-1"><%= bundle.name %></h6>
+                        <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-semibold" id="bundle_count_<%= bundle.id %>" data-bundle-count-id="<%= bundle.id %>">
+                          <%= bundle.questions.size %> <%= bundle.questions.size == 1 ? 'question' : 'questions' %>
+                        </span>
                       </div>
 
                       <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-dark text-white rounded-pill px-3 py-1.5 fw-semibold" id="bundle_count_<%= bundle.id %>" data-bundle-count-id="<%= bundle.id %>">
-                          <%= bundle.questions.size %> <%= bundle.questions.size == 1 ? 'question' : 'questions' %>
-                        </span>
-
                         <button type="button" class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1" title="Edit Bundle" data-bs-toggle="modal" data-bs-target="#editBundleModal<%= bundle.id %>">
                           <i class="bi bi-pencil"></i>
                         </button>
@@ -310,7 +330,7 @@
                     </div>
 
                     <!-- Modal: Edit Bundle -->
-                    <div class="modal fade" id="editBundleModal<%= bundle.id %>" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
+                    <div class="modal fade" id="editBundleModal<%= bundle.id %>" tabindex="-1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content rounded-4 border-0 shadow-lg">
                           <div class="modal-header border-0 pb-0">
@@ -342,7 +362,7 @@
                     </div>
 
                     <!-- Drop Zone for Bundle Questions -->
-                    <div class="card-body p-3 bg-light rounded-4 border-dashed"
+                    <div class="card-body p-2 p-sm-3 bg-light rounded-4 border-dashed"
                          data-bundle-builder-target="bundleDropZone"
                          data-bundle-id="<%= bundle.id %>"
                          data-bundle-name="<%= bundle.name %>"
@@ -379,7 +399,7 @@
 </div>
 
 <!-- Modal: New Bundle Creation -->
-<div class="modal fade" id="newBundleModal" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
+<div class="modal fade" id="newBundleModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-0 pb-0">
@@ -412,15 +432,9 @@
 
 <% content_for :styles do %>
   <style>
-    .modal-backdrop.show {
-      background-color: rgba(15, 23, 42, 0.35) !important;
-      opacity: 1 !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
-    }
-    .modal.show {
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+    .modal-backdrop {
+      opacity: 0.5 !important;
+      background-color: #0f172a !important;
     }
   </style>
 <% end %>

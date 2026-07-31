@@ -1,0 +1,35 @@
+<%= form_with(model: [:admin, question_bank], local: true, class: "needs-validation") do |f| %>
+  <% if question_bank.errors.any? %>
+    <div class="alert alert-danger rounded-3 mb-4">
+      <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+      <ul class="mb-0 ps-3 small">
+        <% question_bank.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :name, "Question Bank Name", class: "form-label fw-semibold" %>
+    <%= f.text_field :name, class: "form-control rounded-3", placeholder: "e.g. Master Academic Question Bank", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold" %>
+    <%= f.text_area :description, rows: 3, class: "form-control rounded-3", placeholder: "Provide additional details about this question bank..." %>
+  </div>
+
+  <div class="mb-4">
+    <div class="form-check form-switch">
+      <%= f.check_box :active, class: "form-check-input", id: "question_bank_active" %>
+      <%= f.label :active, "Active", class: "form-check-label fw-semibold ms-2", for: "question_bank_active" %>
+    </div>
+    <div class="form-text text-muted">Active Question Banks are available for creating categories and assignments.</div>
+  </div>
+
+  <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+    <%= link_to "Cancel", admin_question_banks_path, class: "btn btn-outline-secondary rounded-3 px-4" %>
+    <%= f.submit question_bank.new_record? ? "Create Question Bank" : "Save Changes", class: "btn btn-primary rounded-3 px-4 shadow-sm" %>
+  </div>
+<% end %>
