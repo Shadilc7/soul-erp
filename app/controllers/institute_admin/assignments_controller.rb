@@ -92,18 +92,18 @@ module InstituteAdmin
           assignment.save!(validate: false)
 
           order_index = 0
-          ordered_question_ids = []
+          imported_question_ids = Set.new
 
-          # ONLY import bundled questions as requested
+          # ONLY import bundled questions as requested, skipping duplicates across bundles
           category.question_bundles.order(:position).each do |bundle|
             bundle.question_bundle_items.order(:position).each do |item|
-              if item.question_id.present?
+              if item.question_id.present? && !imported_question_ids.include?(item.question_id)
                 assignment.assignment_questions.create!(
                   question_id: item.question_id,
                   bundle_name: bundle.name,
                   order_number: order_index += 1
                 )
-                ordered_question_ids << item.question_id
+                imported_question_ids.add(item.question_id)
               end
             end
           end
@@ -142,23 +142,29 @@ module InstituteAdmin
       ActiveRecord::Base.transaction do
         if @assignment.save
           if question_bundle_items.any?
-            question_bundle_items.each_with_index do |item, index|
-              qid = item["question_id"] || item[:question_id]
+            added_qids = Set.new
+            question_bundle_items.each do |item|
+              qid = (item["question_id"] || item[:question_id]).to_i
               bname = item["bundle_name"] || item[:bundle_name]
-              next if qid.blank?
-              @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: index + 1)
+              next if qid.zero? || added_qids.include?(qid)
+              added_qids.add(qid)
+              @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: added_qids.size)
             end
           else
-            question_ids.each_with_index do |qid, index|
-              @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+            added_qids = Set.new
+            question_ids.each do |qid|
+              qid_i = qid.to_i
+              next if qid_i.zero? || added_qids.include?(qid_i)
+              added_qids.add(qid_i)
+              @assignment.assignment_questions.build(question_id: qid_i, order_number: added_qids.size)
             end
           end
 
-          question_set_ids.each do |qsid|
+          question_set_ids.uniq.reject(&:blank?).each do |qsid|
             @assignment.assignment_question_sets.build(question_set_id: qsid)
           end
 
-          participant_ids.each do |pid|
+          participant_ids.uniq.reject(&:blank?).each do |pid|
             @assignment.assignment_participants.build(participant_id: pid)
           end
 
@@ -212,27 +218,33 @@ module InstituteAdmin
         @assignment.assignment_sections.destroy_all
 
         if question_bundle_items.any?
-          question_bundle_items.each_with_index do |item, index|
-            qid = item["question_id"] || item[:question_id]
+          added_qids = Set.new
+          question_bundle_items.each do |item|
+            qid = (item["question_id"] || item[:question_id]).to_i
             bname = item["bundle_name"] || item[:bundle_name]
-            next if qid.blank?
-            @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: index + 1)
+            next if qid.zero? || added_qids.include?(qid)
+            added_qids.add(qid)
+            @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: added_qids.size)
           end
         else
-          question_ids.each_with_index do |qid, index|
-            @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+          added_qids = Set.new
+          question_ids.each do |qid|
+            qid_i = qid.to_i
+            next if qid_i.zero? || added_qids.include?(qid_i)
+            added_qids.add(qid_i)
+            @assignment.assignment_questions.build(question_id: qid_i, order_number: added_qids.size)
           end
         end
 
-        question_set_ids.each do |qsid|
+        question_set_ids.uniq.reject(&:blank?).each do |qsid|
           @assignment.assignment_question_sets.build(question_set_id: qsid)
         end
 
-        participant_ids.each do |pid|
+        participant_ids.uniq.reject(&:blank?).each do |pid|
           @assignment.assignment_participants.build(participant_id: pid)
         end
 
-        section_ids.each do |sec_id|
+        section_ids.uniq.reject(&:blank?).each do |sec_id|
           @assignment.assignment_sections.build(section_id: sec_id)
         end
 
