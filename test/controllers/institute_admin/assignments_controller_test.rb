@@ -69,7 +69,7 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     # @q3 remains unbundled in @category_a
   end
 
-  test "should import question bank and create category assignments with proper duration_days and bundle question ordering" do
+  test "should import question bank and create category assignments with proper duration_days and bundled question ordering" do
     assert_difference("Assignment.count", 2) do
       post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
     end
@@ -84,9 +84,9 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_equal Date.current, assignment_a.start_date.to_date
     assert_equal Date.current + 30.days, assignment_a.end_date.to_date
 
-    # Verify Question ordering in Assignment A (Bundle 1 -> Bundle 2 -> Unbundled)
+    # Verify Question ordering in Assignment A (Only Bundled Questions: Bundle 1 -> Bundle 2)
     ordered_q_ids = assignment_a.assignment_questions.order(:order_number).pluck(:question_id)
-    assert_equal [@q1.id, @q2.id, @q3.id], ordered_q_ids
+    assert_equal [@q1.id, @q2.id], ordered_q_ids
 
     # Verify Assignment B (Advanced Rails Architecture)
     assignment_b = Assignment.find_by(title: "Advanced Rails Architecture")
@@ -94,6 +94,19 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_equal @category_b.id, assignment_b.question_category_id
     assert_equal Date.current, assignment_b.start_date.to_date
     assert_equal Date.current + 45.days, assignment_b.end_date.to_date
+  end
+
+  test "should import only selected categories when category_ids parameter is provided" do
+    assert_difference("Assignment.count", 1) do
+      post import_question_bank_institute_admin_assignments_path, params: {
+        question_bank_id: @question_bank.id,
+        category_ids: [@category_a.id]
+      }
+    end
+
+    assert_redirected_to institute_admin_assignments_path
+    assert_nil Assignment.find_by(title: "Advanced Rails Architecture")
+    assert_not_nil Assignment.find_by(title: "Ruby Fundamentals")
   end
 
   test "should show assignment with bundle-grouped questions layout" do
@@ -104,7 +117,6 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_response :success
     assert_select "h6", text: "Part A - Basic Syntax"
     assert_select "h6", text: "Part B - OOP Concepts"
-    assert_select "h6", text: "General Questions"
   end
 
   test "should edit assignment with bundle-grouped questions selection form" do
@@ -115,7 +127,6 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_response :success
     assert_select "h6", text: "Part A - Basic Syntax"
     assert_select "h6", text: "Part B - OOP Concepts"
-    assert_select "h6", text: "General Questions"
     assert_select "h5", text: /Participants/
     assert_select "input[type='submit'][value='Save Assignment Changes']"
   end

@@ -206,19 +206,19 @@
                   </span>
                 </td>
                 <td class="text-center">
-                  <div class="d-flex justify-content-center gap-1.5">
+                  <div class="action-btn-group">
                     <%= link_to institute_admin_assignment_path(assignment), 
-                        class: "btn btn-sm btn-light border text-primary px-2 py-1", title: "View Assignment" do %>
+                        class: "action-btn action-btn-view", title: "View Assignment" do %>
                       <i class="bi bi-eye"></i>
                     <% end %>
                     <%= link_to edit_institute_admin_assignment_path(assignment), 
-                        class: "btn btn-sm btn-light border text-secondary px-2 py-1", title: "Edit Assignment" do %>
+                        class: "action-btn action-btn-edit", title: "Edit Assignment" do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
                     <%= link_to institute_admin_assignment_path(assignment), method: :delete,
                         data: { confirm: "Are you sure you want to delete this assignment?", turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this assignment?" },
-                        class: "btn btn-sm btn-light border text-danger px-2 py-1", title: "Delete Assignment" do %>
-                      <i class="bi bi-trash"></i>
+                        class: "action-btn action-btn-delete", title: "Delete Assignment" do %>
+                      <i class="bi bi-trash3"></i>
                     <% end %>
                   </div>
                 </td>

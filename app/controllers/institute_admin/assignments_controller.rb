@@ -45,6 +45,8 @@ module InstituteAdmin
 
     def import_question_bank
       bank_id = params[:question_bank_id]
+      selected_category_ids = params[:category_ids]
+
       question_bank = QuestionBank.find_by(id: bank_id)
 
       if question_bank.nil?
@@ -52,13 +54,18 @@ module InstituteAdmin
         return
       end
 
-      categories = question_bank.question_categories.where(active: true).includes(
+      categories_scope = question_bank.question_categories.where(active: true)
+      if selected_category_ids.present?
+        categories_scope = categories_scope.where(id: selected_category_ids)
+      end
+
+      categories = categories_scope.includes(
         :questions,
         question_bundles: { question_bundle_items: :question }
       )
 
       if categories.empty?
-        redirect_to institute_admin_assignments_path, alert: "The selected Question Bank has no active categories to import."
+        redirect_to institute_admin_assignments_path, alert: "No active categories selected for import."
         return
       end
 
@@ -84,11 +91,10 @@ module InstituteAdmin
 
           assignment.save!(validate: false)
 
-          ordered_question_ids = []
-
           order_index = 0
           ordered_question_ids = []
 
+          # ONLY import bundled questions as requested
           category.question_bundles.order(:position).each do |bundle|
             bundle.question_bundle_items.order(:position).each do |item|
               if item.question_id.present?
@@ -100,16 +106,6 @@ module InstituteAdmin
                 ordered_question_ids << item.question_id
               end
             end
-          end
-
-          category_q_ids = category.questions.pluck(:id)
-          unbundled_q_ids = category_q_ids - ordered_question_ids
-          unbundled_q_ids.each do |qid|
-            assignment.assignment_questions.create!(
-              question_id: qid,
-              bundle_name: "General Questions",
-              order_number: order_index += 1
-            )
           end
 
           created_assignments_count += 1
