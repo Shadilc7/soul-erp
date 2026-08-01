@@ -86,21 +86,29 @@ module InstituteAdmin
 
           ordered_question_ids = []
 
+          order_index = 0
+          ordered_question_ids = []
+
           category.question_bundles.order(:position).each do |bundle|
             bundle.question_bundle_items.order(:position).each do |item|
-              ordered_question_ids << item.question_id if item.question_id.present?
+              if item.question_id.present?
+                assignment.assignment_questions.create!(
+                  question_id: item.question_id,
+                  bundle_name: bundle.name,
+                  order_number: order_index += 1
+                )
+                ordered_question_ids << item.question_id
+              end
             end
           end
 
           category_q_ids = category.questions.pluck(:id)
           unbundled_q_ids = category_q_ids - ordered_question_ids
-          ordered_question_ids.concat(unbundled_q_ids)
-          ordered_question_ids.uniq!
-
-          ordered_question_ids.each_with_index do |qid, index|
+          unbundled_q_ids.each do |qid|
             assignment.assignment_questions.create!(
               question_id: qid,
-              order_number: index + 1
+              bundle_name: "General Questions",
+              order_number: order_index += 1
             )
           end
 
@@ -128,6 +136,7 @@ module InstituteAdmin
       cleaned_params["question_set_ids"]&.reject!(&:blank?)
       cleaned_params["participant_ids"]&.reject!(&:blank?)
 
+      question_bundle_items = cleaned_params.delete("question_bundle_items") || []
       question_ids = cleaned_params.delete("question_ids") || []
       question_set_ids = cleaned_params.delete("question_set_ids") || []
       participant_ids = cleaned_params.delete("participant_ids") || []
@@ -136,8 +145,17 @@ module InstituteAdmin
 
       ActiveRecord::Base.transaction do
         if @assignment.save
-          question_ids.each_with_index do |qid, index|
-            @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+          if question_bundle_items.any?
+            question_bundle_items.each_with_index do |item, index|
+              qid = item["question_id"] || item[:question_id]
+              bname = item["bundle_name"] || item[:bundle_name]
+              next if qid.blank?
+              @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: index + 1)
+            end
+          else
+            question_ids.each_with_index do |qid, index|
+              @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+            end
           end
 
           question_set_ids.each do |qsid|
@@ -183,6 +201,7 @@ module InstituteAdmin
       cleaned_params["question_set_ids"]&.reject!(&:blank?)
       cleaned_params["participant_ids"]&.reject!(&:blank?)
 
+      question_bundle_items = cleaned_params.delete("question_bundle_items") || []
       question_ids = cleaned_params.delete("question_ids") || []
       question_set_ids = cleaned_params.delete("question_set_ids") || []
       participant_ids = cleaned_params.delete("participant_ids") || []
@@ -196,8 +215,17 @@ module InstituteAdmin
         @assignment.assignment_participants.destroy_all
         @assignment.assignment_sections.destroy_all
 
-        question_ids.each_with_index do |qid, index|
-          @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+        if question_bundle_items.any?
+          question_bundle_items.each_with_index do |item, index|
+            qid = item["question_id"] || item[:question_id]
+            bname = item["bundle_name"] || item[:bundle_name]
+            next if qid.blank?
+            @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: index + 1)
+          end
+        else
+          question_ids.each_with_index do |qid, index|
+            @assignment.assignment_questions.build(question_id: qid, order_number: index + 1)
+          end
         end
 
         question_set_ids.each do |qsid|
@@ -247,7 +275,8 @@ module InstituteAdmin
         section_ids: [],
         participant_ids: [],
         question_ids: [],
-        question_set_ids: []
+        question_set_ids: [],
+        question_bundle_items: [:question_id, :bundle_name]
       )
     end
   end

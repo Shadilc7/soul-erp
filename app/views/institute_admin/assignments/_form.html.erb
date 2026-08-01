@@ -100,7 +100,7 @@
             <div class="d-flex flex-column gap-4">
               <% grouped.each_with_index do |(group_name, questions), b_idx| %>
                 <% is_custom_group = (group_name == "Institution Custom Questions" || (group_name == "General Questions" && @assignment.question_category.blank?)) %>
-                <div class="card border rounded-4 bg-white shadow-sm p-3">
+                <div class="card border rounded-4 bg-white shadow-sm p-3" data-is-custom-group="<%= is_custom_group %>">
                   <!-- Bundle Section Header with Collapse Toggle -->
                   <div class="card-header bg-light border-0 rounded-3 p-3 mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer bundle-header-toggle"
                        data-bs-toggle="collapse" 
@@ -119,7 +119,7 @@
                     <% if is_custom_group %>
                       <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation()">
                         <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2.5 py-1 small">
-                          <i class="bi bi-info-circle me-1"></i> Drag to bundle or click "+ Add to Bundle"
+                          <i class="bi bi-info-circle me-1"></i> Click "+ Add to Bundle" to assign questions
                         </span>
                       </div>
                     <% else %>
@@ -138,31 +138,38 @@
 
                   <!-- Questions in Bundle Collapse -->
                   <div class="collapse show bundle-collapse-container mt-3" id="edit_bundle_collapse_<%= b_idx %>">
-                    <div class="d-flex flex-column gap-3 bundle-questions-container" id="bundle_group_<%= b_idx %>">
+                    <div class="d-flex flex-column gap-3 bundle-questions-container" id="bundle_group_<%= b_idx %>" data-is-custom-container="<%= is_custom_group %>">
+                      <% available_bundles = grouped.each_with_index.select { |(name, _), _| name != group_name } %>
                       <% questions.each_with_index do |q, q_idx| %>
                       <% is_checked = @assignment.question_ids.include?(q.id) %>
                       <% show_checkbox = !is_custom_group %>
-                      <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all question-item-card position-relative" draggable="true" data-question-id="<%= q.id %>">
+                      <% added_count_in_erb = is_custom_group ? available_bundles.count { |(target_name, target_questions), _| target_questions.any? { |tq| tq.id == q.id } } : 0 %>
+                      <% total_bundles_in_erb = is_custom_group ? available_bundles.size : 0 %>
+                      <% is_added_to_all_bundles = is_custom_group && total_bundles_in_erb > 0 && added_count_in_erb == total_bundles_in_erb %>
+                      <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all question-item-card position-relative <%= 'opacity-50 bg-light-subtle' if is_added_to_all_bundles %>" <%= 'draggable="true"' unless is_custom_group %> data-question-id="<%= q.id %>">
                         <div class="d-flex align-items-center justify-content-between gap-3">
                           
                           <!-- Left Controls: Drag Handle + Checkbox + Question Details -->
                           <div class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden">
                             
-                            <!-- Drag Handle Container -->
-                            <div class="d-flex align-items-center pe-3 border-end text-muted flex-shrink-0">
-                              <span class="drag-handle p-1.5 rounded-2 bg-light hover-bg-secondary-subtle cursor-grab" title="Drag to move/reorder question">
-                                <i class="bi bi-grip-vertical fs-5 text-secondary"></i>
-                              </span>
-                            </div>
+                            <!-- Drag Handle Container (Only inside bundles) -->
+                            <% unless is_custom_group %>
+                              <div class="d-flex align-items-center pe-3 border-end text-muted flex-shrink-0">
+                                <span class="drag-handle p-1.5 rounded-2 bg-light hover-bg-secondary-subtle cursor-grab" title="Drag to move/reorder question">
+                                  <i class="bi bi-grip-vertical fs-5 text-secondary"></i>
+                                </span>
+                              </div>
+                            <% end %>
 
                             <!-- Checkbox -->
                             <div class="form-check mb-0 pe-2 flex-shrink-0 question-checkbox-wrapper <%= 'd-none' unless show_checkbox %>">
-                              <%= check_box_tag "assignment[question_ids][]", q.id, (is_checked && show_checkbox),
+                              <%= check_box_tag "assignment[question_bundle_items][][question_id]", q.id, (is_checked && show_checkbox),
                                   class: "form-check-input question-checkbox fs-5 cursor-pointer m-0",
-                                  id: "question_chk_#{q.id}",
+                                  id: "question_chk_#{b_idx}_#{q_idx}_#{q.id}",
                                   data: { 
                                     action: "change->assignment-form#updateCounter change->assignment-form#updateSelectAllQuestions"
                                   } %>
+                              <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="<%= group_name %>" class="question-bundle-name-input" <%= 'disabled' unless (is_checked && show_checkbox) %>>
                             </div>
 
                             <!-- Main Question Information -->
@@ -185,6 +192,16 @@
                                 <% if q.required? %>
                                   <span class="badge bg-danger-subtle text-danger fw-semibold" style="font-size: 0.7rem;">
                                     Required
+                                  </span>
+                                <% end %>
+
+                                <% if is_custom_group && is_added_to_all_bundles %>
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold added-status-badge" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check2-all me-1"></i> Added to All Bundles
+                                  </span>
+                                <% elsif is_custom_group && added_count_in_erb > 0 %>
+                                  <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold added-status-badge" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check2 me-1"></i> Added (<%= added_count_in_erb %>/<%= total_bundles_in_erb %>)
                                   </span>
                                 <% end %>
                               </div>
@@ -212,30 +229,73 @@
                           <!-- Right Action: Add to Bundle + Preview Buttons -->
                           <div class="ps-2 flex-shrink-0 d-flex align-items-center gap-2">
                             <% if is_custom_group %>
-                              <div class="dropdown add-to-bundle-btn-wrapper">
-                                <button type="button" class="btn btn-sm btn-primary rounded-3 px-2.5 py-1.5 d-inline-flex align-items-center gap-1 text-nowrap dropdown-toggle fw-semibold" data-bs-toggle="dropdown">
-                                  <i class="bi bi-plus-lg"></i> Add to Bundle
+                              <% if available_bundles.size == 1 %>
+                                <% target_name, target_questions = available_bundles.first.first %>
+                                <% target_idx = available_bundles.first.last %>
+                                <% is_added = target_questions.any? { |tq| tq.id == q.id } %>
+                                <% if is_added %>
+                                  <button type="button" class="btn btn-sm btn-secondary text-nowrap disabled opacity-75 add-to-bundle-single-btn" 
+                                          data-target-container-id="bundle_group_<%= target_idx %>" disabled>
+                                    <i class="bi bi-check2-all me-1"></i> Added to All Bundles
+                                  </button>
+                                <% else %>
+                                  <button type="button" class="btn btn-sm btn-primary rounded-3 px-2.5 py-1.5 d-inline-flex align-items-center gap-1 text-nowrap fw-semibold add-to-bundle-single-btn" 
+                                          data-target-container-id="bundle_group_<%= target_idx %>"
+                                          onclick="moveQuestionToBundle(this, 'bundle_group_<%= target_idx %>')">
+                                    <i class="bi bi-plus-lg me-1"></i> Add to Bundle
+                                  </button>
+                                <% end %>
+                              <% elsif available_bundles.size > 1 %>
+                                <div class="dropdown add-to-bundle-dropdown">
+                                  <button type="button" 
+                                          class="btn btn-sm <%= is_added_to_all_bundles ? 'btn-secondary disabled opacity-75' : 'btn-primary' %> rounded-3 px-2.5 py-1.5 fw-semibold dropdown-toggle add-to-bundle-main-btn text-nowrap" 
+                                          data-bs-toggle="dropdown" 
+                                          aria-expanded="false" 
+                                          <%= 'disabled' if is_added_to_all_bundles %>>
+                                    <% if is_added_to_all_bundles %>
+                                      <i class="bi bi-check2-all me-1"></i> Added to All Bundles
+                                    <% elsif added_count_in_erb > 0 %>
+                                      <i class="bi bi-check2 me-1"></i> Added (<%= added_count_in_erb %>/<%= total_bundles_in_erb %> Bundles)
+                                    <% else %>
+                                      <i class="bi bi-plus-lg me-1"></i> Add to Bundle
+                                    <% end %>
+                                  </button>
+                                  <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <% available_bundles.each do |(target_name, target_questions), t_idx| %>
+                                      <% is_added = target_questions.any? { |tq| tq.id == q.id } %>
+                                      <li>
+                                        <button type="button" 
+                                                class="dropdown-item d-flex align-items-center justify-content-between gap-2 add-to-bundle-item <%= 'disabled text-muted bg-light' if is_added %>" 
+                                                data-target-container-id="bundle_group_<%= t_idx %>" 
+                                                data-bundle-name="<%= target_name %>"
+                                                <%= 'disabled' if is_added %>
+                                                onclick="moveQuestionToBundle(this, 'bundle_group_<%= t_idx %>')">
+                                          <span>↳ <%= target_name %></span>
+                                          <% if is_added %>
+                                            <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">Added</span>
+                                          <% end %>
+                                        </button>
+                                      </li>
+                                    <% end %>
+                                  </ul>
+                                </div>
+                              <% else %>
+                                <button type="button" class="btn btn-sm btn-secondary rounded-3 px-2.5 py-1.5 text-nowrap disabled" title="No bundles available">
+                                  <i class="bi bi-plus-lg me-1"></i> Add to Bundle
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
-                                  <% grouped.each_with_index do |(target_name, _), t_idx| %>
-                                    <% next if target_name == group_name %>
-                                    <li>
-                                      <button type="button" class="dropdown-item small py-1.5 px-3 d-flex align-items-center gap-2 cursor-pointer" 
-                                              onclick="moveQuestionToBundle(this, 'bundle_group_<%= t_idx %>')">
-                                        <i class="bi bi-folder-plus text-primary"></i> <%= target_name %>
-                                      </button>
-                                    </li>
-                                  <% end %>
-                                </ul>
-                              </div>
+                              <% end %>
                             <% else %>
-                              <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-3 px-2 py-1 remove-from-bundle-btn" 
-                                      onclick="removeQuestionCard(this)" title="Remove question from bundle">
-                                <i class="bi bi-trash text-danger fs-6"></i>
-                              </button>
+                              <% is_custom_question = (q.question_category_id != @assignment.question_category_id || q.question_category_id.nil?) %>
+                              <% if is_custom_question %>
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-3 px-2 py-1 remove-from-bundle-btn" 
+                                        onclick="removeQuestionCard(this)" title="Remove custom question from bundle">
+                                  <i class="bi bi-trash text-danger fs-6"></i>
+                                </button>
+                              <% end %>
                             <% end %>
 
-                            <button type="button" class="btn btn-sm btn-light text-secondary border rounded-3 px-2.5 py-1.5 d-inline-flex align-items-center gap-1.5 text-nowrap" data-bs-toggle="modal" data-bs-target="#editQuestionModal<%= q.id %>">
+                            <button type="button" class="btn btn-sm btn-light text-secondary border rounded-3 px-2.5 py-1.5 d-inline-flex align-items-center gap-1.5 text-nowrap" 
+                                    data-bs-toggle="modal" data-bs-target="#editQuestionModal<%= q.id %>">
                               <i class="bi bi-eye text-primary"></i> Preview
                             </button>
                           </div>
@@ -542,18 +602,7 @@
     });
 
     masterCheckbox.checked = isChecked;
-
-    const formElement = container.closest('form');
-    if (formElement) {
-      const questionsCounterTarget = formElement.querySelector('[data-assignment-form-target="questionsCounter"]');
-      const count = formElement.querySelectorAll('input[name="assignment[question_ids][]"]:checked').length;
-      if (questionsCounterTarget) {
-        questionsCounterTarget.textContent = `${count} Selected`;
-      }
-      
-      const totalQuestions = formElement.querySelectorAll('.question-checkbox').length;
-      const selectAllQuestionsTarget = formElement.querySelector('[data-assignment-form-target="selectAllQuestions"]');
-    }
+    updateFormCounters(container);
   }
 
   function updateBundleIndices(container) {
@@ -564,37 +613,245 @@
     });
   }
 
-  function moveQuestionToBundle(btn, targetContainerId) {
-    const card = btn.closest('.question-item-card');
-    const targetContainer = document.getElementById(targetContainerId);
-    if (!card || !targetContainer) return;
-
-    // Clone the question card so it remains in the Custom Questions pool!
-    const clonedCard = card.cloneNode(true);
-
-    // Show and check the checkbox in cloned card
+  function prepareClonedQuestionCard(clonedCard, targetBundleName) {
+    // 1. Show and check the checkbox in cloned card
     const cbWrapper = clonedCard.querySelector('.question-checkbox-wrapper');
     const cb = clonedCard.querySelector('.question-checkbox');
-    if (cbWrapper) cbWrapper.classList.remove('d-none');
+    if (cbWrapper) {
+      cbWrapper.classList.remove('d-none');
+      cbWrapper.style.display = 'block';
+    }
     if (cb) {
       cb.checked = true;
+      cb.setAttribute('checked', 'checked');
+      cb.name = 'assignment[question_bundle_items][][question_id]';
     }
 
-    // Remove the Add to Bundle dropdown button from cloned card
-    const addBtnWrapper = clonedCard.querySelector('.add-to-bundle-btn-wrapper');
-    if (addBtnWrapper) addBtnWrapper.remove();
+    let bInput = clonedCard.querySelector('.question-bundle-name-input');
+    if (!bInput) {
+      bInput = document.createElement('input');
+      bInput.type = 'hidden';
+      bInput.className = 'question-bundle-name-input';
+      if (cbWrapper) cbWrapper.appendChild(bInput);
+      else clonedCard.appendChild(bInput);
+    }
+    bInput.name = 'assignment[question_bundle_items][][bundle_name]';
+    bInput.value = targetBundleName || '';
+    bInput.disabled = false;
 
-    // Add remove trash button to cloned card if not present
+    // 2. Add Drag handle if not present
+    clonedCard.setAttribute('draggable', 'true');
+    const leftControls = clonedCard.querySelector('.d-flex.align-items-center.gap-3.flex-grow-1');
+    if (leftControls && !leftControls.querySelector('.drag-handle')) {
+      const dragContainer = document.createElement('div');
+      dragContainer.className = 'd-flex align-items-center pe-3 border-end text-muted flex-shrink-0';
+      dragContainer.innerHTML = `
+        <span class="drag-handle p-1.5 rounded-2 bg-light hover-bg-secondary-subtle cursor-grab" title="Drag to move/reorder question">
+          <i class="bi bi-grip-vertical fs-5 text-secondary"></i>
+        </span>
+      `;
+      leftControls.insertBefore(dragContainer, leftControls.firstChild);
+    }
+
+    // 3. Remove ALL Add to Bundle buttons, dropdowns, status badges, and opacity from cloned card
+    clonedCard.classList.remove('opacity-50', 'bg-light-subtle');
+    clonedCard.querySelectorAll('.added-status-badge, .add-to-bundle-btn-wrapper, .add-to-bundle-single-btn, .add-to-bundle-wrapper, [class*="add-to-bundle"]').forEach(el => el.remove());
+
+    // 4. Add remove trash button to cloned card if not present
     const actionContainer = clonedCard.querySelector('.ps-2.flex-shrink-0');
     if (actionContainer && !actionContainer.querySelector('.remove-from-bundle-btn')) {
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'btn btn-sm btn-outline-danger border-0 rounded-3 px-2 py-1 remove-from-bundle-btn';
       removeBtn.title = 'Remove question from bundle';
-      removeBtn.onclick = function() { removeQuestionCard(this); };
+      removeBtn.onmousedown = function(e) { e.stopPropagation(); };
+      removeBtn.onclick = function(e) { e.stopPropagation(); removeQuestionCard(this); };
       removeBtn.innerHTML = '<i class="bi bi-trash text-danger fs-6"></i>';
       actionContainer.insertBefore(removeBtn, actionContainer.firstChild);
     }
+  }
+
+  function showToastMessage(message, type = 'success') {
+    let container = document.getElementById('assignment-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'assignment-toast-container';
+      container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+    }
+
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-white bg-${type === 'warning' ? 'danger' : 'success'} border-0 shadow-lg show`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i class="bi bi-${type === 'warning' ? 'trash-fill' : 'check-circle-fill'} fs-6"></i>
+          <span>${message}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+      </div>
+    `;
+
+    container.appendChild(toastEl);
+    setTimeout(() => {
+      if (toastEl.parentNode) {
+        toastEl.classList.remove('show');
+        setTimeout(() => toastEl.remove(), 300);
+      }
+    }, 2500);
+  }
+
+  function updateAddControlsForQuestion(questionId) {
+    if (!questionId) return;
+
+    // All custom cards in Custom Questions pool matching this question ID
+    const customCards = Array.from(document.querySelectorAll('.question-item-card[data-question-id="' + questionId + '"]'))
+                             .filter(c => c.closest('.card[data-is-custom-group="true"]'));
+
+    // All target bundle containers
+    const targetContainers = Array.from(document.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"]'));
+
+    let addedCount = 0;
+    targetContainers.forEach(container => {
+      if (container.querySelector('.question-item-card[data-question-id="' + questionId + '"]')) {
+        addedCount++;
+      }
+    });
+
+    const totalBundles = targetContainers.length;
+    const addedToAll = totalBundles > 0 && addedCount === totalBundles;
+
+    customCards.forEach(card => {
+      const badgeContainer = card.querySelector('.d-flex.align-items-center.gap-2.mb-1.flex-wrap');
+      let statusBadge = card.querySelector('.added-status-badge');
+
+      if (addedToAll) {
+        card.classList.add('opacity-50', 'bg-light-subtle');
+        if (badgeContainer) {
+          if (!statusBadge) {
+            statusBadge = document.createElement('span');
+            badgeContainer.appendChild(statusBadge);
+          }
+          statusBadge.className = 'badge bg-success-subtle text-success border border-success-subtle fw-semibold added-status-badge';
+          statusBadge.style.fontSize = '0.7rem';
+          statusBadge.innerHTML = '<i class="bi bi-check2-all me-1"></i> Added to All Bundles';
+        }
+      } else if (addedCount > 0) {
+        card.classList.remove('opacity-50', 'bg-light-subtle');
+        if (badgeContainer) {
+          if (!statusBadge) {
+            statusBadge = document.createElement('span');
+            badgeContainer.appendChild(statusBadge);
+          }
+          statusBadge.className = 'badge bg-info-subtle text-info border border-info-subtle fw-semibold added-status-badge';
+          statusBadge.style.fontSize = '0.7rem';
+          statusBadge.innerHTML = `<i class="bi bi-check2 me-1"></i> Added (${addedCount}/${totalBundles})`;
+        }
+      } else {
+        card.classList.remove('opacity-50', 'bg-light-subtle');
+        if (statusBadge) statusBadge.remove();
+      }
+
+      // Update Bootstrap Dropdown Menu & Main Button
+      const dropdownMainBtn = card.querySelector('.add-to-bundle-main-btn');
+      const dropdownItems = card.querySelectorAll('.add-to-bundle-item');
+
+      if (dropdownMainBtn) {
+        if (addedToAll) {
+          dropdownMainBtn.disabled = true;
+          dropdownMainBtn.className = 'btn btn-sm btn-secondary text-nowrap disabled opacity-75 dropdown-toggle add-to-bundle-main-btn rounded-3 px-2.5 py-1.5 fw-semibold';
+          dropdownMainBtn.innerHTML = '<i class="bi bi-check2-all me-1"></i> Added to All Bundles';
+        } else if (addedCount > 0) {
+          dropdownMainBtn.disabled = false;
+          dropdownMainBtn.className = 'btn btn-sm btn-primary text-nowrap dropdown-toggle add-to-bundle-main-btn rounded-3 px-2.5 py-1.5 fw-semibold';
+          dropdownMainBtn.innerHTML = `<i class="bi bi-check2 me-1"></i> Added (${addedCount}/${totalBundles} Bundles)`;
+        } else {
+          dropdownMainBtn.disabled = false;
+          dropdownMainBtn.className = 'btn btn-sm btn-primary text-nowrap dropdown-toggle add-to-bundle-main-btn rounded-3 px-2.5 py-1.5 fw-semibold';
+          dropdownMainBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add to Bundle';
+        }
+      }
+
+      dropdownItems.forEach(item => {
+        const targetContainerId = item.getAttribute('data-target-container-id');
+        const bundleName = item.getAttribute('data-bundle-name') || '';
+        if (targetContainerId) {
+          const container = document.getElementById(targetContainerId);
+          const exists = container && container.querySelector('.question-item-card[data-question-id="' + questionId + '"]') !== null;
+          if (exists) {
+            item.disabled = true;
+            item.className = 'dropdown-item d-flex align-items-center justify-content-between gap-2 add-to-bundle-item disabled text-muted bg-light';
+            item.innerHTML = `<span>↳ ${bundleName}</span><span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">Added</span>`;
+          } else {
+            item.disabled = false;
+            item.className = 'dropdown-item d-flex align-items-center justify-content-between gap-2 add-to-bundle-item';
+            item.innerHTML = `<span>↳ ${bundleName}</span>`;
+          }
+        }
+      });
+
+      // Update Single Button
+      const singleBtn = card.querySelector('.add-to-bundle-single-btn');
+      if (singleBtn) {
+        const targetContainerId = singleBtn.getAttribute('data-target-container-id');
+        if (targetContainerId) {
+          const container = document.getElementById(targetContainerId);
+          const exists = container && container.querySelector('.question-item-card[data-question-id="' + questionId + '"]') !== null;
+          if (addedToAll || exists) {
+            singleBtn.disabled = true;
+            singleBtn.className = 'btn btn-sm btn-secondary text-nowrap disabled opacity-75 add-to-bundle-single-btn';
+            singleBtn.innerHTML = addedToAll ? '<i class="bi bi-check2-all me-1"></i> Added to All Bundles' : '<i class="bi bi-check2 me-1"></i> Added to Bundle';
+          } else {
+            singleBtn.disabled = false;
+            singleBtn.className = 'btn btn-sm btn-primary rounded-3 px-2.5 py-1.5 d-inline-flex align-items-center gap-1 text-nowrap fw-semibold add-to-bundle-single-btn';
+            singleBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add to Bundle';
+          }
+        }
+      }
+    });
+  }
+
+  function updateAllAddControls() {
+    const questionCards = document.querySelectorAll('.card[data-is-custom-group="true"] .question-item-card[data-question-id]');
+    const qIds = Array.from(questionCards).map(c => c.getAttribute('data-question-id'));
+    const uniqueIds = Array.from(new Set(qIds));
+    uniqueIds.forEach(id => updateAddControlsForQuestion(id));
+  }
+
+  function moveQuestionToBundle(btn, targetContainerId) {
+    // Hide parent dropdown menu if button is inside a dropdown
+    const dropdownWrapper = btn.closest('.dropdown');
+    if (dropdownWrapper) {
+      const toggle = dropdownWrapper.querySelector('[data-bs-toggle="dropdown"]');
+      const menu = dropdownWrapper.querySelector('.dropdown-menu');
+      if (toggle && window.bootstrap && window.bootstrap.Dropdown) {
+        const bsDropdown = window.bootstrap.Dropdown.getInstance(toggle) || new window.bootstrap.Dropdown(toggle);
+        if (bsDropdown) bsDropdown.hide();
+      }
+      if (toggle) toggle.classList.remove('show');
+      if (menu) menu.classList.remove('show');
+    }
+
+    const card = btn.closest('.question-item-card');
+    const targetContainer = document.getElementById(targetContainerId);
+    if (!card || !targetContainer) return;
+
+    const qId = card.getAttribute('data-question-id');
+
+    // Prevent duplicate questions in the target bundle!
+    if (qId && targetContainer.querySelector(`.question-item-card[data-question-id="${qId}"]`)) {
+      return;
+    }
+
+    const targetHeader = targetContainer.closest('.card')?.querySelector('.bundle-header-toggle h6')?.textContent?.trim() || 'Bundle';
+
+    // Clone the question card so it remains in the Custom Questions pool!
+    const clonedCard = card.cloneNode(true);
+    prepareClonedQuestionCard(clonedCard, targetHeader);
 
     // Append cloned card to target bundle container
     targetContainer.appendChild(clonedCard);
@@ -607,48 +864,81 @@
     // Update bundle question position numbers
     document.querySelectorAll('.bundle-questions-container').forEach(updateBundleIndices);
     updateFormCounters(targetContainer);
+    if (qId) updateAddControlsForQuestion(qId);
+
+    showToastMessage(`Question added to <strong>${targetHeader}</strong>`);
   }
 
   function removeQuestionCard(btn) {
     const card = btn.closest('.question-item-card');
     if (!card) return;
+    const qId = card.getAttribute('data-question-id');
     const container = card.parentElement;
     card.remove();
     if (container) {
       document.querySelectorAll('.bundle-questions-container').forEach(updateBundleIndices);
       updateFormCounters(container);
     }
+    if (qId) updateAddControlsForQuestion(qId);
+
+    showToastMessage('Question removed from bundle', 'warning');
   }
 
   function updateFormCounters(el) {
     const formElement = el.closest('form') || document.querySelector('form');
     if (formElement) {
       const questionsCounterTarget = formElement.querySelector('[data-assignment-form-target="questionsCounter"]');
-      const count = formElement.querySelectorAll('input[name="assignment[question_ids][]"]:checked').length;
+      const count = formElement.querySelectorAll('.question-checkbox:checked').length;
       if (questionsCounterTarget) {
         questionsCounterTarget.textContent = `${count} Selected`;
       }
 
-      const totalQuestions = formElement.querySelectorAll('.question-checkbox:not(.d-none)').length;
+      const bundleCheckboxes = formElement.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"] .question-checkbox');
+      const checkboxesToCount = bundleCheckboxes.length > 0 ? bundleCheckboxes : formElement.querySelectorAll('.question-checkbox');
+      const totalQuestions = checkboxesToCount.length;
+      const checkedCount = Array.from(checkboxesToCount).filter(cb => cb.checked).length;
+
       const selectAllQuestionsTarget = formElement.querySelector('[data-assignment-form-target="selectAllQuestions"]');
       if (selectAllQuestionsTarget) {
-        selectAllQuestionsTarget.checked = totalQuestions > 0 && totalQuestions === count;
+        selectAllQuestionsTarget.checked = totalQuestions > 0 && totalQuestions === checkedCount;
+      }
+
+      try {
+        const app = window.StimulusApplication || window.Stimulus;
+        const controller = app?.getControllerForElementAndIdentifier ? app.getControllerForElementAndIdentifier(formElement, 'assignment-form') : null;
+        if (controller && typeof controller.validateForm === 'function') {
+          controller.validateForm();
+        }
+      } catch (e) {
+        console.warn("Stimulus form validation note:", e);
       }
     }
   }
 
-  // HTML5 Drag and Drop implementation for question cards across bundles
-  document.addEventListener('DOMContentLoaded', initAllDragAndDrop);
-  document.addEventListener('turbo:load', initAllDragAndDrop);
+  // HTML5 Drag and Drop implementation for question cards inside bundles only
+  document.addEventListener('DOMContentLoaded', () => {
+    initAllDragAndDrop();
+    updateAllAddControls();
+  });
+  document.addEventListener('turbo:load', () => {
+    initAllDragAndDrop();
+    updateAllAddControls();
+  });
 
   function initAllDragAndDrop() {
     let globalDraggedCard = null;
 
     window.bindDragEventsToCard = function(card) {
+      if (card.closest('.bundle-questions-container[data-is-custom-container="true"]')) {
+        card.removeAttribute('draggable');
+        return;
+      }
+
+      card.setAttribute('draggable', 'true');
       card.addEventListener('dragstart', (e) => {
         globalDraggedCard = card;
         card.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.effectAllowed = 'move';
       });
 
       card.addEventListener('dragend', (e) => {
@@ -659,9 +949,9 @@
       });
     };
 
-    document.querySelectorAll('.question-item-card').forEach(window.bindDragEventsToCard);
+    document.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"] .question-item-card').forEach(window.bindDragEventsToCard);
 
-    const containers = document.querySelectorAll('.bundle-questions-container');
+    const containers = document.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"]');
     containers.forEach(container => {
       container.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -677,8 +967,6 @@
           } else {
             targetCard.before(globalDraggedCard);
           }
-        } else if (!targetCard && container !== globalDraggedCard.parentElement) {
-          // Hovering over container
         }
       });
 
@@ -701,38 +989,14 @@
         container.querySelectorAll('.question-item-card').forEach(c => c.classList.remove('drag-over'));
         if (!globalDraggedCard) return;
 
-        const sourceHeader = globalDraggedCard.closest('.card')?.querySelector('.bundle-header-toggle')?.textContent || '';
-        const targetHeader = container.closest('.card')?.querySelector('.bundle-header-toggle')?.textContent || '';
-        const isSourceCustom = sourceHeader.includes('Custom Questions');
-        const isTargetCustom = targetHeader.includes('Custom Questions');
+        const targetHeader = container.closest('.card')?.querySelector('.bundle-header-toggle h6')?.textContent?.trim() || '';
+        const bInput = globalDraggedCard.querySelector('.question-bundle-name-input');
+        if (bInput) bInput.value = targetHeader;
 
-        if (isSourceCustom && !isTargetCustom) {
-          // Clone question from Custom Questions into Target Bundle
-          const clonedCard = globalDraggedCard.cloneNode(true);
-
-          const cbWrapper = clonedCard.querySelector('.question-checkbox-wrapper');
-          const cb = clonedCard.querySelector('.question-checkbox');
-          if (cbWrapper) cbWrapper.classList.remove('d-none');
-          if (cb) cb.checked = true;
-
-          const addBtnWrapper = clonedCard.querySelector('.add-to-bundle-btn-wrapper');
-          if (addBtnWrapper) addBtnWrapper.remove();
-
-          const actionContainer = clonedCard.querySelector('.ps-2.flex-shrink-0');
-          if (actionContainer && !actionContainer.querySelector('.remove-from-bundle-btn')) {
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn btn-sm btn-outline-danger border-0 rounded-3 px-2 py-1 remove-from-bundle-btn';
-            removeBtn.title = 'Remove question from bundle';
-            removeBtn.onclick = function() { removeQuestionCard(this); };
-            removeBtn.innerHTML = '<i class="bi bi-trash text-danger fs-6"></i>';
-            actionContainer.insertBefore(removeBtn, actionContainer.firstChild);
-          }
-
-          container.appendChild(clonedCard);
-          window.bindDragEventsToCard(clonedCard);
-        } else if (!isSourceCustom && !isTargetCustom) {
-          // Move question between bundles
+        const targetCard = e.target.closest('.question-item-card');
+        if (targetCard && targetCard !== globalDraggedCard && container.contains(targetCard)) {
+          targetCard.before(globalDraggedCard);
+        } else if (!container.contains(globalDraggedCard)) {
           container.appendChild(globalDraggedCard);
         }
 

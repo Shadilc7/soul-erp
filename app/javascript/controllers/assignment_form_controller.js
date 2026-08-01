@@ -259,7 +259,7 @@ export default class extends Controller {
   updateQuestionsCount() {
     if (!this.hasQuestionsCounterTarget) return;
     
-    const count = document.querySelectorAll('input[name="assignment[question_ids][]"]:checked').length
+    const count = document.querySelectorAll('.question-checkbox:checked').length
     this.questionsCounterTarget.textContent = `${count} Selected`
     this.validateForm()
   }
@@ -304,7 +304,7 @@ export default class extends Controller {
     // If we're not on the creation page, return true
     if (!this.hasQuestionsCounterTarget) return true;
     
-    const questions = document.querySelectorAll('input[name="assignment[question_ids][]"]:checked').length
+    const questions = document.querySelectorAll('.question-checkbox:checked').length
     return questions > 0
   }
 
@@ -353,15 +353,22 @@ export default class extends Controller {
   toggleAllQuestions(event) {
     console.log("Toggle all questions:", event.target.checked)
     const checked = event.target.checked
-    this.element.querySelectorAll('.question-checkbox').forEach(checkbox => {
+    const bundleCheckboxes = this.element.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"] .question-checkbox')
+    const checkboxesToToggle = bundleCheckboxes.length > 0 ? bundleCheckboxes : this.element.querySelectorAll('.question-checkbox')
+
+    checkboxesToToggle.forEach(checkbox => {
       checkbox.checked = checked
     })
     this.updateQuestionsCount()
+    this.updateSelectAllQuestions()
   }
 
   updateSelectAllQuestions() {
-    const totalQuestions = this.element.querySelectorAll('.question-checkbox').length
-    const checkedQuestions = this.element.querySelectorAll('.question-checkbox:checked').length
+    const bundleCheckboxes = this.element.querySelectorAll('.bundle-questions-container[data-is-custom-container="false"] .question-checkbox')
+    const checkboxesToCount = bundleCheckboxes.length > 0 ? bundleCheckboxes : this.element.querySelectorAll('.question-checkbox')
+
+    const totalQuestions = checkboxesToCount.length
+    const checkedQuestions = Array.from(checkboxesToCount).filter(cb => cb.checked).length
 
     if (this.hasSelectAllQuestionsTarget) {
       this.selectAllQuestionsTarget.checked = totalQuestions > 0 && totalQuestions === checkedQuestions

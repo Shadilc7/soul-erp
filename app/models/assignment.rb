@@ -134,44 +134,40 @@ class Assignment < ApplicationRecord
   end
 
   def questions_grouped_by_bundle
-    assigned_q_ids = questions.pluck(:id)
-    return {} if assigned_q_ids.empty?
+    assigned_aqs = assignment_questions.includes(question: :options).order(:order_number, :id).to_a
+    return {} if assigned_aqs.empty?
 
     groups = {}
 
     if question_category.present?
-      bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
-      bundled_q_ids = []
+      # Preserve Category Bundle Order
+      bundles = question_category.question_bundles.order(:position)
 
       bundles.each do |bundle|
-        b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| assigned_q_ids.include?(q.id) }
-        if b_questions.any?
-          groups[bundle.name] = b_questions
-          bundled_q_ids.concat(b_questions.map(&:id))
+        # 1. Questions assigned explicitly to this bundle via assignment_questions.bundle_name
+        bundle_aqs = assigned_aqs.select { |aq| aq.bundle_name == bundle.name }
+        if bundle_aqs.any?
+          groups[bundle.name] = bundle_aqs.map(&:question).compact
+        else
+          # 2. Fallback for legacy assignments: check template items
+          template_q_ids = bundle.question_bundle_items.pluck(:question_id)
+          legacy_aqs = assigned_aqs.select { |aq| aq.bundle_name.blank? && template_q_ids.include?(aq.question_id) }
+          groups[bundle.name] = legacy_aqs.map(&:question).compact if legacy_aqs.any?
         end
       end
 
-      unbundled_ids = assigned_q_ids - bundled_q_ids
-      if unbundled_ids.any?
-        unbundled_questions = if assignment_questions.where.not(order_number: nil).any?
-                                questions.includes(:options).where(id: unbundled_ids).joins(:assignment_questions).order("assignment_questions.order_number ASC, questions.id ASC").to_a
-                              else
-                                questions.includes(:options).where(id: unbundled_ids).order(:created_at).to_a
-                              end
+      # Handle any assigned questions with unmatched bundle names or no bundle name
+      claimed_q_ids = groups.values.flatten.compact.map(&:id)
+      unclaimed_aqs = assigned_aqs.reject { |aq| claimed_q_ids.include?(aq.question_id) }
 
-        cat_unbundled = unbundled_questions.select { |q| q.question_category_id == question_category_id }
-        inst_unbundled = unbundled_questions.reject { |q| q.question_category_id == question_category_id }
-
-        if cat_unbundled.any?
-          groups["General Questions"] = cat_unbundled
-        end
-
-        if inst_unbundled.any?
-          groups["Institution Custom Questions"] = inst_unbundled
+      if unclaimed_aqs.any?
+        unclaimed_aqs.group_by { |aq| aq.bundle_name.presence || "General Questions" }.each do |b_name, aq_list|
+          groups[b_name] ||= []
+          groups[b_name].concat(aq_list.map(&:question).compact)
         end
       end
     else
-      groups["Questions"] = questions.includes(:options).to_a
+      groups["Questions"] = assigned_aqs.map(&:question).compact
     end
 
     groups
@@ -179,49 +175,56 @@ class Assignment < ApplicationRecord
 
   def edit_questions_grouped_by_bundle
     inst_q_ids = institute&.questions&.pluck(:id) || []
-    assigned_q_ids = questions.pluck(:id)
+    assigned_aqs = assignment_questions.includes(question: :options).order(:order_number, :id).to_a
+    assigned_q_ids = assigned_aqs.map(&:question_id)
     cat_q_ids = question_category&.questions&.pluck(:id) || []
-    all_available_ids = (cat_q_ids + assigned_q_ids + inst_q_ids).uniq
 
+    all_available_ids = (cat_q_ids + assigned_q_ids + inst_q_ids).uniq
     return {} if all_available_ids.empty?
 
-    q_order_map = assignment_questions.pluck(:question_id, :order_number).to_h
     groups = {}
 
     if question_category.present?
       bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
-      bundled_q_ids = []
 
+      bundled_q_ids = []
       bundles.each do |bundle|
-        b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| all_available_ids.include?(q.id) }
-        if b_questions.any?
-          b_questions.sort_by! { |q| q_order_map[q.id] || 999_999 }
-          groups[bundle.name] = b_questions
-          bundled_q_ids.concat(b_questions.map(&:id))
+        # 1. Explicitly assigned questions to this bundle name
+        bundle_aqs = assigned_aqs.select { |aq| aq.bundle_name == bundle.name }
+        if bundle_aqs.any?
+          groups[bundle.name] = bundle_aqs.map(&:question).compact
+          bundled_q_ids.concat(groups[bundle.name].map(&:id))
+        else
+          # 2. Template questions for category bundle
+          b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| all_available_ids.include?(q.id) }
+          if b_questions.any?
+            groups[bundle.name] = b_questions
+            bundled_q_ids.concat(b_questions.map(&:id))
+          end
         end
       end
 
-      remaining_ids = all_available_ids - bundled_q_ids
-      if remaining_ids.any?
-        remaining_questions = Question.includes(:options).where(id: remaining_ids).to_a
-        remaining_questions.sort_by! { |q| q_order_map[q.id] || 999_999 }
-
-        cat_remaining = remaining_questions.select { |q| q.question_category_id == question_category_id }
-        inst_remaining = remaining_questions.reject { |q| q.question_category_id == question_category_id }
-
-        if cat_remaining.any?
-          groups["General Questions"] = cat_remaining
+      # 3. Unbundled Category Questions (General Questions)
+      unbundled_cat_q_ids = cat_q_ids - bundled_q_ids
+      if unbundled_cat_q_ids.any?
+        general_aqs = assigned_aqs.select { |aq| aq.bundle_name == "General Questions" }
+        if general_aqs.any?
+          groups["General Questions"] = general_aqs.map(&:question).compact
+        else
+          cat_unbundled = Question.includes(:options).where(id: unbundled_cat_q_ids).order(:created_at).to_a
+          groups["General Questions"] = cat_unbundled if cat_unbundled.any?
         end
+      end
 
-        if inst_remaining.any?
-          groups["Institution Custom Questions"] = inst_remaining
-        end
+      # 4. Custom Questions pool: all custom institute questions available to be added/dragged into bundles
+      if inst_q_ids.any?
+        inst_custom_questions = Question.includes(:options).where(id: inst_q_ids).order(:created_at).to_a
+        groups["Institution Custom Questions"] = inst_custom_questions if inst_custom_questions.any?
       end
 
       groups
     else
       all_q = Question.includes(:options).where(id: all_available_ids).to_a
-      all_q.sort_by! { |q| q_order_map[q.id] || 999_999 }
       { "Institution Questions" => all_q }
     end
   end
