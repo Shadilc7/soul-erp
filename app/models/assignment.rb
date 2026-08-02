@@ -155,17 +155,6 @@ class Assignment < ApplicationRecord
           groups[bundle.name] = legacy_aqs.map(&:question).compact if legacy_aqs.any?
         end
       end
-
-      # Handle any assigned questions with unmatched bundle names or no bundle name
-      claimed_q_ids = groups.values.flatten.compact.map(&:id)
-      unclaimed_aqs = assigned_aqs.reject { |aq| claimed_q_ids.include?(aq.question_id) }
-
-      if unclaimed_aqs.any?
-        unclaimed_aqs.group_by { |aq| aq.bundle_name.presence || "General Questions" }.each do |b_name, aq_list|
-          groups[b_name] ||= []
-          groups[b_name].concat(aq_list.map(&:question).compact)
-        end
-      end
     else
       groups["Questions"] = assigned_aqs.map(&:question).compact
     end
@@ -176,47 +165,25 @@ class Assignment < ApplicationRecord
   def edit_questions_grouped_by_bundle
     inst_q_ids = institute&.questions&.pluck(:id) || []
     assigned_aqs = assignment_questions.includes(question: :options).order(:order_number, :id).to_a
-    assigned_q_ids = assigned_aqs.map(&:question_id)
-    cat_q_ids = question_category&.questions&.pluck(:id) || []
-
-    all_available_ids = (cat_q_ids + assigned_q_ids + inst_q_ids).uniq
-    return {} if all_available_ids.empty?
 
     groups = {}
 
     if question_category.present?
       bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
 
-      bundled_q_ids = []
       bundles.each do |bundle|
         # 1. Explicitly assigned questions to this bundle name
         bundle_aqs = assigned_aqs.select { |aq| aq.bundle_name == bundle.name }
         if bundle_aqs.any?
           groups[bundle.name] = bundle_aqs.map(&:question).compact
-          bundled_q_ids.concat(groups[bundle.name].map(&:id))
         else
-          # 2. Template questions for category bundle
-          b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact.select { |q| all_available_ids.include?(q.id) }
-          if b_questions.any?
-            groups[bundle.name] = b_questions
-            bundled_q_ids.concat(b_questions.map(&:id))
-          end
+          # 2. Template questions for category bundle (only bundled questions considered)
+          b_questions = bundle.question_bundle_items.sort_by(&:position).map(&:question).compact
+          groups[bundle.name] = b_questions if b_questions.any?
         end
       end
 
-      # 3. Unbundled Category Questions (General Questions)
-      unbundled_cat_q_ids = cat_q_ids - bundled_q_ids
-      if unbundled_cat_q_ids.any?
-        general_aqs = assigned_aqs.select { |aq| aq.bundle_name == "General Questions" }
-        if general_aqs.any?
-          groups["General Questions"] = general_aqs.map(&:question).compact
-        else
-          cat_unbundled = Question.includes(:options).where(id: unbundled_cat_q_ids).order(:created_at).to_a
-          groups["General Questions"] = cat_unbundled if cat_unbundled.any?
-        end
-      end
-
-      # 4. Custom Questions pool: all custom institute questions available to be added/dragged into bundles
+      # Custom Questions pool: all custom institute questions available to be added into bundles
       if inst_q_ids.any?
         inst_custom_questions = Question.includes(:options).where(id: inst_q_ids).order(:created_at).to_a
         groups["Institution Custom Questions"] = inst_custom_questions if inst_custom_questions.any?
@@ -224,6 +191,8 @@ class Assignment < ApplicationRecord
 
       groups
     else
+      assigned_q_ids = assigned_aqs.map(&:question_id)
+      all_available_ids = (assigned_q_ids + inst_q_ids).uniq
       all_q = Question.includes(:options).where(id: all_available_ids).to_a
       { "Institution Questions" => all_q }
     end
