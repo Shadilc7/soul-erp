@@ -1,103 +1,228 @@
 <% content_for :styles do %>
   <style>
-    .users-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 16px 16px 0 0;
-      padding: 2rem;
-      color: white;
-      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+    /* Modern Page Header & Breadcrumb */
+    .admin-header-box {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.75rem 2rem;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+      margin-bottom: 1.5rem;
     }
-    .users-header h4 {
-      font-weight: 600;
-      margin: 0;
-      font-size: 1.75rem;
-    }
-    .users-header .subtitle {
-      opacity: 0.9;
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
-    }
-    .btn-add-user {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      backdrop-filter: blur(10px);
+
+    .breadcrumb-modern {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
       font-weight: 500;
-      padding: 0.625rem 1.5rem;
-      border-radius: 10px;
-      transition: all 0.3s ease;
+      color: #64748b;
+      margin-bottom: 0.75rem;
     }
-    .btn-add-user:hover {
-      background: rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      color: white;
+
+    .breadcrumb-modern a {
+      color: #64748b;
+      text-decoration: none;
+      transition: color 0.2s ease;
     }
-    .users-card {
+
+    .breadcrumb-modern a:hover {
+      color: #3b82f6;
+    }
+
+    .breadcrumb-modern .separator {
+      color: #cbd5e1;
+      font-size: 0.75rem;
+    }
+
+    .breadcrumb-modern .active {
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .btn-create-gradient {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
       border: none;
+      padding: 0.65rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-create-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.45);
+      color: #ffffff;
+    }
+
+    /* Stat Cards */
+    .mini-stat-card {
+      background: #ffffff;
       border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      padding: 1.1rem 1.35rem;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.25s ease;
+    }
+
+    .mini-stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .mini-stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .icon-bg-purple { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+    .icon-bg-emerald { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .icon-bg-rose { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+
+    /* Glassmorphic Table Container */
+    .users-table-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
       overflow: hidden;
     }
-    .users-table {
-      margin: 0;
+
+    .users-table-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .users-table thead th {
-      background: #f8f9fa;
-      border: none;
-      color: #495057;
-      font-weight: 600;
+
+    .modern-users-table {
+      width: 100%;
+      margin-bottom: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .modern-users-table thead th {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.06), rgba(118, 75, 162, 0.08));
+      color: #475569;
+      font-weight: 700;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.5px;
-      padding: 1rem 1.25rem;
+      letter-spacing: 0.05em;
+      padding: 1.1rem 1.5rem;
+      border: none;
     }
-    .users-table tbody td {
-      padding: 1.25rem;
+
+    .modern-users-table tbody td {
+      padding: 1.15rem 1.5rem;
       vertical-align: middle;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid rgba(241, 245, 249, 0.9);
+      transition: background-color 0.2s ease;
     }
-    .users-table tbody tr {
-      transition: all 0.2s ease;
+
+    .modern-users-table tbody tr:last-child td {
+      border-bottom: none;
     }
-    .users-table tbody tr:hover {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
-      transform: scale(1.005);
+
+    .modern-users-table tbody tr:hover td {
+      background-color: rgba(248, 250, 252, 0.8);
     }
-    .user-name {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 1rem;
+
+    /* User Profile Info */
+    .user-avatar-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.25);
+      flex-shrink: 0;
     }
-    .user-institute {
-      font-family: 'Courier New', monospace;
-      background: #f8f9fa;
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #667eea;
-      font-weight: 600;
+
+    .user-name-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 0.95rem;
+      margin-bottom: 0.15rem;
     }
-    .user-date {
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-    .status-badge {
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: 500;
+
+    .user-email-subtitle {
       font-size: 0.8rem;
-      letter-spacing: 0.3px;
+      color: #64748b;
     }
-    .status-active {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color: white;
+
+    /* Institute Badge */
+    .institute-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(102, 126, 234, 0.08);
+      color: #4f46e5;
+      font-size: 0.83rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(99, 102, 241, 0.15);
     }
-    .status-inactive {
-      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-      color: white;
+
+    .institute-badge-unassigned {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #e2e8f0;
     }
+
+    /* Status Pill Badges */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-pill-active {
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-pill-inactive {
+      background: rgba(244, 63, 94, 0.1);
+      color: #e11d48;
+      border: 1px solid rgba(244, 63, 94, 0.2);
+    }
+
+    /* Date Styling */
+    .date-text {
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Action Buttons (Restored Original Design & Gradients) */
     .action-buttons {
       display: flex;
       gap: 0.5rem;
@@ -113,6 +238,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      text-decoration: none;
     }
     .action-btn::before {
       content: '';
@@ -145,11 +271,11 @@
       color: white;
     }
     .btn-edit {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      background: linear-gradient(135deg, #141c2f 0%, #ea02e9 100%);
       color: white;
     }
     .btn-edit:hover {
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+      box-shadow: 0 4px 14px rgba(234, 2, 233, 0.45);
       transform: translateY(-2px);
       color: white;
     }
@@ -163,168 +289,160 @@
       color: white;
     }
 
-    /* Mobile Responsive Styles */
-    @media (max-width: 768px) {
-      .users-header {
-        padding: 1.25rem;
-        border-radius: 12px 12px 0 0;
-      }
-      
-      .users-header h4 {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .users-header .subtitle {
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-      }
-      
-      .users-header > div {
-        flex-direction: column;
-        align-items: flex-start !important;
-      }
-      
-      .btn-add-user {
-        width: 100%;
-        justify-content: center;
-        padding: 0.75rem 1rem;
-        margin-top: 0.75rem;
-      }
-      
-      /* Card view for mobile */
-      .users-table thead {
-        display: none;
-      }
-      
-      .users-table tbody tr {
-        display: block;
-        margin-bottom: 1rem;
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
-      
-      .users-table tbody tr:hover {
-        transform: none;
-        background: white;
-      }
-      
-      .users-table tbody td {
-        display: block;
-        padding: 0.5rem 0;
-        border: none;
-        text-align: left !important;
-      }
-      
-      .users-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #6c757d;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-      
-      .users-table tbody td:first-child {
-        padding-top: 0;
-      }
-      
-      .users-table tbody td:last-child {
-        padding-bottom: 0;
-      }
-      
-      .user-name {
-        font-size: 1.1rem;
-        margin-top: 0.25rem;
-      }
-      
-      .user-institute,
-      .user-date,
-      .status-badge {
-        display: inline-block;
-        margin-top: 0.25rem;
-      }
-      
-      .action-buttons {
-        justify-content: flex-start !important;
-        margin-top: 0.5rem;
-      }
-      
-      .action-btn {
-        width: 44px;
-        height: 44px;
-      }
+    /* Empty State */
+    .empty-state-box {
+      padding: 4rem 2rem;
+      text-align: center;
     }
-    
-    @media (max-width: 480px) {
-      .users-header {
-        padding: 1rem;
-      }
-      
-      .users-header h4 {
-        font-size: 1.1rem;
-      }
-      
-      .users-card {
-        border-radius: 12px;
-      }
+
+    .empty-state-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
     }
   </style>
 <% end %>
 
-<div class="users-card">
-  <div class="users-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h4 class="mb-1">Institute Admins Management</h4>
-        <div class="subtitle"><i class="bi bi-people me-2"></i>Manage all institute administrators in the system</div>
-      </div>
-      <%= link_to new_admin_user_path, class: "btn btn-add-user" do %>
-        <i class="bi bi-plus-lg me-2"></i> Add New Admin
+<!-- Top Header & Breadcrumb -->
+<div class="admin-header-box">
+  <div class="breadcrumb-modern">
+    <%= link_to "Master Admin", admin_root_path %>
+    <span class="separator">›</span>
+    <span class="active">Institute Admins</span>
+  </div>
+
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+        <span>Institute Admins Management</span>
+        <span class="badge bg-indigo-subtle text-indigo rounded-pill fs-6 px-3"><%= @users.count %> Admins</span>
+      </h3>
+      <p class="text-muted mb-0 font-size-14">
+        Manage all institute administrators, credentials, and associated organizational access.
+      </p>
+    </div>
+
+    <div>
+      <%= link_to new_admin_user_path, class: "btn-create-gradient" do %>
+        <i class="bi bi-plus-lg"></i>
+        <span>Add New Admin</span>
       <% end %>
     </div>
   </div>
+</div>
 
-  <div class="card-body p-0">
+<!-- Quick Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="mini-stat-card">
+      <div>
+        <span class="text-muted small fw-semibold text-uppercase">Total Admins</span>
+        <h3 class="fw-bold text-dark mb-0 mt-1"><%= @users.count %></h3>
+      </div>
+      <div class="mini-stat-icon icon-bg-purple">
+        <i class="bi bi-people-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="mini-stat-card">
+      <div>
+        <span class="text-muted small fw-semibold text-uppercase">Active Accounts</span>
+        <h3 class="fw-bold text-emerald mb-0 mt-1"><%= @users.count(&:active?) %></h3>
+      </div>
+      <div class="mini-stat-icon icon-bg-emerald">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="mini-stat-card">
+      <div>
+        <span class="text-muted small fw-semibold text-uppercase">Inactive Accounts</span>
+        <h3 class="fw-bold text-rose mb-0 mt-1"><%= @users.count { |u| !u.active? } %></h3>
+      </div>
+      <div class="mini-stat-icon icon-bg-rose">
+        <i class="bi bi-x-circle-fill"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Users Table Container -->
+<div class="users-table-card">
+  <div class="users-table-header">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-shield-lock-fill text-indigo fs-5"></i>
+      <h5 class="fw-bold text-dark mb-0">System Administrators List</h5>
+    </div>
+  </div>
+
+  <% if @users.any? %>
     <div class="table-responsive">
-      <table class="table users-table">
+      <table class="table modern-users-table">
         <thead>
           <tr>
-            <th>Username</th>
+            <th>User Info</th>
             <th>Institute</th>
-            <th>Status</th>
-            <th>Created At</th>
+            <th>Account Status</th>
+            <th>Created Date</th>
             <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% @users.each do |user| %>
             <tr>
-              <td data-label="Username">
-                <div class="user-name">
-                  <i class="bi bi-person me-2 text-muted"></i><%= user.username %>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="user-avatar-badge">
+                    <%= user.username.first.upcase rescue 'A' %>
+                  </div>
+                  <div>
+                    <div class="user-name-title"><%= user.username %></div>
+                    <div class="user-email-subtitle">
+                      <i class="bi bi-envelope me-1"></i><%= user.email.presence || 'No email provided' %>
+                    </div>
+                  </div>
                 </div>
               </td>
-              <td data-label="Institute">
-                <span class="user-institute"><%= user.institute&.name || 'Not Assigned' %></span>
+              <td>
+                <% if user.institute.present? %>
+                  <span class="institute-badge">
+                    <i class="bi bi-building-fill"></i>
+                    <%= user.institute.name %>
+                  </span>
+                <% else %>
+                  <span class="institute-badge institute-badge-unassigned">
+                    <i class="bi bi-dash-circle me-1"></i> Not Assigned
+                  </span>
+                <% end %>
               </td>
-              <td data-label="Status">
-                <span class="status-badge <%= user.active? ? 'status-active' : 'status-inactive' %>">
-                  <i class="bi <%= user.active? ? 'bi-check-circle' : 'bi-x-circle' %> me-1"></i>
-                  <%= user.active? ? 'Active' : 'Inactive' %>
+              <td>
+                <% if user.active? %>
+                  <span class="status-pill status-pill-active">
+                    <i class="bi bi-check-circle-fill"></i> Active
+                  </span>
+                <% else %>
+                  <span class="status-pill status-pill-inactive">
+                    <i class="bi bi-x-circle-fill"></i> Inactive
+                  </span>
+                <% end %>
+              </td>
+              <td>
+                <span class="date-text">
+                  <i class="bi bi-calendar3 me-1"></i><%= user.created_at.strftime("%b %d, %Y") %>
                 </span>
               </td>
-              <td data-label="Created At">
-                <div class="user-date">
-                  <i class="bi bi-calendar3 me-2"></i><%= user.created_at.strftime("%b %d, %Y") %>
-                </div>
-              </td>
-              <td data-label="Actions">
+              <td>
                 <div class="action-buttons justify-content-center">
                   <%= link_to admin_user_path(user), class: "action-btn btn-view", title: "View Details" do %>
                     <i class="bi bi-eye"></i>
@@ -342,5 +460,17 @@
         </tbody>
       </table>
     </div>
-  </div>
-</div> 
+  <% else %>
+    <div class="empty-state-box">
+      <div class="empty-state-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h5 class="fw-bold text-dark mb-1">No Institute Administrators Found</h5>
+      <p class="text-muted mb-3">Get started by adding your first institute admin user.</p>
+      <%= link_to new_admin_user_path, class: "btn-create-gradient" do %>
+        <i class="bi bi-plus-lg"></i>
+        <span>Add New Admin</span>
+      <% end %>
+    </div>
+  <% end %>
+</div>
