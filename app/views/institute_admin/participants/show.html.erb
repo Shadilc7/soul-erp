@@ -1,184 +1,306 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Participant Details</h5>
-    <div>
-      <%= link_to edit_institute_admin_participant_path(@participant), class: "btn btn-outline-custom me-2" do %>
-        <i class="bi bi-pencil"></i> Edit
-      <% end %>
-      <%= link_to institute_admin_participants_path, class: "btn btn-outline-custom" do %>
-        <i class="bi bi-arrow-left"></i> Back
-      <% end %>
+<% content_for :styles do %>
+  <style>
+    .profile-hero-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      margin-bottom: 1.5rem;
+    }
+
+    .user-avatar-circle {
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+      min-height: 64px;
+      flex-shrink: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      font-size: 1.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .detail-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      padding: 1.5rem;
+      height: 100%;
+    }
+
+    .detail-card-header {
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .detail-card-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    .btn-edit-profile {
+      background: linear-gradient(135deg, #141c2f 0%, #ea02e9 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(234, 2, 233, 0.3);
+      text-decoration: none;
+    }
+
+    .btn-edit-profile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(234, 2, 233, 0.45);
+      color: white;
+    }
+  </style>
+<% end %>
+
+<div class="container-fluid px-4 py-4">
+  <!-- BREADCRUMBS -->
+  <div class="mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb breadcrumb-custom mb-0">
+        <li class="breadcrumb-item"><%= link_to institute_admin_root_path do %><i class="bi bi-house-door me-1"></i>Home<% end %></li>
+        <li class="breadcrumb-item"><%= link_to "Participants", institute_admin_participants_path %></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= @user.full_name.presence || "Participant Profile" %></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- HERO PROFILE HEADER CARD -->
+  <div class="profile-hero-card">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="user-avatar-circle me-1">
+          <%= @user.first_name.to_s.first.upcase %>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h3 class="fw-bold text-dark mb-0"><%= @user.full_name %></h3>
+            <% if @participant.active? %>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.75rem;">
+                <i class="bi bi-check-circle-fill me-1"></i> Active
+              </span>
+            <% else %>
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.75rem;">
+                <i class="bi bi-exclamation-circle-fill me-1"></i> <%= @participant.status.titleize %>
+              </span>
+            <% end %>
+          </div>
+          <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+            <% if @user.email.present? %>
+              <span><i class="bi bi-envelope me-1 text-primary"></i> <%= @user.email %></span>
+            <% end %>
+            <% if @participant.phone_number.present? %>
+              <span><i class="bi bi-telephone me-1 text-success"></i> +91 <%= @participant.phone_number %></span>
+            <% end %>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+              <%= @participant.participant_type&.titleize || "Student" %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <%= link_to institute_admin_participants_path, class: "btn btn-outline-secondary rounded-3 px-3 py-2 fw-medium d-inline-flex align-items-center gap-1.5" do %>
+          <i class="bi bi-arrow-left"></i>
+          <span>Back</span>
+        <% end %>
+
+        <%= link_to edit_institute_admin_participant_path(@participant), class: "btn-edit-profile d-inline-flex align-items-center gap-2" do %>
+          <i class="bi bi-pencil"></i>
+          <span>Edit Profile</span>
+        <% end %>
+      </div>
     </div>
   </div>
 
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Name</h6>
-          <p class="fs-5"><%= @user.first_name %></p>
+  <!-- PROFILE DETAILS GRID -->
+  <div class="row g-4">
+    <!-- LEFT COLUMN: PERSONAL & CONTACT INFORMATION -->
+    <div class="col-12 col-lg-6">
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <i class="bi bi-person-vcard text-primary fs-5"></i>
+          <h6 class="detail-card-title">Personal & Contact Details</h6>
         </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Email</h6>
-          <p class="fs-5"><%= @user.email %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Date of Birth</h6>
-          <p class="fs-5"><%= @participant.date_of_birth&.strftime("%B %d, %Y") %></p>
-        </div>
-
-        <% if @participant.address.present? %>
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Address</h6>
-          <p class="fs-5" style="white-space: pre-line;"><%= @participant.address %></p>
-        </div>
-        <% end %>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Address Line 1</h6>
-          <p class="fs-5"><%= @participant.address_line1.present? ? @participant.address_line1 : "Not provided" %></p>
-        </div>
-
-        <% if @participant.address_line2.present? %>
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Address Line 2</h6>
-          <p class="fs-5"><%= @participant.address_line2 %></p>
-        </div>
-        <% end %>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Place / Town</h6>
-          <p class="fs-5"><%= @participant.place.present? ? @participant.place : "Not provided" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">PIN Code</h6>
-          <p class="fs-5"><%= @participant.pin_code.present? ? @participant.pin_code : "Not provided" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">District</h6>
-          <p class="fs-5"><%= @participant.district.present? ? @participant.district : "Not provided" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">State</h6>
-          <p class="fs-5"><%= @participant.state.present? ? @participant.state : "Not provided" %></p>
-        </div>
-
-        <div class="mb-3">
-          <h6 class="text-muted mb-1">Phone Number</h6>
-          <p class="mb-0">+91 <%= @participant.phone_number %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Participant Type</h6>
-          <p class="fs-5">
-            <span class="badge bg-primary">
-              <%= @participant.participant_type&.titleize || "Student" %>
-            </span>
-          </p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Enrollment Date</h6>
-          <p class="fs-5"><%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Status</h6>
-          <p class="fs-5">
-            <span class="badge <%= @participant.active? ? 'badge-success' : 'badge-warning' %>">
-              <%= @participant.status.titleize %>
-            </span>
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <% if @participant.student? || @participant.participant_type.nil? %>
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Section</h6>
-            <p class="fs-5"><%= @participant.section&.name || "Not Assigned" %></p>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Full Name</div>
+            <div class="info-value"><%= @user.full_name %></div>
           </div>
-        <% end %>
-
-        <% if @participant.employee? %>
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Section</h6>
-            <p class="fs-5"><%= @participant.section&.name || "Not Assigned" %></p>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Email Address</div>
+            <div class="info-value"><%= @user.email %></div>
           </div>
-
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Job Role</h6>
-            <p class="fs-5"><%= @participant.job_role || "Not specified" %></p>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Phone Number</div>
+            <div class="info-value"><%= @participant.phone_number.present? ? "+91 #{@participant.phone_number}" : "Not provided" %></div>
           </div>
-
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Qualification</h6>
-            <p class="fs-5"><%= @participant.qualification || "Not specified" %></p>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Date of Birth</div>
+            <div class="info-value"><%= @participant.date_of_birth&.strftime("%B %d, %Y") || "Not provided" %></div>
           </div>
-
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Years of Experience</h6>
-            <p class="fs-5"><%= @participant.years_of_experience || "Not specified" %></p>
+          <div class="col-12">
+            <div class="info-label">Address Line 1</div>
+            <div class="info-value"><%= @participant.address_line1.presence || @participant.address.presence || "Not provided" %></div>
           </div>
-        <% end %>
-
-        <% if @participant.guardian? %>
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Section</h6>
-            <p class="fs-5">
-              <% if @participant.guardian_for_participant&.section %>
-                <%= @participant.guardian_for_participant.section.name %>
-              <% else %>
-                <span class="text-muted">Not Assigned</span>
-              <% end %>
-            </p>
+          <% if @participant.address_line2.present? %>
+            <div class="col-12">
+              <div class="info-label">Address Line 2</div>
+              <div class="info-value"><%= @participant.address_line2 %></div>
+            </div>
+          <% end %>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Town / Place</div>
+            <div class="info-value"><%= @participant.place.presence || "Not provided" %></div>
           </div>
-
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">Guardian For</h6>
-            <% if @participant.guardian_for_participant %>
-              <p class="fs-5">
-                <%= link_to @participant.guardian_for_participant.user.full_name,
-                    institute_admin_participant_path(@participant.guardian_for_participant) %>
-                <small class="text-muted d-block">
-                  Section: <%= @participant.guardian_for_participant.section&.name || "Not Assigned" %>
-                </small>
-              </p>
-            <% else %>
-              <p class="fs-5">Not assigned</p>
-            <% end %>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">PIN Code</div>
+            <div class="info-value"><%= @participant.pin_code.presence || "Not provided" %></div>
           </div>
-        <% end %>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">District</div>
+            <div class="info-value"><%= @participant.district.presence || "Not provided" %></div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">State</div>
+            <div class="info-value"><%= @participant.state.presence || "Not provided" %></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <% if @guardian %>
-      <div class="mt-4">
-        <h5 class="mb-3">Guardian Information</h5>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-4">
-              <h6 class="text-muted mb-2">Name</h6>
-              <p class="fs-5"><%= @guardian.user.full_name %></p>
+    <!-- RIGHT COLUMN: ACADEMIC & INSTITUTIONAL ROLE DETAILS -->
+    <div class="col-12 col-lg-6">
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="bi bi-mortarboard text-primary fs-5"></i>
+          <h6 class="detail-card-title">Institutional Allocation & Role</h6>
+        </div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Participant Type</div>
+            <div class="info-value">
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+                <%= @participant.participant_type&.titleize || "Student" %>
+              </span>
             </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="info-label">Enrollment Date</div>
+            <div class="info-value"><%= @participant.enrollment_date&.strftime("%B %d, %Y") || "Not specified" %></div>
+          </div>
 
-            <div class="mb-4">
-              <h6 class="text-muted mb-2">Email</h6>
-              <p class="fs-5"><%= @guardian.user.email %></p>
+          <!-- Section Allocation -->
+          <% if @participant.student? || @participant.participant_type.nil? || @participant.employee? %>
+            <div class="col-12">
+              <div class="info-label">Assigned Section / Batch</div>
+              <div class="info-value">
+                <% if @participant.section %>
+                  <span class="badge bg-secondary-subtle text-dark border font-monospace px-2.5 py-1.5 fs-6">
+                    <i class="bi bi-grid-3x3 me-1 text-primary"></i> <%= @participant.section.name %>
+                  </span>
+                <% else %>
+                  <span class="text-muted fst-italic">Not Assigned</span>
+                <% end %>
+              </div>
             </div>
+          <% end %>
 
-            <div class="mb-4">
-              <h6 class="text-muted mb-2">Phone Number</h6>
-              <p class="fs-5"><%= @guardian.phone_number %></p>
+          <!-- Employee Specific Info -->
+          <% if @participant.employee? %>
+            <div class="col-12 col-sm-6">
+              <div class="info-label">Job Role</div>
+              <div class="info-value"><%= @participant.job_role.presence || "Not specified" %></div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="info-label">Qualification</div>
+              <div class="info-value"><%= @participant.qualification.presence || "Not specified" %></div>
+            </div>
+            <div class="col-12">
+              <div class="info-label">Years of Experience</div>
+              <div class="info-value"><%= @participant.years_of_experience.presence || "Not specified" %></div>
+            </div>
+          <% end %>
+
+          <!-- Guardian Specific Info -->
+          <% if @participant.guardian? %>
+            <div class="col-12">
+              <div class="info-label">Guardian For Student</div>
+              <div class="info-value">
+                <% if @participant.guardian_for_participant %>
+                  <%= link_to @participant.guardian_for_participant.user.full_name,
+                      institute_admin_participant_path(@participant.guardian_for_participant),
+                      class: "fw-bold text-primary text-decoration-none" %>
+                  <div class="text-muted small">
+                    Section: <%= @participant.guardian_for_participant.section&.name || "Not Assigned" %>
+                  </div>
+                <% else %>
+                  <span class="text-muted">Not assigned</span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- GUARDIAN INFO CARD (IF APPLICABLE) -->
+      <% if @guardian %>
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <i class="bi bi-shield-check text-primary fs-5"></i>
+            <h6 class="detail-card-title">Associated Guardian Info</h6>
+          </div>
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <div class="info-label">Guardian Name</div>
+              <div class="info-value"><%= @guardian.user.full_name %></div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="info-label">Email</div>
+              <div class="info-value"><%= @guardian.user.email %></div>
+            </div>
+            <div class="col-12">
+              <div class="info-label">Contact Number</div>
+              <div class="info-value"><%= @guardian.phone_number.present? ? "+91 #{@guardian.phone_number}" : "Not provided" %></div>
             </div>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 </div>

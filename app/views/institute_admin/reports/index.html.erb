@@ -1,234 +1,194 @@
 <% content_for :styles do %>
-<style>
-  :root {
-    --primary-gradient: linear-gradient(135deg, #059669 0%, #0891b2 50%, #4f46e5 100%);
-    --card-hover-transform: translateY(-5px);
-  }
-
-  .reports-page {
-    min-height: 100vh;
-    background-color: #f8fafc;
-    padding-bottom: 3rem;
-    padding-top: 0;
-  }
-
-  /* Modern Header */
-  .reports-hero {
-    background: var(--primary-gradient);
-    padding: 2rem 2.5rem;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
-    display: flex;
-    align-items: center;
-    
-    /* Break out of .content-wrapper padding */
-    margin-top: -2.1rem; /* Adjusted to close gap */
-    margin-left: -2rem; /* Pull left */
-    margin-right: -2rem; /* Pull right */
-    width: auto; /* Fill available space */
-    border-radius: 0;
-  }
-
-  .reports-hero::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.15) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .reports-hero h1 {
-    color: white;
-    font-weight: 700;
-    font-size: 1.5rem;
-    letter-spacing: -0.025em;
-    margin-bottom: 0;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-  }
-
-  /* Feature Cards */
-  .feature-card {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    height: 100%;
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .feature-card:hover {
-    transform: var(--card-hover-transform);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border-color: transparent;
-  }
-
-  .icon-box {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    font-size: 1.75rem;
-    transition: transform 0.3s ease;
-  }
-
-  .feature-card:hover .icon-box {
-    transform: scale(1.1) rotate(-5deg);
-  }
-
-  .icon-box-gold { background: #fffbeb; color: #d97706; }
-  .icon-box-teal { background: #ccfbf1; color: #0d9488; }
-  .icon-box-purple { background: #f3e8ff; color: #9333ea; }
-
-  .feature-card h3 {
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: #1e293b;
-    margin-bottom: 0.75rem;
-  }
-
-  .feature-card p {
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    flex-grow: 1;
-  }
-
-  .btn-feature {
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .btn-feature-gold { background: #fffcf4; color: #b45309; border: 1px solid #fcd34d; }
-  .btn-feature-gold:hover { background: #fbbf24; color: white; border-color: #fbbf24; }
-  
-  .btn-feature-teal { background: #f0fdfa; color: #0f766e; border: 1px solid #5eead4; }
-  .btn-feature-teal:hover { background: #2dd4bf; color: white; border-color: #2dd4bf; }
-
-  .btn-feature-purple { background: #faf5ff; color: #7e22ce; border: 1px solid #d8b4fe; }
-  .btn-feature-purple:hover { background: #a855f7; color: white; border-color: #a855f7; }
-
-  /* Active Report Section */
-  .active-report-container {
-    background: white;
-    border-radius: 24px;
-    padding: 2rem;
-    margin-top: 3rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
-    animation: slideUp 0.4s ease-out forwards;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @media (max-width: 768px) {
-    .reports-hero {
-      padding: 1.5rem;
-      margin-left: -1rem;
-      margin-right: -1rem;
+  <style>
+    .reports-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 20px;
+      padding: 1.85rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      position: relative;
+      overflow: hidden;
     }
-    
-    .reports-hero h1 {
-      font-size: 1.75rem;
+
+    .reports-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: transparent;
+      transition: background 0.3s ease;
     }
-    
-    .feature-card {
-      padding: 1.5rem;
+
+    .reports-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
+      border-color: rgba(199, 210, 254, 0.6);
     }
-  }
-</style>
+
+    .reports-card-gold:hover::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .reports-card-teal:hover::before { background: linear-gradient(90deg, #14b8a6, #0d9488); }
+    .reports-card-purple:hover::before { background: linear-gradient(90deg, #a855f7, #7e22ce); }
+
+    .icon-wrapper {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.65rem;
+      margin-bottom: 1.25rem;
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .reports-card:hover .icon-wrapper {
+      transform: scale(1.1) rotate(-4deg);
+    }
+
+    .icon-gold { background: #fffbeb; color: #d97706; }
+    .icon-teal { background: #ccfbf1; color: #0d9488; }
+    .icon-purple { background: #f3e8ff; color: #9333ea; }
+
+    .reports-card h4 {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .reports-card p {
+      color: #64748b;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-report-action {
+      border-radius: 12px;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.25s ease;
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .btn-gold { background: #fffcf4; color: #b45309; border: 1px solid #fcd34d; }
+    .btn-gold:hover { background: #f59e0b; color: #ffffff; border-color: #f59e0b; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+
+    .btn-teal { background: #f0fdfa; color: #0f766e; border: 1px solid #5eead4; }
+    .btn-teal:hover { background: #14b8a6; color: #ffffff; border-color: #14b8a6; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3); }
+
+    .btn-purple { background: #faf5ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+    .btn-purple:hover { background: #a855f7; color: #ffffff; border-color: #a855f7; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
+
+    .active-report-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 <% end %>
 
-<div class="reports-page">
-  <!-- Hero Header -->
-  <div class="reports-hero">
-    <div class="container-fluid px-4">
-      <h1><i class="bi bi-bar-chart-line-fill me-3"></i>Reports & Analytics</h1>
+<div class="container-fluid px-4 py-4">
+  <!-- BREADCRUMBS & PAGE HEADER -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-custom mb-1">
+          <li class="breadcrumb-item"><%= link_to institute_admin_root_path do %><i class="bi bi-house-door me-1"></i>Home<% end %></li>
+          <li class="breadcrumb-item active" aria-current="page">Reports & Analytics</li>
+        </ol>
+      </nav>
+      <h3 class="fw-bold text-dark mb-0">Reports & Analytics Hub</h3>
     </div>
   </div>
 
-  <div class="container-fluid px-4 pt-2">
-    <!-- Features Grid -->
-    <div class="row g-4">
-      <!-- Certificates -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="icon-box icon-box-gold">
+  <!-- REPORT MODULE CARDS GRID -->
+  <div class="row g-4">
+    <!-- Certificates -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="reports-card reports-card-gold">
+        <div>
+          <div class="icon-wrapper icon-gold">
             <i class="bi bi-award-fill"></i>
           </div>
-          <h3>Certificates</h3>
-          <p>Generate and manage official certificates. Track issuance status and verify participant credentials.</p>
-          <%= link_to certificates_institute_admin_reports_path, class: "btn-feature btn-feature-gold" do %>
-            Manage Certificates <i class="bi bi-arrow-right"></i>
-          <% end %>
+          <h4>Certificates & Credentials</h4>
+          <p>Generate, issue, and verify official completion certificates for institute participants.</p>
         </div>
-      </div>
-
-      <!-- Assignments -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="icon-box icon-box-teal">
-            <i class="bi bi-clipboard-data-fill"></i>
-          </div>
-          <h3>Assignment Reports</h3>
-          <p>Deep-dive into assignment submissions, grading statistics, and performance trends across sections.</p>
-          <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn-feature btn-feature-teal" do %>
-            View Analytics <i class="bi bi-arrow-right"></i>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Feedback -->
-      <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="icon-box icon-box-purple">
-            <i class="bi bi-chat-square-quote-fill"></i>
-          </div>
-          <h3>Feedback Insights</h3>
-          <p>Analyze participant satisfaction, trainer ratings, and gathered feedback from training programs.</p>
-          <%= link_to feedback_reports_menu_institute_admin_reports_path, class: "btn-feature btn-feature-purple" do %>
-            Read Feedback <i class="bi bi-arrow-right"></i>
-          <% end %>
-        </div>
+        <%= link_to certificates_institute_admin_reports_path, class: "btn-report-action btn-gold" do %>
+          <span>Manage Certificates</span>
+          <i class="bi bi-arrow-right fs-6"></i>
+        <% end %>
       </div>
     </div>
 
-    <!-- Active Report View -->
-    <% if @report_type.present? %>
-      <div class="active-report-container">
-        <% if @report_type == 'certificates' %>
-          <%= render 'certificate_options' %>
-        <% elsif @report_type == 'assignments' %>
-          <%= render 'assignment_reports' %>
-        <% elsif @report_type == 'feedbacks' %>
-          <%= render 'feedback_reports' %>
+    <!-- Assignment Reports -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="reports-card reports-card-teal">
+        <div>
+          <div class="icon-wrapper icon-teal">
+            <i class="bi bi-clipboard-data-fill"></i>
+          </div>
+          <h4>Assignment Reports</h4>
+          <p>Analyze evaluation submissions, response completion rates, and participant scores.</p>
+        </div>
+        <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn-report-action btn-teal" do %>
+          <span>View Analytics</span>
+          <i class="bi bi-arrow-right fs-6"></i>
         <% end %>
       </div>
-    <% end %>
+    </div>
+
+    <!-- Feedback Insights -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="reports-card reports-card-purple">
+        <div>
+          <div class="icon-wrapper icon-purple">
+            <i class="bi bi-chat-square-quote-fill"></i>
+          </div>
+          <h4>Feedback Insights</h4>
+          <p>Review participant satisfaction scores, course feedback, and trainer ratings.</p>
+        </div>
+        <%= link_to feedback_reports_menu_institute_admin_reports_path, class: "btn-report-action btn-purple" do %>
+          <span>Read Feedback</span>
+          <i class="bi bi-arrow-right fs-6"></i>
+        <% end %>
+      </div>
+    </div>
   </div>
+
+  <!-- ACTIVE REPORT INNER PANEL -->
+  <% if @report_type.present? %>
+    <div class="active-report-card">
+      <% if @report_type == 'certificates' %>
+        <%= render 'certificate_options' %>
+      <% elsif @report_type == 'assignments' %>
+        <%= render 'assignment_reports' %>
+      <% elsif @report_type == 'feedbacks' %>
+        <%= render 'feedback_reports' %>
+      <% end %>
+    </div>
+  <% end %>
 </div>
