@@ -249,6 +249,7 @@ Rails.application.routes.draw do
     namespace :participant_portal do
       root "dashboard#index"
 
+      resources :analytics, only: [ :index ]
       resources :certificates, only: [ :index, :show ]
 
       resources :training_programs, only: [ :index, :show ] do

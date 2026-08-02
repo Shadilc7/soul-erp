@@ -799,6 +799,11 @@
               <span>Assignments</span>
             <% end %>
 
+            <%= link_to participant_portal_analytics_path, class: "nav-link #{'active' if active_link?('analytics')}" do %>
+              <i class="bi bi-graph-up-arrow"></i>
+              <span>Analytics</span>
+            <% end %>
+
             <%= link_to participant_portal_certificates_path, class: "nav-link #{'active' if active_link?('certificates')}" do %>
               <i class="bi bi-award"></i>
               <span>Certificates</span>
@@ -887,7 +892,7 @@
                     <div>
                       <div class="pd-header-name"><%= own_participant.user.full_name %></div>
                       <div class="pd-header-role">
-                        <i class="bi bi-person-fill me-1"></i><%= own_participant.participant_type.titleize %>
+                        <i class="bi bi-person-fill me-1"></i><%= own_participant.participant_type&.titleize || "Participant" %>
                       </div>
                     </div>
                   </div>

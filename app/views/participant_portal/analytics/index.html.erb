@@ -1,0 +1,510 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<% content_for :styles do %>
+  <style>
+    .analytics-kpi-card {
+      background: white;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 100%;
+    }
+
+    .analytics-kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .analytics-icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .chart-card-modern {
+      background: white;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      padding: 1.5rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .chart-container-box {
+      position: relative;
+      flex-grow: 1;
+      min-height: 250px;
+      width: 100%;
+    }
+
+    .insight-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .insight-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .scorecard-table-card {
+      background: white;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+    }
+  </style>
+<% end %>
+
+<div class="container-fluid px-4 py-4">
+  <!-- BREADCRUMB & HEADER -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-custom mb-1">
+          <li class="breadcrumb-item"><%= link_to participant_portal_root_path do %><i class="bi bi-house-door me-1"></i>Home<% end %></li>
+          <li class="breadcrumb-item active" aria-current="page">Analytics & Performance</li>
+        </ol>
+      </nav>
+      <h3 class="fw-bold text-dark mb-0">
+        Performance Analytics 
+        <% if viewing_as_student? %>
+          <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill fs-6 ms-2 align-middle fw-semibold">
+            <i class="bi bi-person-fill me-1"></i> <%= @participant.user.full_name %>
+          </span>
+        <% end %>
+      </h3>
+    </div>
+
+    <!-- DATE RANGE FILTER -->
+    <div class="d-flex align-items-center gap-2">
+      <%= form_with url: participant_portal_analytics_path, method: :get, class: "d-flex align-items-center gap-2", data: { turbo: false } do %>
+        <label class="text-uppercase text-muted fw-bold small me-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Period:</label>
+        <%= select_tag :range, 
+            options_for_select([
+              ["Last 7 Days", "7"],
+              ["Last 30 Days", "30"],
+              ["Last 90 Days", "90"],
+              ["All Time", "all"]
+            ], @selected_range),
+            class: "form-select form-select-sm rounded-3 shadow-sm border-slate-200 fw-semibold text-dark",
+            onchange: "this.form.submit()" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- KPI SUMMARY METRICS (4 CARDS) -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="analytics-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Active Streak</div>
+          <div class="h3 fw-bold mb-0 text-dark">
+            <%= @active_streak %> <span class="fs-6 text-muted fw-normal">days</span>
+          </div>
+        </div>
+        <div class="analytics-icon-box" style="background: #fff5f5; color: #ff6b6b;">
+          <i class="bi bi-fire"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="analytics-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Questions Answered</div>
+          <div class="h3 fw-bold mb-0 text-primary">
+            <%= @total_questions_answered %>
+          </div>
+        </div>
+        <div class="analytics-icon-box" style="background: #e0e7ff; color: #4f46e5;">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="analytics-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Submission Days</div>
+          <div class="h3 fw-bold mb-0 text-success">
+            <%= @total_submitted_days %> <span class="fs-6 text-muted fw-normal">days</span>
+          </div>
+        </div>
+        <div class="analytics-icon-box" style="background: #dcfce7; color: #16a34a;">
+          <i class="bi bi-calendar-check-fill"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="analytics-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">Completion Rate</div>
+          <div class="h3 fw-bold mb-0 text-info">
+            <%= @overall_completion_rate %>%
+          </div>
+        </div>
+        <div class="analytics-icon-box" style="background: #e0f2fe; color: #0284c7;">
+          <i class="bi bi-pie-chart-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1: TREND & QUESTION TYPES -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="chart-card-modern">
+        <div class="chart-header">
+          <h6 class="fw-bold text-dark mb-0">
+            <i class="bi bi-graph-up text-primary me-2"></i>Daily Response Consistency
+          </h6>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1" style="font-size: 0.72rem;">
+            Questions / Day
+          </span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="chart-card-modern">
+        <div class="chart-header">
+          <h6 class="fw-bold text-dark mb-0">
+            <i class="bi bi-pie-chart text-info me-2"></i>Question Type Breakdown
+          </h6>
+          <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1" style="font-size: 0.72rem;">
+            Distribution
+          </span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="typeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2: CATEGORY MASTERY & DAY OF WEEK ACTIVITY -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="chart-card-modern">
+        <div class="chart-header">
+          <h6 class="fw-bold text-dark mb-0">
+            <i class="bi bi-journals text-success me-2"></i>Responses by Assignment
+          </h6>
+          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1" style="font-size: 0.72rem;">
+            Responses / Assignment
+          </span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="chart-card-modern">
+        <div class="chart-header">
+          <h6 class="fw-bold text-dark mb-0">
+            <i class="bi bi-calendar-week text-warning me-2"></i>Weekly Activity Patterns
+          </h6>
+          <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1" style="font-size: 0.72rem;">
+            Day of Week
+          </span>
+        </div>
+        <div class="chart-container-box">
+          <canvas id="dowChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 3: RATING PROGRESSION TREND -->
+  <% if @rating_trend_data.any? %>
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="chart-card-modern">
+          <div class="chart-header">
+            <h6 class="fw-bold text-dark mb-0">
+              <i class="bi bi-sliders text-danger me-2"></i>Self-Rating & Numerical Score Progression
+            </h6>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1" style="font-size: 0.72rem;">
+              Score / Day
+            </span>
+          </div>
+          <div class="chart-container-box" style="min-height: 220px;">
+            <canvas id="ratingTrendChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- ASSIGNMENT PERFORMANCE SCORECARD TABLE -->
+  <div class="scorecard-table-card mb-4">
+    <div class="p-3 px-4 bg-light border-bottom d-flex justify-content-between align-items-center">
+      <h6 class="fw-bold text-dark mb-0">
+        <i class="bi bi-clipboard-data text-primary me-2"></i>Assignment Completion Scorecard
+      </h6>
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1.5" style="font-size: 0.75rem;">
+        <%= @assignment_scorecards.size %> Assignments
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
+        <thead class="bg-slate-50 text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+          <tr>
+            <th class="ps-4">Assignment</th>
+            <th>Duration Period</th>
+            <th class="text-center">Days Submitted</th>
+            <th style="min-width: 180px;">Completion Rate</th>
+            <th class="text-center">Status</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @assignment_scorecards.empty? %>
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                No assignment records available.
+              </td>
+            </tr>
+          <% else %>
+            <% @assignment_scorecards.each do |card| %>
+              <% assignment = card[:assignment] %>
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold text-dark"><%= assignment.title %></div>
+                  <div class="text-muted small" style="font-size: 0.75rem;"><%= truncate(assignment.description, length: 65) %></div>
+                </td>
+                <td class="text-secondary small fw-medium">
+                  <%= assignment.start_date.strftime("%b %d") %> - <%= assignment.end_date.strftime("%b %d, %Y") %>
+                </td>
+                <td class="text-center fw-bold text-dark">
+                  <%= card[:submitted_days] %> / <%= card[:total_days] %>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height: 6px;">
+                      <div class="progress-bar <%= card[:completion_pct] >= 100 ? 'bg-success' : 'bg-primary' %>" 
+                           role="progressbar" 
+                           style="width: <%= card[:completion_pct] %>%;"></div>
+                    </div>
+                    <span class="fw-bold text-dark small me-1" style="width: 45px;"><%= card[:completion_pct] %>%</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <% case card[:status] %>
+                  <% when "completed" %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                      <i class="bi bi-check-circle-fill me-1"></i> Complete
+                    </span>
+                  <% when "ongoing" %>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                      <i class="bi bi-play-circle-fill me-1"></i> Ongoing
+                    </span>
+                  <% else %>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">
+                      <i class="bi bi-clock-history me-1"></i> Expired
+                    </span>
+                  <% end %>
+                </td>
+                <td class="text-end pe-4">
+                  <%= link_to participant_portal_assignment_path(assignment), class: "btn btn-sm btn-outline-primary rounded-3 px-3 fw-semibold" do %>
+                    <i class="bi bi-eye me-1"></i> View Details
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    initAnalyticsCharts();
+  });
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initAnalyticsCharts();
+  }
+
+  function initAnalyticsCharts() {
+    // 1. Daily Response Trend Chart
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx && !trendCtx.chartInstance) {
+      trendCtx.chartInstance = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: <%= raw @trend_labels.to_json %>,
+          datasets: [{
+            label: 'Questions Answered',
+            data: <%= raw @trend_data.to_json %>,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.12)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#4f46e5',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // 2. Question Type Doughnut Chart
+    const typeCtx = document.getElementById('typeChart');
+    if (typeCtx && !typeCtx.chartInstance) {
+      typeCtx.chartInstance = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+          labels: <%= raw @type_labels.to_json %>,
+          datasets: [{
+            data: <%= raw @type_data.to_json %>,
+            backgroundColor: ['#6366f1', '#0ea5e9', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }
+        }
+      });
+    }
+
+    // 3. Category Bar Chart
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx && !catCtx.chartInstance) {
+      catCtx.chartInstance = new Chart(catCtx, {
+        type: 'bar',
+        data: {
+          labels: <%= raw @category_labels.to_json %>,
+          datasets: [{
+            label: 'Total Responses',
+            data: <%= raw @category_data.to_json %>,
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // 4. Day of Week Bar Chart
+    const dowCtx = document.getElementById('dowChart');
+    if (dowCtx && !dowCtx.chartInstance) {
+      dowCtx.chartInstance = new Chart(dowCtx, {
+        type: 'bar',
+        data: {
+          labels: <%= raw @dow_labels.to_json %>,
+          datasets: [{
+            label: 'Submissions',
+            data: <%= raw @dow_data.to_json %>,
+            backgroundColor: '#f59e0b',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // 5. Rating Trend Chart
+    const ratingCtx = document.getElementById('ratingTrendChart');
+    if (ratingCtx && !ratingCtx.chartInstance) {
+      ratingCtx.chartInstance = new Chart(ratingCtx, {
+        type: 'line',
+        data: {
+          labels: <%= raw @rating_trend_labels.to_json %>,
+          datasets: [{
+            label: 'Avg Rating Score',
+            data: <%= raw @rating_trend_data.to_json %>,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 5, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+  }
+</script>
