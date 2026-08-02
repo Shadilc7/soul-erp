@@ -699,22 +699,15 @@ body {
   border-color: #86efac;
 }
 
-/* Modern Pill Action Group & Colorful Animated Buttons */
+/* Modern Action Group & Colorful Animated Buttons */
 .action-btn-group {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.45rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-  transition: all 0.25s ease;
-}
-
-.action-btn-group:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .action-btn {
@@ -901,49 +894,88 @@ body {
   color: #ffffff !important;
 }
 
-/* Sleek Modern Breadcrumb System */
-.breadcrumb-modern {
+/* Universal Modern Breadcrumb System */
+nav[aria-label="breadcrumb"] {
+  margin-bottom: 1.25rem;
+}
+
+.breadcrumb-wrapper {
+  margin-bottom: 1.25rem;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.breadcrumb,
+.breadcrumb-modern,
+.breadcrumb-custom {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   padding: 0;
   margin: 0;
   list-style: none;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  background: transparent !important;
 }
 
-.breadcrumb-modern .breadcrumb-item {
+.breadcrumb .breadcrumb-item,
+.breadcrumb-modern .breadcrumb-item,
+.breadcrumb-custom .breadcrumb-item {
   display: inline-flex;
   align-items: center;
   color: #64748b;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
-.breadcrumb-modern .breadcrumb-item a {
+.breadcrumb .breadcrumb-item a,
+.breadcrumb-modern .breadcrumb-item a,
+.breadcrumb-custom .breadcrumb-item a {
   color: #64748b;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
 }
 
-.breadcrumb-modern .breadcrumb-item a:hover {
-  color: #4f46e5;
+.breadcrumb .breadcrumb-item a:hover,
+.breadcrumb-modern .breadcrumb-item a:hover,
+.breadcrumb-custom .breadcrumb-item a:hover {
+  color: #2563eb;
   text-decoration: none;
 }
 
-.breadcrumb-modern .breadcrumb-item.active {
+.breadcrumb .breadcrumb-item.active,
+.breadcrumb-modern .breadcrumb-item.active,
+.breadcrumb-custom .breadcrumb-item.active {
   color: #0f172a;
   font-weight: 600;
 }
 
-.breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
-  content: "›";
-  font-size: 1rem;
-  line-height: 1;
-  color: #cbd5e1;
-  padding: 0 0.45rem;
-  float: none;
+.breadcrumb .breadcrumb-item + .breadcrumb-item::before,
+.breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before,
+.breadcrumb-custom .breadcrumb-item + .breadcrumb-item::before {
+  content: "›" !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  color: #94a3b8 !important;
+  padding: 0 0.45rem !important;
+  float: none !important;
+}
+
+.breadcrumb .breadcrumb-item i,
+.breadcrumb-modern .breadcrumb-item i,
+.breadcrumb-custom .breadcrumb-item i {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.breadcrumb .breadcrumb-item a:hover i,
+.breadcrumb-modern .breadcrumb-item a:hover i,
+.breadcrumb-custom .breadcrumb-item a:hover i {
+  color: #2563eb;
 }
 
 /* Mobile Responsive Optimizations for ERP Reports */

@@ -1,266 +1,336 @@
-<% content_for :styles do %>
-<style>
-  .certificates-menu-page {
-    min-height: 100vh;
-    padding-top: 0;
-    padding-bottom: 2rem;
-  }
-  
-  /* Full Width Header */
-  .certificates-menu-header {
-    background: linear-gradient(135deg, #059669 0%, #0891b2 50%, #4f46e5 100%);
-    padding: 2rem 2.5rem;
-    margin-bottom: 0;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    
-    /* Break out of .content-wrapper padding */
-    margin-top: -2.1rem; /* Adjusted to close gap */
-    margin-left: -2rem; /* Pull left */
-    margin-right: -2rem; /* Pull right */
-    width: auto; /* Fill available space */
-    border-radius: 0;
-  }
-  
-  .certificates-menu-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  
-  .certificates-menu-header h3 {
-    color: white;
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Breadcrumb Styling Override */
-  .breadcrumb-container {
-    padding: 1rem 1.5rem;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 2rem;
-    
-    /* Break out to match header */
-    margin-left: -2rem;
-    margin-right: -2rem;
-  }
-  
-  /* Card Styles (Restored) */
-  .certificate-action-card {
-    position: relative;
-    background: white;
-    border-radius: 18px;
-    padding: 2rem;
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    overflow: hidden;
-    height: 100%;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .certificate-action-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
-  }
-
-  .certificate-action-card:hover::before {
-    transform: scaleX(1);
-  }
-
-  .certificate-action-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  }
-
-  .certificate-action-card.generate-card { --gradient-start: #667eea; --gradient-end: #764ba2; }
-  .certificate-action-card.section-card { --gradient-start: #f093fb; --gradient-end: #f5576c; }
-  .certificate-action-card.view-card { --gradient-start: #11998e; --gradient-end: #38ef7d; }
-  .certificate-action-card.stats-card { --gradient-start: #ffd89b; --gradient-end: #19547b; }
-  .certificate-action-card.config-card { --gradient-start: #a8edea; --gradient-end: #fed6e3; }
-
-  .action-icon-container {
-    width: 70px;
-    height: 70px;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-
-  .certificate-action-card:hover .action-icon-container {
-    transform: scale(1.15) rotate(-5deg);
-  }
-
-  .generate-card .action-icon-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4); }
-  .section-card .action-icon-container { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 6px 18px rgba(240, 147, 251, 0.4); }
-  .view-card .action-icon-container { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 6px 18px rgba(17, 153, 142, 0.4); }
-  .stats-card .action-icon-container { background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); box-shadow: 0 6px 18px rgba(255, 216, 155, 0.4); }
-  .config-card .action-icon-container { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); box-shadow: 0 6px 18px rgba(168, 237, 234, 0.4); }
-
-  .action-icon-container i {
-    font-size: 2rem;
-    color: white;
-  }
-
-  .certificate-action-card h6 {
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: #2c3e50;
-    margin-bottom: 0.75rem;
-  }
-
-  .certificate-action-card .card-description {
-    color: #6c757d;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    flex-grow: 1;
-  }
-
-  .action-arrow {
-    color: #667eea;
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-    align-self: flex-end;
-    opacity: 0.7;
-  }
-
-  .certificate-action-card:hover .action-arrow {
-    transform: translateX(8px);
-    opacity: 1;
-  }
-
-  .card-link {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
-  }
-
-  .certificates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.75rem;
-    padding: 0 0.5rem; /* Add small padding for box shadows */
-  }
-
-  @media (max-width: 768px) {
-    .certificates-menu-header { padding: 1.5rem; margin-top: -1rem; margin-left: -1rem; margin-right: -1rem; }
-    .breadcrumb-container { margin-left: -1rem; margin-right: -1rem; }
-    .certificates-grid { grid-template-columns: 1fr; }
-  }
-</style>
-<% end %>
-
-<div class="certificates-menu-page">
-  <!-- Full Width Header -->
-  <div class="certificates-menu-header">
-    <div class="container-fluid">
-      <h3><i class="bi bi-award me-3"></i>Certificate Management</h3>
-    </div>
-  </div>
-
-  <!-- Breadcrumb Section -->
-  <div class="breadcrumb-container">
-    <div class="container-fluid">
+<div class="container-fluid px-4 py-4">
+  <!-- Modern Header & Breadcrumb Bar -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
       <%= render 'certificate_breadcrumb', current_page: nil %>
+      <h3 class="fw-bold text-dark mb-1">Certificate Management Hub</h3>
+      <p class="text-muted small mb-0">Generate, inspect, and configure credentials and distribution analytics for participants.</p>
+    </div>
+
+    <div>
+      <%= link_to institute_admin_reports_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 px-3 py-2 fw-medium shadow-sm" do %>
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Reports</span>
+      <% end %>
     </div>
   </div>
 
-  <div class="container-fluid px-4">
-    <!-- Certificates Grid -->
-    <div class="certificates-grid">
-      <!-- Generate Individual Certificate Card -->
-      <div class="certificate-action-card generate-card">
-        <div class="action-icon-container">
-          <i class="bi bi-plus-circle-fill"></i>
+  <!-- Modern Interactive Certificate Action Cards Grid -->
+  <div class="row g-4 mt-1">
+    <!-- Generate Individual Certificate Card -->
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="report-menu-card card-indigo">
+        <%= link_to generate_certificate_institute_admin_reports_path, class: "card-overlay-link", title: "Generate Individual Certificate" do %><% end %>
+        
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div class="report-icon-wrapper icon-indigo">
+            <i class="bi bi-person-workspace"></i>
+          </div>
+          <span class="badge badge-indigo rounded-pill px-3 py-1.5 fw-semibold">
+            <i class="bi bi-plus-circle-fill me-1"></i> Individual Mode
+          </span>
         </div>
-        <h6>Generate Individual Certificate</h6>
-        <p class="card-description">Create certificates for individual participants based on their assignment performance and scores.</p>
-        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
-        <%= link_to generate_certificate_institute_admin_reports_path, class: "card-link" do %>
-          <span class="visually-hidden">Generate Individual Certificate</span>
-        <% end %>
-      </div>
 
-      <!-- Generate Section-Wise Certificate Card -->
-      <div class="certificate-action-card section-card">
-        <div class="action-icon-container">
-          <i class="bi bi-file-earmark-medical"></i>
+        <div class="report-card-content">
+          <h5 class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+            <span>Generate Individual</span>
+            <i class="bi bi-arrow-right action-arrow text-indigo"></i>
+          </h5>
+          <p class="text-muted small mb-0 leading-relaxed">
+            Create custom certificates for single participants based on assignment performance and completion criteria.
+          </p>
         </div>
-        <h6>Generate Section-Wise Certificate</h6>
-        <p class="card-description">Bulk generate certificates for all participants within a specific section or group.</p>
-        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
-        <%= link_to generate_section_certificate_institute_admin_reports_path, class: "card-link" do %>
-          <span class="visually-hidden">Generate Section-Wise Certificate</span>
-        <% end %>
-      </div>
 
-      <!-- View Certificates Card -->
-      <div class="certificate-action-card view-card">
-        <div class="action-icon-container">
-          <i class="bi bi-eye-fill"></i>
+        <div class="report-card-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+          <span class="text-indigo fw-semibold small d-inline-flex align-items-center gap-1">
+            <i class="bi bi-award-fill"></i> Issue Single Credential
+          </span>
+          <i class="bi bi-chevron-right text-muted small"></i>
         </div>
-        <h6>View Certificates</h6>
-        <p class="card-description">Browse, filter, and manage all generated certificates. Publish or regenerate as needed.</p>
-        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
-        <%= link_to view_certificates_institute_admin_reports_path, class: "card-link" do %>
-          <span class="visually-hidden">View Certificates</span>
-        <% end %>
       </div>
-      
-      <!-- Certificate Statistics Card -->
-      <div class="certificate-action-card stats-card">
-        <div class="action-icon-container">
-          <i class="bi bi-bar-chart-fill"></i>
-        </div>
-        <h6>Certificate Statistics</h6>
-        <p class="card-description">View comprehensive statistics and analytics about certificate generation and distribution.</p>
-        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
-        <%= link_to certificate_stats_institute_admin_reports_path, class: "card-link" do %>
-          <span class="visually-hidden">Certificate Statistics</span>
-        <% end %>
-      </div>
+    </div>
 
-      <!-- Certificate Configurations Card -->
-      <div class="certificate-action-card config-card">
-        <div class="action-icon-container">
-          <i class="bi bi-gear-fill"></i>
+    <!-- Generate Section-Wise Certificate Card -->
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="report-menu-card card-rose">
+        <%= link_to generate_section_certificate_institute_admin_reports_path, class: "card-overlay-link", title: "Generate Section-Wise Certificates" do %><% end %>
+        
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div class="report-icon-wrapper icon-rose">
+            <i class="bi bi-collection-play-fill"></i>
+          </div>
+          <span class="badge badge-rose rounded-pill px-3 py-1.5 fw-semibold">
+            <i class="bi bi-diagram-3-fill me-1"></i> Batch Mode
+          </span>
         </div>
-        <h6>Certificate Configurations</h6>
-        <p class="card-description">Manage certificate templates, layouts, and configuration settings for different certificate types.</p>
-        <i class="bi bi-arrow-right-circle-fill action-arrow"></i>
-        <%= link_to institute_admin_certificate_configurations_path, class: "card-link" do %>
-          <span class="visually-hidden">Certificate Configurations</span>
-        <% end %>
+
+        <div class="report-card-content">
+          <h5 class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+            <span>Generate Section-Wise</span>
+            <i class="bi bi-arrow-right action-arrow text-rose"></i>
+          </h5>
+          <p class="text-muted small mb-0 leading-relaxed">
+            Bulk generate certificates for all eligible participants enrolled within a specific section or cohort.
+          </p>
+        </div>
+
+        <div class="report-card-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+          <span class="text-rose fw-semibold small d-inline-flex align-items-center gap-1">
+            <i class="bi bi-stack"></i> Bulk Generate
+          </span>
+          <i class="bi bi-chevron-right text-muted small"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Certificates Card -->
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="report-menu-card card-emerald">
+        <%= link_to view_certificates_institute_admin_reports_path, class: "card-overlay-link", title: "View All Generated Certificates" do %><% end %>
+        
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div class="report-icon-wrapper icon-emerald">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <span class="badge badge-emerald rounded-pill px-3 py-1.5 fw-semibold">
+            <i class="bi bi-folder-fill me-1"></i> Directory
+          </span>
+        </div>
+
+        <div class="report-card-content">
+          <h5 class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+            <span>View Certificates</span>
+            <i class="bi bi-arrow-right action-arrow text-emerald"></i>
+          </h5>
+          <p class="text-muted small mb-0 leading-relaxed">
+            Browse, filter, preview, publish, or regenerate existing certificates stored in the institute repository.
+          </p>
+        </div>
+
+        <div class="report-card-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+          <span class="text-emerald fw-semibold small d-inline-flex align-items-center gap-1">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Browse Credential Logs
+          </span>
+          <i class="bi bi-chevron-right text-muted small"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Statistics Card -->
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="report-menu-card card-amber">
+        <%= link_to certificate_stats_institute_admin_reports_path, class: "card-overlay-link", title: "Certificate Generation Statistics" do %><% end %>
+        
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div class="report-icon-wrapper icon-amber">
+            <i class="bi bi-bar-chart-line-fill"></i>
+          </div>
+          <span class="badge badge-amber rounded-pill px-3 py-1.5 fw-semibold">
+            <i class="bi bi-graph-up me-1"></i> Analytics
+          </span>
+        </div>
+
+        <div class="report-card-content">
+          <h5 class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+            <span>Certificate Statistics</span>
+            <i class="bi bi-arrow-right action-arrow text-amber"></i>
+          </h5>
+          <p class="text-muted small mb-0 leading-relaxed">
+            Gain insight into certificate issue rates, distribution timeline metrics, and section completion trends.
+          </p>
+        </div>
+
+        <div class="report-card-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+          <span class="text-amber fw-semibold small d-inline-flex align-items-center gap-1">
+            <i class="bi bi-pie-chart-fill"></i> View Certificate Metrics
+          </span>
+          <i class="bi bi-chevron-right text-muted small"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Configurations Card -->
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="report-menu-card card-cyan">
+        <%= link_to institute_admin_certificate_configurations_path, class: "card-overlay-link", title: "Certificate Template Configurations" do %><% end %>
+        
+        <div class="d-flex align-items-start justify-content-between mb-3">
+          <div class="report-icon-wrapper icon-cyan">
+            <i class="bi bi-gear-wide-connected"></i>
+          </div>
+          <span class="badge badge-cyan rounded-pill px-3 py-1.5 fw-semibold">
+            <i class="bi bi-sliders me-1"></i> Settings
+          </span>
+        </div>
+
+        <div class="report-card-content">
+          <h5 class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+            <span>Certificate Settings</span>
+            <i class="bi bi-arrow-right action-arrow text-cyan"></i>
+          </h5>
+          <p class="text-muted small mb-0 leading-relaxed">
+            Configure certificate visual templates, signature uploads, background art, and custom field tokens.
+          </p>
+        </div>
+
+        <div class="report-card-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+          <span class="text-cyan fw-semibold small d-inline-flex align-items-center gap-1">
+            <i class="bi bi-palette-fill"></i> Customize Templates
+          </span>
+          <i class="bi bi-chevron-right text-muted small"></i>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+  /* Base Glassmorphic Card Container */
+  .report-menu-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card-overlay-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+  }
+
+  .report-menu-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    border-color: #cbd5e1;
+  }
+
+  /* Indigo Variant */
+  .card-indigo:hover {
+    box-shadow: 0 12px 28px rgba(99, 102, 241, 0.15);
+    border-color: #c7d2fe;
+  }
+  .icon-indigo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+  }
+  .badge-indigo {
+    background-color: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+  }
+  .text-indigo { color: #4f46e5 !important; }
+
+  /* Rose Variant */
+  .card-rose:hover {
+    box-shadow: 0 12px 28px rgba(244, 63, 94, 0.15);
+    border-color: #fecdd3;
+  }
+  .icon-rose {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(244, 63, 94, 0.3);
+  }
+  .badge-rose {
+    background-color: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+  }
+  .text-rose { color: #e11d48 !important; }
+
+  /* Emerald Variant */
+  .card-emerald:hover {
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.15);
+    border-color: #a7f3d0;
+  }
+  .icon-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  }
+  .badge-emerald {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+  .text-emerald { color: #059669 !important; }
+
+  /* Amber Variant */
+  .card-amber:hover {
+    box-shadow: 0 12px 28px rgba(245, 158, 11, 0.15);
+    border-color: #fde68a;
+  }
+  .icon-amber {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+  }
+  .badge-amber {
+    background-color: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+  .text-amber { color: #d97706 !important; }
+
+  /* Cyan Variant */
+  .card-cyan:hover {
+    box-shadow: 0 12px 28px rgba(6, 182, 212, 0.15);
+    border-color: #a5f3fc;
+  }
+  .icon-cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(6, 182, 212, 0.3);
+  }
+  .badge-cyan {
+    background-color: #ecfeff;
+    color: #0e7490;
+    border: 1px solid #a5f3fc;
+  }
+  .text-cyan { color: #0891b2 !important; }
+
+  /* Icon Wrapper */
+  .report-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .report-menu-card:hover .report-icon-wrapper {
+    transform: scale(1.1) rotate(-5deg);
+  }
+
+  /* Animated Arrow */
+  .action-arrow {
+    font-size: 1.25rem;
+    transition: transform 0.3s ease;
+  }
+
+  .report-menu-card:hover .action-arrow {
+    transform: translateX(6px);
+  }
+
+  .report-card-footer {
+    border-color: #f1f5f9 !important;
+  }
+
+  .leading-relaxed {
+    line-height: 1.6;
+  }
+</style>
