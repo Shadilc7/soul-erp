@@ -25,23 +25,25 @@
         <% all_questions.each_with_index do |question, index| %>
           <div class="question-card mb-4">
             <div class="question-header mb-3">
-              <h6 class="mb-1">Question <%= index + 1 %></h6>
-              <div class="question-title"><%= question.title %></div>
+              <h6 class="mb-1 text-primary fw-bold">Question <%= index + 1 %></h6>
+              <div class="question-title fw-semibold"><%= question.title %></div>
             </div>
 
             <% case question.question_type %>
             <% when "multiple_choice" %>
               <div class="options-list">
                 <% question.options.each do |option| %>
+                  <% option_val = option.is_a?(Option) ? option.text : option.to_s %>
                   <div class="form-check mb-2">
                     <%= radio_button_tag "responses[#{question.id}][selected_options]",
-                        option,
+                        option_val,
                         false,
+                        id: "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
                         class: "form-check-input",
                         required: true %>
-                    <%= label_tag "responses[#{question.id}][selected_options_#{option}]",
-                        option,
-                        class: "form-check-label" %>
+                    <%= label_tag "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
+                        option_val,
+                        class: "form-check-label ms-1 text-dark" %>
                   </div>
                 <% end %>
               </div>
@@ -49,14 +51,16 @@
             <% when "checkbox" %>
               <div class="options-list">
                 <% question.options.each do |option| %>
+                  <% option_val = option.is_a?(Option) ? option.text : option.to_s %>
                   <div class="form-check mb-2">
                     <%= check_box_tag "responses[#{question.id}][selected_options][]",
-                        option,
+                        option_val,
                         false,
+                        id: "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
                         class: "form-check-input" %>
-                    <%= label_tag "responses[#{question.id}][selected_options_#{option}]",
-                        option,
-                        class: "form-check-label" %>
+                    <%= label_tag "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
+                        option_val,
+                        class: "form-check-label ms-1 text-dark" %>
                   </div>
                 <% end %>
               </div>
@@ -67,18 +71,19 @@
                     nil,
                     class: "form-control",
                     rows: 3,
-                    required: true %>
+                    required: true,
+                    placeholder: "Type your answer here..." %>
               </div>
             <% end %>
           </div>
         <% end %>
 
-        <div class="form-actions text-end">
+        <div class="form-actions d-flex justify-content-between align-items-center">
           <%= link_to "Cancel",
               participant_portal_root_path,
-              class: "btn btn-light me-2" %>
+              class: "btn btn-outline-secondary rounded-3 px-4 fw-medium" %>
           <%= f.submit "Submit Answers",
-              class: "btn btn-primary",
+              class: "btn btn-primary rounded-3 px-4 fw-semibold",
               data: { confirm: "Are you sure you want to submit your answers?" } %>
         </div>
       <% end %>

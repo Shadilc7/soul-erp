@@ -17,6 +17,10 @@ class Option < ApplicationRecord
 
   before_validation :ensure_text_present
 
+  def to_s
+    text.to_s
+  end
+
   private
 
   def set_default_text
