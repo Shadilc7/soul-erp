@@ -41,6 +41,11 @@ jobs:
             echo "🎨 Precompiling assets..."
             RAILS_ENV=production bundle exec rails assets:precompile
 
+            if ! command -v chromium &> /dev/null && ! command -v chromium-browser &> /dev/null; then
+              echo "📦 Installing Chromium for PDF exports..."
+              sudo apt-get update -y && sudo apt-get install -y chromium-browser
+            fi
+
             echo "🔄 Restarting app..."
             sudo systemctl restart soul-erp
 
