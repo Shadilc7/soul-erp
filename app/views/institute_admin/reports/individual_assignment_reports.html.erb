@@ -13,41 +13,22 @@
       <h3 class="fw-bold text-dark mb-0" style="letter-spacing: -0.3px;">Individual Assignment Reports</h3>
     </div>
     <div class="header-actions d-flex flex-wrap align-items-center gap-2">
-      <!-- Standard Instant Exports -->
-      <%= link_to individual_assignment_reports_institute_admin_reports_path(format: :pdf, specific_date: params[:specific_date], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date], section_id: params[:section_id], participant_id: params[:participant_id], assignment_id: params[:assignment_id], submission_status: params[:submission_status], search: params[:search]), 
-                  class: "btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
-                  target: "_blank", 
-                  title: "Export Instant PDF Report" do %>
+      <!-- Background Job Export Buttons -->
+      <button type="button" 
+              class="btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" 
+              onclick="startAsyncExport('individual_assignment_pdf');"
+              title="Export PDF Report">
         <i class="bi bi-file-earmark-pdf-fill"></i>
-        <span>PDF</span>
-      <% end %>
+        <span>Export PDF</span>
+      </button>
 
-      <%= link_to individual_assignment_reports_institute_admin_reports_path(format: :csv, specific_date: params[:specific_date], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date], section_id: params[:section_id], participant_id: params[:participant_id], assignment_id: params[:assignment_id], submission_status: params[:submission_status], search: params[:search]), 
-                  class: "btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
-                  title: "Export Instant CSV Data" do %>
+      <button type="button" 
+              class="btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" 
+              onclick="startAsyncExport('individual_assignment_csv');"
+              title="Export CSV Data">
         <i class="bi bi-file-earmark-spreadsheet-fill"></i>
-        <span>CSV</span>
-      <% end %>
-
-      <!-- Background Job Async Export Buttons -->
-      <div class="btn-group shadow-sm rounded-3" role="group">
-        <button type="button" 
-                class="btn btn-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 fw-medium border-0" 
-                style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);"
-                onclick="startAsyncExport('individual_assignment_pdf');"
-                title="Generate PDF in Background Job">
-          <i class="bi bi-cpu-fill text-warning"></i>
-          <span>Async PDF</span>
-        </button>
-        <button type="button" 
-                class="btn btn-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 fw-medium border-0 border-start border-indigo-subtle" 
-                style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);"
-                onclick="startAsyncExport('individual_assignment_csv');"
-                title="Generate CSV in Background Job">
-          <i class="bi bi-file-earmark-spreadsheet-fill text-success"></i>
-          <span>Async CSV</span>
-        </button>
-      </div>
+        <span>Export CSV</span>
+      </button>
 
       <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1.5 rounded-3 px-3 py-2 fw-medium" do %>
         <i class="bi bi-arrow-left"></i>
@@ -241,7 +222,8 @@
             <th style="min-width: 200px;">PARTICIPANT</th>
             <th style="min-width: 150px;">SECTION</th>
             <th style="min-width: 220px;">ASSIGNMENT</th>
-            <th class="pe-4 text-end" style="min-width: 120px;">STATUS</th>
+            <th style="min-width: 120px;" class="text-center">STATUS</th>
+            <th style="min-width: 140px;" class="pe-4 text-center">ACTIONS</th>
           </tr>
         </thead>
         <tbody>
@@ -263,7 +245,7 @@
                   </span>
                 </td>
                 <td class="fw-medium text-dark"><%= row[:assignment_title] %></td>
-                <td class="pe-4 text-end">
+                <td class="text-center">
                   <% if row[:status] == "submitted" %>
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
                       <i class="bi bi-check-circle-fill me-1"></i>Submitted
@@ -272,6 +254,27 @@
                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1.5 fw-semibold">
                       <i class="bi bi-clock-history me-1"></i>Pending
                     </span>
+                  <% end %>
+                </td>
+                <td class="pe-4 text-center">
+                  <% if row[:status] == 'submitted' && row[:participant_id].present? && row[:assignment_id].present? %>
+                    <%= link_to assignment_response_details_institute_admin_reports_path(
+                          participant_id: row[:participant_id],
+                          assignment_id: row[:assignment_id],
+                          date: row[:date]
+                        ),
+                        class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 px-3 py-1 rounded-pill fw-semibold shadow-sm",
+                        title: "View Submission Details" do %>
+                      <i class="bi bi-eye-fill"></i> View Details
+                    <% end %>
+                  <% elsif row[:status] == 'pending' && row[:participant_email].present? %>
+                    <%= mail_to row[:participant_email], 
+                                class: "btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill fw-medium", 
+                                subject: "Assignment Submission Reminder" do %>
+                      <i class="bi bi-envelope-at"></i> Remind
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted small">-</span>
                   <% end %>
                 </td>
               </tr>

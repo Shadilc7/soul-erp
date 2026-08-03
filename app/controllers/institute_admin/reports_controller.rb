@@ -9,11 +9,7 @@ module InstituteAdmin
     end
 
     def assignment_reports
-      @date_range = params[:date_range]
-      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
-      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
-      @section_id = params[:section_id]
-      @assignment_id = params[:assignment_id]
+      set_report_filters
 
       respond_to do |format|
         format.html do
@@ -420,12 +416,7 @@ module InstituteAdmin
     end
 
     def individual_assignment_reports
-      @date_range = params[:date_range]
-      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
-      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
-      @section_id = params[:section_id]
-      @participant_id = params[:participant_id]
-      @assignment_id = params[:assignment_id]
+      set_report_filters
 
       # Load participants for the selected section
       @participants = if @section_id.present?
@@ -455,6 +446,21 @@ module InstituteAdmin
           render_individual_assignment_report_pdf
         }
       end
+    end
+
+    def assignment_response_details
+      @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
+      @participant = current_institute.participants.includes(:user, :section).find(params[:participant_id])
+      @assignment = current_institute.assignments.find(params[:assignment_id])
+
+      @responses = @participant.assignment_responses
+                               .where(assignment: @assignment, response_date: @selected_date)
+                               .includes(:question)
+                               .index_by(&:question_id)
+
+      @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
+      @total_questions_count = @grouped_questions.values.flatten.size
+      @answered_count = @responses.size
     end
 
     def export_async
@@ -653,6 +659,7 @@ module InstituteAdmin
     private
 
     def fetch_assignment_reports
+      set_report_filters
       base_query = build_assignment_report_base_query
 
       if @section_id.present? && @section_id != "all"
@@ -690,6 +697,8 @@ module InstituteAdmin
         @submitted_logs.each do |log|
           @report_rows << {
             date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
             participant_name: log.participant.full_name,
             participant_email: log.participant.email,
             section_name: log.participant.section&.name || "N/A",
@@ -722,6 +731,7 @@ module InstituteAdmin
     # DB-paginated version for HTML format — avoids loading all records into memory.
     # KPIs are computed via COUNT queries; only the current page's records are instantiated.
     def fetch_assignment_reports_paginated
+      set_report_filters
       base_query = build_assignment_report_base_query
 
       if @section_id.present? && @section_id != "all"
@@ -754,11 +764,14 @@ module InstituteAdmin
       items_per_page = 15
       page_num = [ (params[:page] || 1).to_i, 1 ].max
 
+      submitted_logs_count = base_query.count
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
+      pending_count = not_submitted_query.count
+
       # Build paginated rows based on submission_status filter
       if params[:submission_status] == "not_submitted"
-        submitted_participant_ids = base_query.distinct.pluck(:participant_id)
-        not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
-        @total_report_count = not_submitted_query.count
+        @total_report_count = pending_count
         @pagy, paginated_participants = pagy(not_submitted_query, items: items_per_page)
         @paginated_rows = paginated_participants.map do |participant|
           {
@@ -771,11 +784,13 @@ module InstituteAdmin
           }
         end
       elsif params[:submission_status] == "submitted"
-        @total_report_count = @submitted_count
+        @total_report_count = submitted_logs_count
         @pagy, paginated_logs = pagy(base_query.order(response_date: :desc), items: items_per_page)
         @paginated_rows = paginated_logs.map do |log|
           {
             date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
             participant_name: log.participant.full_name,
             participant_email: log.participant.email,
             section_name: log.participant.section&.name || "N/A",
@@ -784,20 +799,19 @@ module InstituteAdmin
           }
         end
       else
-        submitted_participant_ids = base_query.distinct.pluck(:participant_id)
-        not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
-        pending_count = not_submitted_query.count
-        @total_report_count = @submitted_count + pending_count
+        @total_report_count = submitted_logs_count + pending_count
         @pagy = Pagy.new(count: @total_report_count, page: page_num, items: items_per_page)
 
         page_offset = @pagy.offset
         @paginated_rows = []
 
-        if page_offset < @submitted_count
+        if page_offset < submitted_logs_count
           logs_for_page = base_query.order(response_date: :desc).offset(page_offset).limit(items_per_page)
           logs_for_page.each do |log|
             @paginated_rows << {
               date: log.response_date,
+              participant_id: log.participant_id,
+              assignment_id: log.assignment_id,
               participant_name: log.participant.full_name,
               participant_email: log.participant.email,
               section_name: log.participant.section&.name || "N/A",
@@ -821,7 +835,7 @@ module InstituteAdmin
             end
           end
         else
-          pending_offset = page_offset - @submitted_count
+          pending_offset = page_offset - submitted_logs_count
           pending_for_page = not_submitted_query.offset(pending_offset).limit(items_per_page)
           pending_for_page.each do |participant|
             @paginated_rows << {
@@ -842,6 +856,7 @@ module InstituteAdmin
 
     # DB-paginated version for individual assignment reports HTML format.
     def fetch_individual_assignment_reports_paginated
+      set_report_filters
       base_query = build_assignment_report_base_query
 
       if @section_id.present? && @section_id != "all"
@@ -880,11 +895,14 @@ module InstituteAdmin
       items_per_page = 15
       page_num = [ (params[:page] || 1).to_i, 1 ].max
 
+      submitted_logs_count = base_query.count
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
+      pending_count = not_submitted_query.count
+
       # Build paginated rows
       if params[:submission_status] == "not_submitted"
-        submitted_participant_ids = base_query.distinct.pluck(:participant_id)
-        not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
-        @total_report_count = not_submitted_query.count
+        @total_report_count = pending_count
         @pagy, paginated_participants = pagy(not_submitted_query, items: items_per_page)
         @paginated_rows = paginated_participants.map do |participant|
           {
@@ -897,11 +915,13 @@ module InstituteAdmin
           }
         end
       elsif params[:submission_status] == "submitted"
-        @total_report_count = @submitted_count
+        @total_report_count = submitted_logs_count
         @pagy, paginated_logs = pagy(base_query.order(response_date: :desc), items: items_per_page)
         @paginated_rows = paginated_logs.map do |log|
           {
             date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
             participant_name: log.participant.full_name,
             participant_email: log.participant.email,
             section_name: log.participant.section&.name || "N/A",
@@ -910,20 +930,19 @@ module InstituteAdmin
           }
         end
       else
-        submitted_participant_ids = base_query.distinct.pluck(:participant_id)
-        not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
-        pending_count = not_submitted_query.count
-        @total_report_count = @submitted_count + pending_count
+        @total_report_count = submitted_logs_count + pending_count
         @pagy = Pagy.new(count: @total_report_count, page: page_num, items: items_per_page)
 
         page_offset = @pagy.offset
         @paginated_rows = []
 
-        if page_offset < @submitted_count
+        if page_offset < submitted_logs_count
           logs_for_page = base_query.order(response_date: :desc).offset(page_offset).limit(items_per_page)
           logs_for_page.each do |log|
             @paginated_rows << {
               date: log.response_date,
+              participant_id: log.participant_id,
+              assignment_id: log.assignment_id,
               participant_name: log.participant.full_name,
               participant_email: log.participant.email,
               section_name: log.participant.section&.name || "N/A",
@@ -947,7 +966,7 @@ module InstituteAdmin
             end
           end
         else
-          pending_offset = page_offset - @submitted_count
+          pending_offset = page_offset - submitted_logs_count
           pending_for_page = not_submitted_query.offset(pending_offset).limit(items_per_page)
           pending_for_page.each do |participant|
             @paginated_rows << {
@@ -963,6 +982,15 @@ module InstituteAdmin
       end
 
       @report_rows = Array.new(@total_report_count)
+    end
+
+    def set_report_filters
+      @date_range = params[:date_range]
+      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
+      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
+      @section_id = params[:section_id]
+      @participant_id = params[:participant_id]
+      @assignment_id = params[:assignment_id]
     end
 
     # Shared query builder for assignment report base query with date filtering.
@@ -1140,6 +1168,7 @@ module InstituteAdmin
     end
 
     def fetch_individual_assignment_reports
+      set_report_filters
       base_query = build_assignment_report_base_query
 
       if @section_id.present? && @section_id != "all"
@@ -1185,6 +1214,8 @@ module InstituteAdmin
         @submitted_logs.each do |log|
           @report_rows << {
             date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
             participant_name: log.participant.full_name,
             participant_email: log.participant.email,
             section_name: log.participant.section&.name || "N/A",
