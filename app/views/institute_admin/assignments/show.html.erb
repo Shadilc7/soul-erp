@@ -124,6 +124,10 @@
                                 <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
                                   <i class="bi bi-clock-history me-1"></i> <%= pluralize(q.duration_days, 'Day') %>
                                 </span>
+                              <% else %>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
+                                  <i class="bi bi-clock-history me-1"></i> All Days
+                                </span>
                               <% end %>
 
                               <% if q.required? %>

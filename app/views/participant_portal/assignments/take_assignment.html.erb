@@ -1,18 +1,52 @@
 <div class="container py-4">
-  <div class="card shadow-sm">
-    <!-- Assignment Header -->
-    <div class="card-header bg-white py-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><%= @assignment.title %></h5>
-        <span class="badge bg-primary"><%= @selected_date.strftime("%B %d, %Y") %></span>
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <!-- Assignment Header & Date Selector -->
+    <div class="card-header bg-white py-3 border-bottom">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <h5 class="mb-0 fw-bold text-dark"><%= @assignment.title %></h5>
+          <small class="text-muted">
+            <%= @assignment.start_date.strftime("%b %d, %Y") %> – <%= @assignment.end_date.strftime("%b %d, %Y") %>
+          </small>
+        </div>
+
+        <!-- Date Selector Dropdown -->
+        <div class="d-flex align-items-center gap-2">
+          <label for="take_assignment_date_select" class="form-label mb-0 fw-semibold text-muted small">Select Date:</label>
+          <select id="take_assignment_date_select"
+                  class="form-select form-select-sm border-primary shadow-sm fw-semibold"
+                  style="width: auto; min-width: 220px;"
+                  onchange="window.location.href='<%= take_assignment_participant_portal_assignment_path(@assignment) %>?date=' + this.value">
+            <% (@assignment.valid_dates_up_to_today | [@selected_date]).sort.reverse.each do |d| %>
+              <% is_sub = @assignment.answered_by_on_date?(current_participant, d) %>
+              <option value="<%= d.strftime('%Y-%m-%d') %>" <%= 'selected' if d == @selected_date %>>
+                <%= d.strftime("%b %d, %Y") %> <%= is_sub ? '— Submitted ✓' : '— Missed / Pending ✕' %>
+              </option>
+            <% end %>
+          </select>
+        </div>
       </div>
     </div>
+
+    <!-- Already Submitted Banner -->
+    <% if @already_submitted %>
+      <div class="alert alert-success d-flex align-items-center justify-content-between m-3 shadow-sm rounded-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-check-circle-fill text-success fs-4"></i>
+          <div>
+            <strong class="text-success">Submitted for <%= @selected_date.strftime("%B %d, %Y") %></strong>
+            <div class="small text-success-emphasis">You have already submitted responses for this date. Below are your answers or questions preview.</div>
+          </div>
+        </div>
+        <span class="badge bg-success px-3 py-2 fs-6"><i class="bi bi-check-lg me-1"></i> Submitted</span>
+      </div>
+    <% end %>
 
     <!-- Assignment Description -->
     <% if @assignment.description.present? %>
       <div class="card-body border-bottom bg-light">
-        <div class="d-flex align-items-start">
-          <i class="bi bi-info-circle-fill text-primary me-2 mt-1"></i>
+        <div class="d-flex align-items-start text-secondary">
+          <i class="bi bi-info-circle-fill text-primary me-2 mt-1 fs-5"></i>
           <div><%= @assignment.description %></div>
         </div>
       </div>
@@ -40,15 +74,19 @@
               <% group_questions.each do |question| %>
                 <div class="question-item mb-4">
                   <div class="d-flex justify-content-between align-items-start mb-2">
-                    <label class="form-label mb-0">
+                    <label class="form-label mb-0 fw-bold text-dark">
                       <%= question.title %>
-                      <% if question.required? %>
+                      <% if question.required? && !@already_submitted %>
                         <span class="text-danger">*</span>
                       <% end %>
                     </label>
-                    <% if question.duration_days.present? %>
+                    <% if question.duration_days.present? && question.duration_days.to_i > 0 %>
                       <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
                         <i class="bi bi-clock-history me-1"></i> <%= pluralize(question.duration_days, 'Day') %>
+                      </span>
+                    <% else %>
+                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
+                        <i class="bi bi-clock-history me-1"></i> All Days
                       </span>
                     <% end %>
                   </div>
@@ -59,22 +97,27 @@
                     </div>
                   <% end %>
 
+                  <% existing_resp = @existing_responses[question.id] %>
+                  <% current_val = @responses&.dig(question.id.to_s, "answer") || existing_resp&.answer %>
+
                   <% case question.question_type %>
                   <% when "short_answer" %>
                     <%= text_field_tag "responses[#{question.id}][answer]",
-                        @responses&.dig(question.id.to_s, "answer"),
+                        current_val,
                         class: "form-control",
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         data: { 
                           action: "input->assignment-form#validateField",
                           question_id: question.id
                         } %>
                   <% when "paragraph" %>
                     <%= text_area_tag "responses[#{question.id}][answer]",
-                        @responses&.dig(question.id.to_s, "answer"),
+                        current_val,
                         class: "form-control",
                         rows: 4,
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         data: { 
                           action: "input->assignment-form#validateField",
                           question_id: question.id
@@ -85,9 +128,10 @@
                         <div class="form-check">
                           <%= radio_button_tag "responses[#{question.id}][answer]",
                               option.text,
-                              @responses&.dig(question.id.to_s, "answer") == option.text,
+                              (current_val == option.text),
                               class: "form-check-input",
-                              required: question.required?,
+                              required: (question.required? && !@already_submitted),
+                              disabled: @already_submitted,
                               data: { 
                                 action: "input->assignment-form#validateField",
                                 question_id: question.id
@@ -99,13 +143,14 @@
                   <% when "checkboxes" %>
                     <div class="options-list">
                       <% question.options.each do |option| %>
-                        <% selected_options = @responses&.dig(question.id.to_s, "selected_options") || [] %>
+                        <% selected_options = @responses&.dig(question.id.to_s, "selected_options") || existing_resp&.selected_options || [] %>
                         <div class="form-check">
                           <%= check_box_tag "responses[#{question.id}][selected_options][]",
                               option.text,
                               selected_options.include?(option.text),
                               class: "form-check-input",
-                              required: question.required?,
+                              required: (question.required? && !@already_submitted),
+                              disabled: @already_submitted,
                               data: { 
                                 action: "input->assignment-form#validateField",
                                 question_id: question.id
@@ -116,37 +161,41 @@
                     </div>
                   <% when "dropdown" %>
                     <%= select_tag "responses[#{question.id}][answer]",
-                        options_for_select(question.options.pluck(:text), @responses&.dig(question.id.to_s, "answer")),
+                        options_for_select(question.options.pluck(:text), current_val),
                         include_blank: "Select an option",
                         class: "form-select",
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         data: { 
                           action: "input->assignment-form#validateField",
                           question_id: question.id
                         } %>
                   <% when "date" %>
                     <%= date_field_tag "responses[#{question.id}][answer]",
-                        @responses&.dig(question.id.to_s, "answer"),
+                        current_val,
                         class: "form-control",
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         data: { 
                           action: "input->assignment-form#validateField",
                           question_id: question.id
                         } %>
                   <% when "time" %>
                     <%= time_field_tag "responses[#{question.id}][answer]",
-                        @responses&.dig(question.id.to_s, "answer"),
+                        current_val,
                         class: "form-control",
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         data: { 
                           action: "input->assignment-form#validateField",
                           question_id: question.id
                         } %>
                   <% when "number" %>
                     <%= number_field_tag "responses[#{question.id}][answer]",
-                        @responses&.dig(question.id.to_s, "answer"),
+                        current_val,
                         class: "form-control",
-                        required: question.required?,
+                        required: (question.required? && !@already_submitted),
+                        disabled: @already_submitted,
                         placeholder: "Enter a number",
                         data: { 
                           action: "input->assignment-form#validateField",
@@ -157,9 +206,10 @@
                       <div class="form-check form-check-inline">
                         <%= radio_button_tag "responses[#{question.id}][answer]",
                             "Yes",
-                            @responses&.dig(question.id.to_s, "answer") == "Yes",
+                            (current_val == "Yes"),
                             class: "form-check-input",
-                            required: question.required?,
+                            required: (question.required? && !@already_submitted),
+                            disabled: @already_submitted,
                             data: { 
                               action: "input->assignment-form#validateField",
                               question_id: question.id
@@ -169,9 +219,10 @@
                       <div class="form-check form-check-inline">
                         <%= radio_button_tag "responses[#{question.id}][answer]",
                             "No",
-                            @responses&.dig(question.id.to_s, "answer") == "No",
+                            (current_val == "No"),
                             class: "form-check-input",
-                            required: question.required?,
+                            required: (question.required? && !@already_submitted),
+                            disabled: @already_submitted,
                             data: { 
                               action: "input->assignment-form#validateField",
                               question_id: question.id
@@ -188,14 +239,25 @@
               <% end %>
             </div>
           <% end %>
+        <% else %>
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-info-circle fs-1 text-secondary mb-2 d-block"></i>
+            <p class="mb-0 fs-6">No questions scheduled for <%= @selected_date.strftime("%B %d, %Y") %></p>
+          </div>
         <% end %>
       </div>
 
-      <div class="card-footer bg-white">
+      <div class="card-footer bg-white border-top py-3">
         <div class="d-flex justify-content-between align-items-center">
-          <%= link_to "Cancel", participant_portal_root_path(date: @selected_date),
-              class: "btn btn-light" %>
-          <%= f.submit "Submit Assignment", class: "btn btn-primary" %>
+          <%= link_to "Back to Assignments", participant_portal_assignments_path,
+              class: "btn btn-light border px-4 rounded-3 fw-medium" %>
+          <% if @already_submitted %>
+            <span class="badge bg-success px-4 py-3 fs-6 rounded-3">
+              <i class="bi bi-check-circle-fill me-1"></i> Submitted for <%= @selected_date.strftime("%b %d, %Y") %>
+            </span>
+          <% elsif @grouped_questions.present? %>
+            <%= f.submit "Submit Assignment", class: "btn btn-primary px-4 py-2 rounded-3 fw-bold" %>
+          <% end %>
         </div>
       </div>
     <% end %>
@@ -240,7 +302,6 @@
       color: #6c757d;
     }
     
-    /* Ensure stars are properly aligned */
     .star-rating {
       padding: 5px 0;
     }
@@ -249,7 +310,6 @@
       display: inline-block;
     }
     
-    /* Hide radio buttons completely */
     .star-rating input[type="radio"] {
       position: absolute;
       opacity: 0;
@@ -260,7 +320,6 @@
       display: none;
     }
     
-    /* Ensure stars are properly displayed */
     .star-rating label i.bi-star,
     .star-rating label i.bi-star-fill {
       font-size: 2rem;
@@ -307,4 +366,4 @@
       margin-right: 0;
     }
   </style>
-<% end %> 
+<% end %>

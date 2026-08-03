@@ -146,7 +146,8 @@ module InstituteAdmin
               question_type: original_question.question_type,
               required: original_question.required,
               active: original_question.active,
-              max_rating: original_question.max_rating
+              max_rating: original_question.max_rating,
+              duration_days: original_question.duration_days
             )
 
             # Temporarily disable validation
@@ -191,7 +192,8 @@ module InstituteAdmin
               question_type: original_question.question_type,
               required: original_question.required,
               active: original_question.active,
-              max_rating: original_question.max_rating
+              max_rating: original_question.max_rating,
+              duration_days: original_question.duration_days
             )
 
             unless new_question.save
@@ -229,6 +231,7 @@ module InstituteAdmin
         :required,
         :max_rating,
         :position,
+        :duration_days,
         options_attributes: [ :id, :text, :correct, :_destroy ]
       )
     end

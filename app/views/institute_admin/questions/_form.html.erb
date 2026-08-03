@@ -21,13 +21,25 @@
         } %>
   </div>
 
-  <!-- Question Display Name -->
-  <div class="mb-4">
-    <%= f.label :display_name, "Display Name (optional)", class: "form-label" %>
-    <%= f.text_field :display_name,
-        class: "form-control",
-        placeholder: "Enter display name" %>
-    <div class="form-text">A shorter name to display in certificates. If left empty, the question title will be used.</div>
+  <!-- Question Display Name & Duration Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <%= f.label :display_name, "Display Name (optional)", class: "form-label" %>
+      <%= f.text_field :display_name,
+          class: "form-control",
+          placeholder: "Enter display name" %>
+      <div class="form-text">A shorter name to display in certificates. If left empty, the question title will be used.</div>
+    </div>
+
+    <div class="col-md-6">
+      <%= f.label :duration_days, "No. of Days (optional)", class: "form-label" %>
+      <%= f.number_field :duration_days,
+          class: "form-control",
+          min: 1,
+          value: @question.duration_days,
+          placeholder: "e.g. 1, 2, 5 days (leave empty for All Days)" %>
+      <div class="form-text">Number of days this question will be active in assignments (leave empty for All Days).</div>
+    </div>
   </div>
 
   <!-- Question Description -->

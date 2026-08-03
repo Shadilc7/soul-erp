@@ -2,7 +2,7 @@ module ParticipantPortal
   class AssignmentsController < ParticipantPortal::BaseController
     before_action :set_assignment, except: [ :index ]
     before_action :prevent_student_view_mutation, only: [ :take_assignment, :submit ]
-    before_action :check_date_availability, only: [ :take_assignment, :submit ]
+    before_action :check_date_availability, only: [ :submit ]
 
     def index
       @selected_date = parse_date(params[:date])
@@ -68,11 +68,13 @@ module ParticipantPortal
     end
 
     def show
-      @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
-
-      @individual_questions = @assignment.questions.order(:created_at)
-      @question_set_questions = @assignment.question_sets.includes(:questions)
-        .flat_map(&:questions)
+      @selected_date = parse_date(params[:date])
+      @already_submitted = @assignment.answered_by_on_date?(current_participant, @selected_date)
+      @existing_responses = current_participant.assignment_responses.where(
+        assignment: @assignment,
+        response_date: @selected_date
+      ).index_by(&:question_id)
+      @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
 
       respond_to do |format|
         format.html # renders show.html.erb
@@ -86,13 +88,18 @@ module ParticipantPortal
 
     def take_assignment
       @selected_date = parse_date(params[:date])
-      @questions = @assignment.all_questions
-      @grouped_questions = @assignment.questions_grouped_by_bundle
+      @already_submitted = @assignment.answered_by_on_date?(current_participant, @selected_date)
+      @existing_responses = current_participant.assignment_responses.where(
+        assignment: @assignment,
+        response_date: @selected_date
+      ).index_by(&:question_id)
+      @questions = @assignment.all_questions_for_date(@selected_date)
+      @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
     end
 
     def submit
-      @selected_date = parse_date(params[:date])
-      @responses = params[:responses].to_unsafe_h
+      raw_responses = params[:responses]
+      @responses = raw_responses.present? ? raw_responses.to_unsafe_h : {}
 
       # First check if already submitted
       if @assignment.answered_by_on_date?(current_participant, @selected_date)
@@ -163,8 +170,8 @@ module ParticipantPortal
                       notice: "Assignment submitted successfully!"
         else
           flash.now[:alert] = "Please fix the following errors:<br>#{validation_errors.join('<br>')}".html_safe
-          @questions = @assignment.all_questions
-          @grouped_questions = @assignment.questions_grouped_by_bundle
+          @questions = @assignment.all_questions_for_date(@selected_date)
+          @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
           render :take_assignment, status: :unprocessable_entity
         end
       rescue ActiveRecord::RecordNotUnique => e
@@ -176,15 +183,15 @@ module ParticipantPortal
           redirect_to participant_portal_root_path and return
         else
           flash.now[:alert] = "Some responses were already recorded by a concurrent submission. Please review and try again."
-          @questions = @assignment.all_questions
-          @grouped_questions = @assignment.questions_grouped_by_bundle
+          @questions = @assignment.all_questions_for_date(@selected_date)
+          @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
           render :take_assignment, status: :conflict and return
         end
       rescue => e
         Rails.logger.error("Error in submit action: #{e.message}")
         flash.now[:alert] = "Error submitting assignment. Please try again."
-        @questions = @assignment.all_questions
-        @grouped_questions = @assignment.questions_grouped_by_bundle
+        @questions = @assignment.all_questions_for_date(@selected_date)
+        @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
         render :take_assignment, status: :unprocessable_entity
       end
     end

@@ -89,12 +89,31 @@ class Assignment < ApplicationRecord
     return false if date > Date.current # Can't do future dates
     return false if date < start_date || date > end_date
     return false if answered_by_on_date?(participant, date)
+    return false if questions_grouped_by_bundle_for_date(date).empty?
 
     if assignment_type == "individual"
       participants.include?(participant)
     else
       sections.include?(participant.section)
     end
+  end
+
+  def latest_unanswered_date_for(participant)
+    max_date = [end_date.to_date, Date.current].min
+    min_date = start_date.to_date
+    return nil if max_date < min_date
+
+    (min_date..max_date).to_a.reverse.find do |d|
+      available_for_date?(participant, d)
+    end
+  end
+
+  def valid_dates_up_to_today
+    max_date = [end_date.to_date, Date.current].min
+    min_date = start_date.to_date
+    return [] if max_date < min_date
+
+    (min_date..max_date).to_a
   end
 
   def total_days
@@ -160,6 +179,50 @@ class Assignment < ApplicationRecord
     end
 
     groups
+  end
+
+  def all_questions_for_date(selected_date)
+    questions_grouped_by_bundle_for_date(selected_date).values.flatten
+  end
+
+  def questions_grouped_by_bundle_for_date(selected_date)
+    return {} if selected_date.blank?
+    target_date = selected_date.to_date
+    all_grouped = questions_grouped_by_bundle
+    return {} if all_grouped.empty?
+
+    active_groups = {}
+    current_bundle_start = start_date.to_date
+
+    all_grouped.each do |group_name, group_questions|
+      next if group_questions.empty?
+
+      explicit_durations = group_questions.map(&:duration_days).compact.map(&:to_i).select { |d| d > 0 }
+      fallback_duration = question_category&.duration_days.presence || total_days
+      bundle_duration = explicit_durations.any? ? explicit_durations.max : fallback_duration
+
+      bundle_start_date = current_bundle_start
+      bundle_end_date = bundle_start_date + (bundle_duration - 1)
+
+      active_questions_in_bundle = group_questions.select do |q|
+        if q.duration_days.present? && q.duration_days.to_i > 0
+          q_duration = q.duration_days.to_i
+          q_start = bundle_start_date
+          q_end = bundle_start_date + (q_duration - 1)
+          target_date >= q_start && target_date <= q_end
+        else
+          target_date >= bundle_start_date && target_date <= bundle_end_date
+        end
+      end
+
+      if active_questions_in_bundle.any?
+        active_groups[group_name] = active_questions_in_bundle
+      end
+
+      current_bundle_start = bundle_end_date + 1.day
+    end
+
+    active_groups
   end
 
   def edit_questions_grouped_by_bundle

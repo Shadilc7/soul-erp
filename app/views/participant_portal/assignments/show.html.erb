@@ -1,90 +1,180 @@
 <div class="container py-4">
-  <div class="card card-custom">
-    <div class="card-header card-header-custom">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><%= @assignment.title %></h5>
-        <span class="badge bg-primary">
-          Assignment for <%= @selected_date.strftime("%B %d, %Y") %>
-        </span>
+  <!-- Page Header Card -->
+  <div class="page-header-card mb-4">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+      <div class="header-icon">
+        <i class="bi bi-journal-text"></i>
+      </div>
+      <div>
+        <h4 class="header-title"><%= @assignment.title %></h4>
+        <p class="header-subtitle">Read-only assignment structure and responses preview</p>
+      </div>
+    </div>
+    <a href="<%= participant_portal_assignments_path %>" class="btn-back" title="Back to Assignments">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+  </div>
+
+  <!-- Assignment Details & Date Selector Card -->
+  <div class="section-card mb-4">
+    <div class="section-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="d-flex align-items-center gap-2">
+        <div class="section-icon past">
+          <i class="bi bi-info-circle-fill"></i>
+        </div>
+        <div>
+          <h5 class="section-title mb-0">Assignment Overview</h5>
+          <small class="text-muted">
+            <%= @assignment.start_date.strftime("%b %d, %Y") %> – <%= @assignment.end_date.strftime("%b %d, %Y") %>
+            (<%= @assignment.total_days %> total days)
+          </small>
+        </div>
+      </div>
+
+      <!-- Date Selector Dropdown -->
+      <div class="d-flex align-items-center gap-2">
+        <label for="assignment_date_select" class="form-label mb-0 fw-semibold text-muted small">Select Date:</label>
+        <select id="assignment_date_select" class="form-select form-select-sm border-indigo shadow-sm fw-semibold" style="width: auto; min-width: 220px;" onchange="window.location.href='<%= participant_portal_assignment_path(@assignment) %>?date=' + this.value">
+          <% (@assignment.valid_dates_up_to_today | [@selected_date]).sort.reverse.each do |d| %>
+            <% is_submitted = @assignment.answered_by_on_date?(current_participant, d) %>
+            <option value="<%= d.strftime('%Y-%m-%d') %>" <%= 'selected' if d == @selected_date %>>
+              <%= d.strftime("%b %d, %Y") %> <%= is_submitted ? '— Submitted ✓' : '— Missed / Pending ✕' %>
+            </option>
+          <% end %>
+        </select>
       </div>
     </div>
 
-    <div class="card-body">
+    <div class="section-body">
       <% if @assignment.description.present? %>
-        <div class="assignment-description mb-4">
-          <%= @assignment.description %>
+        <div class="p-3 mb-4 rounded-3 bg-light border border-light-subtle text-secondary fs-6">
+          <i class="bi bi-quote me-2 text-indigo"></i><%= @assignment.description %>
         </div>
       <% end %>
 
-      <%= form_with url: submit_participant_portal_assignment_path(@assignment, date: @selected_date), 
-          method: :post, 
-          class: "assignment-form" do |f| %>
-        
-        <% all_questions = @individual_questions + @question_set_questions %>
-        
-        <% all_questions.each_with_index do |question, index| %>
-          <div class="question-card mb-4">
-            <div class="question-header mb-3">
-              <h6 class="mb-1 text-primary fw-bold">Question <%= index + 1 %></h6>
-              <div class="question-title fw-semibold"><%= question.title %></div>
+      <!-- Date Completion Status Banner -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 rounded-3 mb-4 <%= @already_submitted ? 'bg-success-subtle border border-success-subtle' : 'bg-warning-subtle border border-warning-subtle' %>">
+        <div class="d-flex align-items-center gap-2">
+          <% if @already_submitted %>
+            <i class="bi bi-check-circle-fill text-success fs-4"></i>
+            <div>
+              <strong class="text-success">Submitted for <%= @selected_date.strftime("%B %d, %Y") %></strong>
+              <div class="small text-success-emphasis">Your answers for this date have been recorded.</div>
+            </div>
+          <% else %>
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+            <div>
+              <strong class="text-warning-emphasis">Not Submitted for <%= @selected_date.strftime("%B %d, %Y") %></strong>
+              <div class="small text-warning-emphasis">You have not recorded responses for this date yet.</div>
+            </div>
+          <% end %>
+        </div>
+
+        <% unless @already_submitted %>
+          <%= link_to take_assignment_participant_portal_assignment_path(@assignment, date: @selected_date),
+              class: "btn-start",
+              data: { turbo_frame: "_top" } do %>
+            <i class="bi bi-play-fill me-1"></i>Take Missed for <%= @selected_date.strftime("%b %d") %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Completion Progress Bar -->
+      <div class="progress-wrapper">
+        <div class="progress-info">
+          <span class="progress-label">Overall Completion Progress</span>
+          <span class="progress-value"><%= @assignment.completion_percentage(current_participant) %>%</span>
+        </div>
+        <div class="progress-bar-modern">
+          <div class="progress-fill" style="width: <%= @assignment.completion_percentage(current_participant) %>%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question Structure by Bundles -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon today">
+        <i class="bi bi-diagram-3-fill"></i>
+      </div>
+      <h5 class="section-title">Assignment Questions & Structure</h5>
+    </div>
+
+    <div class="section-body">
+      <% if @grouped_questions.present? %>
+        <% question_number = 0 %>
+        <% @grouped_questions.each do |bundle_name, questions| %>
+          <div class="bundle-group mb-4">
+            <div class="bundle-header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+              <span class="badge bg-indigo-subtle text-indigo border border-indigo-subtle px-3 py-2 rounded-pill fw-bold fs-6">
+                <i class="bi bi-folder2-open me-1"></i><%= bundle_name %>
+              </span>
+              <span class="text-muted small ms-auto"><%= pluralize(questions.size, 'Question') %></span>
             </div>
 
-            <% case question.question_type %>
-            <% when "multiple_choice" %>
-              <div class="options-list">
-                <% question.options.each do |option| %>
-                  <% option_val = option.is_a?(Option) ? option.text : option.to_s %>
-                  <div class="form-check mb-2">
-                    <%= radio_button_tag "responses[#{question.id}][selected_options]",
-                        option_val,
-                        false,
-                        id: "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
-                        class: "form-check-input",
-                        required: true %>
-                    <%= label_tag "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
-                        option_val,
-                        class: "form-check-label ms-1 text-dark" %>
+            <div class="questions-list d-flex flex-column gap-3">
+              <% questions.each do |question| %>
+                <% question_number += 1 %>
+                <div class="question-preview-card p-3 border rounded-3 bg-white shadow-sm">
+                  <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge bg-secondary-subtle text-secondary fw-bold">#<%= question_number %></span>
+                      <h6 class="mb-0 fw-bold text-dark"><%= question.title %></h6>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <% if question.duration_days.present? && question.duration_days.to_i > 0 %>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold">
+                          <i class="bi bi-clock-history me-1"></i><%= pluralize(question.duration_days, 'Day') %>
+                        </span>
+                      <% else %>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold">
+                          <i class="bi bi-clock-history me-1"></i>All Days
+                        </span>
+                      <% end %>
+                      <span class="badge bg-light text-secondary border fw-normal text-capitalize">
+                        <%= question.question_type.to_s.humanize %>
+                      </span>
+                    </div>
                   </div>
-                <% end %>
-              </div>
 
-            <% when "checkbox" %>
-              <div class="options-list">
-                <% question.options.each do |option| %>
-                  <% option_val = option.is_a?(Option) ? option.text : option.to_s %>
-                  <div class="form-check mb-2">
-                    <%= check_box_tag "responses[#{question.id}][selected_options][]",
-                        option_val,
-                        false,
-                        id: "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
-                        class: "form-check-input" %>
-                    <%= label_tag "question_#{question.id}_option_#{option.try(:id) || option_val.parameterize}",
-                        option_val,
-                        class: "form-check-label ms-1 text-dark" %>
-                  </div>
-                <% end %>
-              </div>
+                  <% if question.description.present? %>
+                    <p class="text-muted small mb-2"><%= question.description %></p>
+                  <% end %>
 
-            <% when "text" %>
-              <div class="form-group">
-                <%= text_area_tag "responses[#{question.id}][answer]",
-                    nil,
-                    class: "form-control",
-                    rows: 3,
-                    required: true,
-                    placeholder: "Type your answer here..." %>
-              </div>
-            <% end %>
+                  <!-- Question Options (Read-only) -->
+                  <% if question.options.present? %>
+                    <div class="options-preview mt-2 pt-2 border-top">
+                      <small class="text-muted fw-semibold d-block mb-1">Options:</small>
+                      <div class="d-flex flex-wrap gap-2">
+                        <% question.options.each do |option| %>
+                          <% opt_text = option.is_a?(Option) ? option.text : option.to_s %>
+                          <span class="badge bg-light text-dark border px-2 py-1"><%= opt_text %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+
+                  <!-- Saved Response if submitted -->
+                  <% if @already_submitted && (resp = @existing_responses[question.id]) %>
+                    <div class="mt-3 p-3 bg-success-subtle border border-success-subtle rounded-3">
+                      <div class="d-flex align-items-center gap-2 text-success fw-bold small mb-1">
+                        <i class="bi bi-check-circle-fill"></i> Saved Response:
+                      </div>
+                      <div class="text-dark fw-medium fs-6 ms-4">
+                        <%= resp.answer.presence || resp.selected_options.join(", ") %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
           </div>
         <% end %>
-
-        <div class="form-actions d-flex justify-content-between align-items-center">
-          <%= link_to "Cancel",
-              participant_portal_root_path,
-              class: "btn btn-outline-secondary rounded-3 px-4 fw-medium" %>
-          <%= f.submit "Submit Answers",
-              class: "btn btn-primary rounded-3 px-4 fw-semibold",
-              data: { confirm: "Are you sure you want to submit your answers?" } %>
+      <% else %>
+        <div class="empty-state-small">
+          <i class="bi bi-info-circle"></i>
+          <p>No active questions scheduled for <%= @selected_date.strftime("%B %d, %Y") %></p>
         </div>
       <% end %>
     </div>
@@ -93,44 +183,157 @@
 
 <% content_for :styles do %>
   <style>
-    .question-card {
-      background: #fff;
-      border: 1px solid #e5e9f2;
-      border-radius: 0.5rem;
-      padding: 1.5rem;
+    .border-indigo { border-color: #6366f1 !important; }
+    .text-indigo { color: #6366f1 !important; }
+    .bg-indigo-subtle { background-color: rgba(99, 102, 241, 0.1) !important; }
+    .border-indigo-subtle { border-color: rgba(99, 102, 241, 0.2) !important; }
+
+    .page-header-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      padding: 1.75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0.25rem 0 0;
+    }
+    .btn-back {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(129, 140, 248, 0.05));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366f1;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .btn-back:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.1));
+      transform: scale(1.05);
+      color: #6366f1;
     }
 
-    .question-header {
-      border-bottom: 1px solid #e5e9f2;
-      padding-bottom: 1rem;
+    .section-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
+    }
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+    }
+    .section-icon.past {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(129, 140, 248, 0.15));
+      color: #6366f1;
+    }
+    .section-icon.today {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+      color: #059669;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .section-body {
+      padding: 2rem;
     }
 
-    .question-title {
-      font-size: 1.1rem;
-      color: #2c3e50;
+    .btn-start {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      color: white;
     }
 
-    .options-list {
-      padding-top: 1rem;
+    .progress-wrapper {
+      margin-top: 1rem;
     }
-
-    .form-check-label {
-      color: #495057;
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
-
-    .assignment-description {
-      color: #6c757d;
-      font-size: 1rem;
-      line-height: 1.6;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 0.5rem;
+    .progress-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
-
-    .form-actions {
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e5e9f2;
+    .progress-value {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .progress-bar-modern {
+      height: 8px;
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+      transition: width 0.6s ease;
     }
   </style>
-<% end %> 
+<% end %>

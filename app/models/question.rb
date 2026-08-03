@@ -16,7 +16,7 @@ class Question < ApplicationRecord
 
   validates :title, presence: true
   validates :question_type, presence: true
-  validates :duration_days, presence: true, numericality: { greater_than: 0 }
+  validates :duration_days, numericality: { greater_than: 0 }, allow_nil: true
   validate :validate_options_and_answers, if: :should_validate_options?
 
   # Add an attribute to control options validation

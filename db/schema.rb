@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_01_172702) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_03_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -338,7 +338,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_172702) do
     t.integer "position", default: 0
     t.bigint "question_category_id"
     t.integer "options_count", default: 0, null: false
-    t.integer "duration_days", default: 1, null: false
+    t.integer "duration_days"
     t.index ["institute_id"], name: "index_questions_on_institute_id"
     t.index ["question_category_id"], name: "index_questions_on_question_category_id"
   end
