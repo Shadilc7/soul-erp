@@ -12,7 +12,12 @@
   </template>
 </turbo-stream>
 
-<turbo-stream action="set_attribute" target="question_select_<%= @question.id %>_bundle_<%= @bundle.id %>" attribute="disabled" value="disabled">
+<turbo-stream action="replace" target="question_select_<%= @question.id %>_bundle_<%= @bundle.id %>">
+  <template>
+    <option value="<%= @bundle.id %>" id="question_select_<%= @question.id %>_bundle_<%= @bundle.id %>" disabled>
+      <%= @bundle.name %> (<%= @bundle.day_range_text %>) - Already added
+    </option>
+  </template>
 </turbo-stream>
 
 <turbo-stream action="append" target="question_badges_<%= @question.id %>">

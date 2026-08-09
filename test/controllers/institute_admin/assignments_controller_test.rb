@@ -35,12 +35,16 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     @bundle1 = QuestionBundle.create!(
       question_category: @category_a,
       name: "Part A - Basic Syntax",
+      from_day: 1,
+      to_day: 15,
       position: 1
     )
 
     @bundle2 = QuestionBundle.create!(
       question_category: @category_a,
       name: "Part B - OOP Concepts",
+      from_day: 16,
+      to_day: 30,
       position: 2
     )
 
@@ -52,9 +56,11 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     )
 
     @q2 = Question.create!(
-      title: "Explain Classes vs Modules",
+      title: "Explain duck typing in Ruby",
       question_type: "paragraph",
-      question_category: @category_a
+      question_category: @category_a,
+      from_day: 16,
+      to_day: 30
     )
 
     @q3 = Question.create!(

@@ -12,16 +12,16 @@ class AssignmentTest < ActiveSupport::TestCase
     @bank = QuestionBank.create!(name: "Test Bank")
     @category = QuestionCategory.create!(name: "Test Category", question_bank: @bank, duration_days: 30)
 
-    @bundle1 = QuestionBundle.create!(question_category: @category, name: "Part1", position: 1)
-    @bundle2 = QuestionBundle.create!(question_category: @category, name: "Part2", position: 2)
+    @bundle1 = QuestionBundle.create!(question_category: @category, name: "Part1", position: 1, from_day: 1, to_day: 10)
+    @bundle2 = QuestionBundle.create!(question_category: @category, name: "Part2", position: 2, from_day: 11, to_day: 25)
 
-    @q1_b1 = Question.create!(title: "Q1 B1 5 Days", question_type: "short_answer", duration_days: 5, institute: @institute)
-    @q2_b1 = Question.create!(title: "Q2 B1 10 Days", question_type: "short_answer", duration_days: 10, institute: @institute)
-    @q3_b1 = Question.create!(title: "Q3 B1 All Days", question_type: "short_answer", duration_days: nil, institute: @institute)
+    @q1_b1 = Question.create!(title: "Q1 B1 5 Days", question_type: "short_answer", from_day: 1, to_day: 5, institute: @institute)
+    @q2_b1 = Question.create!(title: "Q2 B1 10 Days", question_type: "short_answer", from_day: 1, to_day: 10, institute: @institute)
+    @q3_b1 = Question.create!(title: "Q3 B1 All Days", question_type: "short_answer", from_day: 1, to_day: 10, institute: @institute)
 
-    @q1_b2 = Question.create!(title: "Q1 B2 10 Days", question_type: "short_answer", duration_days: 10, institute: @institute)
-    @q2_b2 = Question.create!(title: "Q2 B2 15 Days", question_type: "short_answer", duration_days: 15, institute: @institute)
-    @q3_b2 = Question.create!(title: "Q3 B2 All Days", question_type: "short_answer", duration_days: nil, institute: @institute)
+    @q1_b2 = Question.create!(title: "Q1 B2 10 Days", question_type: "short_answer", from_day: 11, to_day: 20, institute: @institute)
+    @q2_b2 = Question.create!(title: "Q2 B2 15 Days", question_type: "short_answer", from_day: 11, to_day: 25, institute: @institute)
+    @q3_b2 = Question.create!(title: "Q3 B2 All Days", question_type: "short_answer", from_day: 11, to_day: 25, institute: @institute)
 
     @assignment = Assignment.create!(
       title: "Sequential Assignment",
@@ -102,8 +102,9 @@ class AssignmentTest < ActiveSupport::TestCase
       section_id: section.id
     )
     AssignmentParticipant.create!(assignment: @assignment, participant: participant)
-    # Today is Aug 3, 2026. Start date is Aug 1, 2026.
-    # On Aug 3, unanswered date should be Aug 3 (today's date)
-    assert_equal Date.new(2026, 8, 3), @assignment.latest_unanswered_date_for(participant)
+    # Freeze time at Aug 3, 2026
+    travel_to Date.new(2026, 8, 3) do
+      assert_equal Date.new(2026, 8, 3), @assignment.latest_unanswered_date_for(participant)
+    end
   end
 end

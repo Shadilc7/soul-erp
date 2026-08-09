@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_03_220000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_09_223001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -275,6 +275,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_03_220000) do
     t.integer "position", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "effective_from_day"
+    t.integer "effective_to_day"
     t.index ["question_bundle_id", "question_id"], name: "idx_qb_items_unique", unique: true
     t.index ["question_bundle_id"], name: "index_question_bundle_items_on_question_bundle_id"
     t.index ["question_id"], name: "index_question_bundle_items_on_question_id"
@@ -287,6 +289,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_03_220000) do
     t.integer "position", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "from_day", default: 1, null: false
+    t.integer "to_day"
     t.index ["question_category_id"], name: "index_question_bundles_on_question_category_id"
   end
 
@@ -339,6 +343,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_03_220000) do
     t.bigint "question_category_id"
     t.integer "options_count", default: 0, null: false
     t.integer "duration_days"
+    t.integer "from_day", default: 1, null: false
+    t.integer "to_day"
     t.index ["institute_id"], name: "index_questions_on_institute_id"
     t.index ["question_category_id"], name: "index_questions_on_question_category_id"
   end

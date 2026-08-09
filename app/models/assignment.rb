@@ -188,38 +188,36 @@ class Assignment < ApplicationRecord
   def questions_grouped_by_bundle_for_date(selected_date)
     return {} if selected_date.blank?
     target_date = selected_date.to_date
+    start_d = start_date.to_date
+    return {} if target_date < start_d
+
+    day_number = (target_date - start_d).to_i + 1
     all_grouped = questions_grouped_by_bundle
     return {} if all_grouped.empty?
 
     active_groups = {}
-    current_bundle_start = start_date.to_date
 
     all_grouped.each do |group_name, group_questions|
       next if group_questions.empty?
 
-      explicit_durations = group_questions.map(&:duration_days).compact.map(&:to_i).select { |d| d > 0 }
-      fallback_duration = question_category&.duration_days.presence || total_days
-      bundle_duration = explicit_durations.any? ? explicit_durations.max : fallback_duration
+      bundle = question_category&.question_bundles&.find_by(name: group_name)
 
-      bundle_start_date = current_bundle_start
-      bundle_end_date = bundle_start_date + (bundle_duration - 1)
+      bundle_from = bundle&.from_day || 1
+      bundle_to = bundle&.to_day || question_category&.duration_days || total_days
+
+      bundle_is_active = (day_number >= bundle_from && day_number <= bundle_to)
 
       active_questions_in_bundle = group_questions.select do |q|
-        if q.duration_days.present? && q.duration_days.to_i > 0
-          q_duration = q.duration_days.to_i
-          q_start = bundle_start_date
-          q_end = bundle_start_date + (q_duration - 1)
-          target_date >= q_start && target_date <= q_end
-        else
-          target_date >= bundle_start_date && target_date <= bundle_end_date
-        end
+        q_from = q.from_day || 1
+        q_to = q.to_day || question_category&.duration_days || total_days
+
+        question_is_active = (day_number >= q_from && day_number <= q_to)
+        bundle_is_active && question_is_active
       end
 
       if active_questions_in_bundle.any?
         active_groups[group_name] = active_questions_in_bundle
       end
-
-      current_bundle_start = bundle_end_date + 1.day
     end
 
     active_groups

@@ -80,15 +80,9 @@
                         <span class="text-danger">*</span>
                       <% end %>
                     </label>
-                    <% if question.duration_days.present? && question.duration_days.to_i > 0 %>
-                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
-                        <i class="bi bi-clock-history me-1"></i> <%= pluralize(question.duration_days, 'Day') %>
-                      </span>
-                    <% else %>
-                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
-                        <i class="bi bi-clock-history me-1"></i> All Days
-                      </span>
-                    <% end %>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;">
+                      <i class="bi bi-clock-history me-1"></i> <%= question.day_range_text %>
+                    </span>
                   </div>
 
                   <% if question.description.present? %>

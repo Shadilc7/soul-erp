@@ -61,7 +61,8 @@ module Admin
           format.turbo_stream { redirect_to builder_admin_question_category_path(@category), notice: "Question deleted successfully.", status: :see_other }
         end
       else
-        redirect_to builder_admin_question_category_path(@category), alert: @question.errors.full_messages.to_sentence, status: :see_other
+        error_msg = @question.errors.full_messages.to_sentence.presence || "Cannot delete Question because it is in use by assignments."
+        redirect_to builder_admin_question_category_path(@category), alert: error_msg, status: :see_other
       end
     end
 
@@ -112,6 +113,8 @@ module Admin
         :position,
         :active,
         :duration_days,
+        :from_day,
+        :to_day,
         options_attributes: [ :id, :text, :value, :correct, :_destroy ]
       )
     end

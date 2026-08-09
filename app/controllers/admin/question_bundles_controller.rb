@@ -61,7 +61,7 @@ module Admin
           }
         end
       else
-        render_already_added_warning
+        render_already_added_warning(@item.errors.full_messages.to_sentence)
       end
     rescue ActiveRecord::RecordNotUnique
       render_already_added_warning
@@ -70,6 +70,7 @@ module Admin
     def remove_question
       @item = @bundle.question_bundle_items.find_by(question_id: params[:question_id])
       @question_id = params[:question_id]
+      @question = @category.questions.find_by(id: @question_id)
 
       if @item&.destroy
         respond_to do |format|
@@ -112,11 +113,11 @@ module Admin
     end
 
     def bundle_params
-      params.require(:question_bundle).permit(:name, :description, :start_date, :end_date, :position)
+      params.require(:question_bundle).permit(:name, :description, :position, :from_day, :to_day)
     end
 
-    def render_already_added_warning
-      @message = "Question already added to #{@bundle&.name || 'bundle'}"
+    def render_already_added_warning(msg = nil)
+      @message = msg.presence || "Question already added to #{@bundle&.name || 'bundle'}"
       respond_to do |format|
         format.turbo_stream {
           render turbo_stream: turbo_stream.append("toast-container", partial: "admin/question_bundles/toast", formats: [:html], locals: { message: @message, type: "warning" })

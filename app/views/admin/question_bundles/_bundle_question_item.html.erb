@@ -47,8 +47,11 @@
 
       <div class="d-flex align-items-center flex-wrap gap-1 mt-1.5">
         <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;"><%= q.question_type.titleize %></span>
-        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5" style="font-size: 0.68rem;" title="Active Duration">
-          <i class="bi bi-clock-history me-1 text-primary"></i><%= q.duration_days %>d
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;" title="Active in bundle: <%= item.effective_day_range_text %> (Overall question schedule: <%= q.day_range_text %>)">
+          <i class="bi bi-clock-history me-1 text-primary"></i><%= item.effective_day_range_text %>
+        </span>
+        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;" title="Days present in this bundle">
+          <i class="bi bi-calendar-check me-1 text-success"></i><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle
         </span>
       </div>
     </div>

@@ -94,30 +94,31 @@ function initializeSubmenuStates() {
  * Initialize Bootstrap components
  */
 function initializeBootstrapComponents() {
-  if (pageInitialized) return;
-  
   try {
+    const bs = window.bootstrap || bootstrap;
+    if (!bs) return;
+
     // Dropdowns
     const dropdownElementList = document.querySelectorAll('[data-bs-toggle="dropdown"]');
     dropdownElementList.forEach(el => {
-      if (!bootstrap.Dropdown.getInstance(el)) {
-        new bootstrap.Dropdown(el);
+      if (!bs.Dropdown.getInstance(el)) {
+        new bs.Dropdown(el);
       }
     });
     
     // Tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltipTriggerList.forEach(el => {
-      if (!bootstrap.Tooltip.getInstance(el)) {
-        new bootstrap.Tooltip(el);
+      if (!bs.Tooltip.getInstance(el)) {
+        new bs.Tooltip(el);
       }
     });
     
     // Popovers
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
     popoverTriggerList.forEach(el => {
-      if (!bootstrap.Popover.getInstance(el)) {
-        new bootstrap.Popover(el);
+      if (!bs.Popover.getInstance(el)) {
+        new bs.Popover(el);
       }
     });
     

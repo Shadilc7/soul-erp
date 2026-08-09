@@ -124,7 +124,8 @@ module InstituteAdmin
       if @question.destroy
         redirect_to institute_admin_questions_path, notice: "Question was successfully deleted."
       else
-        redirect_to institute_admin_questions_path, alert: @question.errors.full_messages.to_sentence
+        error_msg = @question.errors.full_messages.to_sentence.presence || "Cannot delete Question because it is in use by assignments."
+        redirect_to institute_admin_questions_path, alert: error_msg
       end
     end
 
@@ -147,7 +148,9 @@ module InstituteAdmin
               required: original_question.required,
               active: original_question.active,
               max_rating: original_question.max_rating,
-              duration_days: original_question.duration_days
+              duration_days: original_question.duration_days,
+              from_day: original_question.from_day,
+              to_day: original_question.to_day
             )
 
             # Temporarily disable validation
@@ -193,7 +196,9 @@ module InstituteAdmin
               required: original_question.required,
               active: original_question.active,
               max_rating: original_question.max_rating,
-              duration_days: original_question.duration_days
+              duration_days: original_question.duration_days,
+              from_day: original_question.from_day,
+              to_day: original_question.to_day
             )
 
             unless new_question.save
@@ -232,6 +237,8 @@ module InstituteAdmin
         :max_rating,
         :position,
         :duration_days,
+        :from_day,
+        :to_day,
         options_attributes: [ :id, :text, :correct, :_destroy ]
       )
     end

@@ -72,6 +72,7 @@ Rails.application.routes.draw do
       resources :question_categories do
         member do
           get :builder
+          post :auto_assign_bundles
         end
         resources :questions, controller: "category_questions" do
           collection do

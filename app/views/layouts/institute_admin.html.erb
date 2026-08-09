@@ -1041,6 +1041,30 @@
     <!-- ApexCharts for dashboard visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+    <script>
+      function initAutoDismissAlerts() {
+        var alerts = document.querySelectorAll('.content-wrapper > .alert, .alert-dismissible');
+        alerts.forEach(function(alert) {
+          if (alert.dataset.autoDismissSet) return;
+          alert.dataset.autoDismissSet = 'true';
+          setTimeout(function() {
+            if (alert && alert.parentNode) {
+              alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+              alert.style.opacity = '0';
+              alert.style.transform = 'translateY(-10px)';
+              setTimeout(function() {
+                if (alert.parentNode) alert.remove();
+              }, 500);
+            }
+          }, 5000);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", initAutoDismissAlerts);
+      document.addEventListener("turbo:load", initAutoDismissAlerts);
+      document.addEventListener("turbo:render", initAutoDismissAlerts);
+    </script>
+
     <%= yield :scripts %>
     
 

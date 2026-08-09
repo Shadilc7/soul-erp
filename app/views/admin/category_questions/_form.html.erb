@@ -23,17 +23,25 @@
         } %>
   </div>
 
-  <!-- Display Name & Duration Row -->
+  <!-- Display Name & Day Range (From Day - To Day) Row -->
   <div class="row g-3 mb-4">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <%= f.label :display_name, "Display Name (Optional)", class: "form-label font-weight-bold" %>
       <%= f.text_field :display_name, class: "form-control rounded-3", placeholder: "Short name for reports or certificates" %>
     </div>
 
-    <div class="col-md-6">
-      <%= f.label :duration_days, "No. of Days (Active Duration)", class: "form-label font-weight-bold" %>
-      <%= f.number_field :duration_days, class: "form-control rounded-3", min: 1, value: (question.duration_days || 1), placeholder: "e.g. 1, 2, 5 days", required: true %>
-      <div class="form-text text-muted">Number of days this question will appear in assignments.</div>
+    <% max_category_days = category&.duration_days.presence || 30 %>
+
+    <div class="col-md-4">
+      <%= f.label :from_day, "From Day", class: "form-label font-weight-bold" %>
+      <%= f.number_field :from_day, class: "form-control rounded-3", min: 1, max: max_category_days, value: (question.from_day || 1), placeholder: "e.g. 1", required: true %>
+      <div class="form-text text-muted">First active day (1 to <%= max_category_days %>).</div>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.label :to_day, "To Day", class: "form-label font-weight-bold" %>
+      <%= f.number_field :to_day, class: "form-control rounded-3", min: 1, max: max_category_days, value: (question.to_day || max_category_days), placeholder: "e.g. #{max_category_days}", required: true %>
+      <div class="form-text text-muted">Last active day (Max: <%= max_category_days %> days).</div>
     </div>
   </div>
 
