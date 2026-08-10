@@ -390,17 +390,20 @@
               </div>
             </div>
 
-            <!-- Question Bundles & Sequence Preview Section (Matching Master Admin Bundle View) -->
+            <!-- Question Pool & Custom Bundles Workspace Section (2-Column Parity with Master Admin Builder) -->
             <div class="mt-4 pt-4 border-top">
               <input type="hidden" name="assignments[<%= cat.id %>][question_ids][]" value="">
               
               <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 1.05rem;">
-                  <i class="bi bi-layers-fill text-warning fs-5"></i> 3. Included Question Bundles 
-                  <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-normal">
-                    <%= cat.question_bundles.size %> <%= 'Bundle'.pluralize(cat.question_bundles.size) %>, <%= bundled_questions_count %> <%= 'Question'.pluralize(bundled_questions_count) %>
-                  </span>
-                </h6>
+                <div>
+                  <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 1.05rem;">
+                    <i class="bi bi-diagram-3-fill text-primary fs-5"></i> 3. Question Pool & Bundles Workspace
+                    <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-normal" id="cat_total_questions_pill_<%= cat.id %>">
+                      <%= cat.questions.size %> <%= 'Question'.pluralize(cat.questions.size) %>, <%= cat.question_bundles.size %> <%= 'Bundle'.pluralize(cat.question_bundles.size) %>
+                    </span>
+                  </h6>
+                  <span class="text-muted small">Select questions from pool, edit details, and group into custom bundle parts.</span>
+                </div>
 
                 <div class="form-check mb-0 d-flex align-items-center gap-1.5">
                   <input type="checkbox" class="form-check-input cursor-pointer m-0" id="select_all_q_<%= cat.id %>" checked onchange="toggleAllCatQuestions(<%= cat.id %>, this.checked)">
@@ -410,221 +413,567 @@
                 </div>
               </div>
 
-              <% if cat.question_bundles.any? %>
-                <div class="d-flex flex-column gap-3">
-                  <% cat.question_bundles.order(:position).each do |bundle| %>
-                    <% items = bundle.question_bundle_items.order(:position).includes(:question) %>
-                    
-                    <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle">
-                      <!-- Bundle Card Header (Identical to Master Admin Builder) -->
-                      <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                          <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
-                            <i class="bi bi-layers-fill me-1"></i><%= bundle.name %>
+              <!-- Mobile Tab Switcher Bar (< 992px) -->
+              <div class="d-lg-none mb-3 btn-group w-100 shadow-sm rounded-3">
+                <button type="button" class="btn btn-primary active py-2 fw-semibold cat-tab-btn-pool-<%= cat.id %>" onclick="switchCategoryMobileTab(<%= cat.id %>, 'pool')">
+                  <i class="bi bi-card-list me-1"></i> Question Pool (<%= cat.questions.size %>)
+                </button>
+                <button type="button" class="btn btn-outline-primary py-2 fw-semibold cat-tab-btn-bundles-<%= cat.id %>" onclick="switchCategoryMobileTab(<%= cat.id %>, 'bundles')">
+                  <i class="bi bi-layers me-1"></i> Custom Bundles (<%= cat.question_bundles.size %>)
+                </button>
+              </div>
+
+              <!-- 2-Column Workspace Grid (Question Pool + Custom Bundles) -->
+              <div class="row g-4">
+                <!-- Left Column: Question Pool -->
+                <div class="col-lg-5 cat-col-pool-<%= cat.id %>" id="question_pool_col_<%= cat.id %>">
+                  <div class="card border-0 shadow-sm rounded-4 h-100 bg-light-subtle">
+                    <div class="card-header bg-white border-bottom p-3 rounded-top-4">
+                      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                          <i class="bi bi-card-list text-primary"></i> Question Pool
+                          <span class="badge bg-primary rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="cat_pool_count_<%= cat.id %>">
+                            <%= cat.questions.size %> <%= cat.questions.size == 1 ? 'question' : 'questions' %>
                           </span>
-                          <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1">
-                            <%= items.size %> <%= items.size == 1 ? 'question' : 'questions' %>
-                          </span>
-                          <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
-                            <i class="bi bi-calendar-event me-1"></i><%= bundle.day_range_text %>
-                          </span>
+                        </h6>
+
+                        <button type="button" 
+                                class="btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold" 
+                                onclick="autoAssignQuestionsToBundles(<%= cat.id %>)"
+                                title="Auto-assign questions to matching bundles based on schedule day ranges">
+                          <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
+                        </button>
+                      </div>
+
+                      <!-- Search Filter -->
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" 
+                               class="form-control bg-light border-start-0 ps-0" 
+                               placeholder="Search questions by title..." 
+                               oninput="filterPoolQuestions(<%= cat.id %>, this.value)">
+                      </div>
+                    </div>
+
+                    <!-- Question Pool Cards List -->
+                    <div class="card-body p-3 overflow-auto" style="max-height: 700px;">
+                      <% if cat.questions.any? %>
+                        <div class="d-flex flex-column gap-3" id="question_pool_container_<%= cat.id %>">
+                          <% cat.questions.each_with_index do |q, q_idx| %>
+                            <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all position-relative pool-question-card-<%= cat.id %>" 
+                                 id="pool_card_<%= cat.id %>_<%= q.id %>"
+                                 data-question-title="<%= q.title.downcase %>">
+
+                              <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                  <input type="checkbox" 
+                                         name="assignments[<%= cat.id %>][question_ids][]" 
+                                         value="<%= q.id %>" 
+                                         id="cat_q_cb_<%= cat.id %>_<%= q.id %>" 
+                                         class="form-check-input cat-q-cb-<%= cat.id %> m-0 cursor-pointer" 
+                                         style="width: 1.1rem; height: 1.1rem;"
+                                         checked
+                                         onchange="togglePoolQuestionInclusion(<%= cat.id %>, <%= q.id %>, this.checked)">
+
+                                  <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                    #<%= q_idx + 1 %>
+                                  </span>
+
+                                  <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                                    <%= q.question_type.titleize %>
+                                  </span>
+
+                                  <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;" title="Question Schedule Range">
+                                    <i class="bi bi-clock-history me-1"></i><span id="q_schedule_display_<%= cat.id %>_<%= q.id %>"><%= q.day_range_text %></span>
+                                  </span>
+                                </div>
+
+                                <!-- Quick Actions (View & Edit) -->
+                                <div class="d-flex align-items-center gap-1">
+                                  <!-- View Button -->
+                                  <button type="button" 
+                                          class="btn btn-sm btn-outline-info rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                          style="width: 28px; height: 28px;"
+                                          title="View Question Details"
+                                          data-bs-toggle="modal" 
+                                          data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= q.id %>">
+                                    <i class="bi bi-eye" style="font-size: 0.85rem;"></i>
+                                  </button>
+
+                                  <!-- Edit Button -->
+                                  <button type="button" 
+                                          class="btn btn-sm btn-outline-primary rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                          style="width: 28px; height: 28px;"
+                                          title="Edit Question Details"
+                                          data-bs-toggle="modal" 
+                                          data-bs-target="#editQuestionModal_<%= cat.id %>_<%= q.id %>">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <!-- Question Title -->
+                              <h6 class="fw-bold text-dark mb-1" style="font-size: 0.925rem; line-height: 1.35;" id="q_title_display_<%= cat.id %>_<%= q.id %>">
+                                <%= q.title %>
+                              </h6>
+
+                              <% if q.display_name.present? %>
+                                <div class="text-muted small mb-2" id="q_disp_display_<%= cat.id %>_<%= q.id %>"><%= q.display_name %></div>
+                              <% end %>
+
+                              <!-- Assigned Bundles Badges -->
+                              <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="q_assigned_bundle_badges_<%= cat.id %>_<%= q.id %>">
+                                <% q.question_bundles.where(question_category_id: cat.id).each do |b| %>
+                                  <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate q-bundle-pill-<%= cat.id %>-<%= q.id %>-<%= b.id %>" style="max-width: 140px;">
+                                    <i class="bi bi-layers me-1"></i><%= b.name %>
+                                  </span>
+                                <% end %>
+                              </div>
+
+                              <!-- Quick Assign to Bundle Select -->
+                              <% if cat.question_bundles.any? %>
+                                <div class="mt-3 pt-2 border-top">
+                                  <select class="form-select form-select-sm rounded-3 text-muted q-bundle-assign-select-<%= cat.id %>-<%= q.id %>" 
+                                          data-q-id="<%= q.id %>"
+                                          onchange="handleQuestionBundleSelect(<%= cat.id %>, <%= q.id %>, this)">
+                                    <option value="">+ Assign to Bundle...</option>
+                                    <% cat.question_bundles.order(:position).each do |b| %>
+                                      <% is_assigned = q.question_bundles.include?(b) %>
+                                      <% base_text = "#{b.name} (#{b.day_range_text})" %>
+                                      <option value="<%= b.id %>" 
+                                              <%= 'disabled' if is_assigned %> 
+                                              id="q_select_opt_<%= cat.id %>_<%= q.id %>_<%= b.id %>"
+                                              data-bundle-base-name="<%= base_text %>">
+                                        <%= base_text %><%= " - Assigned" if is_assigned %>
+                                      </option>
+                                    <% end %>
+                                  </select>
+                                </div>
+                              <% end %>
+                            </div>
+
+                            <!-- Modal: View Question -->
+                            <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                  <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                      <i class="bi bi-eye-fill text-success"></i> Question Details
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                      <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
+                                        <%= q.question_type.titleize %>
+                                      </span>
+                                      <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
+                                      <% if q.display_name.present? %>
+                                        <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
+                                      <% end %>
+                                      <% if q.description.present? %>
+                                        <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+                                      <% end %>
+                                    </div>
+
+                                    <% if q.requires_options? && q.options.any? %>
+                                      <div class="mb-3">
+                                        <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                                        <div class="list-group rounded-3">
+                                          <% q.options.each_with_index do |opt, opt_idx| %>
+                                            <div class="list-group-item d-flex align-items-center justify-content-between p-2.5">
+                                              <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                              <% if opt.correct? %>
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
+                                              <% end %>
+                                            </div>
+                                          <% end %>
+                                        </div>
+                                      </div>
+                                    <% elsif q.rating? %>
+                                      <div class="mb-3">
+                                        <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+                                      </div>
+                                    <% end %>
+
+                                    <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                                      <span class="text-muted small">Schedule Day Range:</span>
+                                      <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                                        <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                    <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Modal: Edit Question -->
+                            <div class="modal fade" id="editQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                  <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                      <i class="bi bi-pencil-square text-primary"></i> Edit Question Details
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                    <div id="q_modal_error_<%= cat.id %>_<%= q.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                                      <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                      <label class="form-label fw-semibold text-dark small">Question Title <span class="text-danger">*</span></label>
+                                      <input type="text" 
+                                             id="modal_q_title_<%= cat.id %>_<%= q.id %>" 
+                                             value="<%= q.title %>" 
+                                             class="form-control rounded-3 fw-semibold border-secondary-subtle">
+                                    </div>
+
+                                    <div class="mb-3">
+                                      <label class="form-label fw-semibold text-dark small">Display Name (Optional)</label>
+                                      <input type="text" 
+                                             id="modal_q_disp_name_<%= cat.id %>_<%= q.id %>" 
+                                             value="<%= q.display_name %>" 
+                                             class="form-control rounded-3 border-secondary-subtle">
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                      <div class="col-6">
+                                        <label class="form-label fw-semibold text-dark small">Active From Day <span class="text-danger">*</span></label>
+                                        <input type="number" 
+                                               id="modal_q_from_<%= cat.id %>_<%= q.id %>" 
+                                               value="<%= q.from_day || 1 %>" 
+                                               min="1" 
+                                               max="<%= cat.duration_days || 30 %>" 
+                                               class="form-control rounded-3 border-secondary-subtle">
+                                      </div>
+                                      <div class="col-6">
+                                        <label class="form-label fw-semibold text-dark small">Active To Day <span class="text-danger">*</span></label>
+                                        <input type="number" 
+                                               id="modal_q_to_<%= cat.id %>_<%= q.id %>" 
+                                               value="<%= q.to_day || cat.duration_days || 30 %>" 
+                                               min="1" 
+                                               max="<%= cat.duration_days || 30 %>" 
+                                               class="form-control rounded-3 border-secondary-subtle">
+                                      </div>
+                                      <div class="form-text text-muted small mt-1">
+                                        Category active schedule range: 1 to <%= cat.duration_days || 30 %> Days.
+                                      </div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                      <label class="form-label fw-semibold text-dark small">Description / Prompt (Optional)</label>
+                                      <textarea id="modal_q_desc_<%= cat.id %>_<%= q.id %>" 
+                                                rows="3" 
+                                                class="form-control rounded-3 border-secondary-subtle"><%= q.description %></textarea>
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="saveQuestionEdits(<%= cat.id %>, <%= q.id %>, <%= cat.duration_days || 30 %>)">
+                                      <i class="bi bi-check-lg me-1"></i> Save Question
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
                         </div>
+                      <% else %>
+                        <div class="text-center py-4 text-muted">
+                          <i class="bi bi-journal-x fs-2 opacity-50 d-block mb-1"></i>
+                          <p class="mb-0 small">No questions found in this category pool.</p>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
 
-                        <!-- Bundle Right Actions & Dropdown -->
-                        <div class="d-flex align-items-center gap-2">
-                          <div class="form-check mb-0 me-2 d-flex align-items-center gap-1.5">
-                            <input type="checkbox" class="form-check-input bundle-select-all-cb-<%= cat.id %>-<%= bundle.id %> cursor-pointer m-0" id="bundle_cb_<%= cat.id %>_<%= bundle.id %>" checked onchange="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, this.checked)">
-                            <label for="bundle_cb_<%= cat.id %>_<%= bundle.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer mb-0 ms-1">
-                              Select Bundle
-                            </label>
+                <!-- Right Column: Custom Question Bundles -->
+                <div class="col-lg-7 cat-col-bundles-<%= cat.id %>" id="bundles_col_<%= cat.id %>">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                      <div>
+                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                          <i class="bi bi-layers-fill text-warning"></i> Custom Question Bundles
+                        </h6>
+                        <span class="text-muted small">Split category questions into customizable parts or sections.</span>
+                      </div>
+
+                      <button type="button" class="btn btn-sm btn-primary rounded-3 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm text-white border-0" data-bs-toggle="modal" data-bs-target="#newBundleModal_<%= cat.id %>">
+                        <i class="bi bi-plus-circle-fill text-white" style="font-size: 0.9rem;"></i>
+                        <span>Add Bundle / Part</span>
+                      </button>
+                    </div>
+
+                    <!-- New Bundle Modal -->
+                    <div class="modal fade" id="newBundleModal_<%= cat.id %>" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                          <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                              <i class="bi bi-plus-circle-fill text-primary"></i> Add Custom Bundle / Part
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
+                          <div class="modal-body p-4">
+                            <div id="new_bundle_error_<%= cat.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                              <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                            </div>
 
-                          <!-- 3-Dots Dropdown Menu for Bundle -->
-                          <div class="dropdown d-inline-block">
-                            <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
-                                    type="button" 
-                                    id="bundle_dropdown_btn_<%= cat.id %>_<%= bundle.id %>"
-                                    data-bs-toggle="dropdown" 
-                                    aria-expanded="false" 
-                                    title="Bundle Options"
-                                    style="width: 30px; height: 30px;">
-                              <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem;"></i>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold text-dark small">Bundle / Part Name <span class="text-danger">*</span></label>
+                              <input type="text" 
+                                     id="new_bundle_name_<%= cat.id %>" 
+                                     class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                                     placeholder="e.g. Part 3, Module C">
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                              <div class="col-6">
+                                <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       id="new_bundle_from_<%= cat.id %>" 
+                                       value="1" 
+                                       min="1" 
+                                       max="<%= cat.duration_days || 30 %>" 
+                                       class="form-control rounded-3 border-secondary-subtle">
+                              </div>
+                              <div class="col-6">
+                                <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       id="new_bundle_to_<%= cat.id %>" 
+                                       value="<%= cat.duration_days || 30 %>" 
+                                       min="1" 
+                                       max="<%= cat.duration_days || 30 %>" 
+                                       class="form-control rounded-3 border-secondary-subtle">
+                              </div>
+                              <div class="form-text text-muted small mt-1">
+                                Category active schedule duration: 1 to <%= cat.duration_days || 30 %> Days.
+                              </div>
+                            </div>
+
+                            <div class="mb-0">
+                              <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                              <textarea id="new_bundle_desc_<%= cat.id %>" 
+                                        rows="2" 
+                                        class="form-control rounded-3 border-secondary-subtle" 
+                                        placeholder="Brief description..."></textarea>
+                            </div>
+                          </div>
+                          <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                            <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="addNewBundleCard(<%= cat.id %>, <%= cat.duration_days || 30 %>)">
+                              <i class="bi bi-check-lg me-1"></i> Create Bundle
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small rounded-3" aria-labelledby="bundle_dropdown_btn_<%= cat.id %>_<%= bundle.id %>" style="z-index: 1050;">
-                              <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, true)">
-                                  <i class="bi bi-check-all text-success"></i> Select All Questions
-                                </button>
-                              </li>
-                              <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, false)">
-                                  <i class="bi bi-dash-circle text-danger"></i> Deselect All Questions
-                                </button>
-                              </li>
-                            </ul>
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <!-- Bundle Questions List (Item cards matching Master Admin Builder & Reorder support) -->
-                      <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_<%= cat.id %>_<%= bundle.id %>">
-                        <% items.each_with_index do |item, item_idx| %>
-                          <% q = item.question %>
-                          <% next unless q %>
+                    <div class="card-body p-3 overflow-auto" style="max-height: 700px;">
+                      <div class="d-flex flex-column gap-3" id="cat_bundles_container_<%= cat.id %>">
+                        <% if cat.question_bundles.any? %>
+                          <% cat.question_bundles.order(:position).each do |bundle| %>
+                            <% items = bundle.question_bundle_items.order(:position).includes(:question) %>
 
-                          <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_<%= cat.id %>_<%= q.id %>">
-                            <div class="d-flex align-items-start gap-3">
-                              <!-- Left Controls Column (Selection Checkbox, Drag Handle, Serial Badge, Chevrons) -->
-                              <div class="d-flex align-items-center gap-3 flex-shrink-0 pt-0.5">
-                                <input type="checkbox" 
-                                       name="assignments[<%= cat.id %>][question_ids][]" 
-                                       value="<%= q.id %>" 
-                                       id="cat_q_<%= cat.id %>_<%= q.id %>" 
-                                       class="form-check-input cat-q-cb-<%= cat.id %> bundle-q-cb-<%= cat.id %>-<%= bundle.id %> m-0 cursor-pointer" 
-                                       style="width: 1.1rem; height: 1.1rem;"
-                                       checked>
+                            <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative bundle-card-<%= cat.id %>" id="bundle_card_<%= cat.id %>_<%= bundle.id %>">
+                              <!-- Hidden inputs for institution-edited bundle params -->
+                              <div class="cat-bundle-hidden-inputs-<%= cat.id %>" data-bundle-id="<%= bundle.id %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][name]" id="bundle_input_name_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.name %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][from_day]" id="bundle_input_from_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.from_day || 1 %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][to_day]" id="bundle_input_to_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.to_day || cat.duration_days || 30 %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][description]" id="bundle_input_desc_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.description %>">
+                              </div>
 
-                                <i class="bi bi-list fs-5 text-secondary drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
+                              <!-- Bundle Card Header -->
+                              <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                  <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+                                    <i class="bi bi-layers-fill me-1"></i><span id="bundle_name_display_<%= cat.id %>_<%= bundle.id %>"><%= bundle.name %></span>
+                                  </span>
+                                  <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1" id="bundle_q_count_pill_<%= cat.id %>_<%= bundle.id %>">
+                                    <%= items.size %> <%= items.size == 1 ? 'question' : 'questions' %>
+                                  </span>
+                                  <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-calendar-event me-1"></i><span id="bundle_schedule_display_<%= cat.id %>_<%= bundle.id %>"><%= bundle.day_range_text %></span>
+                                  </span>
+                                </div>
 
-                                <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold bundle-item-serial" style="font-size: 0.75rem;">
-                                  #<%= item_idx + 1 %>
-                                </span>
+                                <!-- Bundle Right Actions -->
+                                <div class="d-flex align-items-center gap-2">
+                                  <div class="form-check mb-0 me-1 d-flex align-items-center gap-1.5">
+                                    <input type="checkbox" class="form-check-input bundle-select-all-cb-<%= cat.id %>-<%= bundle.id %> cursor-pointer m-0" id="bundle_cb_<%= cat.id %>_<%= bundle.id %>" checked onchange="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, this.checked)">
+                                    <label for="bundle_cb_<%= cat.id %>_<%= bundle.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer mb-0 ms-1 d-none d-sm-inline">
+                                      Select
+                                    </label>
+                                  </div>
 
-                                <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5">
-                                  <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
-                                    <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+                                  <!-- Edit Button -->
+                                  <button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1" title="Edit Bundle" data-bs-toggle="modal" data-bs-target="#editBundleModal_<%= cat.id %>_<%= bundle.id %>">
+                                    <i class="bi bi-pencil"></i>
                                   </button>
-                                  <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
-                                    <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                  <!-- Delete Button -->
+                                  <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1" title="Delete Bundle" onclick="deleteBundleCard(<%= cat.id %>, <%= bundle.id %>)">
+                                    <i class="bi bi-trash"></i>
                                   </button>
                                 </div>
                               </div>
 
-                              <!-- Content Column (First Row: Title & Actions; Second Row: Badges) -->
-                              <div class="flex-grow-1 min-w-0">
-                                <!-- First Row: Title & Actions -->
-                                <div class="d-flex align-items-start justify-content-between gap-2">
-                                  <label for="cat_q_<%= cat.id %>_<%= q.id %>" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;">
-                                    <%= q.title %>
-                                  </label>
-
-                                  <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                    <% if q.required? %>
-                                      <span class="badge bg-danger-subtle text-danger fw-semibold px-2 py-1" style="font-size: 0.65rem;">Required</span>
-                                    <% end %>
-
-                                    <!-- 3-Dots Question Dropdown Button -->
-                                    <div class="dropdown d-inline-block">
-                                      <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
-                                              type="button" 
-                                              id="q_dropdown_btn_<%= cat.id %>_<%= q.id %>"
-                                              data-bs-toggle="dropdown" 
-                                              aria-expanded="false" 
-                                              title="Question Options"
-                                              style="width: 28px; height: 28px;">
-                                        <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem;"></i>
-                                      </button>
-                                      <ul class="dropdown-menu dropdown-menu-end shadow border-0 small rounded-3" aria-labelledby="q_dropdown_btn_<%= cat.id %>_<%= q.id %>" style="z-index: 1060;">
-                                        <li>
-                                          <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= q.id %>">
-                                            <i class="bi bi-eye text-primary"></i> View Question Details
-                                          </button>
-                                        </li>
-                                        <li>
-                                          <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleSingleQuestion(<%= cat.id %>, <%= q.id %>)">
-                                            <i class="bi bi-toggle-on text-secondary"></i> Toggle Include / Exclude
-                                          </button>
-                                        </li>
-                                      </ul>
+                              <!-- Edit Bundle Modal -->
+                              <div class="modal fade" id="editBundleModal_<%= cat.id %>_<%= bundle.id %>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                  <div class="modal-content rounded-4 border-0 shadow-lg">
+                                    <div class="modal-header border-bottom-0 pb-0">
+                                      <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="bi bi-pencil-square text-primary"></i> Edit Bundle / Part
+                                      </h5>
+                                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                  </div>
-                                </div>
+                                    <div class="modal-body p-4">
+                                      <div id="bundle_modal_error_<%= cat.id %>_<%= bundle.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                                        <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                                      </div>
 
-                                <!-- Second Row: Metadata Badges -->
-                                <div class="d-flex align-items-center flex-wrap gap-1.5 mt-1.5">
-                                  <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5 text-uppercase" style="font-size: 0.7rem;">
-                                    <%= q.question_type&.titleize %>
-                                  </span>
+                                      <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark small">Bundle / Part Name <span class="text-danger">*</span></label>
+                                        <input type="text" 
+                                               id="modal_bundle_name_<%= cat.id %>_<%= bundle.id %>" 
+                                               value="<%= bundle.name %>" 
+                                               class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                                               placeholder="e.g. Part 1, Module A">
+                                      </div>
 
-                                  <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.7rem;" title="Active schedule: <%= item.effective_day_range_text %>">
-                                    <i class="bi bi-clock-history me-1"></i><%= item.effective_day_range_text %>
-                                  </span>
+                                      <div class="row g-3 mb-3">
+                                        <div class="col-6">
+                                          <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
+                                          <input type="number" 
+                                                 id="modal_bundle_from_<%= cat.id %>_<%= bundle.id %>" 
+                                                 value="<%= bundle.from_day || 1 %>" 
+                                                 min="1" 
+                                                 max="<%= cat.duration_days || 30 %>" 
+                                                 class="form-control rounded-3 border-secondary-subtle">
+                                        </div>
+                                        <div class="col-6">
+                                          <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
+                                          <input type="number" 
+                                                 id="modal_bundle_to_<%= cat.id %>_<%= bundle.id %>" 
+                                                 value="<%= bundle.to_day || cat.duration_days || 30 %>" 
+                                                 min="1" 
+                                                 max="<%= cat.duration_days || 30 %>" 
+                                                 class="form-control rounded-3 border-secondary-subtle">
+                                        </div>
+                                        <div class="form-text text-muted small mt-1">
+                                          Category active schedule duration: 1 to <%= cat.duration_days || 30 %> Days.
+                                        </div>
+                                      </div>
 
-                                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.7rem;">
-                                    <i class="bi bi-calendar-check me-1"></i><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- View Question Modal -->
-                          <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-lg">
-                              <div class="modal-content rounded-4 border-0 shadow-lg">
-                                <div class="modal-header border-bottom-0 pb-0">
-                                  <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
-                                    <i class="bi bi-eye-fill text-primary"></i> Question Details
-                                  </h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body p-4">
-                                  <div class="mb-3">
-                                    <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
-                                      <%= q.question_type.titleize %>
-                                    </span>
-                                    <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
-                                    <% if q.display_name.present? %>
-                                      <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
-                                    <% end %>
-                                    <% if q.description.present? %>
-                                      <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
-                                    <% end %>
-                                  </div>
-
-                                  <% if q.requires_options? && q.options.any? %>
-                                    <div class="mb-3">
-                                      <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
-                                      <div class="list-group rounded-3">
-                                        <% q.options.each_with_index do |opt, opt_idx| %>
-                                          <div class="list-group-item d-flex align-items-center justify-content-between p-2.5">
-                                            <span><%= opt_idx + 1 %>. <%= opt.text %></span>
-                                            <% if opt.correct? %>
-                                              <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
-                                            <% end %>
-                                          </div>
-                                        <% end %>
+                                      <div class="mb-0">
+                                        <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                                        <textarea id="modal_bundle_desc_<%= cat.id %>_<%= bundle.id %>" 
+                                                  rows="2" 
+                                                  class="form-control rounded-3 border-secondary-subtle" 
+                                                  placeholder="Brief instructions or notes..."><%= bundle.description %></textarea>
                                       </div>
                                     </div>
-                                  <% elsif q.rating? %>
-                                    <div class="mb-3">
-                                      <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+                                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                                      <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                                      <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="saveBundleEdits(<%= cat.id %>, <%= bundle.id %>, <%= cat.duration_days || 30 %>)">
+                                        <i class="bi bi-check-lg me-1"></i> Save Bundle
+                                      </button>
                                     </div>
-                                  <% end %>
-
-                                  <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
-                                    <span class="text-muted small">Schedule Day Range:</span>
-                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
-                                      <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
-                                    </span>
                                   </div>
                                 </div>
-                                <div class="modal-footer border-0 pt-0">
-                                  <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                              </div>
+
+                              <!-- Dropzone Container with Dashed Border -->
+                              <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10" style="min-height: 100px; border: 2px dashed #94a3b8 !important;">
+                                <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_<%= cat.id %>_<%= bundle.id %>">
+                                  <% items.each_with_index do |item, item_idx| %>
+                                    <% q = item.question %>
+                                    <% next unless q %>
+
+                                    <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_<%= cat.id %>_<%= bundle.id %>_<%= q.id %>">
+                                      <div class="d-flex align-items-start gap-2">
+                                        <!-- Left Controls Column (Selection Checkbox, Drag Handle, Serial Badge, Chevrons) -->
+                                        <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+                                          <input type="checkbox" 
+                                                 name="assignments[<%= cat.id %>][question_ids][]" 
+                                                 value="<%= q.id %>" 
+                                                 id="cat_q_<%= cat.id %>_<%= q.id %>" 
+                                                 class="form-check-input cat-q-cb-<%= cat.id %> bundle-q-cb-<%= cat.id %>-<%= bundle.id %> m-0 cursor-pointer me-1" 
+                                                 style="width: 1.1rem; height: 1.1rem;"
+                                                 checked>
+
+                                          <i class="bi bi-list fs-5 text-secondary drag-handle me-1" title="Drag to reorder" style="cursor: grab;"></i>
+
+                                          <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold bundle-item-serial me-1" style="font-size: 0.75rem;">
+                                            #<%= item_idx + 1 %>
+                                          </span>
+
+                                          <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-2">
+                                            <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
+                                              <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
+                                              <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <!-- Content Column -->
+                                        <div class="flex-grow-1 min-w-0">
+                                          <div class="d-flex align-items-start justify-content-between gap-2">
+                                            <label for="cat_q_<%= cat.id %>_<%= q.id %>" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;" id="bundle_item_title_<%= cat.id %>_<%= q.id %>">
+                                              <%= q.title %>
+                                            </label>
+
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0 ms-1" 
+                                                    style="width: 24px; height: 24px; min-width: 24px;"
+                                                    title="Remove from bundle" 
+                                                    onclick="removeQuestionFromBundle(<%= cat.id %>, <%= q.id %>, '<%= bundle.id %>')">
+                                              <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+                                            </button>
+                                          </div>
+
+                                          <div class="d-flex align-items-center flex-wrap gap-1.5 mt-2">
+                                            <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;" id="bundle_item_type_<%= cat.id %>_<%= q.id %>">
+                                              <%= q.question_type.titleize %>
+                                            </span>
+                                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                              <i class="bi bi-clock-history me-1 text-primary"></i><span id="bundle_item_eff_sched_<%= cat.id %>_<%= q.id %>"><%= item.effective_day_range_text %></span>
+                                            </span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                              <i class="bi bi-calendar-check me-1 text-success"></i><span id="bundle_item_days_<%= cat.id %>_<%= q.id %>"><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle</span>
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  <% end %>
                                 </div>
                               </div>
                             </div>
+                          <% end %>
+                        <% else %>
+                          <div class="text-center py-4 text-muted bg-light rounded-4 border">
+                            <i class="bi bi-layers fs-2 opacity-50 d-block mb-1 text-warning"></i>
+                            <p class="mb-2 small">No bundles created for this category yet.</p>
+                            <button type="button" class="btn btn-sm btn-primary rounded-3 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newBundleModal_<%= cat.id %>">
+                              <i class="bi bi-plus-circle-fill me-1"></i> Create First Bundle
+                            </button>
                           </div>
                         <% end %>
                       </div>
                     </div>
-                  <% end %>
+                  </div>
                 </div>
-              <% else %>
-                <div class="alert alert-warning mb-0 small rounded-3">
-                  <i class="bi bi-exclamation-triangle me-1"></i> No bundles created under this category yet.
-                </div>
-              <% end %>
+              </div>
             </div>
           </div>
         </div>
@@ -643,7 +992,7 @@
         </div>
       </div>
 
-      <div class="d-flex align-items-center gap-2.5">
+      <div class="d-flex align-items-center gap-3">
         <%= link_to "Cancel", institute_admin_assignments_path, class: "btn btn-light border text-secondary px-4 py-2 rounded-3 fw-semibold shadow-xs" %>
         <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none;">
           <i class="bi bi-box-arrow-in-down fs-5"></i> Create <%= pluralize(@categories.size, 'Assignment') %>
@@ -947,6 +1296,507 @@
         allowInput: true
       });
     }
+  }
+
+  function saveBundleEdits(catId, bundleId, categoryDuration) {
+    const nameInput = document.getElementById(`modal_bundle_name_${catId}_${bundleId}`);
+    const fromInput = document.getElementById(`modal_bundle_from_${catId}_${bundleId}`);
+    const toInput = document.getElementById(`modal_bundle_to_${catId}_${bundleId}`);
+    const descInput = document.getElementById(`modal_bundle_desc_${catId}_${bundleId}`);
+    const errorBox = document.getElementById(`bundle_modal_error_${catId}_${bundleId}`);
+
+    if (!nameInput || !fromInput || !toInput) return;
+
+    const nameVal = nameInput.value.trim();
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+    const descVal = descInput ? descInput.value.trim() : '';
+
+    // 1. Name validation
+    if (!nameVal) {
+      showBundleModalError(errorBox, "Bundle name is required.");
+      return;
+    }
+
+    // 2. From Day validation
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be a valid number greater than or equal to 1.");
+      return;
+    }
+
+    // 3. To Day validation
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${isNaN(toVal) ? 0 : toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    // 4. Category Duration check
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration) {
+        showBundleModalError(errorBox, `From Day cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+      if (toVal > categoryDuration) {
+        showBundleModalError(errorBox, `To Day cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    // 5. Overlap check with other bundles under category catId
+    let overlapFound = false;
+    let overlapBundleName = '';
+
+    document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`).forEach(container => {
+      const bId = container.dataset.bundleId;
+      if (bId != bundleId) {
+        const otherFromInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+        const otherToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+        const otherNameInput = document.getElementById(`bundle_input_name_${catId}_${bId}`);
+
+        if (otherFromInput && otherToInput) {
+          const otherF = parseInt(otherFromInput.value, 10) || 1;
+          const otherT = parseInt(otherToInput.value, 10) || categoryDuration || 30;
+
+          if (fromVal <= otherT && toVal >= otherF) {
+            overlapFound = true;
+            overlapBundleName = otherNameInput ? otherNameInput.value : `Bundle #${bId}`;
+          }
+        }
+      }
+    });
+
+    if (overlapFound) {
+      showBundleModalError(errorBox, `Bundle day range (Day ${fromVal} - ${toVal}) overlaps with existing bundle '${overlapBundleName}'.`);
+      return;
+    }
+
+    // Clear error banner
+    hideBundleModalError(errorBox);
+
+    // Update hidden inputs
+    const hiddenName = document.getElementById(`bundle_input_name_${catId}_${bundleId}`);
+    const hiddenFrom = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+    const hiddenTo = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+    const hiddenDesc = document.getElementById(`bundle_input_desc_${catId}_${bundleId}`);
+
+    if (hiddenName) hiddenName.value = nameVal;
+    if (hiddenFrom) hiddenFrom.value = fromVal;
+    if (hiddenTo) hiddenTo.value = toVal;
+    if (hiddenDesc) hiddenDesc.value = descVal;
+
+    // Update visible UI displays
+    const displayName = document.getElementById(`bundle_name_display_${catId}_${bundleId}`);
+    const displaySchedule = document.getElementById(`bundle_schedule_display_${catId}_${bundleId}`);
+
+    if (displayName) displayName.textContent = nameVal;
+    if (displaySchedule) {
+      displaySchedule.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+    }
+
+    // Close Bootstrap modal
+    const modalEl = document.getElementById(`editBundleModal_${catId}_${bundleId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+  }
+
+  function showBundleModalError(box, msg) {
+    if (!box) return;
+    const msgSpan = box.querySelector('.error-msg');
+    if (msgSpan) msgSpan.textContent = msg;
+    box.classList.remove('d-none');
+  }
+
+  function hideBundleModalError(box) {
+    if (!box) return;
+    box.classList.add('d-none');
+  }
+
+  function filterPoolQuestions(catId, query) {
+    const cards = document.querySelectorAll(`.pool-question-card-${catId}`);
+    const q = query.trim().toLowerCase();
+    cards.forEach(card => {
+      const title = card.dataset.questionTitle || '';
+      if (!q || title.includes(q)) {
+        card.classList.remove('d-none');
+      } else {
+        card.classList.add('d-none');
+      }
+    });
+  }
+
+  function switchCategoryMobileTab(catId, target) {
+    const poolCol = document.getElementById(`question_pool_col_${catId}`);
+    const bundlesCol = document.getElementById(`bundles_col_${catId}`);
+    const poolBtn = document.querySelector(`.cat-tab-btn-pool-${catId}`);
+    const bundleBtn = document.querySelector(`.cat-tab-btn-bundles-${catId}`);
+
+    if (target === 'pool') {
+      if (poolCol) poolCol.classList.remove('d-none');
+      if (bundlesCol) bundlesCol.classList.add('d-none');
+      if (poolBtn) { poolBtn.classList.add('btn-primary', 'active'); poolBtn.classList.remove('btn-outline-primary'); }
+      if (bundleBtn) { bundleBtn.classList.remove('btn-primary', 'active'); bundleBtn.classList.add('btn-outline-primary'); }
+    } else {
+      if (poolCol) poolCol.classList.add('d-none');
+      if (bundlesCol) bundlesCol.classList.remove('d-none');
+      if (bundleBtn) { bundleBtn.classList.add('btn-primary', 'active'); bundleBtn.classList.remove('btn-outline-primary'); }
+      if (poolBtn) { poolBtn.classList.remove('btn-primary', 'active'); poolBtn.classList.add('btn-outline-primary'); }
+    }
+  }
+
+  function togglePoolQuestionInclusion(catId, qId, checked) {
+    const bundleCbs = document.querySelectorAll(`.cat-q-cb-${catId}[value="${qId}"]`);
+    bundleCbs.forEach(cb => cb.checked = checked);
+  }
+
+  function saveQuestionEdits(catId, qId, categoryDuration) {
+    const titleInput = document.getElementById(`modal_q_title_${catId}_${qId}`);
+    const dispInput = document.getElementById(`modal_q_disp_name_${catId}_${qId}`);
+    const fromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+    const toInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+    const errorBox = document.getElementById(`q_modal_error_${catId}_${qId}`);
+
+    if (!titleInput || !fromInput || !toInput) return;
+
+    const titleVal = titleInput.value.trim();
+    const dispVal = dispInput ? dispInput.value.trim() : '';
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+
+    if (!titleVal) {
+      showBundleModalError(errorBox, "Question title is required.");
+      return;
+    }
+
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be at least 1.");
+      return;
+    }
+
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration || toVal > categoryDuration) {
+        showBundleModalError(errorBox, `Day range cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    hideBundleModalError(errorBox);
+
+    // Update displays in Pool
+    const poolTitle = document.getElementById(`q_title_display_${catId}_${qId}`);
+    const poolDisp = document.getElementById(`q_disp_display_${catId}_${qId}`);
+    const poolSched = document.getElementById(`q_schedule_display_${catId}_${qId}`);
+
+    if (poolTitle) poolTitle.textContent = titleVal;
+    if (poolDisp) poolDisp.textContent = dispVal;
+    if (poolSched) poolSched.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+
+    // Update displays in Bundle Items
+    const bundleTitles = document.querySelectorAll(`#bundle_item_title_${catId}_${qId}`);
+    bundleTitles.forEach(t => t.textContent = titleVal);
+
+    // Hide Modal
+    const modalEl = document.getElementById(`editQuestionModal_${catId}_${qId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+  }
+
+  function handleQuestionBundleSelect(catId, qId, selectEl) {
+    const bundleId = selectEl.value;
+    if (!bundleId) return;
+
+    const selectedOpt = selectEl.options[selectEl.selectedIndex];
+    const baseName = selectedOpt.dataset.bundleBaseName || selectedOpt.textContent.replace(/\s*-\s*Assigned$/, '');
+    const bundleName = baseName ? baseName.split(' (')[0] : 'Bundle';
+
+    const bundleItemsContainer = document.getElementById(`bundle_items_${catId}_${bundleId}`);
+    if (!bundleItemsContainer) return;
+
+    // Check if item already exists in bundle
+    const existingCard = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+    if (existingCard) {
+      selectEl.value = "";
+      return;
+    }
+
+    const qTitleEl = document.getElementById(`q_title_display_${catId}_${qId}`);
+    const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question Title';
+    const qTypeEl = document.getElementById(`bundle_item_type_${catId}_${qId}`);
+    const qType = qTypeEl ? qTypeEl.textContent.trim() : 'Short Answer';
+    const qSchedEl = document.getElementById(`q_schedule_display_${catId}_${qId}`);
+    const qSched = qSchedEl ? qSchedEl.textContent.trim() : 'Day 1';
+
+    const itemCount = bundleItemsContainer.querySelectorAll('.bundle-question-item').length + 1;
+
+    const newCardHtml = `
+      <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_${catId}_${bundleId}_${qId}">
+        <div class="d-flex align-items-start gap-2">
+          <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+            <input type="checkbox" name="assignments[${catId}][question_ids][]" value="${qId}" id="cat_q_${catId}_${qId}" class="form-check-input cat-q-cb-${catId} bundle-q-cb-${catId}-${bundleId} m-0 cursor-pointer me-1" style="width: 1.1rem; height: 1.1rem;" checked>
+            <i class="bi bi-list fs-5 text-secondary drag-handle me-1" title="Drag to reorder" style="cursor: grab;"></i>
+            <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold bundle-item-serial me-1" style="font-size: 0.75rem;">#${itemCount}</span>
+            <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-2">
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
+                <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+              </button>
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
+                <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <label for="cat_q_${catId}_${qId}" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;" id="bundle_item_title_${catId}_${qId}">
+                ${qTitle}
+              </label>
+              <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0 ms-1" style="width: 24px; height: 24px; min-width: 24px;" title="Remove from bundle" onclick="removeQuestionFromBundle(${catId}, ${qId}, '${bundleId}')">
+                <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+              </button>
+            </div>
+            <div class="d-flex align-items-center flex-wrap gap-1.5 mt-2">
+              <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;">${qType}</span>
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-clock-history me-1 text-primary"></i>${qSched}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    bundleItemsContainer.insertAdjacentHTML('beforeend', newCardHtml);
+
+    // Add pill under pool question
+    const badgesContainer = document.getElementById(`q_assigned_bundle_badges_${catId}_${qId}`);
+    if (badgesContainer) {
+      const pillHtml = `<span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate q-bundle-pill-${catId}-${qId}-${bundleId}" style="max-width: 140px;"><i class="bi bi-layers me-1"></i>${bundleName}</span>`;
+      badgesContainer.insertAdjacentHTML('beforeend', pillHtml);
+    }
+
+    // Disable option in select dropdown & mark as Assigned
+    selectedOpt.disabled = true;
+    selectedOpt.textContent = `${baseName} - Assigned`;
+    selectEl.value = "";
+
+    // Update bundle serials and count pill
+    updateBundleSerials(bundleItemsContainer);
+    const countPill = document.getElementById(`bundle_q_count_pill_${catId}_${bundleId}`);
+    if (countPill) {
+      const cnt = bundleItemsContainer.querySelectorAll('.bundle-question-item').length;
+      countPill.textContent = `${cnt} ${cnt === 1 ? 'question' : 'questions'}`;
+    }
+  }
+
+  function removeQuestionFromBundle(catId, qId, bundleId) {
+    const card = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+    if (card) {
+      const container = card.parentNode;
+      card.remove();
+      updateBundleSerials(container);
+
+      const countPill = document.getElementById(`bundle_q_count_pill_${catId}_${bundleId}`);
+      if (countPill && container) {
+        const cnt = container.querySelectorAll('.bundle-question-item').length;
+        countPill.textContent = `${cnt} ${cnt === 1 ? 'question' : 'questions'}`;
+      }
+    }
+
+    // Remove pill under pool question
+    const pill = document.querySelector(`.q-bundle-pill-${catId}-${qId}-${bundleId}`);
+    if (pill) pill.remove();
+
+    // Re-enable dropdown option and restore base text (removing " - Assigned")
+    const opt = document.getElementById(`q_select_opt_${catId}_${qId}_${bundleId}`);
+    if (opt) {
+      opt.disabled = false;
+      const baseName = opt.dataset.bundleBaseName || opt.textContent.replace(/\s*-\s*Assigned$/, '');
+      opt.textContent = baseName;
+    }
+  }
+
+  function autoAssignQuestionsToBundles(catId) {
+    const bundleContainers = document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`);
+    if (bundleContainers.length === 0) {
+      alert("No custom bundles found in this category. Please create a bundle first.");
+      return;
+    }
+
+    let assignedCount = 0;
+    const poolCards = document.querySelectorAll(`.pool-question-card-${catId}`);
+
+    poolCards.forEach(card => {
+      const qIdMatch = card.id.match(/pool_card_\d+_(\d+)/);
+      if (!qIdMatch) return;
+      const qId = qIdMatch[1];
+
+      const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+      const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+
+      const qFrom = qFromInput ? parseInt(qFromInput.value, 10) : 1;
+      const qTo = qToInput ? parseInt(qToInput.value, 10) : 30;
+
+      const selectEl = document.querySelector(`.q-bundle-assign-select-${catId}-${qId}`);
+      if (!selectEl) return;
+
+      bundleContainers.forEach(bContainer => {
+        const bundleId = bContainer.dataset.bundleId;
+        const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+        const bToInput = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+
+        if (bFromInput && bToInput) {
+          const bFrom = parseInt(bFromInput.value, 10) || 1;
+          const bTo = parseInt(bToInput.value, 10) || 30;
+
+          const overlapFrom = Math.max(qFrom, bFrom);
+          const overlapTo = Math.min(qTo, bTo);
+
+          if (overlapFrom <= overlapTo) {
+            const existingCard = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+            if (!existingCard) {
+              const opt = document.getElementById(`q_select_opt_${catId}_${qId}_${bundleId}`);
+              if (opt && !opt.disabled) {
+                selectEl.value = bundleId;
+                handleQuestionBundleSelect(catId, qId, selectEl);
+                assignedCount++;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    if (assignedCount > 0) {
+      alert(`Auto-assigned matching questions to bundles based on schedule day ranges (${assignedCount} question-bundle assignments created).`);
+    } else {
+      alert("All questions are already assigned to their matching bundles, or no new schedule overlaps were found.");
+    }
+  }
+
+  function addNewBundleCard(catId, categoryDuration) {
+    const nameInput = document.getElementById(`new_bundle_name_${catId}`);
+    const fromInput = document.getElementById(`new_bundle_from_${catId}`);
+    const toInput = document.getElementById(`new_bundle_to_${catId}`);
+    const descInput = document.getElementById(`new_bundle_desc_${catId}`);
+    const errorBox = document.getElementById(`new_bundle_error_${catId}`);
+
+    if (!nameInput || !fromInput || !toInput) return;
+
+    const nameVal = nameInput.value.trim();
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+    const descVal = descInput ? descInput.value.trim() : '';
+
+    if (!nameVal) {
+      showBundleModalError(errorBox, "Bundle name is required.");
+      return;
+    }
+
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be at least 1.");
+      return;
+    }
+
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration || toVal > categoryDuration) {
+        showBundleModalError(errorBox, `Bundle day range cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    hideBundleModalError(errorBox);
+
+    const bundleId = 'new_' + Date.now();
+    const scheduleText = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+
+    const bundlesContainer = document.getElementById(`cat_bundles_container_${catId}`);
+    if (!bundlesContainer) return;
+
+    const bundleCardHtml = `
+      <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative bundle-card-${catId}" id="bundle_card_${catId}_${bundleId}">
+        <div class="cat-bundle-hidden-inputs-${catId}" data-bundle-id="${bundleId}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][name]" id="bundle_input_name_${catId}_${bundleId}" value="${nameVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][from_day]" id="bundle_input_from_${catId}_${bundleId}" value="${fromVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][to_day]" id="bundle_input_to_${catId}_${bundleId}" value="${toVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][description]" id="bundle_input_desc_${catId}_${bundleId}" value="${descVal}">
+        </div>
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+              <i class="bi bi-layers-fill me-1"></i><span id="bundle_name_display_${catId}_${bundleId}">${nameVal}</span>
+            </span>
+            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1" id="bundle_q_count_pill_${catId}_${bundleId}">
+              0 questions
+            </span>
+            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+              <i class="bi bi-calendar-event me-1"></i><span id="bundle_schedule_display_${catId}_${bundleId}">${scheduleText}</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1" title="Delete Bundle" onclick="deleteBundleCard(${catId}, '${bundleId}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10" style="min-height: 100px; border: 2px dashed #94a3b8 !important;">
+          <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_${catId}_${bundleId}"></div>
+        </div>
+      </div>
+    `;
+
+    bundlesContainer.insertAdjacentHTML('beforeend', bundleCardHtml);
+
+    // Add option to select dropdowns
+    const selects = document.querySelectorAll(`[class*="q-bundle-assign-select-${catId}-"]`);
+    selects.forEach(select => {
+      const opt = document.createElement('option');
+      opt.value = bundleId;
+      opt.textContent = `${nameVal} (${scheduleText})`;
+      opt.id = `q_select_opt_${catId}_${select.dataset.qId || 'x'}_${bundleId}`;
+      select.appendChild(opt);
+    });
+
+    // Reset modal form inputs
+    nameInput.value = '';
+    fromInput.value = '1';
+    toInput.value = categoryDuration || '30';
+    if (descInput) descInput.value = '';
+
+    // Hide Modal
+    const modalEl = document.getElementById(`newBundleModal_${catId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+
+    initBundleSortables();
+  }
+
+  function deleteBundleCard(catId, bundleId) {
+    if (!confirm("Are you sure you want to delete this custom bundle? Questions assigned to it will remain in the pool.")) return;
+
+    const card = document.getElementById(`bundle_card_${catId}_${bundleId}`);
+    if (card) card.remove();
+
+    // Remove pills
+    const pills = document.querySelectorAll(`[class*="q-bundle-pill-${catId}-"][class*="-${bundleId}"]`);
+    pills.forEach(p => p.remove());
+
+    // Remove options
+    const opts = document.querySelectorAll(`[id*="q_select_opt_${catId}_"][id*="_${bundleId}"]`);
+    opts.forEach(o => o.remove());
   }
 
   document.addEventListener('DOMContentLoaded', function() {

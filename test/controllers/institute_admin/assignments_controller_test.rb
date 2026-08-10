@@ -149,6 +149,35 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_equal [@q1.id], assign.assignment_questions.pluck(:question_id)
   end
 
+  test "should respect institution-specific bundle name overrides during finalize_import" do
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Custom Bundles",
+            start_date: Date.current.to_s,
+            end_date: (Date.current + 30.days).to_s,
+            bundles: {
+              @bundle1.id.to_s => {
+                name: "Custom Part 1 - Basic Syntax Override",
+                from_day: "1",
+                to_day: "15",
+                description: "Custom bundle description"
+              }
+            },
+            question_ids: [@q1.id]
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Custom Bundles")
+    assert_not_nil assign
+    aq = assign.assignment_questions.find_by(question_id: @q1.id)
+    assert_not_nil aq
+    assert_equal "Custom Part 1 - Basic Syntax Override", aq.bundle_name
+  end
+
   test "should redirect import_question_bank request to import_setup page" do
     post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
     assert_redirected_to import_setup_institute_admin_assignments_path(question_bank_id: @question_bank.id, category_ids: nil)

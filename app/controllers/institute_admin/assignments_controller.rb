@@ -113,6 +113,13 @@ module InstituteAdmin
           selected_qids = data[:question_ids]&.map(&:to_i)&.reject(&:zero?) || []
 
           category.question_bundles.order(:position).each do |bundle|
+            bundles_param = data[:bundles] || data["bundles"]
+            bundle_override = bundles_param ? (bundles_param[bundle.id.to_s] || bundles_param[bundle.id.to_i] || bundles_param[bundle.id]) : nil
+            custom_bundle_name = if bundle_override.respond_to?(:[])
+              (bundle_override[:name] || bundle_override["name"]).presence
+            end
+            effective_bundle_name = custom_bundle_name || bundle.name
+
             bundle.question_bundle_items.order(:position).each do |item|
               qid = item.question_id
               next if qid.blank? || imported_question_ids.include?(qid)
@@ -120,7 +127,7 @@ module InstituteAdmin
               if !has_q_param || selected_qids.include?(qid)
                 assignment.assignment_questions.create!(
                   question_id: qid,
-                  bundle_name: bundle.name,
+                  bundle_name: effective_bundle_name,
                   order_number: order_index += 1
                 )
                 imported_question_ids.add(qid)
