@@ -72,9 +72,15 @@ module InstituteAdmin
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
-          redirect_to institute_admin_question_path(@question), notice: "Question was successfully created."
+          respond_to do |format|
+            format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully created." }
+            format.json { render json: { status: "success", question: @question.as_json(include: :options) } }
+          end
         else
-          render :new, status: :unprocessable_entity
+          respond_to do |format|
+            format.html { render :new, status: :unprocessable_entity }
+            format.json { render json: { status: "error", errors: @question.errors.full_messages }, status: :unprocessable_entity }
+          end
         end
       rescue => e
         # Log the error
@@ -86,7 +92,10 @@ module InstituteAdmin
 
         # Add error message
         flash.now[:error] = "An error occurred while creating the question. Please try again."
-        render :new, status: :unprocessable_entity
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_entity }
+          format.json { render json: { status: "error", errors: [e.message] }, status: :unprocessable_entity }
+        end
       end
     end
 
@@ -95,6 +104,10 @@ module InstituteAdmin
 
     def update
       begin
+        if @question.institute_id.nil?
+          @question = @question.deep_clone_for_institute(current_institute, @question.question_category)
+        end
+
         # Get the parameters first
         question_parameters = sanitize_question_params(question_params)
 
@@ -103,9 +116,15 @@ module InstituteAdmin
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
-          redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated."
+          respond_to do |format|
+            format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated." }
+            format.json { render json: { status: "success", question: @question.as_json(include: :options) } }
+          end
         else
-          render :edit, status: :unprocessable_entity
+          respond_to do |format|
+            format.html { render :edit, status: :unprocessable_entity }
+            format.json { render json: { status: "error", errors: @question.errors.full_messages }, status: :unprocessable_entity }
+          end
         end
       rescue => e
         # Log the error
@@ -114,7 +133,10 @@ module InstituteAdmin
 
         # Add error message
         flash.now[:error] = "An error occurred while updating the question. Please try again."
-        render :edit, status: :unprocessable_entity
+        respond_to do |format|
+          format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: { status: "error", errors: [e.message] }, status: :unprocessable_entity }
+        end
       end
     end
 
@@ -224,7 +246,10 @@ module InstituteAdmin
     private
 
     def set_question
-      @question = current_institute.questions.includes(:options).find(params[:id])
+      @question = Question.includes(:options).find(params[:id])
+      if @question.institute_id.present? && @question.institute_id != current_institute.id
+        raise ActiveRecord::RecordNotFound
+      end
     end
 
     def question_params
@@ -246,9 +271,14 @@ module InstituteAdmin
     # Sanitize parameters to ensure no null values for options text
     def sanitize_question_params(params)
       if params[:options_attributes].present?
-        params[:options_attributes].each do |key, option_attrs|
-          unless option_attrs[:_destroy] == "1"
-            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs[:text].blank?
+        opts = params[:options_attributes]
+        if opts.is_a?(Hash)
+          opts.each_value do |option_attrs|
+            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
+          end
+        elsif opts.is_a?(Array)
+          opts.each do |option_attrs|
+            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
           end
         end
       end

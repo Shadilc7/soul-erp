@@ -167,7 +167,7 @@ module InstituteAdmin
           assignment.save!(validate: false)
 
           order_index = 0
-          imported_question_ids = Set.new
+          imported_pairs = Set.new
           has_q_param = data.key?(:question_ids)
           selected_qids = data[:question_ids]&.map(&:to_i)&.reject(&:zero?) || []
 
@@ -188,16 +188,15 @@ module InstituteAdmin
                 end
               end
 
-              next if target_q.nil? || imported_question_ids.include?(target_q.id)
-
               b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.presence || "Part 1"
+              next if target_q.nil? || imported_pairs.include?([target_q.id, b_name])
 
               assignment.assignment_questions.create!(
                 question_id: target_q.id,
                 bundle_name: b_name,
                 order_number: order_index += 1
               )
-              imported_question_ids.add(target_q.id)
+              imported_pairs.add([target_q.id, b_name])
             end
           end
 
@@ -218,7 +217,7 @@ module InstituteAdmin
                 end
               end
 
-              next if target_q.nil? || imported_question_ids.include?(target_q.id)
+              next if target_q.nil? || imported_pairs.include?([target_q.id, effective_bundle_name])
 
               if !has_q_param || selected_qids.include?(orig_qid)
                 assignment.assignment_questions.create!(
@@ -226,7 +225,7 @@ module InstituteAdmin
                   bundle_name: effective_bundle_name,
                   order_number: order_index += 1
                 )
-                imported_question_ids.add(target_q.id)
+                imported_pairs.add([target_q.id, effective_bundle_name])
               end
             end
           end
@@ -296,21 +295,39 @@ module InstituteAdmin
       ActiveRecord::Base.transaction do
         if @assignment.save
           if question_bundle_items.any?
-            added_qids = Set.new
+            added_pairs = Set.new
+            order_idx = 0
             question_bundle_items.each do |item|
               qid = (item["question_id"] || item[:question_id]).to_i
-              bname = item["bundle_name"] || item[:bundle_name]
-              next if qid.zero? || added_qids.include?(qid)
-              added_qids.add(qid)
-              @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: added_qids.size)
+              bname = (item["bundle_name"] || item[:bundle_name]).to_s.strip
+              next if qid.zero? || bname.blank? || added_pairs.include?([qid, bname])
+
+              target_q = Question.find_by(id: qid)
+              if target_q && target_q.institute_id != current_institute.id
+                target_q = target_q.deep_clone_for_institute(current_institute, @assignment.question_category)
+              end
+              next unless target_q
+
+              added_pairs.add([target_q.id, bname])
+              order_idx += 1
+              @assignment.assignment_questions.build(question_id: target_q.id, bundle_name: bname, order_number: order_idx)
             end
-          else
+          elsif question_ids.any?
             added_qids = Set.new
+            order_idx = 0
             question_ids.each do |qid|
               qid_i = qid.to_i
               next if qid_i.zero? || added_qids.include?(qid_i)
-              added_qids.add(qid_i)
-              @assignment.assignment_questions.build(question_id: qid_i, order_number: added_qids.size)
+
+              target_q = Question.find_by(id: qid_i)
+              if target_q && target_q.institute_id != current_institute.id
+                target_q = target_q.deep_clone_for_institute(current_institute, @assignment.question_category)
+              end
+              next unless target_q
+
+              added_qids.add(target_q.id)
+              order_idx += 1
+              @assignment.assignment_questions.build(question_id: target_q.id, order_number: order_idx)
             end
           end
 
@@ -348,7 +365,9 @@ module InstituteAdmin
       @sections = current_institute.sections.active
       @selected_sections = @assignment.sections
       @selected_participants = @assignment.participants.includes(:user)
+      @participants = current_institute.participants.active.includes(:user)
       @grouped_questions = @assignment.edit_questions_grouped_by_bundle
+      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
     end
 
     def update
@@ -371,24 +390,42 @@ module InstituteAdmin
         @assignment.assignment_participants.destroy_all
         @assignment.assignment_sections.destroy_all
 
-        if question_bundle_items.any?
-          added_qids = Set.new
-          question_bundle_items.each do |item|
-            qid = (item["question_id"] || item[:question_id]).to_i
-            bname = item["bundle_name"] || item[:bundle_name]
-            next if qid.zero? || added_qids.include?(qid)
-            added_qids.add(qid)
-            @assignment.assignment_questions.build(question_id: qid, bundle_name: bname, order_number: added_qids.size)
+          if question_bundle_items.any?
+            added_pairs = Set.new
+            order_idx = 0
+            question_bundle_items.each do |item|
+              qid = (item["question_id"] || item[:question_id]).to_i
+              bname = (item["bundle_name"] || item[:bundle_name]).to_s.strip
+              next if qid.zero? || bname.blank? || added_pairs.include?([qid, bname])
+
+              target_q = Question.find_by(id: qid)
+              if target_q && target_q.institute_id != current_institute.id
+                target_q = target_q.deep_clone_for_institute(current_institute, @assignment.question_category)
+              end
+              next unless target_q
+
+              added_pairs.add([target_q.id, bname])
+              order_idx += 1
+              @assignment.assignment_questions.build(question_id: target_q.id, bundle_name: bname, order_number: order_idx)
+            end
+          elsif question_ids.any?
+            added_qids = Set.new
+            order_idx = 0
+            question_ids.each do |qid|
+              qid_i = qid.to_i
+              next if qid_i.zero? || added_qids.include?(qid_i)
+
+              target_q = Question.find_by(id: qid_i)
+              if target_q && target_q.institute_id != current_institute.id
+                target_q = target_q.deep_clone_for_institute(current_institute, @assignment.question_category)
+              end
+              next unless target_q
+
+              added_qids.add(target_q.id)
+              order_idx += 1
+              @assignment.assignment_questions.build(question_id: target_q.id, order_number: order_idx)
+            end
           end
-        else
-          added_qids = Set.new
-          question_ids.each do |qid|
-            qid_i = qid.to_i
-            next if qid_i.zero? || added_qids.include?(qid_i)
-            added_qids.add(qid_i)
-            @assignment.assignment_questions.build(question_id: qid_i, order_number: added_qids.size)
-          end
-        end
 
         question_set_ids.uniq.reject(&:blank?).each do |qsid|
           @assignment.assignment_question_sets.build(question_set_id: qsid)

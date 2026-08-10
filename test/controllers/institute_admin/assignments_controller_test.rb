@@ -276,4 +276,82 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     cloned_q.reload
     assert_equal "What is a Symbol?", cloned_q.title
   end
+
+  test "should save questions assigned across multiple bundles when editing assignment" do
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "Ruby Multi-Bundle Test", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
+    assignment = Assignment.find_by(title: "Ruby Multi-Bundle Test")
+    assert_not_nil assignment
+
+    cloned_q1 = assignment.questions.find_by(title: @q1.title)
+    participant = participants(:one)
+
+    patch institute_admin_assignment_path(assignment), params: {
+      assignment: {
+        title: "Ruby Multi-Bundle Test (Updated)",
+        start_date: assignment.start_date,
+        end_date: assignment.end_date,
+        assignment_type: "individual",
+        participant_ids: [participant.id],
+        question_bundle_items: [
+          { question_id: cloned_q1.id, bundle_name: "Part1" },
+          { question_id: cloned_q1.id, bundle_name: "Part2" }
+        ]
+      }
+    }
+
+    assert_redirected_to institute_admin_assignment_path(assignment)
+    assignment.reload
+
+    grouped = assignment.questions_grouped_by_bundle
+    assert_includes grouped.keys, "Part1"
+    assert_includes grouped.keys, "Part2"
+    assert_equal [cloned_q1.id], grouped["Part1"].map(&:id)
+    assert_equal [cloned_q1.id], grouped["Part2"].map(&:id)
+  end
+
+  test "should update master question via JSON by cloning for current institute" do
+    patch institute_admin_question_path(@q1, format: :json), params: {
+      question: {
+        title: "Updated Master Question Title",
+        question_type: "multiple_choice",
+        from_day: 1,
+        to_day: 15,
+        options_attributes: [
+          { text: "Option A" },
+          { text: "Option B" }
+        ]
+      }
+    }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal "success", json_response["status"]
+    assert_equal "Updated Master Question Title", json_response.dig("question", "title")
+    assert_equal @institute.id, json_response.dig("question", "institute_id")
+  end
+
+  test "edit assignment view renders question pool edit button and excludes edit button inside bundle items" do
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "UI Test Assignment", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
+    assignment = Assignment.find_by(title: "UI Test Assignment")
+
+    get edit_institute_admin_assignment_path(assignment)
+    assert_response :success
+
+    # Edit Question pencil button in question pool exists
+    assert_select "button[onclick*='openFormEditQuestionModal']"
+
+    # In bundle items container, ensure pencil edit button is not present inside bundle item action group
+    # Bundle item container id contains form_bundle_items_
+    assert_select ".form-bundle-items-container" do
+      assert_select "button[title='Edit Question']", count: 0
+    end
+  end
 end
