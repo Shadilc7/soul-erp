@@ -161,17 +161,30 @@ class Assignment < ApplicationRecord
     if question_category.present?
       # Preserve Category Bundle Order
       bundles = question_category.question_bundles.order(:position)
+      matched_aq_ids = Set.new
 
       bundles.each do |bundle|
         # 1. Questions assigned explicitly to this bundle via assignment_questions.bundle_name
         bundle_aqs = assigned_aqs.select { |aq| aq.bundle_name == bundle.name }
         if bundle_aqs.any?
           groups[bundle.name] = bundle_aqs.map(&:question).compact
+          matched_aq_ids.merge(bundle_aqs.map(&:id))
         else
           # 2. Fallback for legacy assignments: check template items
           template_q_ids = bundle.question_bundle_items.pluck(:question_id)
           legacy_aqs = assigned_aqs.select { |aq| aq.bundle_name.blank? && template_q_ids.include?(aq.question_id) }
-          groups[bundle.name] = legacy_aqs.map(&:question).compact if legacy_aqs.any?
+          if legacy_aqs.any?
+            groups[bundle.name] = legacy_aqs.map(&:question).compact
+            matched_aq_ids.merge(legacy_aqs.map(&:id))
+          end
+        end
+      end
+
+      # Collect any remaining assignment questions whose bundle_name wasn't matched above
+      unmatched_aqs = assigned_aqs.reject { |aq| matched_aq_ids.include?(aq.id) }
+      if unmatched_aqs.any?
+        unmatched_aqs.group_by { |aq| aq.bundle_name.presence || "Other Questions" }.each do |b_name, aqs|
+          groups[b_name] = aqs.map(&:question).compact
         end
       end
     else
@@ -224,7 +237,6 @@ class Assignment < ApplicationRecord
   end
 
   def edit_questions_grouped_by_bundle
-    inst_q_ids = institute&.questions&.pluck(:id) || []
     assigned_aqs = assignment_questions.includes(question: :options).order(:order_number, :id).to_a
 
     groups = {}
@@ -244,15 +256,18 @@ class Assignment < ApplicationRecord
         end
       end
 
-      # Custom Questions pool: all custom institute questions available to be added into bundles
-      if inst_q_ids.any?
-        inst_custom_questions = Question.includes(:options).where(id: inst_q_ids).order(:created_at).to_a
+      # Custom Questions pool: custom institute questions not belonging to this category
+      if institute.present?
+        inst_custom_questions = institute.questions.includes(:options)
+                                         .where("question_category_id IS NULL OR question_category_id != ?", question_category.id)
+                                         .order(:created_at).to_a
         groups["Institution Custom Questions"] = inst_custom_questions if inst_custom_questions.any?
       end
 
       groups
     else
       assigned_q_ids = assigned_aqs.map(&:question_id)
+      inst_q_ids = institute&.questions&.pluck(:id) || []
       all_available_ids = (assigned_q_ids + inst_q_ids).uniq
       all_q = Question.includes(:options).where(id: all_available_ids).to_a
       { "Institution Questions" => all_q }

@@ -1,5 +1,6 @@
 class QuestionCategory < ApplicationRecord
   belongs_to :question_bank, optional: true
+  belongs_to :institute, optional: true
   has_many :questions, dependent: :destroy
   has_many :question_bundles, -> { order(position: :asc) }, dependent: :destroy
   has_many :assignments, dependent: :restrict_with_error

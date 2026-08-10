@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_09_223001) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_11_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -302,6 +302,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_09_223001) do
     t.datetime "updated_at", null: false
     t.bigint "question_bank_id"
     t.integer "duration_days", default: 30, null: false
+    t.bigint "institute_id"
+    t.index ["institute_id"], name: "index_question_categories_on_institute_id"
     t.index ["question_bank_id"], name: "index_question_categories_on_question_bank_id"
   end
 
@@ -629,6 +631,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_09_223001) do
   add_foreign_key "question_bundle_items", "question_bundles"
   add_foreign_key "question_bundle_items", "questions"
   add_foreign_key "question_bundles", "question_categories"
+  add_foreign_key "question_categories", "institutes"
   add_foreign_key "question_categories", "question_banks"
   add_foreign_key "question_set_items", "question_sets"
   add_foreign_key "question_set_items", "questions"

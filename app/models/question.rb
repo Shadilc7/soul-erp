@@ -42,6 +42,23 @@ class Question < ApplicationRecord
     end
   end
 
+  def deep_clone_for_institute(target_institute, target_category = nil)
+    cloned = dup
+    cloned.institute = target_institute
+    cloned.question_category = target_category if target_category.present?
+    cloned.save!(validate: false)
+
+    options.each do |opt|
+      cloned.options.create!(
+        value: opt.value,
+        text: opt.text,
+        correct: opt.correct
+      )
+    end
+
+    cloned
+  end
+
   # Add an attribute to control options validation
   attr_accessor :validate_options_on_save
 

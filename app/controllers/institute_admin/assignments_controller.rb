@@ -89,12 +89,70 @@ module InstituteAdmin
           category = QuestionCategory.find_by(id: category_id)
           next unless category
 
+          # Clone master category as an Institution-wise separate entity
+          inst_category = current_institute.question_categories.create!(
+            name: category.name,
+            description: category.description,
+            duration_days: (category.duration_days.to_i > 0) ? category.duration_days.to_i : 30,
+            active: true,
+            question_bank_id: nil
+          )
+
           start_date = data[:start_date].present? ? Date.parse(data[:start_date]) : Date.current
-          duration = (category.duration_days.to_i > 0) ? category.duration_days.to_i : 30
+          duration = inst_category.duration_days
           end_date = data[:end_date].present? ? Date.parse(data[:end_date]) : (start_date + duration.days)
           assignment_type = data[:assignment_type].presence || "individual"
           title = data[:title].presence || category.name
           description = data[:description].presence || category.description
+
+          # Clone bundles for the institution category with custom overrides
+          bundle_map = {} # master_bundle.id => inst_bundle
+          bundles_param = data[:bundles] || data["bundles"]
+
+          category.question_bundles.order(:position).each do |m_bundle|
+            bundle_override = bundles_param ? (bundles_param[m_bundle.id.to_s] || bundles_param[m_bundle.id.to_i] || bundles_param[m_bundle.id]) : nil
+            custom_b_name = bundle_override.respond_to?(:[]) ? (bundle_override[:name] || bundle_override["name"]).presence : nil
+            custom_b_from = bundle_override.respond_to?(:[]) ? (bundle_override[:from_day] || bundle_override["from_day"]).presence : nil
+            custom_b_to = bundle_override.respond_to?(:[]) ? (bundle_override[:to_day] || bundle_override["to_day"]).presence : nil
+
+            inst_bundle = inst_category.question_bundles.create!(
+              name: custom_b_name || m_bundle.name,
+              description: m_bundle.description,
+              position: m_bundle.position,
+              from_day: custom_b_from.present? ? custom_b_from.to_i : m_bundle.from_day,
+              to_day: custom_b_to.present? ? custom_b_to.to_i : (m_bundle.to_day || duration)
+            )
+            bundle_map[m_bundle.id] = inst_bundle
+          end
+
+          # Clone master questions for current institute under inst_category
+          question_map = {} # master_q.id => inst_q
+          category.questions.each do |m_q|
+            if m_q.institute_id == current_institute.id
+              question_map[m_q.id] = m_q
+            else
+              inst_q = m_q.deep_clone_for_institute(current_institute, inst_category)
+              question_map[m_q.id] = inst_q
+            end
+          end
+
+          # Reconnect QuestionBundleItems for institute bundles and cloned questions
+          category.question_bundles.each do |m_bundle|
+            inst_bundle = bundle_map[m_bundle.id]
+            next unless inst_bundle
+
+            m_bundle.question_bundle_items.order(:position).each do |m_item|
+              inst_q = question_map[m_item.question_id]
+              next unless inst_q
+
+              inst_bundle.question_bundle_items.create!(
+                question: inst_q,
+                position: m_item.position,
+                effective_from_day: m_item.effective_from_day,
+                effective_to_day: m_item.effective_to_day
+              )
+            end
+          end
 
           assignment = current_institute.assignments.build(
             title: title,
@@ -103,7 +161,7 @@ module InstituteAdmin
             end_date: end_date,
             assignment_type: assignment_type,
             active: data[:active].nil? ? true : (data[:active] == "1" || data[:active] == true),
-            question_category: category
+            question_category: inst_category
           )
 
           assignment.save!(validate: false)
@@ -117,40 +175,58 @@ module InstituteAdmin
           if bundle_items.present?
             bundle_items.each do |bi|
               bi_hash = bi.respond_to?(:to_unsafe_h) ? bi.to_unsafe_h : bi
-              qid = (bi_hash[:question_id] || bi_hash["question_id"]).to_i
-              next if qid.zero? || imported_question_ids.include?(qid)
-              next if has_q_param && !selected_qids.include?(qid)
+              orig_qid = (bi_hash[:question_id] || bi_hash["question_id"]).to_i
+              next if orig_qid.zero?
+              next if has_q_param && !selected_qids.include?(orig_qid)
+
+              target_q = question_map[orig_qid]
+              if target_q.nil?
+                target_q = Question.find_by(id: orig_qid)
+                if target_q && target_q.institute_id != current_institute.id
+                  target_q = target_q.deep_clone_for_institute(current_institute, inst_category)
+                  question_map[orig_qid] = target_q
+                end
+              end
+
+              next if target_q.nil? || imported_question_ids.include?(target_q.id)
 
               b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.presence || "Part 1"
 
               assignment.assignment_questions.create!(
-                question_id: qid,
+                question_id: target_q.id,
                 bundle_name: b_name,
                 order_number: order_index += 1
               )
-              imported_question_ids.add(qid)
+              imported_question_ids.add(target_q.id)
             end
           end
 
-          category.question_bundles.order(:position).each do |bundle|
-            bundles_param = data[:bundles] || data["bundles"]
-            bundle_override = bundles_param ? (bundles_param[bundle.id.to_s] || bundles_param[bundle.id.to_i] || bundles_param[bundle.id]) : nil
-            custom_bundle_name = if bundle_override.respond_to?(:[])
-              (bundle_override[:name] || bundle_override["name"]).presence
-            end
-            effective_bundle_name = custom_bundle_name || bundle.name
+          category.question_bundles.order(:position).each do |m_bundle|
+            inst_bundle = bundle_map[m_bundle.id]
+            effective_bundle_name = inst_bundle&.name || m_bundle.name
 
-            bundle.question_bundle_items.order(:position).each do |item|
-              qid = item.question_id
-              next if qid.blank? || imported_question_ids.include?(qid)
+            m_bundle.question_bundle_items.order(:position).each do |m_item|
+              orig_qid = m_item.question_id
+              next if orig_qid.blank?
 
-              if !has_q_param || selected_qids.include?(qid)
+              target_q = question_map[orig_qid]
+              if target_q.nil?
+                target_q = Question.find_by(id: orig_qid)
+                if target_q && target_q.institute_id != current_institute.id
+                  target_q = target_q.deep_clone_for_institute(current_institute, inst_category)
+                  question_map[orig_qid] = target_q
+                end
+              end
+
+              next if target_q.nil? || imported_question_ids.include?(target_q.id)
+
+              if !has_q_param || selected_qids.include?(orig_qid)
                 assignment.assignment_questions.create!(
-                  question_id: qid,
+                  question_id: target_q.id,
                   bundle_name: effective_bundle_name,
                   order_number: order_index += 1
                 )
-                imported_question_ids.add(qid)
+                imported_question_ids.add(target_q.id)
               end
             end
           end

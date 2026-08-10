@@ -45,12 +45,23 @@
                 } %>
           </div>
 
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <label class="form-label fw-semibold text-dark small mb-0">Schedule Duration</label>
+            <% current_duration = (@assignment.end_date.present? && @assignment.start_date.present?) ? ((@assignment.end_date.to_date - @assignment.start_date.to_date).to_i + 1) : 30 %>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs" id="selected_days_badge" style="font-size: 0.75rem;">
+              <i class="bi bi-calendar-range me-1 text-primary"></i><span id="selected_days_text"><%= current_duration %> <%= current_duration == 1 ? 'Day' : 'Days' %> Selected</span>
+            </span>
+          </div>
+
           <div class="row g-3">
             <div class="col-md-6">
               <div class="form-group">
                 <%= f.label :start_date, "Start Date", class: "form-label fw-semibold text-dark small" %>
                 <%= f.date_field :start_date, 
-                    class: "form-control rounded-3",
+                    class: "form-control rounded-3 border-secondary-subtle",
+                    id: "assignment_start_date",
+                    onchange: "autoUpdateAssignmentEndDate(); updateAssignmentSelectedDaysCount();",
+                    oninput: "updateAssignmentSelectedDaysCount();",
                     data: { assignment_form_target: "startDate" } %>
               </div>
             </div>
@@ -58,7 +69,10 @@
               <div class="form-group">
                 <%= f.label :end_date, "End Date", class: "form-label fw-semibold text-dark small" %>
                 <%= f.date_field :end_date, 
-                    class: "form-control rounded-3",
+                    class: "form-control rounded-3 border-secondary-subtle",
+                    id: "assignment_end_date",
+                    onchange: "updateAssignmentSelectedDaysCount()",
+                    oninput: "updateAssignmentSelectedDaysCount()",
                     data: { assignment_form_target: "endDate" } %>
               </div>
             </div>
@@ -1025,6 +1039,69 @@
       btn.innerHTML = '<i class="bi bi-arrows-collapse me-1"></i> Collapse All';
     }
   }
+
+  function parseFormDate(str) {
+    if (!str) return null;
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    return new Date(str);
+  }
+
+  function updateAssignmentSelectedDaysCount() {
+    const startDateInput = document.getElementById('assignment_start_date') || document.querySelector('input[name="assignment[start_date]"]');
+    const endDateInput = document.getElementById('assignment_end_date') || document.querySelector('input[name="assignment[end_date]"]');
+    const textEl = document.getElementById('selected_days_text');
+    const badgeEl = document.getElementById('selected_days_badge');
+
+    if (!startDateInput || !endDateInput || !textEl) return;
+
+    const start = parseFormDate(startDateInput.value);
+    const end = parseFormDate(endDateInput.value);
+
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const totalDays = diffDays >= 0 ? diffDays + 1 : 0;
+
+      if (totalDays > 0) {
+        textEl.textContent = `${totalDays} ${totalDays === 1 ? 'Day' : 'Days'} Selected`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+      } else {
+        textEl.textContent = `Invalid Date Range`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+      }
+    }
+  }
+
+  function autoUpdateAssignmentEndDate() {
+    const startDateInput = document.getElementById('assignment_start_date') || document.querySelector('input[name="assignment[start_date]"]');
+    const endDateInput = document.getElementById('assignment_end_date') || document.querySelector('input[name="assignment[end_date]"]');
+    if (startDateInput && endDateInput && startDateInput.value) {
+      const start = parseFormDate(startDateInput.value);
+      if (start && !isNaN(start.getTime())) {
+        const currentEnd = parseFormDate(endDateInput.value);
+        let durationDays = 30;
+        if (currentEnd && !isNaN(currentEnd.getTime()) && currentEnd >= start) {
+          durationDays = Math.round((currentEnd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        }
+        start.setDate(start.getDate() + durationDays - 1);
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        endDateInput.value = `${year}-${month}-${day}`;
+        updateAssignmentSelectedDaysCount();
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', updateAssignmentSelectedDaysCount);
+  document.addEventListener('turbo:load', updateAssignmentSelectedDaysCount);
 </script>
 
 <% content_for :styles do %>

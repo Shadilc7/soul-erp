@@ -48,7 +48,7 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
       position: 2
     )
 
-    # Setup questions
+    # Setup master questions
     @q1 = Question.create!(
       title: "What is a Symbol?",
       question_type: "short_answer",
@@ -72,7 +72,6 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     # Associate questions with bundles
     QuestionBundleItem.create!(question_bundle: @bundle1, question: @q1, position: 1)
     QuestionBundleItem.create!(question_bundle: @bundle2, question: @q2, position: 1)
-    # @q3 remains unbundled in @category_a
   end
 
   test "should render import_setup page with selected categories and participants" do
@@ -123,11 +122,15 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_not_nil assign_a
     assert_equal "Custom description for Cohort 1", assign_a.description
     assert_includes assign_a.participant_ids, participant.id
-    assert_equal [@q1.id, @q2.id], assign_a.assignment_questions.order(:order_number).pluck(:question_id)
+    assert_equal ["What is a Symbol?", "Explain duck typing in Ruby"], assign_a.questions.order("assignment_questions.order_number").pluck(:title)
+    assert_equal [@institute.id, @institute.id], assign_a.questions.pluck(:institute_id)
+    assert_equal @institute.id, assign_a.question_category.institute_id
+    assert_nil assign_a.question_category.question_bank_id
 
     assign_b = Assignment.find_by(title: "Advanced Rails Architecture - Cohort 1")
     assert_not_nil assign_b
     assert_includes assign_b.participant_ids, participant.id
+    assert_equal @institute.id, assign_b.question_category.institute_id
   end
 
   test "should filter questions when specific question_ids are selected during finalize_import" do
@@ -146,7 +149,8 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
 
     assign = Assignment.find_by(title: "Ruby Fundamentals - Filtered")
     assert_not_nil assign
-    assert_equal [@q1.id], assign.assignment_questions.pluck(:question_id)
+    assert_equal ["What is a Symbol?"], assign.questions.pluck(:title)
+    assert_equal [@institute.id], assign.questions.pluck(:institute_id)
   end
 
   test "should respect institution-specific bundle name overrides during finalize_import" do
@@ -173,9 +177,10 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
 
     assign = Assignment.find_by(title: "Ruby Fundamentals - Custom Bundles")
     assert_not_nil assign
-    aq = assign.assignment_questions.find_by(question_id: @q1.id)
+    aq = assign.assignment_questions.first
     assert_not_nil aq
     assert_equal "Custom Part 1 - Basic Syntax Override", aq.bundle_name
+    assert_equal @institute.id, aq.question.institute_id
   end
 
   test "should redirect import_question_bank request to import_setup page" do
@@ -232,6 +237,8 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_select "h6", text: "Institution Custom Questions"
 
     participant = participants(:one)
+    cloned_q1 = assignment.questions.find_by(title: @q1.title)
+
     patch institute_admin_assignment_path(assignment), params: {
       assignment: {
         title: "Ruby Fundamentals (Updated)",
@@ -239,12 +246,34 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
         end_date: assignment.end_date,
         assignment_type: "individual",
         participant_ids: [participant.id],
-        question_ids: [@q1.id, inst_question.id]
+        question_ids: [cloned_q1.id, inst_question.id]
       }
     }
 
     assert_redirected_to institute_admin_assignment_path(assignment)
     assignment.reload
     assert_includes assignment.question_ids, inst_question.id
+  end
+
+  test "should isolate imported assignment entities from master question bank modifications" do
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "Ruby Fundamentals Independent", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
+    assignment = Assignment.find_by(title: "Ruby Fundamentals Independent")
+    assert_not_nil assignment
+
+    cloned_q = assignment.questions.find_by(title: @q1.title)
+    assert_not_nil cloned_q
+    assert_not_equal @q1.id, cloned_q.id
+    assert_equal @institute.id, cloned_q.institute_id
+
+    # Modify master question
+    @q1.update!(title: "MODIFIED MASTER TITLE")
+
+    # Assert imported assignment question title remains unchanged
+    cloned_q.reload
+    assert_equal "What is a Symbol?", cloned_q.title
   end
 end
