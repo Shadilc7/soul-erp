@@ -689,6 +689,135 @@
                           <p class="mb-0 small">No questions found in this category pool.</p>
                         </div>
                       <% end %>
+
+                      <!-- Institution Custom Questions Section -->
+                      <% if @custom_questions.present? && @custom_questions.any? %>
+                        <div class="card border rounded-4 bg-white shadow-sm p-3 mt-4" id="custom_questions_section_<%= cat.id %>">
+                          <div class="card-header bg-light border-0 rounded-3 p-3 mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer"
+                               data-bs-toggle="collapse" 
+                               data-bs-target="#custom_q_collapse_<%= cat.id %>" 
+                               aria-expanded="true">
+                            <div class="d-flex align-items-center gap-2">
+                              <i class="bi bi-chevron-down text-secondary transition-transform"></i>
+                              <i class="bi bi-building-gear text-secondary fs-5"></i>
+                              <h6 class="fw-bold text-dark mb-0 fs-6">Institution Custom Questions</h6>
+                              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1 fw-semibold ms-1">
+                                <%= pluralize(@custom_questions.size, 'question') %>
+                              </span>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-info-circle me-1"></i> Click "+ Assign to Bundle" to assign questions
+                            </span>
+                          </div>
+
+                          <div class="collapse show mt-3" id="custom_q_collapse_<%= cat.id %>">
+                            <div class="d-flex flex-column gap-3">
+                              <% @custom_questions.each_with_index do |cq, cq_idx| %>
+                                <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all pool-question-card-<%= cat.id %>" 
+                                     id="pool_card_<%= cat.id %>_<%= cq.id %>"
+                                     data-question-title="<%= cq.title.downcase %>">
+                                  
+                                  <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                      <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                        #<%= cq_idx + 1 %>
+                                      </span>
+
+                                      <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                                        <%= cq.question_type.titleize %>
+                                      </span>
+
+                                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;" title="Question Schedule Range">
+                                        <i class="bi bi-clock-history me-1"></i><span id="q_schedule_display_<%= cat.id %>_<%= cq.id %>"><%= cq.day_range_text %></span>
+                                      </span>
+                                    </div>
+
+                                    <!-- Quick Action Buttons -->
+                                    <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1" data-bs-toggle="modal" data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= cq.id %>">
+                                      <i class="bi bi-eye me-1"></i> Preview
+                                    </button>
+                                  </div>
+
+                                  <!-- Question Title -->
+                                  <h6 class="fw-bold text-dark mb-1" style="font-size: 0.925rem; line-height: 1.35;" id="q_title_display_<%= cat.id %>_<%= cq.id %>">
+                                    <%= cq.title %>
+                                  </h6>
+
+                                  <% if cq.requires_options? && cq.options.any? %>
+                                    <div class="text-muted small mb-1">
+                                      <i class="bi bi-list-check me-1"></i><%= cq.options.size %> Answer Options
+                                    </div>
+                                  <% end %>
+
+                                  <!-- Assigned Bundles Badges -->
+                                  <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="q_assigned_bundle_badges_<%= cat.id %>_<%= cq.id %>">
+                                  </div>
+
+                                  <!-- Quick Assign to Bundle Select -->
+                                  <% if cat.question_bundles.any? %>
+                                    <div class="mt-3 pt-2 border-top">
+                                      <select class="form-select form-select-sm rounded-3 text-muted q-bundle-assign-select-<%= cat.id %>-<%= cq.id %>" 
+                                              data-q-id="<%= cq.id %>"
+                                              onchange="handleQuestionBundleSelect(<%= cat.id %>, <%= cq.id %>, this)">
+                                        <option value="">+ Assign to Bundle...</option>
+                                        <% cat.question_bundles.order(:position).each do |b| %>
+                                          <% base_text = "#{b.name} (#{b.day_range_text})" %>
+                                          <option value="<%= b.id %>" 
+                                                  id="q_select_opt_<%= cat.id %>_<%= cq.id %>_<%= b.id %>"
+                                                  data-bundle-base-name="<%= base_text %>">
+                                            <%= base_text %>
+                                          </option>
+                                        <% end %>
+                                      </select>
+                                    </div>
+                                  <% end %>
+                                </div>
+
+                                <!-- Modal: View Custom Question -->
+                                <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= cq.id %>" tabindex="-1" aria-hidden="true">
+                                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                                      <div class="modal-header border-bottom-0 pb-0">
+                                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                          <i class="bi bi-eye text-primary"></i> View Custom Question Details
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body p-4">
+                                        <div class="mb-3">
+                                          <label class="text-muted small fw-semibold d-block mb-1">Question Title:</label>
+                                          <div class="fw-bold text-dark fs-6"><%= cq.title %></div>
+                                        </div>
+                                        <% if cq.display_name.present? %>
+                                          <div class="mb-3">
+                                            <label class="text-muted small fw-semibold d-block mb-1">Display Name:</label>
+                                            <div class="text-dark"><%= cq.display_name %></div>
+                                          </div>
+                                        <% end %>
+                                        <% if cq.requires_options? && cq.options.any? %>
+                                          <div class="mb-3">
+                                            <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= cq.options.size %>):</h6>
+                                            <div class="list-group rounded-3">
+                                              <% cq.options.each_with_index do |opt, opt_idx| %>
+                                                <div class="list-group-item d-flex align-items-center justify-content-between">
+                                                  <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                                </div>
+                                              <% end %>
+                                            </div>
+                                          </div>
+                                        <% end %>
+                                      </div>
+                                      <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                        <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
                     </div>
                   </div>
                 </div>
@@ -901,6 +1030,8 @@
                                       <div class="d-flex align-items-start gap-2">
                                         <!-- Left Controls Column (Selection Checkbox, Drag Handle, Serial Badge, Chevrons) -->
                                         <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+                                          <input type="hidden" name="assignments[<%= cat.id %>][bundle_items][][question_id]" value="<%= q.id %>">
+                                          <input type="hidden" name="assignments[<%= cat.id %>][bundle_items][][bundle_name]" value="<%= bundle.name %>" class="bundle-item-name-input-<%= cat.id %>-<%= bundle.id %>">
                                           <input type="checkbox" 
                                                  name="assignments[<%= cat.id %>][question_ids][]" 
                                                  value="<%= q.id %>" 
@@ -1003,6 +1134,13 @@
 </div>
 
 <script>
+  function getOrdinal(n) {
+    if (isNaN(n)) return n;
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
   function renderParticipantBreakdown(containerId, counts) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -1531,8 +1669,68 @@
     const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question Title';
     const qTypeEl = document.getElementById(`bundle_item_type_${catId}_${qId}`);
     const qType = qTypeEl ? qTypeEl.textContent.trim() : 'Short Answer';
-    const qSchedEl = document.getElementById(`q_schedule_display_${catId}_${qId}`);
-    const qSched = qSchedEl ? qSchedEl.textContent.trim() : 'Day 1';
+
+    // Calculate Question Schedule Range [qFrom, qTo]
+    let qFrom = 1, qTo = 30;
+    const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+    const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+    if (qFromInput && qToInput && qFromInput.value && qToInput.value) {
+      qFrom = parseInt(qFromInput.value, 10);
+      qTo = parseInt(qToInput.value, 10);
+    } else {
+      const qSchedEl = document.getElementById(`q_schedule_display_${catId}_${qId}`);
+      if (qSchedEl) {
+        const text = qSchedEl.textContent.trim();
+        const numbers = text.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          qFrom = parseInt(numbers[0], 10);
+          qTo = parseInt(numbers[1], 10);
+        } else if (numbers && numbers.length === 1) {
+          qFrom = parseInt(numbers[0], 10);
+          qTo = parseInt(numbers[0], 10);
+        }
+      }
+    }
+
+    // Calculate Bundle Schedule Range [bFrom, bTo]
+    let bFrom = 1, bTo = 30;
+    const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+    const bToInput = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+    if (bFromInput && bToInput && bFromInput.value && bToInput.value) {
+      bFrom = parseInt(bFromInput.value, 10);
+      bTo = parseInt(bToInput.value, 10);
+    } else {
+      const bSchedEl = document.getElementById(`bundle_schedule_display_${catId}_${bundleId}`);
+      if (bSchedEl) {
+        const text = bSchedEl.textContent.trim();
+        const numbers = text.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          bFrom = parseInt(numbers[0], 10);
+          bTo = parseInt(numbers[1], 10);
+        } else if (numbers && numbers.length === 1) {
+          bFrom = parseInt(numbers[0], 10);
+          bTo = parseInt(numbers[0], 10);
+        }
+      }
+    }
+
+    const effFrom = Math.max(qFrom, bFrom);
+    const effTo = Math.min(qTo, bTo);
+
+    let effSchedText = '';
+    let daysInBundle = 0;
+
+    if (effFrom <= effTo) {
+      daysInBundle = effTo - effFrom + 1;
+      if (effFrom === effTo) {
+        effSchedText = `Day ${getOrdinal(effFrom)}`;
+      } else {
+        effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+      }
+    } else {
+      effSchedText = (qFrom === qTo) ? `Day ${getOrdinal(qFrom)}` : `Day ${getOrdinal(qFrom)} - ${getOrdinal(qTo)} Day`;
+      daysInBundle = 0;
+    }
 
     const itemCount = bundleItemsContainer.querySelectorAll('.bundle-question-item').length + 1;
 
@@ -1540,6 +1738,8 @@
       <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_${catId}_${bundleId}_${qId}">
         <div class="d-flex align-items-start gap-2">
           <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+            <input type="hidden" name="assignments[${catId}][bundle_items][][question_id]" value="${qId}">
+            <input type="hidden" name="assignments[${catId}][bundle_items][][bundle_name]" value="${bundleName}" class="bundle-item-name-input-${catId}-${bundleId}">
             <input type="checkbox" name="assignments[${catId}][question_ids][]" value="${qId}" id="cat_q_${catId}_${qId}" class="form-check-input cat-q-cb-${catId} bundle-q-cb-${catId}-${bundleId} m-0 cursor-pointer me-1" style="width: 1.1rem; height: 1.1rem;" checked>
             <i class="bi bi-list fs-5 text-secondary drag-handle me-1" title="Drag to reorder" style="cursor: grab;"></i>
             <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold bundle-item-serial me-1" style="font-size: 0.75rem;">#${itemCount}</span>
@@ -1562,9 +1762,12 @@
               </button>
             </div>
             <div class="d-flex align-items-center flex-wrap gap-1.5 mt-2">
-              <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;">${qType}</span>
+              <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;" id="bundle_item_type_${catId}_${qId}">${qType}</span>
               <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
-                <i class="bi bi-clock-history me-1 text-primary"></i>${qSched}
+                <i class="bi bi-clock-history me-1 text-primary"></i><span id="bundle_item_eff_sched_${catId}_${qId}">${effSchedText}</span>
+              </span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-calendar-check me-1 text-success"></i><span id="bundle_item_days_${catId}_${qId}">${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle</span>
               </span>
             </div>
           </div>

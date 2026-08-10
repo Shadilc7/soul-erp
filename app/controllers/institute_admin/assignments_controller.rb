@@ -69,6 +69,7 @@ module InstituteAdmin
         return
       end
 
+      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
       @sections = current_institute.sections.active.joins(:participants).distinct
       @participants = current_institute.participants.active.includes(:user)
     end
@@ -111,6 +112,25 @@ module InstituteAdmin
           imported_question_ids = Set.new
           has_q_param = data.key?(:question_ids)
           selected_qids = data[:question_ids]&.map(&:to_i)&.reject(&:zero?) || []
+
+          bundle_items = data[:bundle_items] || data["bundle_items"]
+          if bundle_items.present?
+            bundle_items.each do |bi|
+              bi_hash = bi.respond_to?(:to_unsafe_h) ? bi.to_unsafe_h : bi
+              qid = (bi_hash[:question_id] || bi_hash["question_id"]).to_i
+              next if qid.zero? || imported_question_ids.include?(qid)
+              next if has_q_param && !selected_qids.include?(qid)
+
+              b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.presence || "Part 1"
+
+              assignment.assignment_questions.create!(
+                question_id: qid,
+                bundle_name: b_name,
+                order_number: order_index += 1
+              )
+              imported_question_ids.add(qid)
+            end
+          end
 
           category.question_bundles.order(:position).each do |bundle|
             bundles_param = data[:bundles] || data["bundles"]
