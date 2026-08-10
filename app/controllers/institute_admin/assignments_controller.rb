@@ -43,49 +43,65 @@ module InstituteAdmin
       @available_question_banks = QuestionBank.where(active: true).includes(:question_categories).order(:name)
     end
 
-    def import_question_bank
+    def import_setup
       bank_id = params[:question_bank_id]
       selected_category_ids = params[:category_ids]
 
-      question_bank = QuestionBank.find_by(id: bank_id)
+      @question_bank = QuestionBank.find_by(id: bank_id)
 
-      if question_bank.nil?
+      if @question_bank.nil?
         redirect_to institute_admin_assignments_path, alert: "Selected Question Bank not found."
         return
       end
 
-      categories_scope = question_bank.question_categories.where(active: true)
+      categories_scope = @question_bank.question_categories.where(active: true)
       if selected_category_ids.present?
         categories_scope = categories_scope.where(id: selected_category_ids)
       end
 
-      categories = categories_scope.includes(
+      @categories = categories_scope.includes(
         :questions,
-        question_bundles: { question_bundle_items: :question }
+        question_bundles: { question_bundle_items: { question: :options } }
       )
 
-      if categories.empty?
+      if @categories.empty?
         redirect_to institute_admin_assignments_path, alert: "No active categories selected for import."
         return
       end
 
-      created_assignments_count = 0
+      @sections = current_institute.sections.active.joins(:participants).distinct
+      @participants = current_institute.participants.active.includes(:user)
+    end
+
+    def finalize_import
+      assignments_data = params[:assignments]
+
+      if assignments_data.blank?
+        redirect_to institute_admin_assignments_path, alert: "No assignment configuration received."
+        return
+      end
+
+      created_assignments = []
 
       ActiveRecord::Base.transaction do
-        categories.each do |category|
-          duration = category.duration_days.to_i
-          duration = 30 if duration <= 0
+        assignments_data.each do |category_id, data|
+          category = QuestionCategory.find_by(id: category_id)
+          next unless category
 
-          start_date = Date.current
-          end_date = start_date + duration.days
+          start_date = data[:start_date].present? ? Date.parse(data[:start_date]) : Date.current
+          duration = (category.duration_days.to_i > 0) ? category.duration_days.to_i : 30
+          end_date = data[:end_date].present? ? Date.parse(data[:end_date]) : (start_date + duration.days)
+          assignment_type = data[:assignment_type].presence || "individual"
+          title = data[:title].presence || category.name
+          description = data[:description].presence || category.description
 
           assignment = current_institute.assignments.build(
-            title: category.name,
-            description: category.description,
+            title: title,
+            description: description,
             start_date: start_date,
             end_date: end_date,
-            assignment_type: "individual",
-            active: true,
+            assignment_type: assignment_type,
+            active: data[:active].nil? ? true : (data[:active] == "1" || data[:active] == true),
             question_category: category
           )
 
@@ -93,29 +109,64 @@ module InstituteAdmin
 
           order_index = 0
           imported_question_ids = Set.new
+          has_q_param = data.key?(:question_ids)
+          selected_qids = data[:question_ids]&.map(&:to_i)&.reject(&:zero?) || []
 
-          # ONLY import bundled questions as requested, skipping duplicates across bundles
           category.question_bundles.order(:position).each do |bundle|
             bundle.question_bundle_items.order(:position).each do |item|
-              if item.question_id.present? && !imported_question_ids.include?(item.question_id)
+              qid = item.question_id
+              next if qid.blank? || imported_question_ids.include?(qid)
+
+              if !has_q_param || selected_qids.include?(qid)
                 assignment.assignment_questions.create!(
-                  question_id: item.question_id,
+                  question_id: qid,
                   bundle_name: bundle.name,
                   order_number: order_index += 1
                 )
-                imported_question_ids.add(item.question_id)
+                imported_question_ids.add(qid)
               end
             end
           end
 
-          created_assignments_count += 1
+          if assignment_type == "section"
+            sec_ids = data[:section_ids]&.reject(&:blank?) || []
+            sec_ids.uniq.each do |sid|
+              assignment.assignment_sections.create!(section_id: sid)
+            end
+
+            part_ids = data[:participant_ids]&.reject(&:blank?) || []
+            if part_ids.any?
+              part_ids.uniq.each do |pid|
+                assignment.assignment_participants.create!(participant_id: pid)
+              end
+            elsif sec_ids.any?
+              current_institute.participants.active.where(section_id: sec_ids).pluck(:id).each do |pid|
+                assignment.assignment_participants.create!(participant_id: pid)
+              end
+            end
+          else
+            part_ids = data[:participant_ids]&.reject(&:blank?) || []
+            part_ids.uniq.each do |pid|
+              assignment.assignment_participants.create!(participant_id: pid)
+            end
+          end
+
+          created_assignments << assignment
         end
       end
 
-      redirect_to institute_admin_assignments_path, notice: "Successfully imported '#{question_bank.name}' and created #{created_assignments_count} assignment(s)!"
+      titles_str = created_assignments.map(&:title).join(", ")
+      redirect_to institute_admin_assignments_path, notice: "Successfully created #{created_assignments.size} assignment(s): #{titles_str}!"
     rescue => e
-      Rails.logger.error("Failed to import Question Bank: #{e.message}\n#{e.backtrace.join("\n")}")
-      redirect_to institute_admin_assignments_path, alert: "An error occurred while importing the Question Bank: #{e.message}"
+      Rails.logger.error("Failed to finalize Question Bank import: #{e.message}\n#{e.backtrace.join("\n")}")
+      redirect_to institute_admin_assignments_path, alert: "An error occurred while creating assignments: #{e.message}"
+    end
+
+    def import_question_bank
+      redirect_to import_setup_institute_admin_assignments_path(
+        question_bank_id: params[:question_bank_id],
+        category_ids: params[:category_ids]
+      )
     end
 
     def show

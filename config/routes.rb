@@ -164,6 +164,8 @@ Rails.application.routes.draw do
       resources :assignments do
         collection do
           post :import_question_bank
+          match :import_setup, via: [ :get, :post ]
+          post :finalize_import
         end
         resources :responses, only: [ :index, :show ]
       end

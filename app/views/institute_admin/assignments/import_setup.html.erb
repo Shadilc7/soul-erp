@@ -1,0 +1,966 @@
+<div class="container-fluid px-3 px-md-4 py-4" style="background-color: #f8fafc; min-height: 100vh;">
+  <!-- Top Navigation & Header Bar -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 bg-white p-3 p-md-4 rounded-4 shadow-sm border">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <%= link_to institute_admin_assignments_path, class: "btn btn-sm btn-light border text-dark rounded-circle p-2 d-inline-flex align-items-center justify-content-center shadow-xs me-1", title: "Back to Assignments", style: "width: 36px; height: 36px;" do %>
+          <i class="bi bi-arrow-left fs-5"></i>
+        <% end %>
+        <h3 class="fw-bold text-dark mb-0" style="color: #0f172a; font-weight: 700;">Question Bank Import & Assignment Setup</h3>
+      </div>
+      <p class="text-muted small mb-0 ps-5 ms-2">
+        Configure schedules, custom titles, question bundle selections, and participant allocations for each category before persisting assignments.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" style="background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.85rem;">
+        <i class="bi bi-box-seam me-1"></i> Source: <strong><%= @question_bank.name %></strong>
+      </span>
+      <span class="badge rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.85rem;">
+        <i class="bi bi-layers me-1"></i> <%= pluralize(@categories.size, 'Assignment') %> to Create
+      </span>
+    </div>
+  </div>
+
+  <%= form_with url: finalize_import_institute_admin_assignments_path, method: :post, local: true, id: "import_finalize_form" do |f| %>
+
+    <!-- Global Bulk Recipient Helper -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer select-none"
+           data-bs-toggle="collapse" data-bs-target="#globalRecipientsCollapse" aria-expanded="false">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-2.5 rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+            <i class="bi bi-people-fill fs-4"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Bulk Recipient Allocation (Optional)</h5>
+            <span class="text-muted small">Select participants or sections below to quickly apply them across ALL imported category assignments with one click.</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-xs" onclick="syncGlobalRecipients(event)">
+          <i class="bi bi-check2-all fs-6"></i> Apply to All Cards
+        </button>
+      </div>
+
+      <div class="collapse p-3 p-md-4 border-top bg-light-subtle" id="globalRecipientsCollapse">
+        <div class="row g-4">
+          <!-- Global Section Selection -->
+          <div class="col-md-6 border-end-md">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-diagram-3 text-primary"></i> Target Sections (Apply to All Cards)
+              </h6>
+              <div class="form-check mb-0">
+                <input type="checkbox" class="form-check-input cursor-pointer" id="global_select_all_secs" onchange="toggleSelectAllGlobalSections(this.checked)">
+                <label class="form-check-label small fw-semibold text-dark cursor-pointer" for="global_select_all_secs">Select All</label>
+              </div>
+            </div>
+            <div class="sections-list overflow-auto border rounded-3 p-3 bg-white" style="max-height: 200px;">
+              <% if @sections.any? %>
+                <% @sections.each do |sec| %>
+                  <div class="form-check mb-2 p-1.5 rounded hover-bg-light d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input global-section-cb cursor-pointer m-0 ms-1" id="global_sec_<%= sec.id %>" value="<%= sec.id %>" onchange="syncGlobalSections()">
+                    <label class="form-check-label fw-semibold text-dark small cursor-pointer flex-grow-1 mb-0" for="global_sec_<%= sec.id %>">
+                      <%= sec.name.presence || "Section #{sec.id}" %>
+                    </label>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="text-muted small py-3 text-center">No active sections available.</div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Global Participant Selection -->
+          <div class="col-md-6">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-person-lines-fill text-primary"></i> Individual Participants (Apply to All Cards)
+              </h6>
+              <div class="form-check mb-0">
+                <input type="checkbox" class="form-check-input cursor-pointer" id="global_select_all_parts" onchange="toggleSelectAllGlobalParticipants(this.checked)">
+                <label class="form-check-label small fw-semibold text-dark cursor-pointer" for="global_select_all_parts">Select All</label>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <select id="global-participant-type-filter" class="form-select form-select-sm rounded-3" onchange="filterGlobalParticipants(this.value)">
+                <option value="all">All Participant Types</option>
+                <option value="student">Students</option>
+                <option value="guardian">Guardians</option>
+                <option value="employee">Employees</option>
+              </select>
+            </div>
+
+            <!-- Global Participant Legend Breakdown -->
+            <div id="global_participant_breakdown" class="d-flex align-items-center gap-1.5 flex-wrap mb-2 d-none"></div>
+
+            <div class="participants-list overflow-auto border rounded-3 p-3 bg-white" style="max-height: 170px;">
+              <% if @participants.any? %>
+                <% @participants.each do |p| %>
+                  <% p_type = p.participant_type.to_s.downcase %>
+                  <% 
+                    badge_style = case p_type
+                    when 'student' then 'background-color: #06b6d4; color: #ffffff;'
+                    when 'guardian' then 'background-color: #f59e0b; color: #ffffff;'
+                    when 'employee' then 'background-color: #10b981; color: #ffffff;'
+                    else 'background-color: #64748b; color: #ffffff;'
+                    end
+                  %>
+                  <div class="form-check mb-2 p-1.5 rounded hover-bg-light d-flex align-items-center gap-2 global-part-item" data-participant-type="<%= p_type %>">
+                    <input type="checkbox" class="form-check-input global-participant-cb cursor-pointer m-0 ms-1" id="global_part_<%= p.id %>" value="<%= p.id %>" onchange="syncGlobalParticipants()">
+                    <label class="form-check-label small cursor-pointer flex-grow-1 mb-0" for="global_part_<%= p.id %>">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold text-dark"><%= p.user&.full_name || "Participant #{p.id}" %></span>
+                        <span class="badge rounded-pill px-2.5 py-1 fw-bold" style="<%= badge_style %> font-size: 0.68rem;">
+                          <%= p.participant_type&.capitalize %>
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="text-muted small py-3 text-center">No active participants available.</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Assignment Setup Cards -->
+    <div class="d-flex flex-column gap-4 mb-4">
+      <% @categories.each_with_index do |cat, cat_idx| %>
+        <% 
+          duration = (cat.duration_days.to_i > 0) ? cat.duration_days.to_i : 30
+          default_start = Date.current
+          default_end = default_start + duration.days
+          bundled_items = cat.question_bundles.flat_map(&:question_bundle_items).select(&:question_id)
+          bundled_questions_count = bundled_items.map(&:question_id).uniq.size
+        %>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden category-assignment-card" id="category_card_<%= cat.id %>">
+          <!-- Category Card Header -->
+          <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-3 cursor-pointer select-none"
+               data-bs-toggle="collapse" 
+               data-bs-target="#category_collapse_<%= cat.id %>" 
+               aria-expanded="true">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge text-white rounded-circle p-2 fw-bold d-inline-flex align-items-center justify-content-center shadow-xs" 
+                    style="width: 38px; height: 38px; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); font-size: 0.95rem;">
+                #<%= cat_idx + 1 %>
+              </span>
+              <div>
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 1.1rem; color: #1e293b;">
+                  <i class="bi bi-folder-fill text-primary"></i> <%= cat.name %>
+                </h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small">
+                    <i class="bi bi-collection me-1"></i> <%= pluralize(bundled_questions_count, 'bundled question') %>
+                  </span>
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 small">
+                    <i class="bi bi-clock-history me-1"></i> <%= duration %> Days Category Duration
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small fw-semibold border">
+                Will create Assignment #<%= cat_idx + 1 %>
+              </span>
+              <i class="bi bi-chevron-down text-secondary fs-5 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Category Card Body (Accordion Content) -->
+          <div class="collapse show p-3 p-md-4" id="category_collapse_<%= cat.id %>">
+            <div class="row g-4 align-items-stretch">
+              <!-- Left Side: Basic Info & Schedule -->
+              <div class="col-lg-6">
+                <div class="p-3.5 p-md-4 bg-light-subtle rounded-4 border h-100 d-flex flex-column">
+                  <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2 border-bottom pb-2.5" style="font-size: 1rem;">
+                    <i class="bi bi-pencil-square text-primary"></i> 1. Assignment Details
+                  </h6>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark small">Assignment Title <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           name="assignments[<%= cat.id %>][title]" 
+                           value="<%= cat.name %>" 
+                           class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                           required 
+                           placeholder="Enter assignment title...">
+                  </div>
+
+                  <div class="mb-3 flex-grow-1 d-flex flex-column">
+                    <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                    <textarea name="assignments[<%= cat.id %>][description]" 
+                              class="form-control rounded-3 border-secondary-subtle flex-grow-1" 
+                              rows="4" 
+                              style="min-height: 110px;"
+                              placeholder="Brief instructions for participants..."><%= cat.description %></textarea>
+                  </div>
+
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-dark small">Start Date <span class="text-danger">*</span></label>
+                      <input type="text" 
+                             name="assignments[<%= cat.id %>][start_date]" 
+                             value="<%= default_start.strftime('%Y-%m-%d') %>" 
+                             class="form-control rounded-3 border-secondary-subtle datepicker" 
+                             required
+                             onchange="autoUpdateEndDate(<%= cat.id %>, <%= duration %>)">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-dark small">End Date <span class="text-danger">*</span></label>
+                      <input type="text" 
+                             name="assignments[<%= cat.id %>][end_date]" 
+                             value="<%= default_end.strftime('%Y-%m-%d') %>" 
+                             class="form-control rounded-3 border-secondary-subtle datepicker" 
+                             required>
+                    </div>
+                  </div>
+
+                  <div class="pt-1">
+                    <div class="form-check mb-0 d-flex align-items-center gap-1.5">
+                      <input type="checkbox" name="assignments[<%= cat.id %>][active]" value="1" id="active_<%= cat.id %>" class="form-check-input cursor-pointer m-0" checked>
+                      <label class="form-check-label fw-semibold text-dark small cursor-pointer mb-0 ms-1" for="active_<%= cat.id %>">
+                        Active Assignment
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Side: Assignment Type & Target Recipients (Matching Screenshot #2 & Legend Breakdown) -->
+              <div class="col-lg-6">
+                <div class="d-flex flex-column gap-3">
+                  <!-- Assignment Type Box -->
+                  <div class="card border-0 shadow-xs rounded-4 bg-white border">
+                    <div class="card-header bg-white border-bottom p-3">
+                      <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                        <i class="bi bi-sliders text-primary"></i> Assignment Type
+                      </h6>
+                    </div>
+                    <div class="card-body p-3">
+                      <div class="btn-group w-100 p-1 bg-light rounded-3 border" role="group">
+                        <input type="radio" 
+                               name="assignments[<%= cat.id %>][assignment_type]" 
+                               value="individual" 
+                               id="type_ind_<%= cat.id %>" 
+                               class="btn-check" 
+                               checked 
+                               onchange="toggleCategoryRecipientMode(<%= cat.id %>, 'individual')">
+                        <label for="type_ind_<%= cat.id %>" class="btn btn-outline-primary rounded-2 py-2 fw-semibold border-0">
+                          <i class="bi bi-person me-1.5"></i> Individual
+                        </label>
+
+                        <input type="radio" 
+                               name="assignments[<%= cat.id %>][assignment_type]" 
+                               value="section" 
+                               id="type_sec_<%= cat.id %>" 
+                               class="btn-check" 
+                               onchange="toggleCategoryRecipientMode(<%= cat.id %>, 'section')">
+                        <label for="type_sec_<%= cat.id %>" class="btn btn-outline-primary rounded-2 py-2 fw-semibold border-0">
+                          <i class="bi bi-people me-1.5"></i> Section
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recipients Card Box -->
+                  <div class="card border-0 shadow-xs rounded-4 bg-white border">
+                    <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between">
+                      <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                        <i class="bi bi-people-fill text-primary"></i> <span id="recipients_card_title_<%= cat.id %>">Participants</span>
+                      </h6>
+                      <div class="form-check mb-0">
+                        <input type="checkbox" 
+                               id="select_all_recipients_<%= cat.id %>" 
+                               class="form-check-input cursor-pointer"
+                               onchange="toggleSelectAllCardRecipients(<%= cat.id %>, this.checked)">
+                        <label for="select_all_recipients_<%= cat.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer">
+                          Select All
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="card-body p-3">
+                      <!-- Individual View -->
+                      <div id="individual_recipients_<%= cat.id %>">
+                        <input type="hidden" name="assignments[<%= cat.id %>][participant_ids][]" value="">
+                        
+                        <!-- Participant Type Filter -->
+                        <div class="mb-3">
+                          <select id="participant_filter_<%= cat.id %>" 
+                                  class="form-select form-select-sm rounded-3 border-secondary-subtle"
+                                  onchange="filterCategoryParticipants(<%= cat.id %>, this.value)">
+                            <option value="all">All Participant Types</option>
+                            <option value="student">Students</option>
+                            <option value="guardian">Guardians</option>
+                            <option value="employee">Employees</option>
+                          </select>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                          <span class="text-dark small fw-bold">Assign Participants</span>
+                          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="recipient_count_badge_<%= cat.id %>">
+                            0 Selected
+                          </span>
+                        </div>
+
+                        <!-- Participant Breakdown Legend -->
+                        <div id="participant_breakdown_<%= cat.id %>" class="d-flex align-items-center gap-1.5 flex-wrap mb-2 d-none"></div>
+
+                        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 200px;">
+                          <% if @participants.any? %>
+                            <% @participants.each do |p| %>
+                              <% p_type = p.participant_type.to_s.downcase %>
+                              <% 
+                                badge_style = case p_type
+                                when 'student' then 'background-color: #06b6d4; color: #ffffff;'
+                                when 'guardian' then 'background-color: #f59e0b; color: #ffffff;'
+                                when 'employee' then 'background-color: #10b981; color: #ffffff;'
+                                else 'background-color: #64748b; color: #ffffff;'
+                                end
+                              %>
+                              <div class="list-group-item p-2.5 border-bottom hover-bg-light cat-part-item-<%= cat.id %>" data-participant-type="<%= p_type %>">
+                                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                                  <input type="checkbox" 
+                                         name="assignments[<%= cat.id %>][participant_ids][]" 
+                                         value="<%= p.id %>" 
+                                         id="part_<%= cat.id %>_<%= p.id %>" 
+                                         class="form-check-input cat-part-cb-<%= cat.id %> cursor-pointer m-0 ms-1"
+                                         onchange="updateCardRecipientCount(<%= cat.id %>)">
+                                  <label class="form-check-label small mb-0 flex-grow-1 cursor-pointer" for="part_<%= cat.id %>_<%= p.id %>">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                      <span class="fw-semibold text-dark"><%= p.user&.full_name || "Participant #{p.id}" %></span>
+                                      <span class="badge rounded-pill px-2.5 py-1 fw-bold" style="<%= badge_style %> font-size: 0.68rem;">
+                                        <%= p.participant_type&.capitalize %>
+                                      </span>
+                                    </div>
+                                  </label>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <div class="p-3 text-center text-muted small">No active participants available.</div>
+                          <% end %>
+                        </div>
+                      </div>
+
+                      <!-- Section View (Hidden by default) -->
+                      <div id="section_recipients_<%= cat.id %>" class="d-none">
+                        <input type="hidden" name="assignments[<%= cat.id %>][section_ids][]" value="">
+                        
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                          <span class="text-dark small fw-bold">Assign Sections</span>
+                          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="sec_count_badge_<%= cat.id %>">
+                            0 Selected
+                          </span>
+                        </div>
+
+                        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 240px;">
+                          <% if @sections.any? %>
+                            <% @sections.each do |sec| %>
+                              <div class="list-group-item p-2.5 border-bottom hover-bg-light">
+                                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                                  <input type="checkbox" 
+                                         name="assignments[<%= cat.id %>][section_ids][]" 
+                                         value="<%= sec.id %>" 
+                                         id="sec_<%= cat.id %>_<%= sec.id %>" 
+                                         class="form-check-input cat-sec-cb-<%= cat.id %> cursor-pointer m-0 ms-1"
+                                         onchange="updateCardRecipientCount(<%= cat.id %>)">
+                                  <label class="form-check-label small mb-0 flex-grow-1 cursor-pointer fw-semibold text-dark" for="sec_<%= cat.id %>_<%= sec.id %>">
+                                    <%= sec.name.presence || "Section #{sec.id}" %>
+                                  </label>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <div class="p-3 text-center text-muted small">No active sections available.</div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question Bundles & Sequence Preview Section (Matching Master Admin Bundle View) -->
+            <div class="mt-4 pt-4 border-top">
+              <input type="hidden" name="assignments[<%= cat.id %>][question_ids][]" value="">
+              
+              <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 1.05rem;">
+                  <i class="bi bi-layers-fill text-warning fs-5"></i> 3. Included Question Bundles 
+                  <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-normal">
+                    <%= cat.question_bundles.size %> <%= 'Bundle'.pluralize(cat.question_bundles.size) %>, <%= bundled_questions_count %> <%= 'Question'.pluralize(bundled_questions_count) %>
+                  </span>
+                </h6>
+
+                <div class="form-check mb-0 d-flex align-items-center gap-1.5">
+                  <input type="checkbox" class="form-check-input cursor-pointer m-0" id="select_all_q_<%= cat.id %>" checked onchange="toggleAllCatQuestions(<%= cat.id %>, this.checked)">
+                  <label class="form-check-label fw-semibold small text-dark cursor-pointer mb-0 ms-1" for="select_all_q_<%= cat.id %>">
+                    Select All Questions in Category
+                  </label>
+                </div>
+              </div>
+
+              <% if cat.question_bundles.any? %>
+                <div class="d-flex flex-column gap-3">
+                  <% cat.question_bundles.order(:position).each do |bundle| %>
+                    <% items = bundle.question_bundle_items.order(:position).includes(:question) %>
+                    
+                    <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle">
+                      <!-- Bundle Card Header (Identical to Master Admin Builder) -->
+                      <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                          <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+                            <i class="bi bi-layers-fill me-1"></i><%= bundle.name %>
+                          </span>
+                          <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1">
+                            <%= items.size %> <%= items.size == 1 ? 'question' : 'questions' %>
+                          </span>
+                          <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+                            <i class="bi bi-calendar-event me-1"></i><%= bundle.day_range_text %>
+                          </span>
+                        </div>
+
+                        <!-- Bundle Right Actions & Dropdown -->
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="form-check mb-0 me-2 d-flex align-items-center gap-1.5">
+                            <input type="checkbox" class="form-check-input bundle-select-all-cb-<%= cat.id %>-<%= bundle.id %> cursor-pointer m-0" id="bundle_cb_<%= cat.id %>_<%= bundle.id %>" checked onchange="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, this.checked)">
+                            <label for="bundle_cb_<%= cat.id %>_<%= bundle.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer mb-0 ms-1">
+                              Select Bundle
+                            </label>
+                          </div>
+
+                          <!-- 3-Dots Dropdown Menu for Bundle -->
+                          <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                    type="button" 
+                                    id="bundle_dropdown_btn_<%= cat.id %>_<%= bundle.id %>"
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false" 
+                                    title="Bundle Options"
+                                    style="width: 30px; height: 30px;">
+                              <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small rounded-3" aria-labelledby="bundle_dropdown_btn_<%= cat.id %>_<%= bundle.id %>" style="z-index: 1050;">
+                              <li>
+                                <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, true)">
+                                  <i class="bi bi-check-all text-success"></i> Select All Questions
+                                </button>
+                              </li>
+                              <li>
+                                <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleBundleQuestions(<%= cat.id %>, <%= bundle.id %>, false)">
+                                  <i class="bi bi-dash-circle text-danger"></i> Deselect All Questions
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Bundle Questions List (Item cards matching Master Admin Builder & Reorder support) -->
+                      <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_<%= cat.id %>_<%= bundle.id %>">
+                        <% items.each_with_index do |item, item_idx| %>
+                          <% q = item.question %>
+                          <% next unless q %>
+
+                          <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_<%= cat.id %>_<%= q.id %>">
+                            <div class="d-flex align-items-start gap-3">
+                              <!-- Left Controls Column (Selection Checkbox, Drag Handle, Serial Badge, Chevrons) -->
+                              <div class="d-flex align-items-center gap-3 flex-shrink-0 pt-0.5">
+                                <input type="checkbox" 
+                                       name="assignments[<%= cat.id %>][question_ids][]" 
+                                       value="<%= q.id %>" 
+                                       id="cat_q_<%= cat.id %>_<%= q.id %>" 
+                                       class="form-check-input cat-q-cb-<%= cat.id %> bundle-q-cb-<%= cat.id %>-<%= bundle.id %> m-0 cursor-pointer" 
+                                       style="width: 1.1rem; height: 1.1rem;"
+                                       checked>
+
+                                <i class="bi bi-list fs-5 text-secondary drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
+
+                                <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold bundle-item-serial" style="font-size: 0.75rem;">
+                                  #<%= item_idx + 1 %>
+                                </span>
+
+                                <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5">
+                                  <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
+                                    <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+                                  </button>
+                                  <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
+                                    <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <!-- Content Column (First Row: Title & Actions; Second Row: Badges) -->
+                              <div class="flex-grow-1 min-w-0">
+                                <!-- First Row: Title & Actions -->
+                                <div class="d-flex align-items-start justify-content-between gap-2">
+                                  <label for="cat_q_<%= cat.id %>_<%= q.id %>" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;">
+                                    <%= q.title %>
+                                  </label>
+
+                                  <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <% if q.required? %>
+                                      <span class="badge bg-danger-subtle text-danger fw-semibold px-2 py-1" style="font-size: 0.65rem;">Required</span>
+                                    <% end %>
+
+                                    <!-- 3-Dots Question Dropdown Button -->
+                                    <div class="dropdown d-inline-block">
+                                      <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                              type="button" 
+                                              id="q_dropdown_btn_<%= cat.id %>_<%= q.id %>"
+                                              data-bs-toggle="dropdown" 
+                                              aria-expanded="false" 
+                                              title="Question Options"
+                                              style="width: 28px; height: 28px;">
+                                        <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem;"></i>
+                                      </button>
+                                      <ul class="dropdown-menu dropdown-menu-end shadow border-0 small rounded-3" aria-labelledby="q_dropdown_btn_<%= cat.id %>_<%= q.id %>" style="z-index: 1060;">
+                                        <li>
+                                          <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= q.id %>">
+                                            <i class="bi bi-eye text-primary"></i> View Question Details
+                                          </button>
+                                        </li>
+                                        <li>
+                                          <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="toggleSingleQuestion(<%= cat.id %>, <%= q.id %>)">
+                                            <i class="bi bi-toggle-on text-secondary"></i> Toggle Include / Exclude
+                                          </button>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- Second Row: Metadata Badges -->
+                                <div class="d-flex align-items-center flex-wrap gap-1.5 mt-1.5">
+                                  <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5 text-uppercase" style="font-size: 0.7rem;">
+                                    <%= q.question_type&.titleize %>
+                                  </span>
+
+                                  <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.7rem;" title="Active schedule: <%= item.effective_day_range_text %>">
+                                    <i class="bi bi-clock-history me-1"></i><%= item.effective_day_range_text %>
+                                  </span>
+
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.7rem;">
+                                    <i class="bi bi-calendar-check me-1"></i><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- View Question Modal -->
+                          <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                              <div class="modal-content rounded-4 border-0 shadow-lg">
+                                <div class="modal-header border-bottom-0 pb-0">
+                                  <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+                                    <i class="bi bi-eye-fill text-primary"></i> Question Details
+                                  </h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                  <div class="mb-3">
+                                    <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
+                                      <%= q.question_type.titleize %>
+                                    </span>
+                                    <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
+                                    <% if q.display_name.present? %>
+                                      <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
+                                    <% end %>
+                                    <% if q.description.present? %>
+                                      <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+                                    <% end %>
+                                  </div>
+
+                                  <% if q.requires_options? && q.options.any? %>
+                                    <div class="mb-3">
+                                      <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                                      <div class="list-group rounded-3">
+                                        <% q.options.each_with_index do |opt, opt_idx| %>
+                                          <div class="list-group-item d-flex align-items-center justify-content-between p-2.5">
+                                            <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                            <% if opt.correct? %>
+                                              <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
+                                            <% end %>
+                                          </div>
+                                        <% end %>
+                                      </div>
+                                    </div>
+                                  <% elsif q.rating? %>
+                                    <div class="mb-3">
+                                      <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+                                    </div>
+                                  <% end %>
+
+                                  <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                                    <span class="text-muted small">Schedule Day Range:</span>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                                      <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                  <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="alert alert-warning mb-0 small rounded-3">
+                  <i class="bi bi-exclamation-triangle me-1"></i> No bundles created under this category yet.
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Sticky Floating Bottom Action Dock -->
+    <div class="position-sticky bottom-0 bg-white border shadow-lg p-3 p-md-3.5 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-3 z-3 mb-3 mt-4" style="bottom: 1rem;">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-2 rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <i class="bi bi-check-circle-fill fs-5"></i>
+        </div>
+        <div>
+          <h6 class="fw-bold text-dark mb-0">Ready to create <%= pluralize(@categories.size, 'Assignment') %></h6>
+          <span class="text-muted small">Configured from <strong><%= @question_bank.name %></strong></span>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2.5">
+        <%= link_to "Cancel", institute_admin_assignments_path, class: "btn btn-light border text-secondary px-4 py-2 rounded-3 fw-semibold shadow-xs" %>
+        <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none;">
+          <i class="bi bi-box-arrow-in-down fs-5"></i> Create <%= pluralize(@categories.size, 'Assignment') %>
+        </button>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function renderParticipantBreakdown(containerId, counts) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const types = Object.keys(counts);
+    if (types.length === 0) {
+      container.classList.add('d-none');
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    types.forEach(type => {
+      const cnt = counts[type];
+      if (cnt > 0) {
+        let formattedType = type === 'student' ? (cnt === 1 ? 'Student' : 'Students') : 
+                           (type === 'guardian' ? (cnt === 1 ? 'Guardian' : 'Guardians') : 
+                           (type === 'employee' ? (cnt === 1 ? 'Employee' : 'Employees') : type));
+        
+        let pillStyle = '';
+        if (type === 'student') {
+          pillStyle = 'background-color: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc;';
+        } else if (type === 'guardian') {
+          pillStyle = 'background-color: #fefce8; color: #ca8a04; border: 1px solid #fef08a;';
+        } else if (type === 'employee') {
+          pillStyle = 'background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;';
+        } else {
+          pillStyle = 'background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
+        }
+
+        html += `<span class="badge rounded-pill px-2.5 py-1 fw-bold" style="${pillStyle} font-size: 0.72rem;">${cnt} ${formattedType}</span>`;
+      }
+    });
+
+    if (html !== '') {
+      container.innerHTML = html;
+      container.classList.remove('d-none');
+    } else {
+      container.classList.add('d-none');
+      container.innerHTML = '';
+    }
+  }
+
+  function toggleCategoryRecipientMode(catId, mode) {
+    const indDiv = document.getElementById('individual_recipients_' + catId);
+    const secDiv = document.getElementById('section_recipients_' + catId);
+    const titleSpan = document.getElementById('recipients_card_title_' + catId);
+    
+    if (mode === 'section') {
+      indDiv.classList.add('d-none');
+      secDiv.classList.remove('d-none');
+      if (titleSpan) titleSpan.textContent = 'Sections';
+    } else {
+      secDiv.classList.add('d-none');
+      indDiv.classList.remove('d-none');
+      if (titleSpan) titleSpan.textContent = 'Participants';
+    }
+    updateCardRecipientCount(catId);
+  }
+
+  function filterCategoryParticipants(catId, type) {
+    const items = document.querySelectorAll(`.cat-part-item-${catId}`);
+    items.forEach(item => {
+      if (type === 'all' || item.dataset.participantType === type) {
+        item.classList.remove('d-none');
+      } else {
+        item.classList.add('d-none');
+      }
+    });
+  }
+
+  function toggleSelectAllCardRecipients(catId, checked) {
+    const modeRadio = document.querySelector(`input[name="assignments[${catId}][assignment_type]"]:checked`);
+    const mode = modeRadio ? modeRadio.value : 'individual';
+
+    if (mode === 'section') {
+      const secCbs = document.querySelectorAll(`.cat-sec-cb-${catId}`);
+      secCbs.forEach(cb => cb.checked = checked);
+    } else {
+      const partItems = document.querySelectorAll(`.cat-part-item-${catId}:not(.d-none)`);
+      partItems.forEach(item => {
+        const cb = item.querySelector('.form-check-input');
+        if (cb) cb.checked = checked;
+      });
+    }
+    updateCardRecipientCount(catId);
+  }
+
+  function updateCardRecipientCount(catId) {
+    const modeRadio = document.querySelector(`input[name="assignments[${catId}][assignment_type]"]:checked`);
+    const mode = modeRadio ? modeRadio.value : 'individual';
+
+    const partBadge = document.getElementById('recipient_count_badge_' + catId);
+    const secBadge = document.getElementById('sec_count_badge_' + catId);
+
+    if (mode === 'section') {
+      const checkedSecs = document.querySelectorAll(`.cat-sec-cb-${catId}:checked`);
+      const count = checkedSecs.length;
+      if (secBadge) {
+        secBadge.textContent = `${count} Selected`;
+        secBadge.className = count > 0 ? "badge bg-primary text-white rounded-pill px-2.5 py-1.5 fw-semibold" : "badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5 fw-semibold";
+      }
+      renderParticipantBreakdown('participant_breakdown_' + catId, {});
+    } else {
+      const checkedParts = document.querySelectorAll(`.cat-part-cb-${catId}:checked`);
+      const count = checkedParts.length;
+      if (partBadge) {
+        partBadge.textContent = `${count} Selected`;
+        partBadge.className = count > 0 ? "badge bg-primary text-white rounded-pill px-2.5 py-1.5 fw-semibold" : "badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5 fw-semibold";
+      }
+
+      const counts = {};
+      checkedParts.forEach(cb => {
+        const item = cb.closest('.cat-part-item-' + catId);
+        if (item && item.dataset.participantType) {
+          const t = item.dataset.participantType;
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      });
+
+      renderParticipantBreakdown('participant_breakdown_' + catId, counts);
+    }
+  }
+
+  function filterGlobalParticipants(type) {
+    const items = document.querySelectorAll('.global-part-item');
+    items.forEach(item => {
+      if (type === 'all' || item.dataset.participantType === type) {
+        item.classList.remove('d-none');
+      } else {
+        item.classList.add('d-none');
+      }
+    });
+  }
+
+  function toggleSelectAllGlobalParticipants(checked) {
+    const visibleItems = document.querySelectorAll('.global-part-item:not(.d-none)');
+    visibleItems.forEach(item => {
+      const cb = item.querySelector('.global-participant-cb');
+      if (cb) cb.checked = checked;
+    });
+    syncGlobalParticipants();
+  }
+
+  function toggleSelectAllGlobalSections(checked) {
+    const cbs = document.querySelectorAll('.global-section-cb');
+    cbs.forEach(cb => cb.checked = checked);
+    syncGlobalSections();
+  }
+
+  function toggleAllCatQuestions(catId, checked) {
+    const cbs = document.querySelectorAll(`.cat-q-cb-${catId}`);
+    cbs.forEach(cb => cb.checked = checked);
+    const bundleCbs = document.querySelectorAll(`[class*="bundle-select-all-cb-${catId}-"]`);
+    bundleCbs.forEach(cb => cb.checked = checked);
+  }
+
+  function toggleBundleQuestions(catId, bundleId, checked) {
+    const cbs = document.querySelectorAll(`.bundle-q-cb-${catId}-${bundleId}`);
+    cbs.forEach(cb => cb.checked = checked);
+    const bundleCb = document.getElementById(`bundle_cb_${catId}_${bundleId}`);
+    if (bundleCb) bundleCb.checked = checked;
+  }
+
+  function toggleSingleQuestion(catId, qId) {
+    const cb = document.getElementById(`cat_q_${catId}_${qId}`);
+    if (cb) cb.checked = !cb.checked;
+  }
+
+  function syncGlobalSections() {
+    const globalCbs = document.querySelectorAll('.global-section-cb');
+    globalCbs.forEach(gCb => {
+      const secId = gCb.value;
+      const targetCbs = document.querySelectorAll(`input[name$="[section_ids][]"][value="${secId}"]`);
+      targetCbs.forEach(tCb => {
+        tCb.checked = gCb.checked;
+        const catIdMatch = tCb.name.match(/assignments\[(\d+)\]/);
+        if (catIdMatch && catIdMatch[1]) {
+          updateCardRecipientCount(catIdMatch[1]);
+        }
+      });
+    });
+  }
+
+  function syncGlobalParticipants() {
+    const globalCbs = document.querySelectorAll('.global-participant-cb');
+    const counts = {};
+
+    globalCbs.forEach(gCb => {
+      const partId = gCb.value;
+      if (gCb.checked) {
+        const item = gCb.closest('.global-part-item');
+        if (item && item.dataset.participantType) {
+          const t = item.dataset.participantType;
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      }
+      const targetCbs = document.querySelectorAll(`input[name$="[participant_ids][]"][value="${partId}"]`);
+      targetCbs.forEach(tCb => {
+        tCb.checked = gCb.checked;
+        const catIdMatch = tCb.name.match(/assignments\[(\d+)\]/);
+        if (catIdMatch && catIdMatch[1]) {
+          updateCardRecipientCount(catIdMatch[1]);
+        }
+      });
+    });
+
+    renderParticipantBreakdown('global_participant_breakdown', counts);
+  }
+
+  function syncGlobalRecipients(e) {
+    if (e) e.preventDefault();
+    syncGlobalSections();
+    syncGlobalParticipants();
+  }
+
+  function autoUpdateEndDate(catId, durationDays) {
+    const startDateInput = document.querySelector(`input[name="assignments[${catId}][start_date]"]`);
+    const endDateInput = document.querySelector(`input[name="assignments[${catId}][end_date]"]`);
+    if (startDateInput && endDateInput && startDateInput.value) {
+      const start = new Date(startDateInput.value);
+      if (!isNaN(start.getTime())) {
+        start.setDate(start.getDate() + parseInt(durationDays));
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`;
+        endDateInput.value = formatted;
+        if (endDateInput._flatpickr) {
+          endDateInput._flatpickr.setDate(formatted, true);
+        }
+      }
+    }
+  }
+
+  function moveQuestionItemUp(btn) {
+    const item = btn.closest('.bundle-question-item');
+    if (!item) return;
+    const prev = item.previousElementSibling;
+    if (prev && prev.classList.contains('bundle-question-item')) {
+      item.parentNode.insertBefore(item, prev);
+      updateBundleSerials(item.parentNode);
+    }
+  }
+
+  function moveQuestionItemDown(btn) {
+    const item = btn.closest('.bundle-question-item');
+    if (!item) return;
+    const next = item.nextElementSibling;
+    if (next && next.classList.contains('bundle-question-item')) {
+      item.parentNode.insertBefore(next, item);
+      updateBundleSerials(item.parentNode);
+    }
+  }
+
+  function updateBundleSerials(container) {
+    if (!container) return;
+    const items = container.querySelectorAll('.bundle-question-item');
+    items.forEach((item, idx) => {
+      const serialBadge = item.querySelector('.bundle-item-serial');
+      if (serialBadge) {
+        serialBadge.textContent = '#' + (idx + 1);
+      }
+    });
+  }
+
+  function initBundleSortables() {
+    if (typeof Sortable !== "undefined") {
+      const containers = document.querySelectorAll('.bundle-items-container');
+      containers.forEach(container => {
+        if (!container.dataset.sortableInitialized) {
+          container.dataset.sortableInitialized = 'true';
+          new Sortable(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function(evt) {
+              updateBundleSerials(evt.to);
+            }
+          });
+        }
+      });
+    }
+  }
+
+  function setupFlatpickrInstances() {
+    if (typeof flatpickr !== "undefined") {
+      flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setupFlatpickrInstances();
+    initBundleSortables();
+    const catCards = document.querySelectorAll('.category-assignment-card');
+    catCards.forEach(card => {
+      const catId = card.id.replace('category_card_', '');
+      updateCardRecipientCount(catId);
+    });
+  });
+
+  document.addEventListener('turbo:load', function() {
+    setupFlatpickrInstances();
+    initBundleSortables();
+  });
+</script>

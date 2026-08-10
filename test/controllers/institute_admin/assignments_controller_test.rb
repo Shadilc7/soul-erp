@@ -75,48 +75,91 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     # @q3 remains unbundled in @category_a
   end
 
-  test "should import question bank and create category assignments with proper duration_days and bundled question ordering" do
-    assert_difference("Assignment.count", 2) do
-      post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
-    end
+  test "should render import_setup page with selected categories and participants" do
+    get import_setup_institute_admin_assignments_path, params: {
+      question_bank_id: @question_bank.id,
+      category_ids: [@category_a.id, @category_b.id]
+    }
 
-    assert_redirected_to institute_admin_assignments_path
-    assert_match /Successfully imported/, flash[:notice]
-
-    # Verify Assignment A (Ruby Fundamentals)
-    assignment_a = Assignment.find_by(title: "Ruby Fundamentals")
-    assert_not_nil assignment_a
-    assert_equal @category_a.id, assignment_a.question_category_id
-    assert_equal Date.current, assignment_a.start_date.to_date
-    assert_equal Date.current + 30.days, assignment_a.end_date.to_date
-
-    # Verify Question ordering in Assignment A (Only Bundled Questions: Bundle 1 -> Bundle 2)
-    ordered_q_ids = assignment_a.assignment_questions.order(:order_number).pluck(:question_id)
-    assert_equal [@q1.id, @q2.id], ordered_q_ids
-
-    # Verify Assignment B (Advanced Rails Architecture)
-    assignment_b = Assignment.find_by(title: "Advanced Rails Architecture")
-    assert_not_nil assignment_b
-    assert_equal @category_b.id, assignment_b.question_category_id
-    assert_equal Date.current, assignment_b.start_date.to_date
-    assert_equal Date.current + 45.days, assignment_b.end_date.to_date
+    assert_response :success
+    assert_select "h3", text: "Question Bank Import & Assignment Setup"
+    assert_select "input[name='assignments[#{@category_a.id}][title]'][value='Ruby Fundamentals']"
+    assert_select "input[name='assignments[#{@category_b.id}][title]'][value='Advanced Rails Architecture']"
   end
 
-  test "should import only selected categories when category_ids parameter is provided" do
-    assert_difference("Assignment.count", 1) do
-      post import_question_bank_institute_admin_assignments_path, params: {
-        question_bank_id: @question_bank.id,
-        category_ids: [@category_a.id]
+  test "should finalize_import and create customized batch assignments with assigned participants" do
+    participant = participants(:one)
+
+    assert_difference("Assignment.count", 2) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Cohort 1",
+            description: "Custom description for Cohort 1",
+            start_date: Date.current.to_s,
+            end_date: (Date.current + 30.days).to_s,
+            assignment_type: "individual",
+            active: "1",
+            participant_ids: [participant.id],
+            question_ids: [@q1.id, @q2.id]
+          },
+          @category_b.id => {
+            title: "Advanced Rails Architecture - Cohort 1",
+            description: "Deep dive for Cohort 1",
+            start_date: Date.current.to_s,
+            end_date: (Date.current + 45.days).to_s,
+            assignment_type: "individual",
+            active: "1",
+            participant_ids: [participant.id]
+          }
+        }
       }
     end
 
     assert_redirected_to institute_admin_assignments_path
-    assert_nil Assignment.find_by(title: "Advanced Rails Architecture")
-    assert_not_nil Assignment.find_by(title: "Ruby Fundamentals")
+    assert_match /Successfully created 2 assignment/, flash[:notice]
+
+    assign_a = Assignment.find_by(title: "Ruby Fundamentals - Cohort 1")
+    assert_not_nil assign_a
+    assert_equal "Custom description for Cohort 1", assign_a.description
+    assert_includes assign_a.participant_ids, participant.id
+    assert_equal [@q1.id, @q2.id], assign_a.assignment_questions.order(:order_number).pluck(:question_id)
+
+    assign_b = Assignment.find_by(title: "Advanced Rails Architecture - Cohort 1")
+    assert_not_nil assign_b
+    assert_includes assign_b.participant_ids, participant.id
+  end
+
+  test "should filter questions when specific question_ids are selected during finalize_import" do
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Filtered",
+            start_date: Date.current.to_s,
+            end_date: (Date.current + 30.days).to_s,
+            question_ids: ["", @q1.id.to_s] # Only @q1 included, @q2 excluded
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Filtered")
+    assert_not_nil assign
+    assert_equal [@q1.id], assign.assignment_questions.pluck(:question_id)
+  end
+
+  test "should redirect import_question_bank request to import_setup page" do
+    post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
+    assert_redirected_to import_setup_institute_admin_assignments_path(question_bank_id: @question_bank.id, category_ids: nil)
   end
 
   test "should show assignment with bundle-grouped questions layout" do
-    post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "Ruby Fundamentals", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
     assignment = Assignment.find_by(title: "Ruby Fundamentals")
 
     get institute_admin_assignment_path(assignment)
@@ -126,7 +169,11 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
   end
 
   test "should edit assignment with bundle-grouped questions selection form" do
-    post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "Ruby Fundamentals", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
     assignment = Assignment.find_by(title: "Ruby Fundamentals")
 
     get edit_institute_admin_assignment_path(assignment)
@@ -144,7 +191,11 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
       question_type: "short_answer"
     )
 
-    post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
+    post finalize_import_institute_admin_assignments_path, params: {
+      assignments: {
+        @category_a.id => { title: "Ruby Fundamentals", start_date: Date.current.to_s, end_date: (Date.current + 30.days).to_s }
+      }
+    }
     assignment = Assignment.find_by(title: "Ruby Fundamentals")
 
     get edit_institute_admin_assignment_path(assignment)
