@@ -39,7 +39,7 @@
           </div>
         </div>
         <button type="button" class="btn btn-sm btn-primary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-xs" onclick="syncGlobalRecipients(event)">
-          <i class="bi bi-check2-all fs-6"></i> Apply to All Cards
+          <i class="bi bi-chevron-double-down fs-6" id="globalCollapseIcon"></i> Apply to All Cards
         </button>
       </div>
 
@@ -140,7 +140,7 @@
           bundled_questions_count = bundled_items.map(&:question_id).uniq.size
         %>
 
-        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden category-assignment-card" id="category_card_<%= cat.id %>">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden category-assignment-card" id="category_card_<%= cat.id %>" data-category-duration="<%= duration %>">
           <!-- Category Card Header -->
           <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-3 cursor-pointer select-none"
                data-bs-toggle="collapse" 
@@ -203,23 +203,35 @@
                               placeholder="Brief instructions for participants..."><%= cat.description %></textarea>
                   </div>
 
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="form-label fw-semibold text-dark small mb-0">Schedule Duration</label>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs" id="selected_days_badge_<%= cat.id %>" style="font-size: 0.75rem;">
+                      <i class="bi bi-calendar-range me-1 text-primary"></i><span id="selected_days_text_<%= cat.id %>"><%= (default_end.to_date - default_start.to_date).to_i + 1 %> Days Selected</span>
+                    </span>
+                  </div>
+
                   <div class="row g-3 mb-3">
                     <div class="col-md-6">
                       <label class="form-label fw-semibold text-dark small">Start Date <span class="text-danger">*</span></label>
                       <input type="text" 
                              name="assignments[<%= cat.id %>][start_date]" 
+                             id="start_date_<%= cat.id %>"
                              value="<%= default_start.strftime('%Y-%m-%d') %>" 
                              class="form-control rounded-3 border-secondary-subtle datepicker" 
                              required
-                             onchange="autoUpdateEndDate(<%= cat.id %>, <%= duration %>)">
+                             onchange="autoUpdateEndDate(<%= cat.id %>, <%= duration %>); updateSelectedDaysCount(<%= cat.id %>);"
+                             oninput="updateSelectedDaysCount(<%= cat.id %>)">
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-semibold text-dark small">End Date <span class="text-danger">*</span></label>
                       <input type="text" 
                              name="assignments[<%= cat.id %>][end_date]" 
+                             id="end_date_<%= cat.id %>"
                              value="<%= default_end.strftime('%Y-%m-%d') %>" 
                              class="form-control rounded-3 border-secondary-subtle datepicker" 
-                             required>
+                             required
+                             onchange="updateSelectedDaysCount(<%= cat.id %>)"
+                             oninput="updateSelectedDaysCount(<%= cat.id %>)">
                     </div>
                   </div>
 
@@ -427,29 +439,35 @@
               <div class="row g-4">
                 <!-- Left Column: Question Pool -->
                 <div class="col-lg-5 cat-col-pool-<%= cat.id %>" id="question_pool_col_<%= cat.id %>">
-                  <div class="card border-0 shadow-sm rounded-4 h-100 bg-light-subtle">
-                    <div class="card-header bg-white border-bottom p-3 rounded-top-4">
-                      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                          <i class="bi bi-card-list text-primary"></i> Question Pool
-                          <span class="badge bg-primary rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="cat_pool_count_<%= cat.id %>">
-                            <%= cat.questions.size %> <%= cat.questions.size == 1 ? 'question' : 'questions' %>
-                          </span>
-                        </h6>
+                  <div class="card border border-secondary-subtle shadow-sm rounded-4 h-100 bg-light-subtle">
+                    <div class="card-header bg-white border-bottom p-3.5 p-md-4 rounded-top-4">
+                      <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                        <div>
+                          <h6 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-card-list text-primary fs-5"></i>
+                            <span>Question Pool</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="cat_pool_count_<%= cat.id %>">
+                              <%= cat.questions.size %> <%= cat.questions.size == 1 ? 'question' : 'questions' %>
+                            </span>
+                          </h6>
+                          <span class="text-muted small d-block mt-1">Select questions from pool to assign to custom bundles.</span>
+                        </div>
 
                         <button type="button" 
-                                class="btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold" 
+                                class="btn btn-sm btn-primary rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white border-0" 
+                                style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);"
                                 onclick="autoAssignQuestionsToBundles(<%= cat.id %>)"
                                 title="Auto-assign questions to matching bundles based on schedule day ranges">
-                          <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
+                          <i class="bi bi-magic fs-6"></i>
+                          <span>Auto Assign to Bundles</span>
                         </button>
                       </div>
 
                       <!-- Search Filter -->
                       <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <span class="input-group-text bg-light border-end-0 ps-3 pe-2"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" 
-                               class="form-control bg-light border-start-0 ps-0" 
+                               class="form-control bg-light border-start-0 ps-0 py-2" 
                                placeholder="Search questions by title..." 
                                oninput="filterPoolQuestions(<%= cat.id %>, this.value)">
                       </div>
@@ -648,20 +666,20 @@
                                                id="modal_q_from_<%= cat.id %>_<%= q.id %>" 
                                                value="<%= q.from_day || 1 %>" 
                                                min="1" 
-                                               max="<%= cat.duration_days || 30 %>" 
-                                               class="form-control rounded-3 border-secondary-subtle">
+                                               max="<%= cat.duration_days || duration %>" 
+                                               class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
                                       </div>
                                       <div class="col-6">
                                         <label class="form-label fw-semibold text-dark small">Active To Day <span class="text-danger">*</span></label>
                                         <input type="number" 
                                                id="modal_q_to_<%= cat.id %>_<%= q.id %>" 
-                                               value="<%= q.to_day || cat.duration_days || 30 %>" 
+                                               value="<%= q.to_day || cat.duration_days || duration %>" 
                                                min="1" 
-                                               max="<%= cat.duration_days || 30 %>" 
-                                               class="form-control rounded-3 border-secondary-subtle">
+                                               max="<%= cat.duration_days || duration %>" 
+                                               class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
                                       </div>
-                                      <div class="form-text text-muted small mt-1">
-                                        Category active schedule range: 1 to <%= cat.duration_days || 30 %> Days.
+                                      <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                        Category active schedule range: 1 to <%= duration %> Days.
                                       </div>
                                     </div>
 
@@ -824,19 +842,38 @@
 
                 <!-- Right Column: Custom Question Bundles -->
                 <div class="col-lg-7 cat-col-bundles-<%= cat.id %>" id="bundles_col_<%= cat.id %>">
-                  <div class="card border-0 shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                      <div>
-                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                          <i class="bi bi-layers-fill text-warning"></i> Custom Question Bundles
-                        </h6>
-                        <span class="text-muted small">Split category questions into customizable parts or sections.</span>
+                  <div class="card border border-secondary-subtle shadow-sm rounded-4 h-100 bg-light-subtle">
+                    <div class="card-header bg-white border-bottom p-3.5 p-md-4 rounded-top-4">
+                      <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                        <div>
+                          <h6 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-layers-fill text-warning fs-5"></i>
+                            <span>Custom Question Bundles</span>
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+                              <%= cat.question_bundles.size %> <%= cat.question_bundles.size == 1 ? 'bundle' : 'bundles' %>
+                            </span>
+                          </h6>
+                          <span class="text-muted small d-block mt-1">Split category questions into customizable parts or sections.</span>
+                        </div>
+
+                        <button type="button" 
+                                class="btn btn-sm btn-primary rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white border-0" 
+                                style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#newBundleModal_<%= cat.id %>">
+                          <i class="bi bi-plus-circle-fill text-white fs-6"></i>
+                          <span>Add Bundle / Part</span>
+                        </button>
                       </div>
 
-                      <button type="button" class="btn btn-sm btn-primary rounded-3 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm text-white border-0" data-bs-toggle="modal" data-bs-target="#newBundleModal_<%= cat.id %>">
-                        <i class="bi bi-plus-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                        <span>Add Bundle / Part</span>
-                      </button>
+                      <!-- Search Filter for Bundles -->
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 ps-3 pe-2"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" 
+                               class="form-control bg-light border-start-0 ps-0 py-2" 
+                               placeholder="Search bundles by name..." 
+                               oninput="filterCategoryBundles(<%= cat.id %>, this.value)">
+                      </div>
                     </div>
 
                     <!-- New Bundle Modal -->
@@ -869,20 +906,20 @@
                                        id="new_bundle_from_<%= cat.id %>" 
                                        value="1" 
                                        min="1" 
-                                       max="<%= cat.duration_days || 30 %>" 
-                                       class="form-control rounded-3 border-secondary-subtle">
+                                       max="<%= cat.duration_days || duration %>" 
+                                       class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
                               </div>
                               <div class="col-6">
                                 <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
                                 <input type="number" 
                                        id="new_bundle_to_<%= cat.id %>" 
-                                       value="<%= cat.duration_days || 30 %>" 
+                                       value="<%= duration %>" 
                                        min="1" 
-                                       max="<%= cat.duration_days || 30 %>" 
-                                       class="form-control rounded-3 border-secondary-subtle">
+                                       max="<%= cat.duration_days || duration %>" 
+                                       class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
                               </div>
-                              <div class="form-text text-muted small mt-1">
-                                Category active schedule duration: 1 to <%= cat.duration_days || 30 %> Days.
+                              <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                Category active schedule duration: 1 to <%= duration %> Days.
                               </div>
                             </div>
 
@@ -978,27 +1015,27 @@
                                       </div>
 
                                       <div class="row g-3 mb-3">
-                                        <div class="col-6">
-                                          <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
-                                          <input type="number" 
-                                                 id="modal_bundle_from_<%= cat.id %>_<%= bundle.id %>" 
-                                                 value="<%= bundle.from_day || 1 %>" 
-                                                 min="1" 
-                                                 max="<%= cat.duration_days || 30 %>" 
-                                                 class="form-control rounded-3 border-secondary-subtle">
-                                        </div>
-                                        <div class="col-6">
-                                          <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
-                                          <input type="number" 
-                                                 id="modal_bundle_to_<%= cat.id %>_<%= bundle.id %>" 
-                                                 value="<%= bundle.to_day || cat.duration_days || 30 %>" 
-                                                 min="1" 
-                                                 max="<%= cat.duration_days || 30 %>" 
-                                                 class="form-control rounded-3 border-secondary-subtle">
-                                        </div>
-                                        <div class="form-text text-muted small mt-1">
-                                          Category active schedule duration: 1 to <%= cat.duration_days || 30 %> Days.
-                                        </div>
+                                         <div class="col-6">
+                                           <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
+                                           <input type="number" 
+                                                  id="modal_bundle_from_<%= cat.id %>_<%= bundle.id %>" 
+                                                  value="<%= bundle.from_day || 1 %>" 
+                                                  min="1" 
+                                                  max="<%= cat.duration_days || duration %>" 
+                                                  class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                         </div>
+                                         <div class="col-6">
+                                           <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
+                                           <input type="number" 
+                                                  id="modal_bundle_to_<%= cat.id %>_<%= bundle.id %>" 
+                                                  value="<%= bundle.to_day || cat.duration_days || duration %>" 
+                                                  min="1" 
+                                                  max="<%= cat.duration_days || duration %>" 
+                                                  class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                         </div>
+                                         <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                           Category active schedule duration: 1 to <%= duration %> Days.
+                                         </div>
                                       </div>
 
                                       <div class="mb-0">
@@ -1357,13 +1394,91 @@
     syncGlobalParticipants();
   }
 
+  function parseInputDate(dateStr) {
+    if (!dateStr) return null;
+    let parts;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      parts = dateStr.split('-').map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      parts = dateStr.split('/').map(Number);
+      const d = parts[0], m = parts[1], y = parts[2];
+      if (m > 12) {
+        return new Date(y, d - 1, m);
+      }
+      return new Date(y, m - 1, d);
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function updateSelectedDaysCount(catId) {
+    const startDateInput = document.querySelector(`input[name="assignments[${catId}][start_date]"]`);
+    const endDateInput = document.querySelector(`input[name="assignments[${catId}][end_date]"]`);
+    const textEl = document.getElementById(`selected_days_text_${catId}`);
+    const badgeEl = document.getElementById(`selected_days_badge_${catId}`);
+
+    if (!startDateInput || !endDateInput || !textEl) return;
+
+    const start = parseInputDate(startDateInput.value);
+    const end = parseInputDate(endDateInput.value);
+
+    if (start && end) {
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const totalDays = diffDays >= 0 ? diffDays + 1 : 0;
+
+      if (totalDays > 0) {
+        textEl.textContent = `${totalDays} ${totalDays === 1 ? 'Day' : 'Days'} Selected`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+
+        // Store active duration on category card dataset
+        const catCard = document.getElementById(`category_card_${catId}`);
+        if (catCard) {
+          const oldDuration = parseInt(catCard.dataset.categoryDuration) || 0;
+          catCard.dataset.categoryDuration = totalDays;
+
+          // If new_bundle_to input value was set to old duration or empty, update to new totalDays
+          const newBundleToInput = document.getElementById(`new_bundle_to_${catId}`);
+          if (newBundleToInput && (parseInt(newBundleToInput.value) === oldDuration || !newBundleToInput.value)) {
+            newBundleToInput.value = totalDays;
+          }
+        }
+
+        // Dynamically update subtext in modals for catId
+        const durationSubtexts = document.querySelectorAll(`.cat-duration-subtext-${catId}`);
+        durationSubtexts.forEach(el => {
+          if (el.textContent.includes('schedule range:')) {
+            el.textContent = `Category active schedule range: 1 to ${totalDays} Days.`;
+          } else {
+            el.textContent = `Category active schedule duration: 1 to ${totalDays} Days.`;
+          }
+        });
+
+        // Dynamically update max attribute of To Day / From Day inputs
+        const dayInputs = document.querySelectorAll(`.cat-day-input-max-${catId}`);
+        dayInputs.forEach(input => {
+          input.max = totalDays;
+        });
+      } else {
+        textEl.textContent = `Invalid Date Range`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+      }
+    }
+  }
+
   function autoUpdateEndDate(catId, durationDays) {
     const startDateInput = document.querySelector(`input[name="assignments[${catId}][start_date]"]`);
     const endDateInput = document.querySelector(`input[name="assignments[${catId}][end_date]"]`);
     if (startDateInput && endDateInput && startDateInput.value) {
-      const start = new Date(startDateInput.value);
-      if (!isNaN(start.getTime())) {
-        start.setDate(start.getDate() + parseInt(durationDays));
+      const start = parseInputDate(startDateInput.value);
+      if (start && !isNaN(start.getTime())) {
+        start.setDate(start.getDate() + parseInt(durationDays) - 1);
         const year = start.getFullYear();
         const month = String(start.getMonth() + 1).padStart(2, '0');
         const day = String(start.getDate()).padStart(2, '0');
@@ -1374,6 +1489,7 @@
         }
       }
     }
+    updateSelectedDaysCount(catId);
   }
 
   function moveQuestionItemUp(btn) {
@@ -1442,6 +1558,11 @@
     const toInput = document.getElementById(`modal_bundle_to_${catId}_${bundleId}`);
     const descInput = document.getElementById(`modal_bundle_desc_${catId}_${bundleId}`);
     const errorBox = document.getElementById(`bundle_modal_error_${catId}_${bundleId}`);
+
+    const catCard = document.getElementById(`category_card_${catId}`);
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10);
+    }
 
     if (!nameInput || !fromInput || !toInput) return;
 
@@ -1531,6 +1652,50 @@
       displaySchedule.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
     }
 
+    // Update question item schedule badges inside this bundle
+    const itemsContainer = document.getElementById(`bundle_items_${catId}_${bundleId}`);
+    if (itemsContainer) {
+      itemsContainer.querySelectorAll('.bundle-question-item').forEach(itemCard => {
+        const idParts = itemCard.id.split('_');
+        if (idParts.length >= 6) {
+          const qId = idParts[5];
+          const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+          const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+
+          let qFrom = 1;
+          let qTo = categoryDuration || 30;
+          if (qFromInput && qToInput) {
+            qFrom = parseInt(qFromInput.value, 10) || 1;
+            qTo = parseInt(qToInput.value, 10) || (categoryDuration || 30);
+          }
+
+          const effFrom = Math.max(qFrom, fromVal);
+          const effTo = Math.min(qTo, toVal);
+
+          let effSchedText = '';
+          let daysInBundle = 0;
+
+          if (effFrom <= effTo) {
+            daysInBundle = effTo - effFrom + 1;
+            if (effFrom === effTo) {
+              effSchedText = `Day ${getOrdinal(effFrom)}`;
+            } else {
+              effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+            }
+          } else {
+            effSchedText = (qFrom === qTo) ? `Day ${getOrdinal(qFrom)}` : `Day ${getOrdinal(qFrom)} - ${getOrdinal(qTo)} Day`;
+            daysInBundle = 0;
+          }
+
+          const effSchedEl = itemCard.querySelector(`[id^="bundle_item_eff_sched_"]`);
+          const daysEl = itemCard.querySelector(`[id^="bundle_item_days_"]`);
+
+          if (effSchedEl) effSchedEl.textContent = effSchedText;
+          if (daysEl) daysEl.textContent = `${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle`;
+        }
+      });
+    }
+
     // Close Bootstrap modal
     const modalEl = document.getElementById(`editBundleModal_${catId}_${bundleId}`);
     if (modalEl) {
@@ -1557,6 +1722,20 @@
     cards.forEach(card => {
       const title = card.dataset.questionTitle || '';
       if (!q || title.includes(q)) {
+        card.classList.remove('d-none');
+      } else {
+        card.classList.add('d-none');
+      }
+    });
+  }
+
+  function filterCategoryBundles(catId, query) {
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll(`.bundle-card-${catId}`);
+    cards.forEach(card => {
+      const nameEl = card.querySelector(`[id*="bundle_name_display_${catId}_"]`);
+      const bundleName = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+      if (!q || bundleName.includes(q)) {
         card.classList.remove('d-none');
       } else {
         card.classList.add('d-none');
@@ -1626,6 +1805,11 @@
 
     hideBundleModalError(errorBox);
 
+    const catCard = document.getElementById(`category_card_${catId}`);
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10);
+    }
+
     // Update displays in Pool
     const poolTitle = document.getElementById(`q_title_display_${catId}_${qId}`);
     const poolDisp = document.getElementById(`q_disp_display_${catId}_${qId}`);
@@ -1635,9 +1819,49 @@
     if (poolDisp) poolDisp.textContent = dispVal;
     if (poolSched) poolSched.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
 
-    // Update displays in Bundle Items
-    const bundleTitles = document.querySelectorAll(`#bundle_item_title_${catId}_${qId}`);
+    // Update displays & schedule badges in Bundle Items
+    const bundleTitles = document.querySelectorAll(`[id^="bundle_item_title_${catId}_${qId}"]`);
     bundleTitles.forEach(t => t.textContent = titleVal);
+
+    document.querySelectorAll(`[id^="bundle_item_card_${catId}_"][id$="_${qId}"]`).forEach(itemCard => {
+      const idParts = itemCard.id.split('_');
+      if (idParts.length >= 6) {
+        const bId = idParts[4];
+        const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+        const bToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+
+        let bFrom = 1;
+        let bTo = categoryDuration || 30;
+        if (bFromInput && bToInput) {
+          bFrom = parseInt(bFromInput.value, 10) || 1;
+          bTo = parseInt(bToInput.value, 10) || (categoryDuration || 30);
+        }
+
+        const effFrom = Math.max(fromVal, bFrom);
+        const effTo = Math.min(toVal, bTo);
+
+        let effSchedText = '';
+        let daysInBundle = 0;
+
+        if (effFrom <= effTo) {
+          daysInBundle = effTo - effFrom + 1;
+          if (effFrom === effTo) {
+            effSchedText = `Day ${getOrdinal(effFrom)}`;
+          } else {
+            effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+          }
+        } else {
+          effSchedText = (fromVal === toVal) ? `Day ${getOrdinal(fromVal)}` : `Day ${getOrdinal(fromVal)} - ${getOrdinal(toVal)} Day`;
+          daysInBundle = 0;
+        }
+
+        const effSchedEl = itemCard.querySelector(`[id^="bundle_item_eff_sched_"]`);
+        const daysEl = itemCard.querySelector(`[id^="bundle_item_days_"]`);
+
+        if (effSchedEl) effSchedEl.textContent = effSchedText;
+        if (daysEl) daysEl.textContent = `${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle`;
+      }
+    });
 
     // Hide Modal
     const modalEl = document.getElementById(`editQuestionModal_${catId}_${qId}`);
@@ -2002,9 +2226,23 @@
     opts.forEach(o => o.remove());
   }
 
+  function setupGlobalCollapseIconListener() {
+    const globalCollapseEl = document.getElementById('globalRecipientsCollapse');
+    const globalCollapseIcon = document.getElementById('globalCollapseIcon');
+    if (globalCollapseEl && globalCollapseIcon) {
+      globalCollapseEl.addEventListener('show.bs.collapse', function () {
+        globalCollapseIcon.className = 'bi bi-chevron-double-up fs-6';
+      });
+      globalCollapseEl.addEventListener('hide.bs.collapse', function () {
+        globalCollapseIcon.className = 'bi bi-chevron-double-down fs-6';
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     setupFlatpickrInstances();
     initBundleSortables();
+    setupGlobalCollapseIconListener();
     const catCards = document.querySelectorAll('.category-assignment-card');
     catCards.forEach(card => {
       const catId = card.id.replace('category_card_', '');
@@ -2015,5 +2253,6 @@
   document.addEventListener('turbo:load', function() {
     setupFlatpickrInstances();
     initBundleSortables();
+    setupGlobalCollapseIconListener();
   });
 </script>
