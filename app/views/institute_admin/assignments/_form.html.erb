@@ -76,58 +76,106 @@
   <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between">
       <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-        <i class="bi bi-people-fill text-primary"></i> <span id="recipients_card_title">Participants</span>
+        <i class="bi bi-people-fill text-primary"></i> <span id="recipients_card_title"><%= @assignment.assignment_type == 'section' ? 'Sections / Batches' : 'Participants' %></span>
       </h5>
+      <div class="d-flex align-items-center gap-2">
+        <div class="form-check mb-0">
+          <input type="checkbox" id="form_select_all_recipients" class="form-check-input cursor-pointer"
+                 onchange="toggleFormSelectAllRecipients(this.checked)">
+          <label for="form_select_all_recipients" class="form-check-label small fw-semibold text-dark cursor-pointer">
+            Select All
+          </label>
+        </div>
+      </div>
     </div>
 
     <div class="card-body p-3 p-md-4">
       <!-- Individual Participants Container -->
       <div id="individual_audience_container" class="<%= 'd-none' if @assignment.assignment_type == 'section' %>">
-        <div class="input-group input-group-sm mb-3">
-          <span class="input-group-text bg-light border-end-0 ps-3 pe-2"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" class="form-control bg-light border-start-0 ps-0 py-2" placeholder="Search participants by name or code..." oninput="filterFormParticipants(this.value)">
+        <!-- Participant Type Filter -->
+        <div class="mb-3">
+          <select id="form_participant_type_filter" class="form-select form-select-sm rounded-3 border-secondary-subtle"
+                  onchange="filterFormParticipantsByType(this.value)">
+            <option value="all">All Participant Types</option>
+            <option value="student">Students</option>
+            <option value="guardian">Guardians</option>
+            <option value="employee">Employees</option>
+          </select>
         </div>
 
-        <div class="border rounded-3 p-3 overflow-auto recipients-list" style="max-height: 220px; background-color: #f8fafc;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="text-dark small fw-bold">Assign Participants</span>
+          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="form_recipient_count_badge">
+            <%= @assignment.persisted? ? @assignment.participant_ids.size : 0 %> Selected
+          </span>
+        </div>
+
+        <!-- Participant Breakdown Legend -->
+        <div id="form_participant_breakdown" class="d-flex align-items-center gap-1.5 flex-wrap mb-2 d-none"></div>
+
+        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 220px;">
           <% if @participants.present? && @participants.any? %>
-            <div class="row g-2" id="participants_checkbox_grid">
-              <% @participants.each do |p| %>
-                <% is_sel = @selected_participants&.include?(p) || @assignment.participant_ids.include?(p.id) %>
-                <div class="col-md-6 participant-item-row" data-search-name="<%= p.full_name.downcase %> <%= p.user&.email.to_s.downcase %>">
-                  <div class="form-check bg-white p-2 px-3 border rounded-3 d-flex align-items-center gap-2 mb-0 shadow-xs hover-shadow transition-all">
-                    <%= check_box_tag "assignment[participant_ids][]", p.id, is_sel, id: "part_chk_#{p.id}", class: "form-check-input m-0 cursor-pointer" %>
-                    <label for="part_chk_<%= p.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer flex-grow-1 text-truncate mb-0">
-                      <%= p.full_name %>
-                    </label>
-                  </div>
+            <% @participants.each do |p| %>
+              <% p_type = p.participant_type.to_s.downcase %>
+              <% is_sel = @selected_participants&.include?(p) || @assignment.participant_ids.include?(p.id) %>
+              <%
+                badge_style = case p_type
+                when 'student' then 'background-color: #06b6d4; color: #ffffff;'
+                when 'guardian' then 'background-color: #f59e0b; color: #ffffff;'
+                when 'employee' then 'background-color: #10b981; color: #ffffff;'
+                else 'background-color: #64748b; color: #ffffff;'
+                end
+              %>
+              <div class="list-group-item p-2.5 border-bottom hover-bg-light form-part-item" data-participant-type="<%= p_type %>"
+                   data-search-name="<%= p.full_name.downcase %> <%= p.user&.email.to_s.downcase %>">
+                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                  <%= check_box_tag "assignment[participant_ids][]", p.id, is_sel,
+                      id: "part_chk_#{p.id}",
+                      class: "form-check-input form-part-cb cursor-pointer m-0 ms-1",
+                      onchange: "updateFormRecipientCount()" %>
+                  <label for="part_chk_<%= p.id %>" class="form-check-label small mb-0 flex-grow-1 cursor-pointer">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="fw-semibold text-dark"><%= p.full_name %></span>
+                      <span class="badge rounded-pill px-2.5 py-1 fw-bold" style="<%= badge_style %> font-size: 0.68rem;">
+                        <%= p.participant_type&.capitalize %>
+                      </span>
+                    </div>
+                  </label>
                 </div>
-              <% end %>
-            </div>
+              </div>
+            <% end %>
           <% else %>
-            <div class="text-muted small text-center py-3">No active participants available.</div>
+            <div class="p-3 text-center text-muted small">No active participants available.</div>
           <% end %>
         </div>
       </div>
 
       <!-- Section / Batch Container -->
       <div id="section_audience_container" class="<%= 'd-none' if @assignment.assignment_type != 'section' %>">
-        <div class="border rounded-3 p-3 overflow-auto recipients-list" style="max-height: 220px; background-color: #f8fafc;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="text-dark small fw-bold">Assign Sections</span>
+          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="form_sec_count_badge">
+            <%= @assignment.persisted? ? @assignment.section_ids.size : 0 %> Selected
+          </span>
+        </div>
+        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 220px;">
           <% if @sections.present? && @sections.any? %>
-            <div class="row g-2">
-              <% @sections.each do |sec| %>
-                <% is_sec_sel = @selected_sections&.include?(sec) || @assignment.section_ids.include?(sec.id) %>
-                <div class="col-md-6">
-                  <div class="form-check bg-white p-2 px-3 border rounded-3 d-flex align-items-center gap-2 mb-0 shadow-xs hover-shadow transition-all">
-                    <%= check_box_tag "assignment[section_ids][]", sec.id, is_sec_sel, id: "sec_chk_#{sec.id}", class: "form-check-input m-0 cursor-pointer" %>
-                    <label for="sec_chk_<%= sec.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer flex-grow-1 text-truncate mb-0">
-                      <%= sec.name %>
-                    </label>
-                  </div>
+            <% @sections.each do |sec| %>
+              <% is_sec_sel = @selected_sections&.include?(sec) || @assignment.section_ids.include?(sec.id) %>
+              <div class="list-group-item p-2.5 border-bottom hover-bg-light">
+                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                  <%= check_box_tag "assignment[section_ids][]", sec.id, is_sec_sel,
+                      id: "sec_chk_#{sec.id}",
+                      class: "form-check-input form-sec-cb cursor-pointer m-0 ms-1",
+                      onchange: "updateFormRecipientCount()" %>
+                  <label for="sec_chk_<%= sec.id %>" class="form-check-label small mb-0 flex-grow-1 cursor-pointer fw-semibold text-dark">
+                    <%= sec.name %>
+                  </label>
                 </div>
-              <% end %>
-            </div>
+              </div>
+            <% end %>
           <% else %>
-            <div class="text-muted small text-center py-3">No active sections available.</div>
+            <div class="p-3 text-center text-muted small">No active sections available.</div>
           <% end %>
         </div>
       </div>
@@ -436,7 +484,7 @@
                     <% assigned_qs = @assignment.questions_grouped_by_bundle[bundle.name] || [] %>
                     <% duration = current_duration %>
 
-                    <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative form-bundle-card" id="form_bundle_card_<%= bundle.id %>" data-bundle-id="<%= bundle.id %>">
+                    <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative form-bundle-card" id="form_bundle_card_<%= bundle.id %>" data-bundle-id="<%= bundle.id %>" data-bundle-from="<%= bundle.from_day || 1 %>" data-bundle-to="<%= bundle.to_day || 30 %>">
                       <!-- Bundle Card Header -->
                       <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -533,14 +581,84 @@
       if (ind) ind.classList.remove('d-none');
       if (title) title.textContent = 'Participants';
     }
+    updateFormRecipientCount();
   }
 
-  function filterFormParticipants(query) {
-    const q = query.toLowerCase().trim();
-    document.querySelectorAll('.participant-item-row').forEach(row => {
-      const name = row.dataset.searchName || '';
-      row.style.display = (!q || name.includes(q)) ? '' : 'none';
+  function filterFormParticipantsByType(type) {
+    document.querySelectorAll('.form-part-item').forEach(item => {
+      if (type === 'all' || item.dataset.participantType === type) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
     });
+  }
+
+  function toggleFormSelectAllRecipients(checked) {
+    const isSection = document.getElementById('section_audience_container') &&
+                      !document.getElementById('section_audience_container').classList.contains('d-none');
+    if (isSection) {
+      document.querySelectorAll('.form-sec-cb').forEach(cb => { cb.checked = checked; });
+    } else {
+      document.querySelectorAll('.form-part-cb').forEach(cb => {
+        const item = cb.closest('.form-part-item');
+        if (item && item.style.display !== 'none') {
+          cb.checked = checked;
+        }
+      });
+    }
+    updateFormRecipientCount();
+  }
+
+  function updateFormRecipientCount() {
+    const isSection = document.getElementById('section_audience_container') &&
+                      !document.getElementById('section_audience_container').classList.contains('d-none');
+
+    if (isSection) {
+      const count = document.querySelectorAll('.form-sec-cb:checked').length;
+      const badge = document.getElementById('form_sec_count_badge');
+      if (badge) badge.textContent = `${count} Selected`;
+    } else {
+      const checkedCbs = document.querySelectorAll('.form-part-cb:checked');
+      const count = checkedCbs.length;
+      const badge = document.getElementById('form_recipient_count_badge');
+      if (badge) badge.textContent = `${count} Selected`;
+
+      // Build participant breakdown
+      const counts = {};
+      checkedCbs.forEach(cb => {
+        const item = cb.closest('.form-part-item');
+        if (item && item.dataset.participantType) {
+          const t = item.dataset.participantType;
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      });
+      renderFormParticipantBreakdown('form_participant_breakdown', counts);
+    }
+  }
+
+  function renderFormParticipantBreakdown(containerId, counts) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const colorMap = {
+      student: { bg: '#ecfeff', color: '#0891b2', border: '#a5f3fc' },
+      guardian: { bg: '#fffbeb', color: '#d97706', border: '#fcd34d' },
+      employee: { bg: '#ecfdf5', color: '#059669', border: '#6ee7b7' }
+    };
+
+    const keys = Object.keys(counts);
+    if (keys.length === 0) {
+      container.classList.add('d-none');
+      container.innerHTML = '';
+      return;
+    }
+
+    container.classList.remove('d-none');
+    container.innerHTML = keys.map(type => {
+      const c = colorMap[type] || { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' };
+      return `<span class="badge rounded-pill px-2 py-1 fw-semibold" style="background-color: ${c.bg}; color: ${c.color}; border: 1px solid ${c.border}; font-size: 0.7rem;">${counts[type]} ${type.charAt(0).toUpperCase() + type.slice(1)}${counts[type] > 1 ? 's' : ''}</span>`;
+    }).join('');
   }
 
   function filterFormPoolQuestions(query) {
@@ -652,6 +770,63 @@
       if (text) text.textContent = 'Collapse All';
     }
   }
+
+  function autoAssignFormQuestionsToBundles() {
+    const bundleCards = document.querySelectorAll('.form-bundle-card');
+    if (bundleCards.length === 0) {
+      alert('No custom bundles found. Please create a bundle first.');
+      return;
+    }
+
+    let assignedCount = 0;
+    const poolCards = document.querySelectorAll('.form-pool-question-card');
+
+    poolCards.forEach(card => {
+      const qId = card.dataset.qId;
+      if (!qId) return;
+
+      const qFrom = parseInt(card.dataset.qFrom, 10) || 1;
+      const qTo = parseInt(card.dataset.qTo, 10) || 30;
+
+      const selectEl = document.querySelector(`.form-bundle-assign-select-${qId}`);
+      if (!selectEl) return;
+
+      bundleCards.forEach(bCard => {
+        const bundleId = bCard.dataset.bundleId;
+        const bFrom = parseInt(bCard.dataset.bundleFrom, 10) || 1;
+        const bTo = parseInt(bCard.dataset.bundleTo, 10) || 30;
+
+        // Check for day-range overlap
+        const overlapFrom = Math.max(qFrom, bFrom);
+        const overlapTo = Math.min(qTo, bTo);
+
+        if (overlapFrom <= overlapTo) {
+          // Check if already assigned to this bundle
+          const existingCard = document.getElementById(`form_bundle_item_card_${bundleId}_${qId}`);
+          if (!existingCard) {
+            // Find the matching option and check it's not disabled
+            let optFound = false;
+            for (let i = 0; i < selectEl.options.length; i++) {
+              if (selectEl.options[i].value == bundleId && !selectEl.options[i].disabled) {
+                selectEl.value = bundleId;
+                handleFormQuestionBundleSelect(qId, selectEl);
+                assignedCount++;
+                optFound = true;
+                break;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    if (assignedCount > 0) {
+      alert(`Auto-assigned matching questions to bundles based on schedule day ranges (${assignedCount} question-bundle assignments created).`);
+    } else {
+      alert('All questions are already assigned to their matching bundles, or no new schedule overlaps were found.');
+    }
+  }
+</script>
 
 <!-- MODALS FOR BUNDLE AND QUESTION EDITING -->
 
@@ -868,124 +1043,8 @@
   </div>
 </div>
 
-<!-- JS HELPER FUNCTIONS -->
+<!-- JS REMAINING HELPER FUNCTIONS -->
 <script>
-  function toggleAssignmentAudienceSection(val) {
-    const ind = document.getElementById('individual_audience_container');
-    const sec = document.getElementById('section_audience_container');
-    const title = document.getElementById('recipients_card_title');
-    if (val === 'section') {
-      if (ind) ind.classList.add('d-none');
-      if (sec) sec.classList.remove('d-none');
-      if (title) title.textContent = 'Sections / Batches';
-    } else {
-      if (sec) sec.classList.add('d-none');
-      if (ind) ind.classList.remove('d-none');
-      if (title) title.textContent = 'Participants';
-    }
-  }
-
-  function filterFormParticipants(query) {
-    const q = query.toLowerCase().trim();
-    document.querySelectorAll('.participant-item-row').forEach(row => {
-      const name = row.dataset.searchName || '';
-      row.style.display = (!q || name.includes(q)) ? '' : 'none';
-    });
-  }
-
-  function filterFormPoolQuestions(query) {
-    const q = query.toLowerCase().trim();
-    document.querySelectorAll('.form-pool-question-card').forEach(card => {
-      const title = card.dataset.questionTitle || '';
-      card.classList.toggle('d-none', q && !title.includes(q));
-    });
-  }
-
-  function filterFormBundles(query) {
-    const q = query.toLowerCase().trim();
-    document.querySelectorAll('.form-bundle-card').forEach(card => {
-      const nameEl = card.querySelector('[id*="form_bundle_name_display_"]');
-      const name = nameEl ? nameEl.textContent.toLowerCase() : '';
-      card.classList.toggle('d-none', q && !name.includes(q));
-    });
-  }
-
-  function handleFormQuestionBundleSelect(qId, selectEl) {
-    const bundleId = selectEl.value;
-    if (!bundleId) return;
-
-    const opt = selectEl.options[selectEl.selectedIndex];
-    const bundleName = opt.dataset.bundleName;
-
-    const container = document.getElementById(`form_bundle_items_${bundleId}`);
-    const poolCard = document.getElementById(`form_pool_card_${qId}`);
-
-    if (container && poolCard) {
-      const title = poolCard.querySelector('h6')?.textContent?.trim() || '';
-      const qType = poolCard.querySelector('.badge.bg-secondary-subtle')?.textContent?.trim() || '';
-      const dayRange = poolCard.querySelector('.badge.bg-info-subtle')?.textContent?.trim() || '';
-
-      const itemCard = document.createElement('div');
-      itemCard.className = 'bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2';
-      itemCard.id = `form_bundle_item_card_${bundleId}_${qId}`;
-      itemCard.innerHTML = `
-        <input type="hidden" name="assignment[question_bundle_items][][question_id]" value="${qId}">
-        <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="${bundleName}">
-        <div class="d-flex align-items-start gap-2">
-          <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
-            <input type="checkbox" name="assignment[question_ids][]" value="${qId}" class="form-check-input m-0 cursor-pointer" checked style="width: 1.1rem; height: 1.1rem;">
-            <i class="bi bi-list fs-5 text-secondary drag-handle me-1" style="cursor: grab;"></i>
-            <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold form-bundle-item-serial me-1" style="font-size: 0.75rem;">#1</span>
-          </div>
-          <div class="flex-grow-1 min-w-0">
-            <div class="fw-bold text-dark mb-0 text-break pe-1 q-title-display-${qId}" style="font-size: 0.925rem;">${title}</div>
-            <div class="d-flex align-items-center gap-2 mt-1">
-              <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase q-type-badge-${qId}" style="font-size: 0.7rem;">${qType}</span>
-              <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold q-day-badge-${qId}" style="font-size: 0.7rem;"><i class="bi bi-clock-history me-1"></i>${dayRange}</span>
-            </div>
-          </div>
-          <div class="flex-shrink-0 d-flex align-items-center gap-1">
-            <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-2 p-1" title="Remove from bundle" onclick="removeFormQuestionFromBundle('${bundleId}', ${qId})">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-        </div>
-      `;
-      container.appendChild(itemCard);
-      updateFormBundleItemSerials(bundleId);
-      opt.disabled = true;
-      selectEl.value = '';
-    }
-  }
-
-  function removeFormQuestionFromBundle(bundleId, qId) {
-    const card = document.getElementById(`form_bundle_item_card_${bundleId}_${qId}`);
-    if (card) {
-      card.remove();
-      updateFormBundleItemSerials(bundleId);
-      const select = document.querySelector(`.form-bundle-assign-select-${qId}`);
-      if (select) {
-        for (let i = 0; i < select.options.length; i++) {
-          if (select.options[i].value == bundleId) {
-            select.options[i].disabled = false;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  function updateFormBundleItemSerials(bundleId) {
-    const container = document.getElementById(`form_bundle_items_${bundleId}`);
-    if (!container) return;
-    const items = container.querySelectorAll('.bundle-question-item');
-    items.forEach((item, idx) => {
-      const serial = item.querySelector('.form-bundle-item-serial');
-      if (serial) serial.textContent = `#${idx + 1}`;
-    });
-    const pill = document.getElementById(`form_bundle_q_count_pill_${bundleId}`);
-    if (pill) pill.textContent = `${items.length} ${items.length === 1 ? 'question' : 'questions'}`;
-  }
 
   function submitNewFormBundle(e) {
     e.preventDefault();
@@ -1007,6 +1066,8 @@
       card.className = 'card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative form-bundle-card';
       card.id = `form_bundle_card_${bundleId}`;
       card.dataset.bundleId = bundleId;
+      card.dataset.bundleFrom = fromDay;
+      card.dataset.bundleTo = toDay;
       card.innerHTML = `
         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1542,8 +1603,8 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', updateAssignmentSelectedDaysCount);
-  document.addEventListener('turbo:load', updateAssignmentSelectedDaysCount);
+  document.addEventListener('DOMContentLoaded', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); });
+  document.addEventListener('turbo:load', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); });
 </script>
 
 <% content_for :styles do %>
