@@ -242,7 +242,7 @@ class Assignment < ApplicationRecord
     groups = {}
 
     if question_category.present?
-      bundles = question_category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position)
+      bundles = question_category.question_bundles.includes(:question_bundle_items).order(:position)
 
       bundles.each do |bundle|
         # 1. Explicitly assigned questions to this bundle name

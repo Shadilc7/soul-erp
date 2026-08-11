@@ -314,8 +314,14 @@
                                   data-q-id="<%= q.id %>"
                                   onchange="handleFormQuestionBundleSelect(<%= q.id %>, this)">
                             <option value="">+ Assign to Bundle...</option>
+                            <%
+                              assigned_bnames = if @assignment.assignment_questions.loaded?
+                                                  @assignment.assignment_questions.select { |aq| aq.question_id == q.id }.map(&:bundle_name)
+                                                else
+                                                  @assignment.assignment_questions.where(question_id: q.id).pluck(:bundle_name)
+                                                end
+                            %>
                             <% category_bundles.each do |b| %>
-                              <% assigned_bnames = @assignment.assignment_questions.where(question_id: q.id).pluck(:bundle_name) %>
                               <% is_assigned = assigned_bnames.include?(b.name) %>
                               <option value="<%= b.id %>" data-bundle-name="<%= b.name %>" <%= 'disabled' if is_assigned %>>
                                 <%= b.name %> (<%= b.day_range_text %>)<%= " - Assigned" if is_assigned %>
@@ -411,9 +417,6 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-1">
-                              <button type="button" class="btn btn-sm btn-outline-primary rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" style="width: 28px; height: 28px;" title="Edit Question" onclick="openFormEditQuestionModal(<%= cq.id %>)">
-                                <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
-                              </button>
                               <button type="button" class="btn btn-sm btn-outline-info rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" style="width: 28px; height: 28px;" title="View Question Details" data-bs-toggle="modal" data-bs-target="#viewFormQuestionModal_<%= cq.id %>">
                                 <i class="bi bi-eye" style="font-size: 0.85rem;"></i>
                               </button>
@@ -428,8 +431,14 @@
                                       data-q-id="<%= cq.id %>"
                                       onchange="handleFormQuestionBundleSelect(<%= cq.id %>, this)">
                                 <option value="">+ Assign to Bundle...</option>
+                                <%
+                                  assigned_bnames = if @assignment.assignment_questions.loaded?
+                                                      @assignment.assignment_questions.select { |aq| aq.question_id == cq.id }.map(&:bundle_name)
+                                                    else
+                                                      @assignment.assignment_questions.where(question_id: cq.id).pluck(:bundle_name)
+                                                    end
+                                %>
                                 <% category_bundles.each do |b| %>
-                                  <% assigned_bnames = @assignment.assignment_questions.where(question_id: cq.id).pluck(:bundle_name) %>
                                   <% is_assigned = assigned_bnames.include?(b.name) %>
                                   <option value="<%= b.id %>" data-bundle-name="<%= b.name %>" <%= 'disabled' if is_assigned %>>
                                     <%= b.name %> (<%= b.day_range_text %>)<%= " - Assigned" if is_assigned %>
@@ -438,6 +447,40 @@
                               </select>
                             </div>
                           <% end %>
+                        </div>
+
+                        <!-- Modal: View Form Custom Question -->
+                        <div class="modal fade" id="viewFormQuestionModal_<%= cq.id %>" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                              <div class="modal-header border-bottom-0 pb-0">
+                                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                  <i class="bi bi-eye-fill text-info"></i> Question Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body p-4">
+                                <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2 q-type-badge-<%= cq.id %>" style="font-size: 0.75rem;"><%= cq.question_type&.titleize %></span>
+                                <h4 class="fw-bold text-dark mb-2 q-title-display-<%= cq.id %>"><%= cq.title %></h4>
+                                <% if cq.description.present? %>
+                                  <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= cq.description %></div>
+                                <% end %>
+                                <% if cq.requires_options? && cq.options.any? %>
+                                  <h6 class="fw-semibold text-dark mb-2">Answer Options:</h6>
+                                  <div class="list-group rounded-3 mb-3">
+                                    <% cq.options.each_with_index do |opt, o_idx| %>
+                                      <div class="list-group-item d-flex align-items-center justify-content-between">
+                                        <span><%= o_idx + 1 %>. <%= opt.text %></span>
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                <% end %>
+                              </div>
+                              <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       <% end %>
                     </div>
@@ -512,13 +555,28 @@
                       <div class="card-body bg-light-subtle rounded-3 p-2.5" style="min-height: 100px; border: 2px dashed #94a3b8 !important;">
                         <div class="d-flex flex-column gap-2 form-bundle-items-container" id="form_bundle_items_<%= bundle.id %>" data-bundle-name="<%= bundle.name %>">
                           <% assigned_qs.each_with_index do |q, q_idx| %>
+                            <%
+                              q_from = q.from_day || 1
+                              q_to = q.to_day || 30
+                              b_from = bundle.from_day || 1
+                              b_to = bundle.to_day || 30
+                              eff_from = [q_from, b_from].max
+                              eff_to = [q_to, b_to].min
+                              if eff_from <= eff_to
+                                days_in_bundle = (eff_to - eff_from + 1)
+                                eff_sched_text = (eff_from == eff_to) ? "Day #{eff_from.ordinalize}" : "Day #{eff_from.ordinalize} - #{eff_to.ordinalize} Day"
+                              else
+                                days_in_bundle = 0
+                                eff_sched_text = (q_from == q_to) ? "Day #{q_from.ordinalize}" : "Day #{q_from.ordinalize} - #{q_to.ordinalize} Day"
+                              end
+                            %>
                             <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="form_bundle_item_card_<%= bundle.id %>_<%= q.id %>">
                               <input type="hidden" name="assignment[question_bundle_items][][question_id]" value="<%= q.id %>">
                               <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="<%= bundle.name %>" class="form-bundle-item-name-input-<%= bundle.id %>">
 
                               <div class="d-flex align-items-start gap-2">
                                 <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
-                                  <input type="checkbox" name="assignment[question_ids][]" value="<%= q.id %>" class="form-check-input m-0 cursor-pointer" checked style="width: 1.1rem; height: 1.1rem;">
+                                  <input type="hidden" name="assignment[question_ids][]" value="<%= q.id %>">
                                   <i class="bi bi-list fs-5 text-secondary drag-handle me-1" style="cursor: grab;"></i>
                                   <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold form-bundle-item-serial me-1" style="font-size: 0.75rem;">
                                     #<%= q_idx + 1 %>
@@ -527,9 +585,14 @@
 
                                 <div class="flex-grow-1 min-w-0">
                                   <div class="fw-bold text-dark mb-0 text-break pe-1 q-title-display-<%= q.id %>" style="font-size: 0.925rem;"><%= q.title %></div>
-                                  <div class="d-flex align-items-center gap-2 mt-1">
+                                  <div class="d-flex align-items-center flex-wrap gap-1.5 mt-1">
                                     <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase q-type-badge-<%= q.id %>" style="font-size: 0.7rem;"><%= q.question_type&.titleize %></span>
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold q-day-badge-<%= q.id %>" style="font-size: 0.7rem;"><i class="bi bi-clock-history me-1"></i><%= q.day_range_text %></span>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                      <i class="bi bi-clock-history me-1 text-primary"></i><span class="form-bundle-item-eff-sched-<%= bundle.id %>-<%= q.id %>"><%= eff_sched_text %></span>
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                      <i class="bi bi-calendar-check me-1 text-success"></i><span class="form-bundle-item-days-<%= bundle.id %>-<%= q.id %>"><%= days_in_bundle %> <%= 'day'.pluralize(days_in_bundle) %> in bundle</span>
+                                    </span>
                                   </div>
                                 </div>
 
@@ -678,6 +741,63 @@
     });
   }
 
+  function getFormOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  function calculateFormBundleItemSchedule(qFrom, qTo, bFrom, bTo) {
+    const effFrom = Math.max(qFrom, bFrom);
+    const effTo = Math.min(qTo, bTo);
+    let effSchedText = '';
+    let daysInBundle = 0;
+
+    if (effFrom <= effTo) {
+      daysInBundle = effTo - effFrom + 1;
+      if (effFrom === effTo) {
+        effSchedText = `Day ${getFormOrdinal(effFrom)}`;
+      } else {
+        effSchedText = `Day ${getFormOrdinal(effFrom)} - ${getFormOrdinal(effTo)} Day`;
+      }
+    } else {
+      effSchedText = (qFrom === qTo) ? `Day ${getFormOrdinal(qFrom)}` : `Day ${getFormOrdinal(qFrom)} - ${getFormOrdinal(qTo)} Day`;
+      daysInBundle = 0;
+    }
+    return { daysInBundle, effSchedText };
+  }
+
+  function updateFormBundleItemSchedules(bundleId) {
+    const bundleCard = document.getElementById(`form_bundle_card_${bundleId}`);
+    if (!bundleCard) return;
+    const bFrom = parseInt(bundleCard.dataset.bundleFrom, 10) || 1;
+    const bTo = parseInt(bundleCard.dataset.bundleTo, 10) || 30;
+
+    const container = document.getElementById(`form_bundle_items_${bundleId}`);
+    if (!container) return;
+
+    container.querySelectorAll('.bundle-question-item').forEach(itemCard => {
+      const qIdInput = itemCard.querySelector('input[name="assignment[question_bundle_items][][question_id]"]');
+      if (!qIdInput) return;
+      const qId = qIdInput.value;
+      const poolCard = document.getElementById(`form_pool_card_${qId}`);
+
+      let qFrom = 1, qTo = 30;
+      if (poolCard) {
+        qFrom = parseInt(poolCard.dataset.qFrom, 10) || 1;
+        qTo = parseInt(poolCard.dataset.qTo, 10) || 30;
+      }
+
+      const { daysInBundle, effSchedText } = calculateFormBundleItemSchedule(qFrom, qTo, bFrom, bTo);
+
+      const effSchedEl = itemCard.querySelector(`.form-bundle-item-eff-sched-${bundleId}-${qId}`);
+      const daysEl = itemCard.querySelector(`.form-bundle-item-days-${bundleId}-${qId}`);
+
+      if (effSchedEl) effSchedEl.textContent = effSchedText;
+      if (daysEl) daysEl.textContent = `${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle`;
+    });
+  }
+
   function handleFormQuestionBundleSelect(qId, selectEl) {
     const bundleId = selectEl.value;
     if (!bundleId) return;
@@ -687,11 +807,18 @@
 
     const container = document.getElementById(`form_bundle_items_${bundleId}`);
     const poolCard = document.getElementById(`form_pool_card_${qId}`);
+    const bundleCard = document.getElementById(`form_bundle_card_${bundleId}`);
 
     if (container && poolCard) {
       const title = poolCard.querySelector('h6')?.textContent?.trim() || '';
       const qType = poolCard.querySelector('.badge.bg-secondary-subtle')?.textContent?.trim() || '';
-      const dayRange = poolCard.querySelector('.badge.bg-info-subtle')?.textContent?.trim() || '';
+      
+      const qFrom = parseInt(poolCard.dataset.qFrom, 10) || 1;
+      const qTo = parseInt(poolCard.dataset.qTo, 10) || 30;
+      const bFrom = bundleCard ? (parseInt(bundleCard.dataset.bundleFrom, 10) || 1) : 1;
+      const bTo = bundleCard ? (parseInt(bundleCard.dataset.bundleTo, 10) || 30) : 30;
+
+      const { daysInBundle, effSchedText } = calculateFormBundleItemSchedule(qFrom, qTo, bFrom, bTo);
 
       const itemCard = document.createElement('div');
       itemCard.className = 'bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2';
@@ -701,15 +828,20 @@
         <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="${bundleName}">
         <div class="d-flex align-items-start gap-2">
           <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
-            <input type="checkbox" name="assignment[question_ids][]" value="${qId}" class="form-check-input m-0 cursor-pointer" checked style="width: 1.1rem; height: 1.1rem;">
+            <input type="hidden" name="assignment[question_ids][]" value="${qId}">
             <i class="bi bi-list fs-5 text-secondary drag-handle me-1" style="cursor: grab;"></i>
             <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold form-bundle-item-serial me-1" style="font-size: 0.75rem;">#1</span>
           </div>
           <div class="flex-grow-1 min-w-0">
-            <div class="fw-bold text-dark mb-0 text-break pe-1" style="font-size: 0.925rem;">${title}</div>
-            <div class="d-flex align-items-center gap-2 mt-1">
-              <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">${qType}</span>
-              <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;"><i class="bi bi-clock-history me-1"></i>${dayRange}</span>
+            <div class="fw-bold text-dark mb-0 text-break pe-1 q-title-display-${qId}" style="font-size: 0.925rem;">${title}</div>
+            <div class="d-flex align-items-center flex-wrap gap-1.5 mt-1">
+              <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase q-type-badge-${qId}" style="font-size: 0.7rem;">${qType}</span>
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-clock-history me-1 text-primary"></i><span class="form-bundle-item-eff-sched-${bundleId}-${qId}">${effSchedText}</span>
+              </span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-calendar-check me-1 text-success"></i><span class="form-bundle-item-days-${bundleId}-${qId}">${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle</span>
+              </span>
             </div>
           </div>
           <div class="flex-shrink-0">
@@ -925,11 +1057,9 @@
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
               <select id="new_form_q_type" class="form-select rounded-3" onchange="toggleFormQuestionOptionsVisibility('new', this.value)">
-                <option value="multiple_choice">Multiple Choice</option>
-                <option value="single_choice">Single Choice</option>
-                <option value="text">Text Response</option>
-                <option value="rating">Rating Scale</option>
-                <option value="date">Date</option>
+                <% Question.question_types.keys.each do |qt| %>
+                  <option value="<%= qt %>"><%= qt.titleize %></option>
+                <% end %>
               </select>
             </div>
           </div>
@@ -950,18 +1080,18 @@
             <textarea id="new_form_q_desc" class="form-control rounded-3" rows="2" placeholder="Provide instructions or background context..."></textarea>
           </div>
 
-          <div id="new_form_q_options_wrapper" class="p-3 bg-light rounded-3 mb-3">
+          <div id="new_form_q_options_wrapper" class="p-3 bg-light rounded-3 mb-3 d-none">
             <div class="d-flex align-items-center justify-content-between mb-2">
               <label class="form-label small fw-bold text-dark mb-0">Answer Options</label>
               <button type="button" class="btn btn-xs btn-outline-primary rounded-2" onclick="addFormQuestionOptionRow('new')">+ Add Option</button>
             </div>
             <div id="new_form_q_options_container" class="d-flex flex-column gap-2">
               <div class="input-group input-group-sm">
-                <input type="text" class="form-control new-q-opt-text" placeholder="Option 1" required>
+                <input type="text" class="form-control new-q-opt-text" placeholder="Option 1">
                 <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
               </div>
               <div class="input-group input-group-sm">
-                <input type="text" class="form-control new-q-opt-text" placeholder="Option 2" required>
+                <input type="text" class="form-control new-q-opt-text" placeholder="Option 2">
                 <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
               </div>
             </div>
@@ -1000,11 +1130,9 @@
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
               <select id="edit_form_q_type" class="form-select rounded-3" onchange="toggleFormQuestionOptionsVisibility('edit', this.value)">
-                <option value="multiple_choice">Multiple Choice</option>
-                <option value="single_choice">Single Choice</option>
-                <option value="text">Text Response</option>
-                <option value="rating">Rating Scale</option>
-                <option value="date">Date</option>
+                <% Question.question_types.keys.each do |qt| %>
+                  <option value="<%= qt %>"><%= qt.titleize %></option>
+                <% end %>
               </select>
             </div>
           </div>
@@ -1141,7 +1269,13 @@
 
     if (!bundleId || !name) return;
 
-    // Update bundle card UI
+    // Update bundle card dataset & UI
+    const bundleCard = document.getElementById(`form_bundle_card_${bundleId}`);
+    if (bundleCard) {
+      bundleCard.dataset.bundleFrom = fromDay;
+      bundleCard.dataset.bundleTo = toDay;
+    }
+
     const nameDisplay = document.getElementById(`form_bundle_name_display_${bundleId}`);
     if (nameDisplay) nameDisplay.textContent = name;
 
@@ -1168,6 +1302,8 @@
         }
       }
     });
+
+    updateFormBundleItemSchedules(bundleId);
 
     const modalEl = document.getElementById('editFormBundleModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
@@ -1202,13 +1338,25 @@
   function toggleFormQuestionOptionsVisibility(prefix, type) {
     const wrapper = document.getElementById(`${prefix}_form_q_options_wrapper`);
     if (wrapper) {
-      if (type === 'multiple_choice' || type === 'single_choice') {
+      if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
         wrapper.classList.remove('d-none');
       } else {
         wrapper.classList.add('d-none');
       }
     }
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const newModal = document.getElementById('newFormQuestionModal');
+    if (newModal) {
+      newModal.addEventListener('show.bs.modal', function () {
+        const typeSelect = document.getElementById('new_form_q_type');
+        if (typeSelect) {
+          toggleFormQuestionOptionsVisibility('new', typeSelect.value);
+        }
+      });
+    }
+  });
 
   function addFormQuestionOptionRow(prefix, text = '', id = '') {
     const container = document.getElementById(`${prefix}_form_q_options_container`);
@@ -1217,7 +1365,7 @@
     row.className = 'input-group input-group-sm mb-1';
     row.innerHTML = `
       ${id ? `<input type="hidden" class="${prefix}-q-opt-id" value="${id}">` : ''}
-      <input type="text" class="form-control ${prefix}-q-opt-text" value="${text.replace(/"/g, '&quot;')}" placeholder="Option text" required>
+      <input type="text" class="form-control ${prefix}-q-opt-text" value="${text.replace(/"/g, '&quot;')}" placeholder="Option text">
       <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
     `;
     container.appendChild(row);
@@ -1226,7 +1374,7 @@
   function submitNewFormQuestion(e) {
     e.preventDefault();
     const errorEl = document.getElementById('new_q_modal_error');
-    errorEl.classList.add('d-none');
+    if (errorEl) errorEl.classList.add('d-none');
 
     const title = document.getElementById('new_form_q_title').value.trim();
     const type = document.getElementById('new_form_q_type').value;
@@ -1234,15 +1382,45 @@
     const toDay = parseInt(document.getElementById('new_form_q_to_day').value, 10) || 30;
     const desc = document.getElementById('new_form_q_desc').value.trim();
 
-    if (!title) return;
+    if (!title) {
+      if (errorEl) {
+        errorEl.textContent = 'Question title is required.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
+
+    if (fromDay < 1) {
+      if (errorEl) {
+        errorEl.textContent = 'From Day must be at least 1.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
+
+    if (toDay < fromDay) {
+      if (errorEl) {
+        errorEl.textContent = 'To Day must be greater than or equal to From Day.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     const optionsData = [];
 
-    if (type === 'multiple_choice' || type === 'single_choice') {
+    if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
       document.querySelectorAll('.new-q-opt-text').forEach(input => {
         if (input.value.trim()) optionsData.push({ text: input.value.trim() });
       });
+
+      if (optionsData.length < 2) {
+        if (errorEl) {
+          errorEl.textContent = 'Questions requiring options must have at least 2 options.';
+          errorEl.classList.remove('d-none');
+        }
+        return;
+      }
     }
 
     const payload = {
@@ -1264,9 +1442,9 @@
       },
       body: JSON.stringify(payload)
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'success' && data.question) {
+    .then(async res => {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.status === 'success' && data.question) {
         const q = data.question;
         const dayText = (q.from_day === q.to_day) ? `Day ${q.from_day}` : `Day ${q.from_day}-${q.to_day}`;
         
@@ -1318,8 +1496,8 @@
                 <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold q-day-badge-${q.id}" style="font-size: 0.7rem;"><i class="bi bi-clock-history me-1"></i>${dayText}</span>
               </div>
               <div class="d-flex align-items-center gap-1">
-                <button type="button" class="btn btn-sm btn-outline-primary rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" style="width: 28px; height: 28px;" title="Edit Question" onclick="openFormEditQuestionModal(${q.id})">
-                  <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                <button type="button" class="btn btn-sm btn-outline-info rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" style="width: 28px; height: 28px;" title="View Question Details" data-bs-toggle="modal" data-bs-target="#viewFormQuestionModal_${q.id}">
+                  <i class="bi bi-eye" style="font-size: 0.85rem;"></i>
                 </button>
               </div>
             </div>
@@ -1331,6 +1509,48 @@
             </div>
           `;
           container.prepend(card);
+
+          // Ensure View Question modal exists in DOM for dynamic custom question
+          if (!document.getElementById(`viewFormQuestionModal_${q.id}`)) {
+            const vModal = document.createElement('div');
+            vModal.className = 'modal fade';
+            vModal.id = `viewFormQuestionModal_${q.id}`;
+            vModal.tabIndex = -1;
+            vModal.setAttribute('aria-hidden', 'true');
+            
+            let optionsHtml = '';
+            if (q.options && q.options.length > 0) {
+              optionsHtml = `<h6 class="fw-semibold text-dark mb-2">Answer Options:</h6><div class="list-group rounded-3 mb-3">`;
+              q.options.forEach((opt, idx) => {
+                const text = typeof opt === 'object' ? (opt.text || '') : opt;
+                optionsHtml += `<div class="list-group-item d-flex align-items-center justify-content-between"><span>${idx + 1}. ${text}</span></div>`;
+              });
+              optionsHtml += `</div>`;
+            }
+
+            vModal.innerHTML = `
+              <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                  <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                      <i class="bi bi-eye-fill text-info"></i> Question Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2 q-type-badge-${q.id}" style="font-size: 0.75rem;">${(q.question_type || '').replace(/_/g, ' ')}</span>
+                    <h4 class="fw-bold text-dark mb-2 q-title-display-${q.id}">${q.title}</h4>
+                    ${q.description ? `<div class="p-3 bg-light rounded-3 text-muted small mb-3">${q.description}</div>` : ''}
+                    ${optionsHtml}
+                  </div>
+                  <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(vModal);
+          }
 
           // Pre-populate dropdown bundles for new question
           const select = card.querySelector(`.form-bundle-assign-select-${q.id}`);
@@ -1351,16 +1571,31 @@
         }
 
         const modalEl = document.getElementById('newFormQuestionModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        if (modalEl) {
+          if (window.bootstrap && window.bootstrap.Modal) {
+            const modal = window.bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          } else if (window.jQuery || window.$) {
+            window.$(modalEl).modal('hide');
+          } else {
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+          }
+        }
       } else {
-        errorEl.textContent = (data.errors || ['Failed to save question']).join(', ');
-        errorEl.classList.remove('d-none');
+        const errMsgs = data.errors || (data.message ? [data.message] : ['Failed to save question.']);
+        if (errorEl) {
+          errorEl.textContent = Array.isArray(errMsgs) ? errMsgs.join(', ') : errMsgs;
+          errorEl.classList.remove('d-none');
+        }
       }
     })
     .catch(err => {
-      errorEl.textContent = 'Error creating question. Please try again.';
-      errorEl.classList.remove('d-none');
+      console.error(err);
+      if (errorEl) {
+        errorEl.textContent = 'Error creating question. Please try again.';
+        errorEl.classList.remove('d-none');
+      }
     });
   }
 
@@ -1370,7 +1605,7 @@
 
     const title = card.getAttribute('data-q-title') || card.dataset.qTitle || '';
     const desc = card.getAttribute('data-q-desc') || card.dataset.qDesc || '';
-    const type = card.getAttribute('data-q-type') || card.dataset.qType || 'multiple_choice';
+    const type = card.getAttribute('data-q-type') || card.dataset.qType || 'short_answer';
     const fromDay = card.getAttribute('data-q-from') || card.dataset.qFrom || 1;
     const toDay = card.getAttribute('data-q-to') || card.dataset.qTo || 30;
 
@@ -1405,7 +1640,7 @@
         options.forEach(opt => {
           addFormQuestionOptionRow('edit', opt.text || '', opt.id || '');
         });
-      } else if (type === 'multiple_choice' || type === 'single_choice') {
+      } else if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
         addFormQuestionOptionRow('edit', 'Option 1');
         addFormQuestionOptionRow('edit', 'Option 2');
       }
@@ -1437,12 +1672,34 @@
     const toDay = parseInt(document.getElementById('edit_form_q_to_day').value, 10) || 30;
     const desc = document.getElementById('edit_form_q_desc').value.trim();
 
-    if (!qId || !title) return;
+    if (!qId || !title) {
+      if (errorEl) {
+        errorEl.textContent = 'Question title is required.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
+
+    if (fromDay < 1) {
+      if (errorEl) {
+        errorEl.textContent = 'From Day must be at least 1.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
+
+    if (toDay < fromDay) {
+      if (errorEl) {
+        errorEl.textContent = 'To Day must be greater than or equal to From Day.';
+        errorEl.classList.remove('d-none');
+      }
+      return;
+    }
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     const optionsData = [];
 
-    if (type === 'multiple_choice' || type === 'single_choice') {
+    if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
       document.querySelectorAll('#edit_form_q_options_container .input-group').forEach(group => {
         const idInput = group.querySelector('.edit-q-opt-id');
         const textInput = group.querySelector('.edit-q-opt-text');
@@ -1452,6 +1709,14 @@
           optionsData.push(item);
         }
       });
+
+      if (optionsData.length < 2) {
+        if (errorEl) {
+          errorEl.textContent = 'Questions requiring options must have at least 2 options.';
+          errorEl.classList.remove('d-none');
+        }
+        return;
+      }
     }
 
     const payload = {
@@ -1473,9 +1738,9 @@
       },
       body: JSON.stringify(payload)
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'success' && data.question) {
+    .then(async res => {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.status === 'success' && data.question) {
         const q = data.question;
         const newId = q.id;
         const dayText = (q.from_day === q.to_day) ? `Day ${q.from_day}` : `Day ${q.from_day}-${q.to_day}`;
@@ -1516,6 +1781,18 @@
         document.querySelectorAll(`.q-type-badge-${qId}, .q-type-badge-${newId}`).forEach(el => el.textContent = q.question_type.replace(/_/g, ' '));
         document.querySelectorAll(`.q-day-badge-${qId}, .q-day-badge-${newId}`).forEach(el => el.innerHTML = `<i class="bi bi-clock-history me-1"></i>${dayText}`);
 
+        // Recalculate schedule badges for any bundle items holding this question
+        document.querySelectorAll(`.bundle-question-item input[name="assignment[question_bundle_items][][question_id]"][value="${newId}"]`).forEach(input => {
+          const itemCard = input.closest('.bundle-question-item');
+          if (itemCard) {
+            const bundleContainer = itemCard.closest('.form-bundle-items-container');
+            if (bundleContainer) {
+              const bId = bundleContainer.id.replace('form_bundle_items_', '');
+              updateFormBundleItemSchedules(bId);
+            }
+          }
+        });
+
         const modalEl = document.getElementById('editFormQuestionModal');
         if (modalEl) {
           if (window.bootstrap && window.bootstrap.Modal) {
@@ -1529,13 +1806,15 @@
           }
         }
       } else {
+        const errMsgs = data.errors || (data.message ? [data.message] : ['Failed to update question']);
         if (errorEl) {
-          errorEl.textContent = (data.errors || ['Failed to update question']).join(', ');
+          errorEl.textContent = Array.isArray(errMsgs) ? errMsgs.join(', ') : errMsgs;
           errorEl.classList.remove('d-none');
         }
       }
     })
     .catch(err => {
+      console.error(err);
       if (errorEl) {
         errorEl.textContent = 'Error updating question. Please try again.';
         errorEl.classList.remove('d-none');

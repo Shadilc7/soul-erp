@@ -70,7 +70,7 @@ Rails.application.configure do
   config.action_controller.raise_on_missing_callback_actions = true
 
   config.after_initialize do
-    Bullet.enable = true
+    Bullet.enable = false
     Bullet.alert = true        # popup
     Bullet.console = true      # browser console
     Bullet.rails_logger = true

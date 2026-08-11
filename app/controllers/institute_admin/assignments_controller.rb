@@ -45,19 +45,21 @@ module InstituteAdmin
 
     def import_setup
       bank_id = params[:question_bank_id]
-      selected_category_ids = params[:category_ids]
+      selected_category_ids = Array(params[:category_ids]).reject(&:blank?)
 
       @question_bank = QuestionBank.find_by(id: bank_id)
 
       if @question_bank.nil?
-        redirect_to institute_admin_assignments_path, alert: "Selected Question Bank not found."
+        redirect_to new_institute_admin_assignment_path(mode: 'import_select'), alert: "Selected Question Bank not found."
         return
       end
 
-      categories_scope = @question_bank.question_categories.where(active: true)
-      if selected_category_ids.present?
-        categories_scope = categories_scope.where(id: selected_category_ids)
+      if selected_category_ids.empty?
+        redirect_to new_institute_admin_assignment_path(mode: 'import_select', question_bank_id: bank_id), alert: "Please select at least one category to proceed with import setup."
+        return
       end
+
+      categories_scope = @question_bank.question_categories.where(active: true).where(id: selected_category_ids)
 
       @categories = categories_scope.includes(
         :questions,
@@ -65,7 +67,7 @@ module InstituteAdmin
       )
 
       if @categories.empty?
-        redirect_to institute_admin_assignments_path, alert: "No active categories selected for import."
+        redirect_to new_institute_admin_assignment_path(mode: 'import_select', question_bank_id: bank_id), alert: "No active categories selected for import."
         return
       end
 
@@ -277,6 +279,7 @@ module InstituteAdmin
 
     def new
       @assignment = current_institute.assignments.new
+      set_form_variables
     end
 
     def create
@@ -358,16 +361,12 @@ module InstituteAdmin
       end
 
       Rails.logger.debug "Assignment creation failed: #{@assignment.errors.full_messages}"
+      set_form_variables
       render :new
     end
 
     def edit
-      @sections = current_institute.sections.active
-      @selected_sections = @assignment.sections
-      @selected_participants = @assignment.participants.includes(:user)
-      @participants = current_institute.participants.active.includes(:user)
-      @grouped_questions = @assignment.edit_questions_grouped_by_bundle
-      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      set_form_variables
     end
 
     def update
@@ -447,10 +446,7 @@ module InstituteAdmin
         end
       end
 
-      @sections = current_institute.sections.active
-      @selected_sections = @assignment.sections
-      @selected_participants = @assignment.participants.includes(:user)
-      @grouped_questions = @assignment.edit_questions_grouped_by_bundle
+      set_form_variables
       render :edit, status: :unprocessable_entity
     end
 
@@ -460,6 +456,16 @@ module InstituteAdmin
     end
 
     private
+
+    def set_form_variables
+      @sections = current_institute.sections.active
+      @selected_sections = @assignment.sections
+      @selected_participants = @assignment.participants.includes(:user)
+      @participants = current_institute.participants.active.includes(:user)
+      @grouped_questions = @assignment.edit_questions_grouped_by_bundle
+      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      @available_question_banks = QuestionBank.where(active: true).includes(:question_categories).order(:name)
+    end
 
     def set_assignment
       @assignment = current_institute.assignments
