@@ -54,6 +54,58 @@ module InstituteAdmin
       @five_star_count = @feedbacks.where(rating: 5).count
       @participant_types_count = @feedbacks.joins(:participant).pluck("participants.participant_type").compact.uniq.count
 
+      # Rating Distribution Breakdown (5 stars to 1 star)
+      # Base query respects participant_type, date_range, search (omits rating filter so all 5 bars are visible)
+      dist_query = @training_program.training_program_feedbacks
+      if params[:participant_type].present?
+        dist_query = dist_query.joins(:participant).where(participants: { participant_type: params[:participant_type] })
+      end
+      if params[:search].present?
+        query = "%#{params[:search].downcase}%"
+        dist_query = dist_query.joins(participant: :user).where(
+          "LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(training_program_feedbacks.content) LIKE :q",
+          q: query
+        )
+      end
+      if params[:date_range].present? && params[:date_range] != "all"
+        case params[:date_range]
+        when "today"
+          dist_query = dist_query.where(created_at: Date.current.all_day)
+        when "yesterday"
+          dist_query = dist_query.where(created_at: Date.yesterday.all_day)
+        when "last_7_days"
+          dist_query = dist_query.where(created_at: 7.days.ago.beginning_of_day..Time.current)
+        when "this_month"
+          dist_query = dist_query.where(created_at: Time.current.beginning_of_month..Time.current)
+        when "custom"
+          if params[:start_date].present? && params[:end_date].present?
+            s_date = Date.parse(params[:start_date]).beginning_of_day rescue nil
+            e_date = Date.parse(params[:end_date]).end_of_day rescue nil
+            dist_query = dist_query.where(created_at: s_date..e_date) if s_date && e_date
+          end
+        end
+      elsif params[:start_date].present? || params[:end_date].present?
+        s_date = params[:start_date].present? ? (Date.parse(params[:start_date]).beginning_of_day rescue nil) : 10.years.ago
+        e_date = params[:end_date].present? ? (Date.parse(params[:end_date]).end_of_day rescue nil) : Time.current
+        dist_query = dist_query.where(created_at: s_date..e_date) if s_date && e_date
+      end
+
+      dist_total = dist_query.count
+      raw_rating_counts = dist_query.group(:rating).count
+      @rating_distribution = [5, 4, 3, 2, 1].map do |stars|
+        count = raw_rating_counts[stars] || raw_rating_counts[stars.to_i] || 0
+        pct = dist_total.positive? ? ((count.to_f / dist_total) * 100).round(1) : 0.0
+        {
+          stars: stars,
+          count: count,
+          percentage: pct
+        }
+      end
+      positive_count = (raw_rating_counts[5] || 0) + (raw_rating_counts[4] || 0)
+      @positive_rating_pct = dist_total.positive? ? ((positive_count.to_f / dist_total) * 100).round : 0
+      @program_avg_rating = dist_total.positive? ? dist_query.average(:rating).to_f.round(1) : 0.0
+      @program_total_feedbacks = dist_total
+
       respond_to do |format|
         format.html
         format.csv {

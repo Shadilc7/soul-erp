@@ -86,6 +86,110 @@
     </div>
   </div>
 
+  <!-- RATING OVERVIEW & HORIZONTAL DISTRIBUTION CARD -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden rating-analytics-card">
+    <div class="card-body p-4">
+      <div class="row g-4 align-items-center">
+        <!-- Left: Overall Rating Hero -->
+        <div class="col-12 col-lg-4 text-center border-lg-end pe-lg-4">
+          <div class="rating-hero-wrapper py-2">
+            <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">Overall Rating</div>
+            <div class="display-3 fw-bold text-dark mb-1 rating-hero-score"><%= @program_avg_rating %></div>
+            <div class="d-flex justify-content-center align-items-center gap-1 text-warning fs-4 mb-2">
+              <% @program_avg_rating.floor.times do %>
+                <i class="bi bi-star-fill"></i>
+              <% end %>
+              <% if @program_avg_rating - @program_avg_rating.floor >= 0.5 %>
+                <i class="bi bi-star-half"></i>
+                <% (4 - @program_avg_rating.floor).times do %>
+                  <i class="bi bi-star text-light-emphasis"></i>
+                <% end %>
+              <% else %>
+                <% (5 - @program_avg_rating.floor).times do %>
+                  <i class="bi bi-star text-light-emphasis"></i>
+                <% end %>
+              <% end %>
+            </div>
+            <div class="text-muted small fw-medium mb-3">
+              Based on <strong class="text-dark"><%= @program_total_feedbacks %></strong> <%= "review".pluralize(@program_total_feedbacks) %>
+            </div>
+            <% if @positive_rating_pct > 0 %>
+              <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 bg-success bg-opacity-10 text-success rounded-pill small fw-semibold">
+                <i class="bi bi-patch-check-fill"></i>
+                <span><%= @positive_rating_pct %>% Positive Reviews (4-5 ★)</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Right: Horizontal Breakdown Bars (5 to 1 Stars) -->
+        <div class="col-12 col-lg-8 ps-lg-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-bar-chart-line-fill text-primary fs-5"></i>
+              <h6 class="fw-bold text-dark mb-0">Feedback Rating Distribution</h6>
+            </div>
+            <% if params[:rating].present? %>
+              <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "badge bg-primary bg-opacity-10 text-primary border border-primary-subtle text-decoration-none d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill",
+                  title: "Clear rating filter" do %>
+                <span>Active: <%= params[:rating] %> ★</span>
+                <i class="bi bi-x-circle-fill"></i>
+              <% end %>
+            <% else %>
+              <span class="text-muted small">Click any star tier to filter</span>
+            <% end %>
+          </div>
+
+          <div class="rating-breakdown-list d-flex flex-column gap-2.5">
+            <% @rating_distribution.each do |item| %>
+              <% 
+                is_selected = params[:rating].to_s == item[:stars].to_s
+                bar_color_class = case item[:stars]
+                                  when 5 then "rating-bar-5"
+                                  when 4 then "rating-bar-4"
+                                  when 3 then "rating-bar-3"
+                                  when 2 then "rating-bar-2"
+                                  when 1 then "rating-bar-1"
+                                  end
+              %>
+              <div class="rating-breakdown-row <%= 'rating-row-active' if is_selected %> d-flex align-items-center gap-3 p-2 rounded-3"
+                   onclick="filterByRating(<%= item[:stars] %>)"
+                   role="button"
+                   tabindex="0"
+                   title="Click to filter by <%= item[:stars] %> star ratings">
+                
+                <!-- Star Label -->
+                <div class="rating-star-label d-flex align-items-center gap-1 fw-bold text-secondary flex-shrink-0" style="width: 75px; font-size: 0.875rem;">
+                  <span><%= item[:stars] %></span>
+                  <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem;"></i>
+                  <span class="text-muted fw-normal" style="font-size: 0.75rem;"><%= item[:stars] == 1 ? 'star' : 'stars' %></span>
+                </div>
+
+                <!-- Horizontal Progress Bar -->
+                <div class="progress flex-grow-1 rating-progress-track" style="height: 12px; background-color: #f1f5f9; border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                  <div class="progress-bar <%= bar_color_class %>" 
+                       role="progressbar" 
+                       style="width: <%= item[:percentage] %>%; border-radius: 999px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);" 
+                       aria-valuenow="<%= item[:percentage] %>" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                  </div>
+                </div>
+
+                <!-- Count and Percentage -->
+                <div class="rating-count-label text-end text-nowrap flex-shrink-0" style="width: 100px;">
+                  <span class="fw-bold text-dark small"><%= item[:count] %></span>
+                  <span class="text-muted small ms-1" style="font-size: 0.75rem;">(<%= item[:percentage] %>%)</span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FILLED MULTI-CRITERIA FILTER TOOLBAR -->
   <div class="filled-toolbar mb-4">
     <%= form_with url: institute_admin_training_program_training_program_feedbacks_path(@training_program), method: :get, local: true, id: "feedbackFilterForm" do |f| %>
@@ -364,4 +468,77 @@
     document.getElementById('ratingFilter').value = 'all';
     filterFeedbacksTable();
   }
+
+  function filterByRating(stars) {
+    const ratingSelect = document.getElementById('ratingFilter');
+    if (ratingSelect) {
+      if (ratingSelect.value == stars) {
+        ratingSelect.value = '';
+      } else {
+        ratingSelect.value = stars;
+      }
+      ratingSelect.form.submit();
+    }
+  }
 </script>
+
+<style>
+  .rating-analytics-card {
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .rating-hero-score {
+    font-size: clamp(2.75rem, 4.5vw, 3.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .border-lg-end {
+    border-right: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  @media (max-width: 991.98px) {
+    .border-lg-end {
+      border-right: none;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  .rating-breakdown-row {
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .rating-breakdown-row:hover {
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateX(3px);
+  }
+
+  .rating-row-active {
+    background: rgba(99, 102, 241, 0.08) !important;
+    outline: 1px solid rgba(99, 102, 241, 0.3);
+  }
+
+  .rating-bar-5 {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  }
+
+  .rating-bar-4 {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  }
+
+  .rating-bar-3 {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  }
+
+  .rating-bar-2 {
+    background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+  }
+
+  .rating-bar-1 {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  }
+</style>

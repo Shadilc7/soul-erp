@@ -53,7 +53,8 @@
         --danger-color: #ef4444;
         --warning-color: #f59e0b;
         --info-color: #3b82f6;
-        --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        --sidebar-bg: #11141d;
+        --sidebar-header-bg: #11141d;
         --topbar-bg: #ffffff;
         --body-bg: #f8fafc;
         --text-primary: #f8fafc;
@@ -91,15 +92,15 @@
         bottom: 0;
         width: var(--sidebar-width);
         background: var(--sidebar-bg);
-        border-right: 1px solid rgba(255,255,255,0.08);
+        border-right: 1px solid rgba(255,255,255,0.07);
         transform: translateX(0);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1045;
         overflow-y: auto;
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
       }
 
       #sidebar.collapsed {
@@ -114,15 +115,20 @@
       #sidebar.collapsed .submenu-toggle-icon {
         opacity: 0;
         visibility: hidden;
+        display: none !important;
       }
 
       #sidebar.collapsed .nav-link {
         justify-content: center;
         padding: 0.8rem;
+        margin: 0.3rem auto;
+        width: 44px;
+        height: 44px;
       }
 
       #sidebar.collapsed .nav-link i {
         margin-right: 0;
+        font-size: 1.25rem;
       }
 
       #sidebar.collapsed .sidebar-submenu-container {
@@ -144,8 +150,8 @@
         align-items: center;
         justify-content: flex-start;
         gap: 0.9rem;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        background: #0f172a;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        background: #11141d;
         position: sticky;
         top: 0;
         z-index: 20;
@@ -230,65 +236,79 @@
       }
 
       .nav-link {
-        padding: 0.9rem 1.2rem;
-        color: var(--text-secondary);
+        padding: 0.75rem 1rem;
+        color: #94a3b8;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 12px;
-        margin: 0.3rem 0.75rem;
+        margin: 0.25rem 0.75rem;
         position: relative;
         overflow: hidden;
         font-weight: 500;
         font-size: 0.9rem;
         text-decoration: none;
+        border: 1px solid transparent;
       }
 
       .nav-link::before {
         content: '';
         position: absolute;
         left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-        transform: translateX(-4px);
-        transition: transform 0.3s ease;
+        top: 25%;
+        bottom: 25%;
+        width: 3.5px;
+        background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+        transform: scaleY(0);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 0 4px 4px 0;
+        box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
       }
 
       .nav-link:hover {
-        color: var(--text-primary);
-        background: rgba(255,255,255,0.08);
-        transform: translateX(4px);
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.04);
+        transform: translateX(3px);
       }
 
       .nav-link:hover::before {
-        transform: translateX(0);
+        transform: scaleY(0.7);
       }
 
       .nav-link.active,
       .nav-link.active-parent {
-        color: var(--text-primary);
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.1) 100%);
+        color: #ffffff;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(129, 140, 248, 0.08) 100%);
+        border-color: rgba(99, 102, 241, 0.28);
         font-weight: 600;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.16);
       }
 
       .nav-link.active::before,
       .nav-link.active-parent::before {
-        transform: translateX(0);
+        transform: scaleY(1);
       }
 
       .nav-link i {
-        width: 1.3rem;
-        font-size: 1.1rem;
-        transition: transform 0.3s ease;
+        width: 1.35rem;
+        font-size: 1.15rem;
+        transition: transform 0.25s ease, color 0.25s ease;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .nav-link:hover i {
-        transform: scale(1.1);
+        color: #ffffff;
+        transform: scale(1.08);
+      }
+
+      .nav-link.active i,
+      .nav-link.active-parent i {
+        color: #818cf8;
       }
 
       .nav-link span {
@@ -300,17 +320,19 @@
       }
 
       .submenu-toggle-icon {
-        transition: transform 0.3s ease;
-        font-size: 0.85rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.8rem;
+        color: #64748b;
       }
 
       .nav-link[aria-expanded="true"] .submenu-toggle-icon {
         transform: rotate(180deg);
+        color: #818cf8;
       }
 
       /* Submenu Styles */
       .sidebar-submenu-container {
-        margin: 0.2rem 0;
+        margin: 0.15rem 0;
       }
 
       .collapse:not(.show) {
@@ -320,24 +342,49 @@
       .collapsing {
         height: 0;
         overflow: hidden;
-        transition: height 0.35s ease;
+        transition: height 0.3s ease;
       }
 
       .submenu {
         background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        margin: 0 0.75rem;
-        padding: 0.5rem 0;
+        border-radius: 10px;
+        margin: 0.25rem 0.75rem 0.4rem 1.85rem;
+        padding: 0.35rem 0.4rem;
+        border-left: 2px solid rgba(99, 102, 241, 0.3);
       }
 
       .submenu-link {
-        font-size: 0.85rem;
-        padding: 0.7rem 1rem 0.7rem 3rem;
-        margin: 0.2rem 0.5rem;
+        font-size: 0.84rem !important;
+        padding: 0.5rem 0.75rem !important;
+        margin: 0.15rem 0 !important;
+        border-radius: 8px !important;
+        color: #94a3b8 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.6rem !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+        border: 1px solid transparent !important;
+      }
+
+      .submenu-link:hover {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+        transform: translateX(3px) !important;
+      }
+
+      .submenu-link.active {
+        color: #ffffff !important;
+        background: rgba(99, 102, 241, 0.2) !important;
+        border-color: rgba(99, 102, 241, 0.28) !important;
+        font-weight: 600 !important;
       }
 
       .submenu-link i {
-        font-size: 0.95rem;
+        font-size: 0.9rem !important;
+        width: auto !important;
+        color: #818cf8 !important;
       }
 
       /* Main Content Styles */
@@ -446,16 +493,20 @@
         transform: rotate(90deg);
       }
 
+      .sidebar-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(0, 0, 0, 0.15);
+      }
+
       .signout-btn {
-        border: none;
-        padding: 0.9rem 1.2rem;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
-        color: #ef4444;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border-radius: 12px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 0.65rem 1rem;
+        background: rgba(239, 68, 68, 0.07);
+        color: #f87171;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-radius: 10px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
       }
@@ -476,10 +527,11 @@
       }
 
       .signout-btn:hover {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-        color: #ef4444;
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
       }
 
       .signout-btn i {
@@ -488,6 +540,10 @@
 
       .signout-btn:hover i {
         transform: translateX(-3px);
+      }
+
+      #sidebar.collapsed .sidebar-footer {
+        padding: 0.75rem 0.5rem !important;
       }
 
       #sidebar.collapsed .signout-btn {
@@ -507,10 +563,6 @@
       #sidebar.collapsed .signout-btn i {
         margin: 0 !important;
         font-size: 1.25rem;
-      }
-
-      #sidebar.collapsed .mt-auto {
-        padding: 1rem 0.5rem !important;
       }
 
       .content-wrapper {
@@ -1065,7 +1117,7 @@
         </div>
         
         <!-- Signout button at bottom of sidebar -->
-        <div class="mt-auto p-3">
+        <div class="sidebar-footer mt-auto p-3">
           <%= button_to destroy_user_session_path, method: :delete, 
               class: "signout-btn w-100 d-flex align-items-center justify-content-center gap-2" do %>
             <i class="bi bi-box-arrow-right"></i>
