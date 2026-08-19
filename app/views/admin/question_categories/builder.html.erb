@@ -9,6 +9,13 @@
   .drag-handle:active {
     cursor: grabbing;
   }
+  .pool-question-card, .bundle-question-item {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .min-w-0 {
+    min-width: 0 !important;
+  }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3 py-md-4" data-controller="bundle-builder" data-bundle-builder-category-id-value="<%= @category.id %>">
@@ -34,20 +41,22 @@
 
   <!-- Header Banner -->
   <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-      <div>
-        <h2 class="fw-bold text-white mb-1 h3 h2-md"><%= @category.name %></h2>
-        <p class="text-white-50 mb-0 small text-md-normal"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-md-8 col-lg-9">
+        <h2 class="fw-bold text-white mb-1 fs-4 fs-md-3"><%= @category.name %></h2>
+        <p class="text-white-50 mb-2 small"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5">
+            <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name || "Master Question Bank" %>
+          </span>
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5 text-nowrap">
+            <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
+          </span>
+        </div>
       </div>
 
-      <div class="d-flex align-items-center flex-wrap gap-2">
-        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-          <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name || "Master Question Bank" %>
-        </span>
-        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-          <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
-        </span>
-        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-flex align-items-center gap-2 shadow-sm ms-auto ms-sm-0" do %>
+      <div class="col-12 col-md-4 col-lg-3 text-md-end">
+        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm text-nowrap w-100 w-md-auto fw-semibold" do %>
           <i class="bi bi-plus-lg fs-6"></i> <span>Add New Question</span>
         <% end %>
       </div>
@@ -65,12 +74,12 @@
   </div>
 
   <!-- Builder Workspace Grid -->
-  <div class="row g-4">
+  <div class="row g-3 g-md-4">
     <!-- Left Column: Question Pool -->
-    <div class="col-lg-5" id="question-pool-column">
+    <div class="col-lg-5 col-12" id="question-pool-column">
       <div class="card border-0 shadow-sm rounded-4 h-100 bg-light-subtle">
-        <div class="card-header bg-white border-bottom p-3 rounded-top-4">
-          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div class="card-header bg-white border-bottom p-2.5 p-sm-3 rounded-top-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 mb-sm-3">
             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-card-list text-primary"></i> Question Pool
               <span class="badge bg-primary rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
@@ -78,7 +87,7 @@
               </span>
             </h5>
 
-            <%= button_to auto_assign_bundles_admin_question_category_path(@category), method: :post, form: { class: "d-inline" }, class: "btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold", data: { turbo_confirm: "Auto-assign questions to matching bundles based on schedule day ranges?" } do %>
+            <%= button_to auto_assign_bundles_admin_question_category_path(@category), method: :post, form: { class: "d-inline" }, class: "btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold text-nowrap", data: { turbo_confirm: "Auto-assign questions to matching bundles based on schedule day ranges?" } do %>
               <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
             <% end %>
           </div>
@@ -95,11 +104,11 @@
         </div>
 
         <!-- Question Cards List -->
-        <div class="card-body p-3 overflow-auto" style="max-height: 720px;">
+        <div class="card-body p-2 p-sm-3 overflow-auto" style="max-height: 720px;">
           <% if @questions.size > 0 %>
             <div class="d-flex flex-column gap-3" id="question-pool-container" data-action="dragover->bundle-builder#poolDragOver drop->bundle-builder#poolDrop">
               <% @questions.each_with_index do |q, index| %>
-                <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all position-relative" 
+                <div class="card border border-light-subtle rounded-3 p-2.5 p-sm-3 bg-white shadow-sm hover-shadow transition-all position-relative pool-question-card" 
                      draggable="true" 
                      data-bundle-builder-target="questionItem" 
                      data-question-id="<%= q.id %>"
@@ -107,8 +116,8 @@
                      data-action="dragstart->bundle-builder#dragStart dragend->bundle-builder#dragEnd"
                      style="cursor: grab;">
 
-                  <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <div class="d-flex align-items-center gap-2">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-items-center flex-wrap gap-1.5 min-w-0">
                       <!-- 3 Horizontal Lines Drag Handle -->
                       <i class="bi bi-list fs-5 text-secondary me-1 drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
 
@@ -137,7 +146,7 @@
                     </div>
 
                     <!-- Quick Action Buttons & Dropdown Menu -->
-                    <div class="d-flex align-items-center" style="gap: 7px;" draggable="false" onmousedown="event.stopPropagation();">
+                    <div class="d-flex align-items-center flex-shrink-0 ms-auto" style="gap: 6px;" draggable="false" onmousedown="event.stopPropagation();">
                       <!-- View Button -->
                       <button type="button" 
                               class="btn p-0 border-0 text-white d-flex align-items-center justify-content-center shadow-xs gradient-action-btn" 
@@ -198,9 +207,9 @@
                     </div>
                   </div>
 
-                  <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;"><%= q.title %></h6>
+                  <h6 class="fw-bold text-dark mb-1 text-break" style="font-size: 0.95rem; line-height: 1.4; word-break: break-word;"><%= q.title %></h6>
                   <% if q.display_name.present? %>
-                    <div class="text-muted small mb-1"><%= q.display_name %></div>
+                    <div class="text-muted small mb-1 text-break" style="word-break: break-word;"><%= q.display_name %></div>
                   <% end %>
 
                   <% if q.requires_options? && q.options_count > 0 %>
@@ -212,7 +221,7 @@
                   <!-- Assigned Bundles Pills -->
                   <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="question_badges_<%= q.id %>">
                     <% q.question_bundles.each do |b| %>
-                      <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate bundle-badge-item" id="q_<%= q.id %>_b_badge_<%= b.id %>" style="max-width: 140px;">
+                      <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate bundle-badge-item" id="q_<%= q.id %>_b_badge_<%= b.id %>" style="max-width: 100%;">
                         <i class="bi bi-layers me-1"></i><%= b.name %>
                       </span>
                     <% end %>
@@ -221,7 +230,7 @@
                   <!-- Quick Assign to Bundle Select -->
                   <% if @bundles.size > 0 %>
                     <div class="mt-3 pt-2 border-top" draggable="false">
-                      <select class="form-select form-select-sm rounded-3 text-muted" 
+                      <select class="form-select form-select-sm rounded-3 text-muted w-100" 
                               data-question-id="<%= q.id %>" 
                               data-action="change->bundle-builder#assignFromSelect"
                               draggable="false">
@@ -331,9 +340,9 @@
     </div>
 
     <!-- Right Column: Custom Bundles -->
-    <div class="col-lg-7 d-none-mobile" id="bundles-column">
+    <div class="col-lg-7 col-12 d-none-mobile" id="bundles-column">
       <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="card-header bg-white border-bottom p-2.5 p-sm-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div>
             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-layers-fill text-warning"></i> Custom Question Bundles
@@ -359,7 +368,7 @@
                        data-action="dragover->bundle-builder#dragOver dragleave->bundle-builder#dragLeave drop->bundle-builder#drop">
                     <!-- Bundle Card Header -->
                     <div class="card-header bg-white border-0 pb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-2">
+                      <div class="d-flex align-items-center flex-wrap gap-2">
                         <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
                           <%= bundle.name %>
                         </span>

@@ -30,36 +30,38 @@ export default class extends Controller {
    * Toggle sidebar visibility (mobile) or collapse state (desktop)
    */
   toggle() {
+    if (!this.hasSidebarTarget) return
     const sidebar = this.sidebarTarget
-    const mainContent = this.mainContentTarget
+    const mainContent = this.hasMainContentTarget ? this.mainContentTarget : document.getElementById('main-content')
     const isMobile = window.innerWidth < 992
     
     if (isMobile) {
       // Mobile: show/hide sidebar
       sidebar.classList.toggle('show')
-      this.backdropTarget.classList.toggle('show')
+      if (this.hasBackdropTarget) {
+        this.backdropTarget.classList.toggle('show')
+      }
       document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : ''
     } else {
       // Desktop: collapse/expand sidebar
       const isCollapsed = sidebar.classList.toggle('collapsed')
-      mainContent.classList.toggle('collapsed', isCollapsed)
-      
-      // Save state to localStorage
-      localStorage.setItem('sidebarCollapsed', isCollapsed)
+      if (mainContent) {
+        mainContent.classList.toggle('collapsed', isCollapsed)
+      }
     }
   }
   
   /**
-   * Load sidebar state from localStorage
+   * Load sidebar state - by default always open on desktop
    */
   loadSidebarState() {
+    if (!this.hasSidebarTarget) return
     const sidebar = this.sidebarTarget
-    const mainContent = this.mainContentTarget
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'
+    const mainContent = this.hasMainContentTarget ? this.mainContentTarget : document.getElementById('main-content')
     
-    if (isCollapsed && window.innerWidth >= 992) {
-      sidebar.classList.add('collapsed')
-      mainContent.classList.add('collapsed')
+    if (window.innerWidth >= 992) {
+      sidebar.classList.remove('collapsed')
+      if (mainContent) mainContent.classList.remove('collapsed')
     }
   }
 

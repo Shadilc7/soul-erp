@@ -147,8 +147,8 @@ class Assignment < ApplicationRecord
     if assignment_questions.where.not(order_number: nil).any?
       questions.joins(:assignment_questions).order("assignment_questions.order_number ASC, questions.id ASC")
     else
-      questions.order(:created_at) +
-      question_sets.includes(:questions).flat_map { |qs| qs.questions.order(:created_at) }
+      questions.order(position: :asc, created_at: :desc) +
+      question_sets.includes(:questions).flat_map { |qs| qs.questions.order(position: :asc, created_at: :desc) }
     end
   end
 
@@ -260,7 +260,7 @@ class Assignment < ApplicationRecord
       if institute.present?
         inst_custom_questions = institute.questions.includes(:options)
                                          .where("question_category_id IS NULL OR question_category_id != ?", question_category.id)
-                                         .order(:created_at).to_a
+                                         .order(position: :asc, created_at: :desc).to_a
         groups["Institution Custom Questions"] = inst_custom_questions if inst_custom_questions.any?
       end
 
@@ -269,7 +269,7 @@ class Assignment < ApplicationRecord
       assigned_q_ids = assigned_aqs.map(&:question_id)
       inst_q_ids = institute&.questions&.pluck(:id) || []
       all_available_ids = (assigned_q_ids + inst_q_ids).uniq
-      all_q = Question.includes(:options).where(id: all_available_ids).to_a
+      all_q = Question.includes(:options).where(id: all_available_ids).order(position: :asc, created_at: :desc).to_a
       { "Institution Questions" => all_q }
     end
   end

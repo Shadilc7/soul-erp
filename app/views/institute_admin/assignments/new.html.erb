@@ -166,33 +166,28 @@
               <div class="row g-3.5">
                 <% @available_question_banks.each_with_index do |bank, index| %>
                   <div class="col-12 col-md-6 col-xl-4">
-                    <div class="card bank-selection-card <%= 'selected' if index == 0 %> p-4 h-100" id="bank_card_<%= bank.id %>" onclick="selectQuestionBank(<%= bank.id %>)">
-                      <div class="d-flex align-items-center gap-3">
-                        <input class="form-check-input custom-radio-item bank-radio" 
+                    <div class="card bank-selection-card <%= 'selected' if index == 0 %> p-3.5 p-sm-4 h-100" id="bank_card_<%= bank.id %>" onclick="selectQuestionBank(<%= bank.id %>)">
+                      <div class="d-flex align-items-start gap-3">
+                        <input class="form-check-input custom-radio-item bank-radio mt-1 flex-shrink-0" 
                                type="radio" 
                                name="question_bank_id" 
                                id="bank_radio_<%= bank.id %>" 
                                value="<%= bank.id %>" 
                                <%= 'checked' if index == 0 %>>
                         
-                        <div class="flex-grow-1 overflow-hidden">
-                          <div class="d-flex align-items-center justify-content-between gap-2 mb-1.5">
-                            <h6 class="fw-bold text-dark mb-0 text-truncate"><%= bank.name %></h6>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-0.5 flex-shrink-0" style="font-size: 0.7rem;">
+                        <div class="flex-grow-1 min-w-0">
+                          <div class="d-flex align-items-start justify-content-between gap-2 mb-1.5 flex-wrap">
+                            <h6 class="fw-bold text-dark mb-0 text-break" style="word-break: break-word; line-height: 1.35;"><%= bank.name %></h6>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 flex-shrink-0 text-nowrap" style="font-size: 0.7rem;">
                               <%= pluralize(bank.question_categories.count, 'Category') %>
                             </span>
                           </div>
 
                           <% if bank.description.present? %>
-                            <p class="text-muted small mb-2.5 line-clamp-2" style="font-size: 0.82rem; min-height: 2.2em;"><%= bank.description %></p>
+                            <p class="text-muted small mb-0 text-break" style="font-size: 0.82rem; word-break: break-word;"><%= bank.description %></p>
                           <% else %>
-                            <p class="text-muted small mb-2.5 fst-italic" style="font-size: 0.82rem; min-height: 2.2em;">No description provided.</p>
+                            <p class="text-muted small mb-0 fst-italic" style="font-size: 0.82rem;">No description provided.</p>
                           <% end %>
-
-                          <div class="d-flex align-items-center gap-1.5 text-success fs-7 fw-medium pt-1 border-top border-light-subtle">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>Active & Ready to Import</span>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -230,9 +225,9 @@
                       <% active_cats.each do |category| %>
                         <% bundled_count = category.question_bundles.joins(:question_bundle_items).count %>
                         <div class="col-12 col-md-6 col-xl-4">
-                          <div class="card category-card-item p-4 rounded-4 border bg-white shadow-2xs h-100 d-flex flex-column justify-content-between">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                              <input class="form-check-input custom-checkbox-item cat-cb-<%= bank.id %>" 
+                          <div class="card category-card-item p-3.5 p-sm-4 rounded-4 border bg-white shadow-2xs h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                              <input class="form-check-input custom-checkbox-item cat-cb-<%= bank.id %> mt-1 flex-shrink-0" 
                                      type="checkbox" 
                                      name="category_ids[]" 
                                      id="cat_cb_<%= category.id %>" 
@@ -243,21 +238,21 @@
                                 <i class="bi bi-folder2-open fs-5"></i>
                               </div>
 
-                              <div class="overflow-hidden flex-grow-1">
-                                <label class="fw-bold text-dark mb-0 text-truncate cursor-pointer d-block fs-6" for="cat_cb_<%= category.id %>" title="<%= category.name %>">
+                              <div class="flex-grow-1 min-w-0">
+                                <label class="fw-bold text-dark mb-0 text-break cursor-pointer d-block fs-6" style="word-break: break-word; line-height: 1.35;" for="cat_cb_<%= category.id %>" title="<%= category.name %>">
                                   <%= category.name %>
                                 </label>
                                 <% if category.description.present? %>
-                                  <span class="text-muted small text-truncate d-block mt-0.5" style="font-size: 0.78rem;"><%= category.description %></span>
+                                  <span class="text-muted small text-break d-block mt-0.5" style="font-size: 0.78rem; word-break: break-word;"><%= category.description %></span>
                                 <% end %>
                               </div>
                             </div>
 
-                            <div class="d-flex align-items-center gap-2 pt-2.5 border-top border-light-subtle mt-auto">
-                              <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.72rem;">
+                            <div class="d-flex align-items-center flex-wrap gap-2 pt-2.5 border-top border-light-subtle mt-auto">
+                              <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 fw-medium text-nowrap" style="font-size: 0.72rem;">
                                 <i class="bi bi-calendar3 me-1"></i><%= category.duration_days %> Active Days
                               </span>
-                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.72rem;">
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-medium text-nowrap" style="font-size: 0.72rem;">
                                 <i class="bi bi-collection me-1"></i><%= bundled_count %> Q Bundles
                               </span>
                             </div>

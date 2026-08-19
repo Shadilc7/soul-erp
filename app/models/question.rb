@@ -75,8 +75,9 @@ class Question < ApplicationRecord
     yes_or_no: 9        # Yes/No radio buttons
   }
 
-  # Add scope for active questions
+  # Add scope for active and ordered questions
   scope :active, -> { where(active: true) }
+  scope :ordered, -> { order(position: :asc, created_at: :desc) }
 
   before_destroy :check_assignment_associations, prepend: true
   after_save :sync_question_bundle_items

@@ -59,13 +59,16 @@
 
       .sidebar-header {
         height: var(--header-height);
-        padding: 0 1.5rem;
+        padding: 0 1rem;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         border-bottom: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(10px);
+        background: #0f172a;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        flex-shrink: 0;
       }
 
       .sidebar-header a {

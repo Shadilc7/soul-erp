@@ -34,3 +34,4 @@
 /config/master.key
 /config/database.yml
 docs/
+AGENTS.md

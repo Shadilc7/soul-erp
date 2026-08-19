@@ -23,38 +23,37 @@
 
   <!-- Header Banner Card -->
   <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-      <div>
-        <div class="d-flex align-items-center gap-2 mb-1">
-          <h2 class="fw-bold text-white mb-0 h3 h2-md"><%= @assignment.title %></h2>
+    <div class="row align-items-center g-3">
+      <div class="col-12">
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+          <h2 class="fw-bold text-white mb-0 fs-4 fs-md-3"><%= @assignment.title %></h2>
           <span class="badge <%= @assignment.active? ? 'bg-success-subtle text-success border border-success' : 'bg-secondary-subtle text-secondary border' %> rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
             <%= @assignment.active? ? 'Active' : 'Inactive' %>
           </span>
         </div>
-        <p class="text-white-50 mb-0 small text-md-normal">
+        <p class="text-white-50 mb-2 small">
           <%= @assignment.description.presence || "No description provided for this assignment." %>
         </p>
-      </div>
-
-      <div class="d-flex align-items-center flex-wrap gap-2">
-        <% if @assignment.question_category.present? %>
-          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-            <i class="bi bi-folder2 me-1 text-primary"></i> <%= @assignment.question_category.name %>
-          </span>
-        <% end %>
-
-        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-          <i class="bi bi-calendar-range me-1 text-info"></i> 
-          <%= @assignment.start_date.strftime("%b %d") %> – <%= @assignment.end_date.strftime("%b %d, %Y") %>
-        </span>
-
-        <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-2">
-          <% if @assignment.assignment_type == 'section' %>
-            <i class="bi bi-people me-1 text-warning"></i> Section
-          <% else %>
-            <i class="bi bi-person me-1 text-info"></i> Individual
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <% if @assignment.question_category.present? %>
+            <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5">
+              <i class="bi bi-folder2 me-1 text-primary"></i> <%= @assignment.question_category.name %>
+            </span>
           <% end %>
-        </span>
+
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5 text-nowrap">
+            <i class="bi bi-calendar-range me-1 text-info"></i> 
+            <%= @assignment.start_date.strftime("%b %d") %> – <%= @assignment.end_date.strftime("%b %d, %Y") %>
+          </span>
+
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5 text-nowrap">
+            <% if @assignment.assignment_type == 'section' %>
+              <i class="bi bi-people me-1 text-warning"></i> Section
+            <% else %>
+              <i class="bi bi-person me-1 text-info"></i> Individual
+            <% end %>
+          </span>
+        </div>
       </div>
     </div>
   </div>

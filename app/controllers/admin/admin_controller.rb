@@ -281,7 +281,7 @@ module Admin
     def questions
       @institutes = Institute.all.order(:name)
 
-      questions = Question.includes(:institute).order(created_at: :desc)
+      questions = Question.includes(:institute).order(position: :asc, created_at: :desc)
 
       if params[:institute_id].present?
         questions = questions.where(institute_id: params[:institute_id])

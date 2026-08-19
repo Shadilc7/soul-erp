@@ -71,7 +71,7 @@ module InstituteAdmin
         return
       end
 
-      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
       @sections = current_institute.sections.active.joins(:participants).distinct
       @participants = current_institute.participants.active.includes(:user)
     end
@@ -463,7 +463,7 @@ module InstituteAdmin
       @selected_participants = @assignment.participants.includes(:user)
       @participants = current_institute.participants.active.includes(:user)
       @grouped_questions = @assignment.edit_questions_grouped_by_bundle
-      @custom_questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
       @available_question_banks = QuestionBank.where(active: true).includes(:question_categories).order(:name)
     end
 
