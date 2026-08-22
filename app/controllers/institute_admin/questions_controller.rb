@@ -3,7 +3,55 @@ module InstituteAdmin
     before_action :set_question, only: [ :show, :edit, :update, :destroy ]
 
     def index
-      @questions = current_institute.questions.includes(:options).order(created_at: :desc)
+      @institute = current_institute
+      @all_questions = @institute.questions.includes(:options).order(position: :asc, created_at: :desc)
+      @questions = @all_questions
+      @question_types = Question.question_types.keys
+
+      if params[:search].present?
+        query = "%#{params[:search].downcase}%"
+        @questions = @questions.where("LOWER(title) LIKE :q OR LOWER(display_name) LIKE :q", q: query)
+      end
+
+      if params[:question_type].present?
+        @questions = @questions.where(question_type: params[:question_type])
+      end
+
+      if params[:status].present?
+        is_active = params[:status] == "active"
+        @questions = @questions.where(active: is_active)
+      end
+
+      # KPI Metrics (Calculated on filtered set)
+      @total_questions_count = @questions.count
+      @active_questions_count = @questions.where(active: true).count
+      @types_count = @questions.pluck(:question_type).compact.uniq.count
+      @required_questions_count = @questions.where(required: true).count
+
+      respond_to do |format|
+        format.html
+        format.csv {
+          send_data generate_questions_csv(@questions),
+                    filename: "questions_bank_#{Date.current}.csv",
+                    type: "text/csv"
+        }
+        format.pdf {
+          pdf_data = generate_questions_pdf_with_ferrum
+          send_data pdf_data,
+                    filename: "questions_bank_#{Date.current}.pdf",
+                    type: "application/pdf",
+                    disposition: "inline"
+        }
+      end
+    end
+
+    def reorder
+      if params[:question_ids].is_a?(Array)
+        params[:question_ids].each_with_index do |id, index|
+          current_institute.questions.where(id: id).update_all(position: index + 1)
+        end
+      end
+      render json: { status: "success", message: "Question order updated successfully." }
     end
 
     def show
@@ -24,9 +72,15 @@ module InstituteAdmin
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
-          redirect_to institute_admin_question_path(@question), notice: "Question was successfully created."
+          respond_to do |format|
+            format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully created." }
+            format.json { render json: { status: "success", question: @question.as_json(include: :options) } }
+          end
         else
-          render :new, status: :unprocessable_entity
+          respond_to do |format|
+            format.html { render :new, status: :unprocessable_entity }
+            format.json { render json: { status: "error", errors: @question.errors.full_messages }, status: :unprocessable_entity }
+          end
         end
       rescue => e
         # Log the error
@@ -38,7 +92,10 @@ module InstituteAdmin
 
         # Add error message
         flash.now[:error] = "An error occurred while creating the question. Please try again."
-        render :new, status: :unprocessable_entity
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_entity }
+          format.json { render json: { status: "error", errors: [e.message] }, status: :unprocessable_entity }
+        end
       end
     end
 
@@ -47,6 +104,10 @@ module InstituteAdmin
 
     def update
       begin
+        if @question.institute_id.nil?
+          @question = @question.deep_clone_for_institute(current_institute, @question.question_category)
+        end
+
         # Get the parameters first
         question_parameters = sanitize_question_params(question_params)
 
@@ -55,9 +116,15 @@ module InstituteAdmin
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
-          redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated."
+          respond_to do |format|
+            format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated." }
+            format.json { render json: { status: "success", question: @question.as_json(include: :options) } }
+          end
         else
-          render :edit, status: :unprocessable_entity
+          respond_to do |format|
+            format.html { render :edit, status: :unprocessable_entity }
+            format.json { render json: { status: "error", errors: @question.errors.full_messages }, status: :unprocessable_entity }
+          end
         end
       rescue => e
         # Log the error
@@ -66,7 +133,10 @@ module InstituteAdmin
 
         # Add error message
         flash.now[:error] = "An error occurred while updating the question. Please try again."
-        render :edit, status: :unprocessable_entity
+        respond_to do |format|
+          format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: { status: "error", errors: [e.message] }, status: :unprocessable_entity }
+        end
       end
     end
 
@@ -76,7 +146,8 @@ module InstituteAdmin
       if @question.destroy
         redirect_to institute_admin_questions_path, notice: "Question was successfully deleted."
       else
-        redirect_to institute_admin_questions_path, alert: @question.errors.full_messages.to_sentence
+        error_msg = @question.errors.full_messages.to_sentence.presence || "Cannot delete Question because it is in use by assignments."
+        redirect_to institute_admin_questions_path, alert: error_msg
       end
     end
 
@@ -98,7 +169,10 @@ module InstituteAdmin
               question_type: original_question.question_type,
               required: original_question.required,
               active: original_question.active,
-              max_rating: original_question.max_rating
+              max_rating: original_question.max_rating,
+              duration_days: original_question.duration_days,
+              from_day: original_question.from_day,
+              to_day: original_question.to_day
             )
 
             # Temporarily disable validation
@@ -143,7 +217,10 @@ module InstituteAdmin
               question_type: original_question.question_type,
               required: original_question.required,
               active: original_question.active,
-              max_rating: original_question.max_rating
+              max_rating: original_question.max_rating,
+              duration_days: original_question.duration_days,
+              from_day: original_question.from_day,
+              to_day: original_question.to_day
             )
 
             unless new_question.save
@@ -169,7 +246,10 @@ module InstituteAdmin
     private
 
     def set_question
-      @question = current_institute.questions.includes(:options).find(params[:id])
+      @question = Question.includes(:options).find(params[:id])
+      if @question.institute_id.present? && @question.institute_id != current_institute.id
+        raise ActiveRecord::RecordNotFound
+      end
     end
 
     def question_params
@@ -180,6 +260,10 @@ module InstituteAdmin
         :question_type,
         :required,
         :max_rating,
+        :position,
+        :duration_days,
+        :from_day,
+        :to_day,
         options_attributes: [ :id, :text, :correct, :_destroy ]
       )
     end
@@ -187,9 +271,14 @@ module InstituteAdmin
     # Sanitize parameters to ensure no null values for options text
     def sanitize_question_params(params)
       if params[:options_attributes].present?
-        params[:options_attributes].each do |key, option_attrs|
-          unless option_attrs[:_destroy] == "1"
-            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs[:text].blank?
+        opts = params[:options_attributes]
+        if opts.is_a?(Hash)
+          opts.each_value do |option_attrs|
+            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
+          end
+        elsif opts.is_a?(Array)
+          opts.each do |option_attrs|
+            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
           end
         end
       end
@@ -202,6 +291,73 @@ module InstituteAdmin
         if option.text.blank? && !option.marked_for_destruction?
           option.text = "Option #{Time.now.to_i}"
         end
+      end
+    end
+
+    def generate_questions_csv(questions)
+      require "csv"
+      CSV.generate(headers: true) do |csv|
+        csv << [ "#", "Title", "Display Name", "Question Type", "Status", "Required", "Options Count", "Created Date" ]
+        questions.each_with_index do |q, idx|
+          csv << [
+            idx + 1,
+            q.title,
+            q.display_name.presence || "Not Set",
+            q.question_type.titleize,
+            q.active? ? "Active" : "Inactive",
+            q.required? ? "Yes" : "No",
+            q.options.count,
+            q.created_at.strftime("%Y-%m-%d %H:%M")
+          ]
+        end
+      end
+    end
+
+    def generate_questions_pdf_with_ferrum
+      require "ferrum"
+      require "base64"
+
+      html_content = render_to_string(
+        template: "institute_admin/questions/pdf",
+        formats: [ :html ],
+        layout: false,
+        locals: {
+          questions: @questions,
+          total_count: @total_questions_count,
+          active_count: @active_questions_count,
+          types_count: @types_count,
+          required_count: @required_questions_count,
+          institute: current_institute
+        }
+      )
+
+      browser = Ferrum::Browser.new(
+        timeout: 15,
+        window_size: [ 1200, 1600 ],
+        browser_options: {
+          "no-sandbox": nil,
+          "disable-gpu": nil,
+          "disable-dev-shm-usage": nil
+        }
+      )
+
+      begin
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          landscape: false,
+          print_background: true
+        )
+
+        if pdf_data.present? && !pdf_data.start_with?("%PDF")
+          pdf_data = Base64.decode64(pdf_data)
+        end
+
+        pdf_data
+      ensure
+        browser.quit
       end
     end
   end

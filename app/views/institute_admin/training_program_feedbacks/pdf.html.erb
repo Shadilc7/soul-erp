@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Training Program Feedback Report - <%= training_program.title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    <%= File.read(Rails.root.join("app/assets/stylesheets/feedback_pdf_report.css")).html_safe %>
+  </style>
+</head>
+<body>
+
+  <!-- HERO HEADER -->
+  <div class="hero-banner">
+    <table class="hero-table">
+      <tr>
+        <td style="vertical-align: middle;">
+          <div class="hero-title">Training Program Feedback Report</div>
+          <div class="hero-subtitle">Program: <%= training_program.title %></div>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <div class="hero-badge"><%= training_program.institute&.name || "Soul ERP" %></div>
+          <div style="font-size: 10.5px; color: #e0e7ff; margin-top: 6px;">
+            Generated: <%= Time.current.strftime("%B %d, %Y") %>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- KPI SUMMARY ROW -->
+  <table class="kpi-table">
+    <tr>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-indigo">
+          <div class="kpi-label" style="color: #3730a3;">Total Feedbacks</div>
+          <div class="kpi-value" style="color: #1e1b4b;"><%= total_count %></div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-amber">
+          <div class="kpi-label" style="color: #92400e;">Average Rating</div>
+          <div class="kpi-value" style="color: #78350f;"><%= avg_rating %> ★</div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-emerald">
+          <div class="kpi-label" style="color: #065f46;">5-Star Reviews</div>
+          <div class="kpi-value" style="color: #064e3b;"><%= five_star_count %></div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-blue">
+          <div class="kpi-label" style="color: #075985;">User Categories</div>
+          <div class="kpi-value" style="color: #0c4a6e;"><%= participant_types_count %></div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATA TABLE -->
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 5%; text-align: center;">#</th>
+        <th style="width: 24%;">Participant Details</th>
+        <th style="width: 14%;">User Type</th>
+        <th style="width: 16%;">Rating</th>
+        <th style="width: 42%;">Feedback Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if feedbacks.empty? %>
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 28px; color: #64748b; font-weight: 500;">
+            No feedback entries found matching the report criteria.
+          </td>
+        </tr>
+      <% else %>
+        <% feedbacks.each_with_index do |fb, idx| %>
+          <% 
+            participant = fb.participant
+            user = participant&.user
+            user_type = participant&.participant_type.presence || 'student'
+          %>
+          <tr>
+            <td style="text-align: center; font-weight: 700; color: #64748b;"><%= idx + 1 %></td>
+            <td>
+              <div style="font-weight: 700; color: #0f172a; font-size: 11.5px;"><%= user&.full_name.presence || "Unknown User" %></div>
+              <div style="font-size: 10px; color: #64748b; margin-top: 2px;"><%= user&.email.presence || participant&.phone_number %></div>
+            </td>
+            <td>
+              <% case user_type.downcase %>
+              <% when 'student' %>
+                <span class="user-badge badge-student">Student</span>
+              <% when 'guardian' %>
+                <span class="user-badge badge-guardian">Guardian</span>
+              <% when 'employee' %>
+                <span class="user-badge badge-employee">Employee</span>
+              <% else %>
+                <span class="user-badge" style="background-color: #64748b; color: #ffffff;"><%= user_type.titleize %></span>
+              <% end %>
+            </td>
+            <td>
+              <div class="rating-badge">
+                <span class="rating-stars">
+                  <% fb.rating.times do %>★<% end %><% (5 - fb.rating).times do %>☆<% end %>
+                </span>
+                <span><%= fb.rating %>.0</span>
+              </div>
+            </td>
+            <td>
+              <div class="feedback-box">
+                <%= fb.content %>
+              </div>
+              <div style="font-size: 9.5px; color: #94a3b8; margin-top: 5px; font-weight: 500;">
+                Submitted on <%= fb.created_at.strftime("%b %d, %Y at %I:%M %p") %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+
+  <!-- FOOTER SECTION -->
+  <div class="footer-section">
+    <div>Soul ERP — Administrative Feedback Report</div>
+    <div>Page 1 of 1</div>
+  </div>
+
+</body>
+</html>

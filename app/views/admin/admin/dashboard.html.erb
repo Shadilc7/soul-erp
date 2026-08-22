@@ -1,128 +1,171 @@
 <!-- Admin Dashboard -->
 <!-- Key Metrics -->
-<div class="row">
-  <!-- Basic Stats -->
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Institutes</h6>
-            <h2 class="mt-2 mb-0"><%= @institutes_count %></h2>
-          </div>
-          <i class="bi bi-building fs-1 text-primary opacity-75"></i>
+<!-- Key Metrics Overview Grid -->
+<div class="row g-3 mb-4">
+  <!-- Institutes -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Institutes</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @institutes_count %></h2>
         </div>
-        <%= link_to "View Institutes", admin_institutes_path, class: "btn btn-custom-primary mt-3" %>
+        <div class="kpi-icon-wrapper icon-blue">
+          <i class="bi bi-building-fill"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to admin_institutes_path, class: "btn-kpi-link text-blue" do %>
+          <span>View Institutes</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Institute Admins</h6>
-            <h2 class="mt-2 mb-0"><%= @institute_admins_count %></h2>
-          </div>
-          <i class="bi bi-people fs-1 text-success opacity-75"></i>
+  <!-- Institute Admins -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Institute Admins</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @institute_admins_count %></h2>
         </div>
-        <%= link_to "Manage Admins", admin_users_path, class: "btn btn-custom-primary mt-3" %>
+        <div class="kpi-icon-wrapper icon-emerald">
+          <i class="bi bi-people-fill"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to admin_users_path, class: "btn-kpi-link text-emerald" do %>
+          <span>Manage Admins</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Active Programs</h6>
-            <h2 class="mt-2 mb-0"><%= @active_programs_count %></h2>
-            <!-- removed 'of X' for compactness -->
-          </div>
-          <i class="bi bi-journal-check fs-1 text-info opacity-75"></i>
+  <!-- Active Programs -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Active Programs</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @active_programs_count %></h2>
         </div>
-        <%= link_to 'View Programs', '/admin/programs_by_institute', class: 'btn btn-custom-primary mt-3' %>
+        <div class="kpi-icon-wrapper icon-cyan">
+          <i class="bi bi-journal-check"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to '/admin/programs_by_institute', class: "btn-kpi-link text-cyan" do %>
+          <span>View Programs</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Participants</h6>
-            <h2 class="mt-2 mb-0"><%= @total_participants %></h2>
-          </div>
-          <i class="bi bi-people-fill fs-1 text-primary opacity-75"></i>
+  <!-- Participants -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Participants</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @total_participants %></h2>
         </div>
-        <%= link_to 'View Participants', '/admin/participants_by_institute', class: 'btn btn-custom-primary mt-3' %>
+        <div class="kpi-icon-wrapper icon-purple">
+          <i class="bi bi-person-badge-fill"></i>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Secondary KPIs: Questions / Assignments / Trainers -->
-<div class="row mt-3">
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Questions</h6>
-            <h2 class="mt-2 mb-0"><%= @total_questions || 0 %></h2>
-          </div>
-          <i class="bi bi-question-circle fs-1 text-warning opacity-75"></i>
-        </div>
-  <%= link_to 'View', '/admin/questions', class: 'btn btn-custom-primary mt-3' %>
+      <div class="pt-2 border-top border-light">
+        <%= link_to '/admin/participants_by_institute', class: "btn-kpi-link text-purple" do %>
+          <span>View Participants</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Assignments</h6>
-            <h2 class="mt-2 mb-0"><%= @total_assignments || 0 %></h2>
-          </div>
-          <i class="bi bi-journal-text fs-1 text-info opacity-75"></i>
+  <!-- Questions -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Questions</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @total_questions || 0 %></h2>
         </div>
-  <%= link_to 'View', '/admin/assignments', class: 'btn btn-custom-primary mt-3' %>
+        <div class="kpi-icon-wrapper icon-amber">
+          <i class="bi bi-patch-question-fill"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to '/admin/questions', class: "btn-kpi-link text-amber" do %>
+          <span>View Questions</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Trainers</h6>
-            <h2 class="mt-2 mb-0"><%= (@total_trainers || Trainer.count) rescue 0 %></h2>
-          </div>
-          <i class="bi bi-person-badge fs-1 text-primary opacity-75"></i>
+  <!-- Assignments -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Assignments</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @total_assignments || 0 %></h2>
         </div>
-  <%= link_to 'View', '/admin/trainers', class: 'btn btn-custom-primary mt-3' %>
+        <div class="kpi-icon-wrapper icon-indigo">
+          <i class="bi bi-file-earmark-text-fill"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to '/admin/assignments', class: "btn-kpi-link text-indigo" do %>
+          <span>View Assignments</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3 mb-4 d-flex">
-    <!-- Responses KPI -->
-    <div class="card card-custom flex-fill kpi-card">
-      <div class="card-body d-flex flex-column justify-content-between">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title mb-0">Responses</h6>
-            <h2 class="mt-2 mb-0"><%= @total_responses || 0 %></h2>
-          </div>
-          <i class="bi bi-reply-all fs-1 text-danger opacity-75"></i>
+  <!-- Trainers -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Trainers</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= (@total_trainers || Trainer.count) rescue 0 %></h2>
         </div>
-        <%= link_to 'View Responses', admin_responses_path, class: 'btn btn-custom-primary mt-3' %>
+        <div class="kpi-icon-wrapper icon-rose">
+          <i class="bi bi-person-workspace"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to '/admin/trainers', class: "btn-kpi-link text-rose" do %>
+          <span>View Trainers</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Responses -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card-modern">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <span class="kpi-label">Responses</span>
+          <h2 class="kpi-value text-dark mb-0 mt-1"><%= @total_responses || 0 %></h2>
+        </div>
+        <div class="kpi-icon-wrapper icon-orange">
+          <i class="bi bi-reply-all-fill"></i>
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light">
+        <%= link_to admin_responses_path, class: "btn-kpi-link text-orange" do %>
+          <span>View Responses</span>
+          <i class="bi bi-arrow-right kpi-arrow"></i>
+        <% end %>
       </div>
     </div>
   </div>
@@ -413,35 +456,106 @@
 
 <% content_for :styles do %>
   <style>
-    .card-custom {
-      border: none;
-      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    .card-custom .card-header {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid rgba(0,0,0,.125);
-    }
-    .btn-custom-primary {
-      color: var(--bs-primary);
-      background-color: rgba(var(--bs-primary-rgb), 0.1);
-      border: none;
-    }
-    .btn-custom-primary:hover {
-      color: #fff;
-      background-color: var(--bs-primary);
-    }
-    .icon-primary {
-      color: var(--bs-primary);
-      opacity: 0.75;
-    }
-    /* KPI card consistent sizing and responsive tweaks */
-    .kpi-card {
-      min-height: 120px;
-      padding: 1rem 1.1rem 0.8rem 1.1rem;
+    /* High-Fidelity Glassmorphic KPI Cards */
+    .kpi-card-modern {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      height: 100%;
     }
+    
+    .kpi-card-modern:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
+      border-color: rgba(203, 213, 225, 0.9);
+    }
+
+    .kpi-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+
+    .kpi-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .kpi-card-modern:hover .kpi-icon-wrapper {
+      transform: scale(1.12) rotate(-6deg);
+    }
+
+    .icon-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35); }
+    .icon-emerald { background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35); }
+    .icon-cyan { background: linear-gradient(135deg, #06b6d4, #0e7490); box-shadow: 0 6px 16px rgba(6, 182, 212, 0.35); }
+    .icon-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35); }
+    .icon-amber { background: linear-gradient(135deg, #f59e0b, #b45309); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35); }
+    .icon-indigo { background: linear-gradient(135deg, #6366f1, #4338ca); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35); }
+    .icon-rose { background: linear-gradient(135deg, #ec4899, #be185d); box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35); }
+    .icon-orange { background: linear-gradient(135deg, #f97316, #c2410c); box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35); }
+
+    .btn-kpi-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      padding-top: 0.25rem;
+    }
+
+    .kpi-arrow {
+      font-size: 0.95rem;
+      transition: transform 0.25s ease;
+    }
+
+    .btn-kpi-link:hover .kpi-arrow {
+      transform: translateX(5px);
+    }
+
+    .text-blue { color: #2563eb; }
+    .text-blue:hover { color: #1d4ed8; }
+    .text-emerald { color: #059669; }
+    .text-emerald:hover { color: #047857; }
+    .text-cyan { color: #0891b2; }
+    .text-cyan:hover { color: #0e7490; }
+    .text-purple { color: #7c3aed; }
+    .text-purple:hover { color: #6d28d9; }
+    .text-amber { color: #d97706; }
+    .text-amber:hover { color: #b45309; }
+    .text-indigo { color: #4f46e5; }
+    .text-indigo:hover { color: #4338ca; }
+    .text-rose { color: #db2777; }
+    .text-rose:hover { color: #be185d; }
+    .text-orange { color: #ea580c; }
+    .text-orange:hover { color: #c2410c; }
 
     /* Export buttons on Institution Statistics header */
     .btn-export {
@@ -1056,7 +1170,15 @@ document.addEventListener('turbo:load', function() {
             boxHeight: 12,
             boxPadding: 6,
             borderColor: 'rgba(102, 126, 234, 0.2)',
-            borderWidth: 1
+            borderWidth: 1,
+            callbacks: {
+              title: function(context) {
+                if (context.length > 0) {
+                  return stats.labels[context[0].dataIndex] || context[0].label;
+                }
+                return '';
+              }
+            }
           }
         },
         layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
@@ -1066,10 +1188,18 @@ document.addEventListener('turbo:load', function() {
             border: { display: false },
             ticks: {
               color: '#64748b',
-              font: { size: 12, weight: '500' },
-              maxRotation: 0,
+              font: { size: 11, weight: '600' },
+              maxRotation: 25,
+              minRotation: 0,
               autoSkip: false,
-              padding: 8
+              padding: 8,
+              callback: function(value, index) {
+                const rawLabel = stats.labels[index] || this.getLabelForValue(value);
+                if (typeof rawLabel === 'string' && rawLabel.length > 15) {
+                  return rawLabel.substring(0, 13) + '…';
+                }
+                return rawLabel;
+              }
             }
           },
           y: {
@@ -1192,7 +1322,15 @@ document.addEventListener('turbo:load', function() {
             boxHeight: 12,
             boxPadding: 6,
             borderColor: 'rgba(102, 126, 234, 0.2)',
-            borderWidth: 1
+            borderWidth: 1,
+            callbacks: {
+              title: function(context) {
+                if (context.length > 0) {
+                  return stats.labels[context[0].dataIndex] || context[0].label;
+                }
+                return '';
+              }
+            }
           }
         },
         layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
@@ -1202,9 +1340,18 @@ document.addEventListener('turbo:load', function() {
             border: { display: false },
             ticks: {
               color: '#64748b',
-              font: { size: 12, weight: '500' },
-              maxRotation: 0,
-              padding: 8
+              font: { size: 11, weight: '600' },
+              maxRotation: 25,
+              minRotation: 0,
+              autoSkip: false,
+              padding: 8,
+              callback: function(value, index) {
+                const rawLabel = stats.labels[index] || this.getLabelForValue(value);
+                if (typeof rawLabel === 'string' && rawLabel.length > 15) {
+                  return rawLabel.substring(0, 13) + '…';
+                }
+                return rawLabel;
+              }
             }
           },
           y: {
@@ -1339,7 +1486,15 @@ document.addEventListener('turbo:load', function() {
             boxHeight: 12,
             boxPadding: 6,
             borderColor: 'rgba(102, 126, 234, 0.2)',
-            borderWidth: 1
+            borderWidth: 1,
+            callbacks: {
+              title: function(context) {
+                if (context.length > 0) {
+                  return stats.labels[context[0].dataIndex] || context[0].label;
+                }
+                return '';
+              }
+            }
           }
         },
         layout: { padding: { top: 12, right: 12, bottom: 12, left: 12 } },
@@ -1349,10 +1504,18 @@ document.addEventListener('turbo:load', function() {
             border: { display: false },
             ticks: {
               color: '#64748b',
-              font: { size: 12, weight: '500' },
-              maxRotation: 0,
-              autoSkip: true,
-              padding: 8
+              font: { size: 11, weight: '600' },
+              maxRotation: 25,
+              minRotation: 0,
+              autoSkip: false,
+              padding: 8,
+              callback: function(value, index) {
+                const rawLabel = stats.labels[index] || this.getLabelForValue(value);
+                if (typeof rawLabel === 'string' && rawLabel.length > 15) {
+                  return rawLabel.substring(0, 13) + '…';
+                }
+                return rawLabel;
+              }
             }
           },
           y: {
@@ -1487,6 +1650,12 @@ document.addEventListener('turbo:load', function() {
             borderColor: 'rgba(251, 191, 36, 0.3)',
             borderWidth: 2,
             callbacks: {
+              title: function(context) {
+                if (context.length > 0) {
+                  return stats.labels[context[0].dataIndex] || context[0].label;
+                }
+                return '';
+              },
               label: function(context) {
                 return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' ⭐';
               }
@@ -1500,9 +1669,18 @@ document.addEventListener('turbo:load', function() {
             border: { display: false },
             ticks: {
               color: '#64748b',
-              font: { size: 12, weight: '500' },
-              maxRotation: 0,
-              padding: 8
+              font: { size: 11, weight: '600' },
+              maxRotation: 25,
+              minRotation: 0,
+              autoSkip: false,
+              padding: 8,
+              callback: function(value, index) {
+                const rawLabel = stats.labels[index] || this.getLabelForValue(value);
+                if (typeof rawLabel === 'string' && rawLabel.length > 15) {
+                  return rawLabel.substring(0, 13) + '…';
+                }
+                return rawLabel;
+              }
             }
           },
           y: {

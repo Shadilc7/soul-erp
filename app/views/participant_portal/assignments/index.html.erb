@@ -203,15 +203,27 @@
                     </div>
                   </td>
                   <td class="text-end">
-                    <% if assignment.assignment_response_logs.where(participant: current_participant).exists? %>
-                      <%= link_to participant_portal_assignment_path(assignment), class: "btn-table-action" do %>
-                        <i class="bi bi-eye me-1"></i> View
+                    <div class="d-flex align-items-center justify-content-end gap-2">
+                      <% unanswered_date = assignment.latest_unanswered_date_for(current_participant) %>
+                      <% if unanswered_date.present? %>
+                        <%= link_to take_assignment_participant_portal_assignment_path(assignment, date: unanswered_date),
+                            class: "btn-start-table",
+                            data: { turbo_frame: "_top" },
+                            title: "Take assignment for #{unanswered_date.strftime('%b %d, %Y')}" do %>
+                          <i class="bi bi-play-fill me-1"></i>Take Missed
+                        <% end %>
                       <% end %>
-                    <% else %>
-                      <span class="status-badge status-missed">
-                        <i class="bi bi-x-circle-fill me-1"></i>Missed
-                      </span>
-                    <% end %>
+
+                      <% if assignment.assignment_response_logs.where(participant: current_participant).exists? %>
+                        <%= link_to participant_portal_assignment_path(assignment), class: "btn-table-action" do %>
+                          <i class="bi bi-eye me-1"></i>View
+                        <% end %>
+                      <% elsif unanswered_date.blank? %>
+                        <span class="status-badge status-missed">
+                          <i class="bi bi-x-circle-fill me-1"></i>Missed
+                        </span>
+                      <% end %>
+                    </div>
                   </td>
                 </tr>
               <% end %>
@@ -601,6 +613,26 @@
       color: white;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .btn-start-table {
+      background: linear-gradient(135deg, #ef4444, #f87171);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-start-table:hover {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
     /* Empty State */

@@ -1,385 +1,273 @@
-<!-- Header -->
-<div class="container py-4">
-  <div class="page-header-card mb-4">
-    <div class="header-icon">
-      <i class="bi bi-mortarboard"></i>
-    </div>
-    <div>
-      <h4 class="header-title">Training Programs</h4>
-      <p class="header-subtitle">View all your training programs and their details</p>
-    </div>
-  </div>
-
-  <!-- Training Programs Grid -->
-  <div class="row g-4">
-    <% @training_programs.each do |program| %>
-      <div class="col-12 col-md-6 col-xl-4">
-        <div class="program-card h-100">
-          <div class="card-header-modern">
-            <h5 class="program-title" title="<%= program.title %>">
-              <%= program.title %>
-            </h5>
-            <span class="status-badge status-<%= program.status == 'completed' ? 'completed' : 'active' %>">
-              <i class="bi bi-<%= program.status == 'completed' ? 'check-circle-fill' : 'play-circle-fill' %> me-1"></i>
-              <%= program.status.titleize %>
-            </span>
-          </div>
-
-          <div class="card-body-modern">
-            <p class="program-description"><%= truncate(program.description, length: 100) %></p>
-            
-            <div class="info-list">
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-person-workspace"></i>
-                </div>
-                <div class="info-content">
-                  <small class="info-label">Trainer</small>
-                  <span class="info-value"><%= program.trainer.user.full_name %></span>
-                </div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-calendar-range"></i>
-                </div>
-                <div class="info-content">
-                  <small class="info-label">Duration</small>
-                  <span class="info-value"><%= program.start_date.strftime("%b %d") %> - <%= program.end_date.strftime("%b %d, %Y") %></span>
-                </div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-icon">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="info-content">
-                  <small class="info-label">Type</small>
-                  <span class="info-value"><%= program.program_type.titleize %></span>
-                </div>
-              </div>
-            </div>
-
-            <div class="action-buttons">
-              <%= link_to participant_portal_training_program_path(program), class: "btn-view" do %>
-                <i class="bi bi-eye me-1"></i> View Details
-              <% end %>
-
-              <% participant_feedback = program.feedbacks.find_by(participant: current_participant) %>
-              <% if participant_feedback.present? %>
-                <button class="btn-feedback-done" disabled>
-                  <i class="bi bi-check-circle-fill me-1"></i> Feedback Submitted
-                </button>
-              <% else %>
-                <%= link_to new_participant_portal_training_program_feedback_path(program), class: "btn-feedback" do %>
-                  <i class="bi bi-star-fill me-1"></i> Give Feedback
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% end %>
-
-    <% if @training_programs.empty? %>
-      <div class="col-12">
-        <div class="empty-state">
-          <div class="empty-icon">
-            <i class="bi bi-mortarboard"></i>
-          </div>
-          <h5 class="empty-title">No Training Programs Found</h5>
-          <p class="empty-text">You are not enrolled in any training programs yet.</p>
-        </div>
-      </div>
-    <% end %>
-  </div>
-</div>
+<% 
+  total_programs = @training_programs.size
+  active_programs = @training_programs.select { |p| p.status != 'completed' }.size
+  completed_programs = @training_programs.select { |p| p.status == 'completed' }.size
+%>
 
 <% content_for :styles do %>
-<style>
-  /* Container stability */
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  
-  /* Page Header Card */
-  .page-header-card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    padding: 1.75rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-  }
-  .header-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6366f1;
-    font-size: 1.75rem;
-    flex-shrink: 0;
-  }
-  .header-title {
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-    font-size: 1.75rem;
-    letter-spacing: -0.02em;
-  }
-  .header-subtitle {
-    font-size: 0.95rem;
-    color: #94a3b8;
-    margin: 0.25rem 0 0;
-  }
-
-  /* Program Cards */
-  .program-card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-  .program-card:hover {
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-    transform: translateY(-4px);
-  }
-  .card-header-modern {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    gap: 1rem;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
-  }
-  .program-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  .card-body-modern {
-    padding: 1.5rem;
-  }
-  .program-description {
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-  }
-
-  /* Status Badge */
-  .status-badge {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .status-completed {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
-    color: #059669;
-  }
-  .status-active {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
-    color: #2563eb;
-  }
-
-  /* Info List */
-  .info-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  .info-item {
-    display: flex;
-    align-items: start;
-    gap: 0.875rem;
-    padding: 0.875rem;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(168, 85, 247, 0.02));
-    border: 1px solid rgba(148, 163, 184, 0.06);
-    transition: all 0.3s ease;
-  }
-  .info-item:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
-    border-color: rgba(99, 102, 241, 0.15);
-    transform: translateX(4px);
-  }
-  .info-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6366f1;
-    font-size: 1rem;
-    flex-shrink: 0;
-  }
-  .info-content {
-    flex: 1;
-    min-width: 0;
-  }
-  .info-label {
-    display: block;
-    color: #94a3b8;
-    font-size: 0.7rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-  .info-value {
-    display: block;
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 0.9rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Action Buttons */
-  .action-buttons {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .btn-view {
-    flex: 1;
-    min-width: 0;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    color: #6366f1;
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-  }
-  .btn-view:hover {
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    border-color: #6366f1;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
-  }
-  .btn-feedback {
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    border: none;
-    color: white;
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .btn-feedback:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-    color: white;
-  }
-  .btn-feedback-done {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    color: #059669;
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    cursor: not-allowed;
-    opacity: 0.8;
-    white-space: nowrap;
-  }
-
-  /* Empty State */
-  .empty-state {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    padding: 4rem 2rem;
-    text-align: center;
-  }
-  .empty-icon {
-    width: 96px;
-    height: 96px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-  }
-  .empty-icon i {
-    font-size: 3rem;
-    color: #94a3b8;
-  }
-  .empty-title {
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.75rem;
-  }
-  .empty-text {
-    color: #64748b;
-    margin: 0;
-    font-size: 0.95rem;
-  }
-
-  @media (max-width: 768px) {
-    .header-title {
-      font-size: 1.25rem;
-    }
-    .page-header-card {
-      padding: 1.5rem;
-      gap: 0.875rem;
-    }
-    .header-icon {
-      width: 48px;
-      height: 48px;
-      font-size: 1.5rem;
-    }
-    .header-subtitle {
-      font-size: 0.85rem;
-    }
-    .action-buttons {
+  <style>
+    .program-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
       flex-direction: column;
+      height: 100%;
     }
-    .btn-view {
-      flex: none;
-      width: 100%;
+
+    .program-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
     }
-  }
-</style>
-<% end %> 
+
+    .card-header-modern {
+      padding: 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .program-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .card-body-modern {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      justify-content: space-between;
+    }
+
+    .info-item-modern {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+    }
+
+    .info-icon-modern {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #e0e7ff;
+      color: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .btn-action-view {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      flex: 1;
+    }
+
+    .btn-action-view:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.45);
+      color: white;
+    }
+
+    .btn-action-feedback {
+      background: linear-gradient(135deg, #141c2f 0%, #ea02e9 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(234, 2, 233, 0.3);
+    }
+
+    .btn-action-feedback:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(234, 2, 233, 0.45);
+      color: white;
+    }
+
+    .btn-feedback-submitted {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      cursor: default;
+    }
+  </style>
+<% end %>
+
+<div class="container-fluid px-4 py-4">
+  <!-- BREADCRUMBS & HEADER -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-custom mb-1">
+          <li class="breadcrumb-item"><%= link_to participant_portal_root_path do %><i class="bi bi-house-door me-1"></i>Home<% end %></li>
+          <li class="breadcrumb-item active" aria-current="page">Training Programs</li>
+        </ol>
+      </nav>
+      <h3 class="fw-bold text-dark mb-0">Enrolled Training Programs</h3>
+    </div>
+  </div>
+
+  <!-- KPI METRICS SUMMARY -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Total Programs</div>
+          <div class="h4 fw-bold mb-0 text-dark"><%= total_programs %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-primary">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-4">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Active Ongoing</div>
+          <div class="h4 fw-bold mb-0 text-primary"><%= active_programs %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-info">
+          <i class="bi bi-play-circle-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-4">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Completed</div>
+          <div class="h4 fw-bold mb-0 text-success"><%= completed_programs %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-success">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINING PROGRAMS GRID -->
+  <div class="row g-4">
+    <% if @training_programs.empty? %>
+      <div class="col-12">
+        <div class="table-card p-5 text-center">
+          <div class="text-muted mb-2"><i class="bi bi-mortarboard fs-1"></i></div>
+          <h5 class="fw-bold text-dark mb-1">No Training Programs Found</h5>
+          <p class="text-muted small mb-0">You are currently not enrolled in any training programs.</p>
+        </div>
+      </div>
+    <% else %>
+      <% @training_programs.each do |program| %>
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="program-card">
+            <div class="card-header-modern">
+              <h5 class="program-title text-truncate me-2" title="<%= program.title %>">
+                <%= program.title %>
+              </h5>
+              <% if program.status == 'completed' %>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.75rem;">
+                  <i class="bi bi-check-circle-fill me-1"></i> Completed
+                </span>
+              <% else %>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-medium" style="font-size: 0.75rem;">
+                  <i class="bi bi-play-circle-fill me-1"></i> Ongoing
+                </span>
+              <% end %>
+            </div>
+
+            <div class="card-body-modern">
+              <p class="text-muted small mb-3" style="line-height: 1.5;"><%= truncate(program.description, length: 110) %></p>
+
+              <div class="d-flex flex-column gap-2 mb-4">
+                <div class="info-item-modern">
+                  <div class="info-icon-modern">
+                    <i class="bi bi-person-badge"></i>
+                  </div>
+                  <div>
+                    <span class="text-uppercase text-muted d-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;">Trainer</span>
+                    <span class="fw-semibold text-dark small"><%= program.trainer&.user&.full_name || 'N/A' %></span>
+                  </div>
+                </div>
+
+                <div class="info-item-modern">
+                  <div class="info-icon-modern" style="background: #e0f2fe; color: #0284c7;">
+                    <i class="bi bi-calendar-range"></i>
+                  </div>
+                  <div>
+                    <span class="text-uppercase text-muted d-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;">Duration</span>
+                    <span class="fw-semibold text-dark small"><%= program.start_date.strftime("%b %d") %> - <%= program.end_date.strftime("%b %d, %Y") %></span>
+                  </div>
+                </div>
+
+                <div class="info-item-modern">
+                  <div class="info-icon-modern" style="background: #fef3c7; color: #d97706;">
+                    <i class="bi bi-layers-fill"></i>
+                  </div>
+                  <div>
+                    <span class="text-uppercase text-muted d-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;">Program Type</span>
+                    <span class="fw-semibold text-dark small"><%= program.program_type.titleize %></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <%= link_to participant_portal_training_program_path(program), class: "btn-action-view" do %>
+                  <i class="bi bi-eye me-1.5"></i> View Details
+                <% end %>
+
+                <% participant_feedback = program.feedbacks.find_by(participant: current_participant) %>
+                <% if participant_feedback.present? %>
+                  <span class="btn-feedback-submitted">
+                    <i class="bi bi-check-circle-fill me-1"></i> Feedback Sent
+                  </span>
+                <% else %>
+                  <%= link_to new_participant_portal_training_program_feedback_path(program), class: "btn-action-feedback" do %>
+                    <i class="bi bi-star-fill me-1"></i> Feedback
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div> 

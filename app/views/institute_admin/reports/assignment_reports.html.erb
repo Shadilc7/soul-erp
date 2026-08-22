@@ -1,430 +1,520 @@
-<div class="container-fluid">
-  <!-- Modern Breadcrumb -->
-  <div class="breadcrumb-wrapper d-flex justify-content-between align-items-center mb-4">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb breadcrumb-custom mb-0">
-        <li class="breadcrumb-item"><%= link_to institute_admin_root_path do %><i class="bi bi-house-door"></i><% end %></li>
-        <li class="breadcrumb-item"><%= link_to "Reports", institute_admin_reports_path %></li>
-        <li class="breadcrumb-item"><%= link_to "Assignment Reports", assignment_reports_menu_institute_admin_reports_path %></li>
-        <li class="breadcrumb-item active" aria-current="page">Section-wise Assignments</li>
-      </ol>
-    </nav>
-    <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn btn-sm btn-outline-secondary" do %>
-      <i class="bi bi-arrow-left me-1"></i> Back
-    <% end %>
+<div class="container-fluid px-0 pt-3 pb-4">
+  <!-- PAGE HEADER & BREADCRUMB -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-1 mb-4">
+    <div>
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb breadcrumb-modern mb-0">
+          <li class="breadcrumb-item"><%= link_to institute_admin_root_path do %><i class="bi bi-house-door-fill"></i><% end %></li>
+          <li class="breadcrumb-item"><%= link_to "Reports", institute_admin_reports_path %></li>
+          <li class="breadcrumb-item"><%= link_to "Assignment Reports", assignment_reports_menu_institute_admin_reports_path %></li>
+          <li class="breadcrumb-item active" aria-current="page">Section-wise Assignments</li>
+        </ol>
+      </nav>
+      <h3 class="fw-bold text-dark mb-0" style="letter-spacing: -0.3px;">Section-wise Assignment Reports</h3>
+    </div>
+    <div class="header-actions d-flex flex-wrap align-items-center gap-2">
+      <!-- Background Job Export Buttons -->
+      <button type="button" 
+              class="btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" 
+              onclick="startAsyncExport('assignment_pdf');"
+              title="Export PDF Report">
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+        <span>Export PDF</span>
+      </button>
+
+      <button type="button" 
+              class="btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" 
+              onclick="startAsyncExport('assignment_csv');"
+              title="Export CSV Data">
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        <span>Export CSV</span>
+      </button>
+
+      <%= link_to assignment_reports_menu_institute_admin_reports_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1.5 rounded-3 px-3 py-2 fw-medium" do %>
+        <i class="bi bi-arrow-left"></i>
+        <span>Back</span>
+      <% end %>
+    </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center py-3">
-      <div class="d-flex align-items-center">
-        <h5 class="mb-0">Section-wise Assignment Reports</h5>
+  <!-- KPI SUMMARY METRICS ROW -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Total Assigned</div>
+          <div class="h4 fw-bold mb-0 text-dark"><%= @total_assigned_count || 0 %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-primary">
+          <i class="bi bi-journal-text"></i>
+        </div>
       </div>
     </div>
 
-    <div class="card-body">
-      <!-- Filters -->
-      <%= form_tag assignment_reports_institute_admin_reports_path, method: :get, class: 'mb-4', data: { turbo: false } do %>
-        <div class="filter-container p-3 mb-4 bg-light rounded-3">
-          <h6 class="text-muted mb-3">
-            <i class="bi bi-funnel-fill me-2"></i>Filter Options
-          </h6>
-          
-          <!-- Date Range Filter -->
-          <div class="row mb-3 align-items-center">
-            <label for="date_range" class="col-md-3 col-form-label">
-              <div class="d-flex align-items-center">
-                <div class="icon-circle bg-primary bg-opacity-10 me-2">
-                  <i class="bi bi-calendar-range text-primary"></i>
-                </div>
-                <span>Date Range</span>
-              </div>
-            </label>
-            <div class="col-md-9">
-              <%= select_tag :date_range,
-                  options_for_select([
-                    ['Select Date Range', ''],
-                    ['Today', 'today'],
-                    ['Yesterday', 'yesterday'],
-                    ['Last 7 Days', 'last_7_days'],
-                    ['This Month', 'this_month'],
-                    ['Custom Range', 'custom']
-                  ], @date_range),
-                  class: 'form-select',
-                  required: true,
-                  data: { action: 'change->custom-range#toggle' } %>
-            </div>
-          </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Submitted</div>
+          <div class="h4 fw-bold mb-0 text-success"><%= @submitted_count || 0 %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+      </div>
+    </div>
 
-          <!-- Custom Date Range -->
-          <div class="row mb-3 align-items-center custom-date-container" id="custom-range-fields" style="<%= @date_range == 'custom' ? '' : 'display: none;' %>">
-            <div class="col-md-3">
-              <div class="spacer" style="height: 38px;"></div>
-            </div>
-            <div class="col-md-9">
-              <div class="row g-2">
-                <div class="col-md-6">
-                  <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                      <i class="bi bi-calendar-date text-primary"></i>
-                    </span>
-                    <%= date_field_tag :start_date, @start_date, class: 'form-control border-start-0', placeholder: 'From' %>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                      <i class="bi bi-calendar-date text-primary"></i>
-                    </span>
-                    <%= date_field_tag :end_date, @end_date, class: 'form-control border-start-0', placeholder: 'To' %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Pending</div>
+          <div class="h4 fw-bold mb-0 text-warning"><%= @pending_count || 0 %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-warning">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+    </div>
 
-          <!-- Section Filter -->
-          <div class="row mb-3 align-items-center">
-            <label for="section_id" class="col-md-3 col-form-label">
-              <div class="d-flex align-items-center">
-                <div class="icon-circle bg-primary bg-opacity-10 me-2">
-                  <i class="bi bi-people-fill text-primary"></i>
-                </div>
-                <span>Section</span>
-              </div>
-            </label>
-            <div class="col-md-9">
-              <%= select_tag :section_id,
-                  options_for_select([
-                    ['Select Section', ''],
-                    ['All Sections', 'all']
-                  ] + current_institute.sections.map { |s| [s.name, s.id] }, @section_id),
-                  class: 'form-select',
-                  required: true %>
-            </div>
-          </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Completion Rate</div>
+          <div class="h4 fw-bold mb-0 text-info"><%= @participation_rate || 0 %>%</div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-info">
+          <i class="bi bi-pie-chart"></i>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          <!-- Assignment Filter -->
-          <div class="row mb-3 align-items-center">
-            <label for="assignment_id" class="col-md-3 col-form-label">
-              <div class="d-flex align-items-center">
-                <div class="icon-circle bg-primary bg-opacity-10 me-2">
-                  <i class="bi bi-file-earmark-text-fill text-primary"></i>
-                </div>
-                <span>Assignment</span>
-              </div>
-            </label>
-            <div class="col-md-9">
-              <%= select_tag :assignment_id,
-                  options_for_select([
-                    ['Select Assignment', ''],
-                    ['All Assignments', 'all']
-                  ] + current_institute.assignments.map { |a| [a.title, a.id] }, params[:assignment_id]),
-                  class: 'form-select' %>
-            </div>
-          </div>
-
-          <!-- Submission Status -->
-          <div class="row mb-3 align-items-center">
-            <label for="submission_status" class="col-md-3 col-form-label">
-              <div class="d-flex align-items-center">
-                <div class="icon-circle bg-primary bg-opacity-10 me-2">
-                  <i class="bi bi-check-circle-fill text-primary"></i>
-                </div>
-                <span>Submission Status</span>
-              </div>
-            </label>
-            <div class="col-md-9">
-              <%= select_tag :submission_status,
-                  options_for_select([
-                    ['Select Status', ''],
-                    ['Submitted', 'submitted'],
-                    ['Not Submitted', 'not_submitted']
-                  ], params[:submission_status]),
-                  class: 'form-select',
-                  required: true %>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="row">
-            <div class="col-md-3"></div>
-            <div class="col-md-9">
-              <div class="d-flex">
-                <%= submit_tag "Generate Report", class: "btn btn-primary px-4 me-2" %>
-                <% if params[:commit].present? %>
-                  <%= link_to assignment_reports_institute_admin_reports_path, class: "btn btn-outline-secondary" do %>
-                    <i class="bi bi-arrow-clockwise me-1"></i>Reset Filters
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
+  <!-- FILLED FILTER TOOLBAR -->
+  <div class="filled-toolbar mb-4">
+    <%= form_tag assignment_reports_institute_admin_reports_path, method: :get, id: "assignmentReportsForm" do %>
+      <div class="row g-2 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" id="reportSearchInput" class="form-control" placeholder="Search..." value="<%= params[:search] %>">
           </div>
         </div>
-      <% end %>
 
-      <!-- Report Content -->
-      <% if params[:commit].present? && params[:submission_status].present? %>
-        <% if params[:submission_status] == 'submitted' %>
-          <!-- Submitted Assignments -->
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-              <h6 class="mb-0">Submitted Assignments</h6>
-              <% if @submitted_logs.any? %>
-              <div>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :csv, submission_status: 'submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-primary me-2" do %>
-                  <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-                <% end %>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :pdf, submission_status: 'submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-danger me-2", target: "_blank" do %>
-                  <i class="bi bi-file-earmark-pdf"></i> Preview PDF
-                <% end %>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :pdf, download: true, submission_status: 'submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-danger" do %>
-                  <i class="bi bi-download"></i> Download PDF
-                <% end %>
-              </div>
+        <!-- Section Filter -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-people"></i></span>
+            <select name="section_id" id="sectionFilter" class="form-select" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:section_id].blank? %>>All Sections</option>
+              <% current_institute.sections.each do |sec| %>
+                <option value="<%= sec.id %>" <%= 'selected' if params[:section_id].to_s == sec.id.to_s %>><%= sec.name %></option>
               <% end %>
-            </div>
-            <div class="card-body">
-              <% if @submitted_logs.any? %>
-                <div class="table-responsive">
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Participant</th>
-                        <th>Section</th>
-                        <th>Responses</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% @submitted_logs.each do |log| %>
-                        <tr>
-                          <td><%= log.response_date.strftime("%b %d, %Y") %></td>
-                          <td><%= log.participant.full_name %></td>
-                          <td><%= log.participant.section.name %></td>
-                          <td><%= log.assignment_response_ids.size %></td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% else %>
-                <div class="text-center py-5">
-                  <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
-                  <p class="text-muted">No submitted assignments found for the selected criteria.</p>
-                </div>
-              <% end %>
-            </div>
+            </select>
           </div>
-        <% else %>
-          <!-- Not Submitted Assignments -->
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-              <h6 class="mb-0">Not Submitted Assignments</h6>
-              <% if @not_submitted_participants.any? %>
-              <div>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :csv, submission_status: 'not_submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-primary me-2" do %>
-                  <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-                <% end %>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :pdf, submission_status: 'not_submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-danger me-2", target: "_blank" do %>
-                  <i class="bi bi-file-earmark-pdf"></i> Preview PDF
-                <% end %>
-                <%= link_to assignment_reports_institute_admin_reports_path(format: :pdf, download: true, submission_status: 'not_submitted', date_range: @date_range, start_date: @start_date, end_date: @end_date, section_id: @section_id, assignment_id: params[:assignment_id]), class: "btn btn-sm btn-outline-danger" do %>
-                  <i class="bi bi-download"></i> Download PDF
-                <% end %>
-              </div>
+        </div>
+
+        <!-- Assignment Filter -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+            <select name="assignment_id" id="assignmentFilter" class="form-select" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:assignment_id].blank? %>>All Assignments</option>
+              <% current_institute.assignments.each do |asg| %>
+                <option value="<%= asg.id %>" <%= 'selected' if params[:assignment_id].to_s == asg.id.to_s %>><%= asg.title %></option>
               <% end %>
-            </div>
-            <div class="card-body">
-              <% if @not_submitted_participants.any? %>
-                <div class="table-responsive">
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Participant</th>
-                        <th>Section</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% @not_submitted_participants.each do |participant| %>
-                        <tr>
-                          <td><%= participant.full_name %></td>
-                          <td><%= participant.section.name %></td>
-                          <td><%= participant.email %></td>
-                          <td>
-                            <%= mail_to participant.email, 
-                                class: "btn btn-sm btn-outline-primary",
+            </select>
+          </div>
+        </div>
+
+        <!-- Submission Status -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-check-circle"></i></span>
+            <select name="submission_status" id="statusFilter" class="form-select" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:submission_status].blank? %>>All Status</option>
+              <option value="submitted" <%= 'selected' if params[:submission_status] == 'submitted' %>>Submitted</option>
+              <option value="not_submitted" <%= 'selected' if params[:submission_status] == 'not_submitted' %>>Pending Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Exact Date Filter -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group" title="Filter by Specific Date">
+            <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+            <input type="date" name="specific_date" class="form-control" value="<%= params[:specific_date] %>" onchange="this.form.submit()" placeholder="Select Date">
+          </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+            <select name="date_range" id="dateRangeFilter" class="form-select" onchange="toggleCustomDates(this.value); if (this.value !== 'custom') { this.form.submit(); }">
+              <option value="" <%= 'selected' if params[:date_range].blank? %>>All Ranges</option>
+              <option value="today" <%= 'selected' if params[:date_range] == 'today' %>>Today</option>
+              <option value="yesterday" <%= 'selected' if params[:date_range] == 'yesterday' %>>Yesterday</option>
+              <option value="last_7_days" <%= 'selected' if params[:date_range] == 'last_7_days' %>>Last 7 Days</option>
+              <option value="this_month" <%= 'selected' if params[:date_range] == 'this_month' %>>This Month</option>
+              <option value="custom" <%= 'selected' if params[:date_range] == 'custom' %>>Custom Range</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Date Row (Toggled when Custom is selected) -->
+      <div id="customDateRow" class="row g-3 mt-2 align-items-center <%= 'd-none' unless params[:date_range] == 'custom' %>">
+        <div class="col-12 col-md-4">
+          <div class="input-group">
+            <span class="input-group-text">From</span>
+            <input type="date" name="start_date" class="form-control" value="<%= @start_date.to_s %>">
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="input-group">
+            <span class="input-group-text">To</span>
+            <input type="date" name="end_date" class="form-control" value="<%= @end_date.to_s %>">
+          </div>
+        </div>
+        <div class="col-12 col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm">Apply Range</button>
+          <%= link_to assignment_reports_institute_admin_reports_path, class: "btn btn-outline-secondary", title: "Reset Filters" do %>
+            <i class="bi bi-arrow-counterclockwise"></i>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- MAIN DATA TABLE CARD -->
+  <div class="table-card">
+    <div class="table-card-header d-flex align-items-center justify-content-between py-3 px-4">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-journal-check text-primary fs-5"></i>
+        <h6 class="fw-bold mb-0 text-dark">Assignment Submission Logs</h6>
+      </div>
+      <span class="badge bg-light text-secondary border px-3 py-1.5 fw-medium">
+        Showing <%= @report_rows&.size || 0 %> Records
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px;" class="text-center">#</th>
+            <th style="min-width: 120px;">Date</th>
+            <th style="min-width: 220px;">Participant</th>
+            <th style="min-width: 140px;">Section</th>
+            <th style="min-width: 220px;">Assignment Title</th>
+            <th style="min-width: 120px;" class="text-center">Status</th>
+            <th style="min-width: 120px;" class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% display_rows = @paginated_rows.presence || @report_rows %>
+          <% if display_rows.blank? %>
+            <tr>
+              <td colspan="7" class="text-center py-5">
+                <div class="text-muted mb-2"><i class="bi bi-inbox fs-1"></i></div>
+                <h6 class="fw-bold text-dark mb-1">No Report Entries Found</h6>
+                <p class="text-muted small mb-0">No assignment records match the selected search & filter criteria.</p>
+              </td>
+            </tr>
+          <% else %>
+            <% display_rows.each_with_index do |row, index| %>
+              <% row_num = (@pagy ? @pagy.from : 1) + index %>
+              <tr>
+                <td class="text-center fw-semibold text-secondary" style="font-size: 0.85rem;"><%= row_num %></td>
+                <td>
+                  <span class="fw-medium text-dark"><%= row[:date].present? ? row[:date].strftime("%b %d, %Y") : "-" %></span>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark"><%= row[:participant_name] %></div>
+                  <div class="text-muted small"><%= row[:participant_email] %></div>
+                </td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-medium">
+                    <%= row[:section_name] %>
+                  </span>
+                </td>
+                <td>
+                  <div class="fw-medium text-dark"><%= row[:assignment_title] %></div>
+                </td>
+                <td class="text-center">
+                  <% if row[:status] == 'submitted' %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-medium">Submitted</span>
+                  <% else %>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1 fw-medium">Pending</span>
+                  <% end %>
+                </td>
+                <td class="text-center">
+                  <% if row[:status] == 'submitted' && row[:participant_id].present? && row[:assignment_id].present? %>
+                    <%= link_to assignment_response_details_institute_admin_reports_path(
+                          participant_id: row[:participant_id],
+                          assignment_id: row[:assignment_id],
+                          date: row[:date]
+                        ),
+                        class: "btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 px-3 py-1 rounded-pill fw-semibold shadow-sm",
+                        title: "View Submission Details" do %>
+                      <i class="bi bi-eye-fill"></i> View Details
+                    <% end %>
+                  <% elsif row[:status] == 'pending' && row[:participant_email].present? %>
+                    <%= mail_to row[:participant_email], 
+                                class: "btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill fw-medium", 
                                 subject: "Assignment Submission Reminder" do %>
-                              <i class="bi bi-envelope"></i> Remind
-                            <% end %>
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% else %>
-                <div class="text-center py-5">
-                  <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
-                  <p class="text-muted">No pending submissions found for the selected criteria.</p>
-                </div>
-              <% end %>
-            </div>
+                      <i class="bi bi-envelope-at"></i> Remind
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted small">-</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @pagy && @pagy.pages > 1 %>
+      <div class="table-card-footer d-flex flex-column flex-md-row align-items-center justify-content-between py-3 px-4 bg-white border-top gap-3">
+        <div class="text-secondary small fw-medium">
+          Showing <strong><%= @pagy.from %></strong> to <strong><%= @pagy.to %></strong> of <strong><%= @pagy.count %></strong> records
+        </div>
+        <div class="pagy-bootstrap-nav">
+          <%== pagy_bootstrap_nav(@pagy) %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- ASYNC BACKGROUND EXPORT PROGRESS MODAL -->
+<div class="modal fade" id="asyncExportModal" tabindex="-1" aria-labelledby="asyncExportModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="background: #ffffff;">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-3 rounded-3" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+            <i class="bi bi-cpu-fill fs-3" id="asyncExportIcon"></i>
           </div>
-        <% end %>
-      <% end %>
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="asyncExportModalLabel">Exporting Report</h5>
+          </div>
+        </div>
+        <button type="button" class="btn-close" aria-label="Close" id="asyncExportCloseBtn" onclick="minimizeAsyncModal();"></button>
+      </div>
+
+      <div class="modal-body p-4 text-center">
+        <!-- Progress Percentage Header -->
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <span class="text-secondary small fw-semibold" id="asyncExportStage">Initializing worker...</span>
+          <span class="badge bg-indigo text-white fw-bold px-2.5 py-1 rounded-pill" id="asyncExportPercent" style="background-color: #6366f1;">0%</span>
+        </div>
+
+        <!-- Animated Modern Progress Bar -->
+        <div class="progress rounded-pill mb-3" style="height: 12px; background-color: #f1f5f9;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" 
+               id="asyncProgressBar" 
+               role="progressbar" 
+               style="width: 0%; background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%); transition: width 0.4s ease;"></div>
+        </div>
+
+        <p class="text-muted small mb-0" id="asyncExportMessage">Your request has been enqueued. Please wait while the background worker builds the export file.</p>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-center">
+        <a href="#" id="asyncDownloadBtn" class="btn btn-success d-none d-inline-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow-sm fw-semibold">
+          <i class="bi bi-cloud-arrow-down-fill fs-5"></i>
+          <span>Download File Now</span>
+        </a>
+        <button type="button" class="btn btn-outline-secondary px-3 py-1.5 rounded-3 small text-muted d-inline-flex align-items-center gap-1.5" id="asyncCancelBtn" onclick="minimizeAsyncModal();">
+          <span>Minimize Window</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- MINIMIZED FLOATING PROGRESS WIDGET -->
+<div id="minimizedProgressWidget" 
+     class="d-none position-fixed bottom-0 end-0 m-4 p-3 bg-white rounded-4 shadow-lg border d-flex align-items-center gap-3" 
+     style="z-index: 1065; min-width: 300px; border-color: rgba(99, 102, 241, 0.25) !important;">
+  <div class="p-2 rounded-3 text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);" id="minimizedIconBox">
+    <i class="bi bi-cpu-fill fs-5" id="minimizedIcon"></i>
+  </div>
+  <div class="flex-grow-1 overflow-hidden">
+    <div class="d-flex align-items-center justify-content-between">
+      <span class="fw-bold text-dark small" id="minimizedTitle">Exporting...</span>
+      <span class="badge bg-indigo text-white fw-bold px-2 py-0.5 rounded-pill small" id="minimizedPercent" style="background-color: #6366f1;">0%</span>
+    </div>
+    <div class="progress rounded-pill mt-1" style="height: 6px; background-color: #f1f5f9;">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" id="minimizedProgressBar" style="width: 0%; background: #6366f1; transition: width 0.4s ease;"></div>
+    </div>
+  </div>
+  <button type="button" class="btn btn-sm btn-light rounded-circle p-1.5 lh-1 shadow-sm" title="Maximize Progress Window" onclick="maximizeAsyncModal();">
+    <i class="bi bi-arrows-angle-expand text-primary fs-6"></i>
+  </button>
+  <button type="button" class="btn btn-sm btn-light rounded-circle p-1.5 lh-1 text-muted shadow-sm" title="Dismiss Widget" onclick="dismissWidget();">
+    <i class="bi bi-x-lg"></i>
+  </button>
+</div>
+
 <script>
-  document.addEventListener('turbo:load', function() {
-    // Handle date range selection
-    const dateRangeSelect = document.querySelector('select[name="date_range"]');
-    const customRangeFields = document.getElementById('custom-range-fields');
-    
-    if (dateRangeSelect) {
-      dateRangeSelect.addEventListener('change', function() {
-        if (this.value === 'custom') {
-          customRangeFields.style.display = 'flex';
-        } else {
-          customRangeFields.style.display = 'none';
-        }
-      });
+  let pollInterval = null;
 
-      // Ensure proper display on page load if custom is selected
-      if (dateRangeSelect.value === 'custom') {
-        customRangeFields.style.display = 'flex';
-      }
+  function showAsyncModal() {
+    const modalElement = document.getElementById('asyncExportModal');
+    if (!modalElement) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        modal.show();
+        return;
+      } catch (e) { console.warn('Bootstrap modal init error, using fallback', e); }
     }
+    modalElement.classList.add('show');
+    modalElement.style.display = 'block';
+    document.body.classList.add('modal-open');
+    let backdrop = document.getElementById('customModalBackdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'customModalBackdrop';
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+  }
 
-    // Validate custom date range on form submit
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(event) {
-      const dateRange = dateRangeSelect.value;
-      if (dateRange === 'custom') {
-        const startDate = document.querySelector('input[name="start_date"]').value;
-        const endDate = document.querySelector('input[name="end_date"]').value;
-        
-        if (!startDate || !endDate) {
-          event.preventDefault();
-          alert('Please select both start and end dates for custom range');
-        }
+  function hideAsyncModal() {
+    const modalElement = document.getElementById('asyncExportModal');
+    if (!modalElement) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+      } catch (e) { /* ignore */ }
+    }
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    const backdrop = document.getElementById('customModalBackdrop');
+    if (backdrop) backdrop.remove();
+  }
+
+  function minimizeAsyncModal() {
+    hideAsyncModal();
+    const widget = document.getElementById('minimizedProgressWidget');
+    if (widget) widget.classList.remove('d-none');
+  }
+
+  function maximizeAsyncModal() {
+    dismissWidget();
+    showAsyncModal();
+  }
+
+  function dismissWidget() {
+    const widget = document.getElementById('minimizedProgressWidget');
+    if (widget) widget.classList.add('d-none');
+  }
+
+  function toggleCustomDates(val) {
+    const row = document.getElementById('customDateRow');
+    if (!row) return;
+    if (val === 'custom') {
+      row.classList.remove('d-none');
+    } else {
+      row.classList.add('d-none');
+    }
+  }
+
+  function startAsyncExport(exportType) {
+    document.getElementById('asyncProgressBar').style.width = '5%';
+    document.getElementById('asyncExportPercent').innerText = '5%';
+    document.getElementById('asyncExportStage').innerText = 'Enqueuing Background Job...';
+    document.getElementById('asyncExportMessage').innerText = 'Enqueuing background export request...';
+    document.getElementById('asyncDownloadBtn').classList.add('d-none');
+    document.getElementById('asyncExportIcon').className = 'bi bi-cpu-fill fs-3';
+
+    document.getElementById('minimizedProgressBar').style.width = '5%';
+    document.getElementById('minimizedPercent').innerText = '5%';
+    document.getElementById('minimizedIcon').className = 'bi bi-cpu-fill fs-5';
+
+    showAsyncModal();
+
+    const form = document.getElementById('assignmentReportsForm');
+    const formData = new FormData(form || undefined);
+    formData.delete('_method');
+    formData.append('export_type', exportType);
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('/institute_admin/reports/export_async', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.export_token) {
+        pollExportStatus(data.export_token);
+      } else {
+        document.getElementById('asyncExportStage').innerText = 'Error';
+        document.getElementById('asyncExportMessage').innerText = 'Failed to enqueue export job.';
       }
+    })
+    .catch(err => {
+      console.error('Export enqueue error:', err);
+      document.getElementById('asyncExportStage').innerText = 'Error';
+      document.getElementById('asyncExportMessage').innerText = 'Network error while triggering export.';
     });
-  });
-</script>
+  }
 
-<style>
-  .filter-container {
-    border-left: 4px solid var(--bs-primary);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  function pollExportStatus(exportToken) {
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = setInterval(() => {
+      fetch(`/institute_admin/reports/export_status?export_token=${exportToken}`)
+        .then(res => res.json())
+        .then(data => {
+          const percent = data.progress || 0;
+          document.getElementById('asyncProgressBar').style.width = `${percent}%`;
+          document.getElementById('asyncExportPercent').innerText = `${percent}%`;
+          document.getElementById('asyncExportMessage').innerText = data.message || 'Processing...';
+
+          document.getElementById('minimizedProgressBar').style.width = `${percent}%`;
+          document.getElementById('minimizedPercent').innerText = `${percent}%`;
+
+          if (data.status === 'processing') {
+            document.getElementById('asyncExportStage').innerText = 'Background Processing...';
+          } else if (data.status === 'completed') {
+            clearInterval(pollInterval);
+            document.getElementById('asyncExportStage').innerText = 'Export Ready!';
+            document.getElementById('asyncExportIcon').className = 'bi bi-check-circle-fill text-success fs-3';
+            document.getElementById('minimizedIcon').className = 'bi bi-check-circle-fill text-success fs-5';
+            
+            const downloadBtn = document.getElementById('asyncDownloadBtn');
+            downloadBtn.href = data.download_url;
+            downloadBtn.classList.remove('d-none');
+
+            // Trigger direct download automatically
+            window.location.href = data.download_url;
+
+            // Automatically dismiss both modal & widget after brief completion visual indicator
+            setTimeout(() => {
+              hideAsyncModal();
+              dismissWidget();
+            }, 1200);
+          } else if (data.status === 'failed') {
+            clearInterval(pollInterval);
+            document.getElementById('asyncExportStage').innerText = 'Failed';
+            document.getElementById('asyncExportIcon').className = 'bi bi-exclamation-triangle-fill text-danger fs-3';
+            document.getElementById('minimizedIcon').className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
+          }
+        })
+        .catch(err => console.error('Error polling status:', err));
+    }, 600);
   }
-  
-  /* Modern Breadcrumb Styling */
-  .breadcrumb-wrapper {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    margin-top: 1rem;
-    margin-left: 1rem;
-    margin-right: 1rem;
-  }
-  
-  .breadcrumb-custom {
-    margin-bottom: 0;
-    padding: 0;
-    background: transparent;
-  }
-  
-  .breadcrumb-custom .breadcrumb-item {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-  
-  .breadcrumb-custom .breadcrumb-item a {
-    color: #6c757d;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  
-  .breadcrumb-custom .breadcrumb-item a:hover {
-    color: var(--bs-primary);
-  }
-  
-  .breadcrumb-custom .breadcrumb-item.active {
-    color: var(--bs-primary);
-    font-weight: 600;
-  }
-  
-  .breadcrumb-custom .breadcrumb-item+.breadcrumb-item::before {
-    content: "›";
-    color: #adb5bd;
-    font-size: 1rem;
-    line-height: 1;
-    padding: 0 0.5rem;
-  }
-  
-  .icon-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-  }
-  
-  .custom-date-container {
-    animation: fadeIn 0.3s ease-in-out;
-    margin-top: -0.5rem;
-    margin-bottom: 1rem !important;
-  }
-  
-  .custom-date-container .col-md-9 {
-    padding-left: calc(var(--bs-gutter-x) * .5);
-    padding-right: calc(var(--bs-gutter-x) * .5);
-  }
-  
-  .custom-date-container .row.g-2 {
-    width: 100%;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .form-select, .form-control {
-    border-radius: 0.375rem;
-    box-shadow: none;
-    transition: all 0.2s;
-  }
-  
-  .form-select:focus, .form-control:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15);
-  }
-  
-  .input-group-text {
-    color: #6c757d;
-  }
-  
-  @media (max-width: 768px) {
-    .col-form-label {
-      margin-bottom: 0.5rem;
-    }
-    
-    .row.mb-3 {
-      margin-bottom: 1.5rem !important;
-    }
-    
-    .custom-date-container {
-      margin-top: 0;
-    }
-    
-    .custom-date-container .col-md-6 {
-      margin-bottom: 0.5rem;
-    }
-  }
-</style> 
+</script>

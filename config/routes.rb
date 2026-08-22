@@ -67,6 +67,29 @@ Rails.application.routes.draw do
       resources :training_programs
       resources :assignments
       resource :registration_setting, only: [ :edit, :update ]
+
+      resources :question_banks
+      resources :question_categories do
+        member do
+          get :builder
+          post :auto_assign_bundles
+        end
+        resources :questions, controller: "category_questions" do
+          collection do
+            post :reorder
+          end
+          member do
+            post :duplicate
+          end
+        end
+        resources :bundles, controller: "question_bundles" do
+          member do
+            post :add_question
+            delete "remove_question/:question_id", action: :remove_question, as: :remove_question
+            post :reorder_questions
+          end
+        end
+      end
     end
   end
 
@@ -109,6 +132,9 @@ Rails.application.routes.draw do
         member do
           post :duplicate
         end
+        collection do
+          post :reorder
+        end
       end
       resources :question_sets
       resources :training_programs do
@@ -136,6 +162,11 @@ Rails.application.routes.draw do
         end
       end
       resources :assignments do
+        collection do
+          post :import_question_bank
+          match :import_setup, via: [ :get, :post ]
+          post :finalize_import
+        end
         resources :responses, only: [ :index, :show ]
       end
       resources :responses do
@@ -147,6 +178,10 @@ Rails.application.routes.draw do
           get "assignment_reports_menu"
           get "assignment_reports"
           get "individual_assignment_reports"
+          get "assignment_response_details"
+          match "export_async", via: [ :get, :post, :delete ]
+          get "export_status"
+          get "download_export"
           get "feedback_reports_menu"
           get "feedback_reports"
           get "section_feedback_reports"
@@ -218,6 +253,7 @@ Rails.application.routes.draw do
     namespace :participant_portal do
       root "dashboard#index"
 
+      resources :analytics, only: [ :index ]
       resources :certificates, only: [ :index, :show ]
 
       resources :training_programs, only: [ :index, :show ] do

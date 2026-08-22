@@ -9,37 +9,22 @@ module InstituteAdmin
     end
 
     def assignment_reports
-      @date_range = params[:date_range]
-      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
-      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
-      @section_id = params[:section_id]
-      @assignment_id = params[:assignment_id]
-
-      # Always fetch reports for CSV/PDF format, or when filter is applied in HTML format
-      if params[:format].in?([ "csv", "pdf" ]) || (params[:commit].present? && params[:submission_status].present?)
-        fetch_assignment_reports
-      end
+      set_report_filters
 
       respond_to do |format|
-        format.html
-        format.csv {
-          if @submitted_logs.nil? && @not_submitted_participants.nil?
-            # Initialize empty collections to prevent nil errors
-            @submitted_logs = []
-            @not_submitted_participants = []
-          end
+        format.html do
+          fetch_assignment_reports_paginated
+        end
+        format.csv do
+          fetch_assignment_reports
           send_data generate_assignment_csv, filename: "assignment_report_#{Date.current}.csv"
-        }
-        format.pdf {
-          if @submitted_logs.nil? && @not_submitted_participants.nil?
-            # Initialize empty collections to prevent nil errors
-            @submitted_logs = []
-            @not_submitted_participants = []
-          end
-
-          # Render PDF using Prawn or WickedPDF
-          render_assignment_report_pdf
-        }
+        end
+        format.pdf do
+          fetch_assignment_reports
+          pdf_data = generate_assignment_pdf_with_ferrum
+          disposition = params[:download].present? ? "attachment" : "inline"
+          send_data pdf_data, filename: "assignment_report_#{Date.current}.pdf", type: "application/pdf", disposition: disposition
+        end
       end
     end
 
@@ -431,12 +416,7 @@ module InstituteAdmin
     end
 
     def individual_assignment_reports
-      @date_range = params[:date_range]
-      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
-      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
-      @section_id = params[:section_id]
-      @participant_id = params[:participant_id]
-      @assignment_id = params[:assignment_id]
+      set_report_filters
 
       # Load participants for the selected section
       @participants = if @section_id.present?
@@ -445,31 +425,78 @@ module InstituteAdmin
                        []
       end
 
-      # Always fetch reports for CSV/PDF format, or when filter is applied in HTML format
-      if params[:format].in?([ "csv", "pdf" ]) || (params[:commit].present? && params[:submission_status].present?)
-        fetch_individual_assignment_reports
-      end
-
       respond_to do |format|
-        format.html
+        format.html do
+          fetch_individual_assignment_reports_paginated
+        end
         format.csv {
+          fetch_individual_assignment_reports
           if @submitted_logs.nil? && @not_submitted_assignments.nil?
-            # Initialize empty collections to prevent nil errors
             @submitted_logs = []
             @not_submitted_assignments = []
           end
           send_data generate_individual_assignment_csv, filename: "individual_assignment_report_#{Date.current}.csv"
         }
         format.pdf {
+          fetch_individual_assignment_reports
           if @submitted_logs.nil? && @not_submitted_assignments.nil?
-            # Initialize empty collections to prevent nil errors
             @submitted_logs = []
             @not_submitted_assignments = []
           end
-
-          # Render PDF using Prawn or WickedPDF
           render_individual_assignment_report_pdf
         }
+      end
+    end
+
+    def assignment_response_details
+      @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
+      @participant = current_institute.participants.includes(:user, :section).find(params[:participant_id])
+      @assignment = current_institute.assignments.find(params[:assignment_id])
+
+      @responses = @participant.assignment_responses
+                               .where(assignment: @assignment, response_date: @selected_date)
+                               .includes(:question)
+                               .index_by(&:question_id)
+
+      @grouped_questions = @assignment.questions_grouped_by_bundle_for_date(@selected_date)
+      @total_questions_count = @grouped_questions.values.flatten.size
+      @answered_count = @responses.size
+    end
+
+    def export_async
+      export_token = SecureRandom.hex(12)
+      report_type = params[:export_type] || "individual_assignment_pdf"
+
+      Rails.cache.write("export_progress_#{export_token}", { status: "queued", progress: 5, message: "Enqueuing background export..." }, expires_in: 30.minutes)
+
+      ReportExportJob.perform_later(export_token, report_type, params.permit!.to_h, current_institute.id)
+
+      render json: { export_token: export_token, status: "queued" }
+    end
+
+    def export_status
+      export_token = params[:export_token]
+      progress_info = Rails.cache.read("export_progress_#{export_token}") || { status: "queued", progress: 5, message: "Preparing job..." }
+
+      if progress_info[:status] == "completed"
+        progress_info[:download_url] = download_export_institute_admin_reports_path(export_token: export_token)
+      end
+
+      render json: progress_info
+    end
+
+    def download_export
+      export_token = params[:export_token]
+      file_info = Rails.cache.read("export_file_#{export_token}")
+
+      if file_info.present?
+        response.headers["Content-Length"] = file_info[:data].bytesize.to_s
+        send_data file_info[:data],
+                  filename: file_info[:filename],
+                  type: file_info[:content_type],
+                  disposition: "attachment"
+      else
+        redirect_to individual_assignment_reports_institute_admin_reports_path, alert: "Export file expired or not found."
       end
     end
 
@@ -632,63 +659,464 @@ module InstituteAdmin
     private
 
     def fetch_assignment_reports
-      base_query = AssignmentResponseLog.includes(:participant, :assignment, participant: :section)
-                                      .where(institute: current_institute)
+      set_report_filters
+      base_query = build_assignment_report_base_query
 
-      # Apply date filters
-      base_query = case @date_range
-      when "today"
-                    base_query.where(response_date: Date.current)
-      when "yesterday"
-                    base_query.where(response_date: Date.yesterday)
-      when "last_7_days"
-                    base_query.where(response_date: 7.days.ago.beginning_of_day..Time.current)
-      when "this_month"
-                    base_query.where(response_date: Time.current.beginning_of_month..Time.current)
-      when "custom"
-                    base_query.where(response_date: @start_date.beginning_of_day..@end_date.end_of_day)
-      else
-                    base_query.where(response_date: Date.current)
-      end
-
-      # Apply section filter if selected
       if @section_id.present? && @section_id != "all"
-        base_query = base_query.joins(participant: :section)
-                              .where(sections: { id: @section_id })
+        base_query = base_query.joins(participant: :section).where(sections: { id: @section_id })
       end
 
-      # Apply assignment filter if selected
       if @assignment_id.present? && @assignment_id != "all"
         base_query = base_query.where(assignment_id: @assignment_id)
       end
 
-      @submitted_logs = base_query.order(response_date: :desc)
-
-      # Preload assignment responses for performance
-      @assignment_responses = AssignmentResponse.where(id: @submitted_logs.map(&:assignment_response_ids).flatten).index_by(&:id)
-
-      # Get all participants who should have submitted
-      all_participants = if @section_id.present? && @section_id != "all"
-                         current_institute.participants.includes(:section).where(section_id: @section_id)
-      else
-                         current_institute.participants.includes(:section)
+      if params[:search].present?
+        query_str = "%#{params[:search].strip.downcase}%"
+        base_query = base_query.left_outer_joins(participant: [ :user, :section ], assignment: [])
+                               .where("LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(users.email) LIKE :q OR LOWER(sections.name) LIKE :q OR LOWER(assignments.title) LIKE :q", q: query_str)
       end
 
-      # Get participants who haven't submitted
+      @submitted_logs = base_query.order(response_date: :desc)
+      all_participants = build_all_participants_query
+
       submitted_participant_ids = @submitted_logs.pluck(:participant_id).uniq
       @not_submitted_participants = all_participants.where.not(id: submitted_participant_ids)
 
-      # For assignment filter in non-submitted participants
-      if @assignment_id.present? && @assignment_id != "all"
-        assignment = current_institute.assignments.find(@assignment_id)
-        @assignment_title = assignment.title
+      resolve_report_titles
+
+      # Calculate KPIs
+      @submitted_count = submitted_participant_ids.size
+      @pending_count = @not_submitted_participants.count
+      @total_assigned_count = @submitted_count + @pending_count
+      @participation_rate = (@total_assigned_count > 0) ? ((@submitted_count.to_f / @total_assigned_count) * 100).round(1) : 0.0
+
+      # Unified report rows
+      @report_rows = []
+
+      if params[:submission_status] != "not_submitted"
+        @submitted_logs.each do |log|
+          @report_rows << {
+            date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
+            participant_name: log.participant.full_name,
+            participant_email: log.participant.email,
+            section_name: log.participant.section&.name || "N/A",
+            assignment_title: log.assignment&.title || "Assignment",
+            status: "submitted"
+          }
+        end
       end
 
-      # Clear the data that's not needed based on submission status
+      if params[:submission_status] != "submitted"
+        @not_submitted_participants.each do |participant|
+          @report_rows << {
+            date: nil,
+            participant_name: participant.full_name,
+            participant_email: participant.email,
+            section_name: participant.section&.name || "N/A",
+            assignment_title: @assignment_title || "Assigned Tasks",
+            status: "pending"
+          }
+        end
+      end
+
       if params[:submission_status] == "submitted"
         @not_submitted_participants = []
-      else
+      elsif params[:submission_status] == "not_submitted"
         @submitted_logs = []
+      end
+    end
+
+    # DB-paginated version for HTML format — avoids loading all records into memory.
+    # KPIs are computed via COUNT queries; only the current page's records are instantiated.
+    def fetch_assignment_reports_paginated
+      set_report_filters
+      base_query = build_assignment_report_base_query
+
+      if @section_id.present? && @section_id != "all"
+        base_query = base_query.joins(participant: :section).where(sections: { id: @section_id })
+      end
+
+      if @assignment_id.present? && @assignment_id != "all"
+        base_query = base_query.where(assignment_id: @assignment_id)
+      end
+
+      if params[:search].present?
+        query_str = "%#{params[:search].strip.downcase}%"
+        base_query = base_query.left_outer_joins(participant: [ :user, :section ], assignment: [])
+                               .where("LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(users.email) LIKE :q OR LOWER(sections.name) LIKE :q OR LOWER(assignments.title) LIKE :q", q: query_str)
+      end
+
+      all_participants = build_all_participants_query
+
+      # KPIs via COUNT queries (no record instantiation)
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      @submitted_count = submitted_participant_ids.size
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids)
+      @pending_count = not_submitted_query.count
+      @total_assigned_count = @submitted_count + @pending_count
+      @participation_rate = (@total_assigned_count > 0) ? ((@submitted_count.to_f / @total_assigned_count) * 100).round(1) : 0.0
+
+      # Resolve assignment/section titles for display
+      resolve_report_titles
+
+      items_per_page = 15
+      page_num = [ (params[:page] || 1).to_i, 1 ].max
+
+      submitted_logs_count = base_query.count
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
+      pending_count = not_submitted_query.count
+
+      # Build paginated rows based on submission_status filter
+      if params[:submission_status] == "not_submitted"
+        @total_report_count = pending_count
+        @pagy, paginated_participants = pagy(not_submitted_query, items: items_per_page)
+        @paginated_rows = paginated_participants.map do |participant|
+          {
+            date: nil,
+            participant_name: participant.full_name,
+            participant_email: participant.email,
+            section_name: participant.section&.name || "N/A",
+            assignment_title: @assignment_title || "Assigned Tasks",
+            status: "pending"
+          }
+        end
+      elsif params[:submission_status] == "submitted"
+        @total_report_count = submitted_logs_count
+        @pagy, paginated_logs = pagy(base_query.order(response_date: :desc), items: items_per_page)
+        @paginated_rows = paginated_logs.map do |log|
+          {
+            date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
+            participant_name: log.participant.full_name,
+            participant_email: log.participant.email,
+            section_name: log.participant.section&.name || "N/A",
+            assignment_title: log.assignment&.title || "Assignment",
+            status: "submitted"
+          }
+        end
+      else
+        @total_report_count = submitted_logs_count + pending_count
+        @pagy = Pagy.new(count: @total_report_count, page: page_num, items: items_per_page)
+
+        page_offset = @pagy.offset
+        @paginated_rows = []
+
+        if page_offset < submitted_logs_count
+          logs_for_page = base_query.order(response_date: :desc).offset(page_offset).limit(items_per_page)
+          logs_for_page.each do |log|
+            @paginated_rows << {
+              date: log.response_date,
+              participant_id: log.participant_id,
+              assignment_id: log.assignment_id,
+              participant_name: log.participant.full_name,
+              participant_email: log.participant.email,
+              section_name: log.participant.section&.name || "N/A",
+              assignment_title: log.assignment&.title || "Assignment",
+              status: "submitted"
+            }
+          end
+
+          if @paginated_rows.size < items_per_page && pending_count > 0
+            needed = items_per_page - @paginated_rows.size
+            pending_for_page = not_submitted_query.offset(0).limit(needed)
+            pending_for_page.each do |participant|
+              @paginated_rows << {
+                date: nil,
+                participant_name: participant.full_name,
+                participant_email: participant.email,
+                section_name: participant.section&.name || "N/A",
+                assignment_title: @assignment_title || "Assigned Tasks",
+                status: "pending"
+              }
+            end
+          end
+        else
+          pending_offset = page_offset - submitted_logs_count
+          pending_for_page = not_submitted_query.offset(pending_offset).limit(items_per_page)
+          pending_for_page.each do |participant|
+            @paginated_rows << {
+              date: nil,
+              participant_name: participant.full_name,
+              participant_email: participant.email,
+              section_name: participant.section&.name || "N/A",
+              assignment_title: @assignment_title || "Assigned Tasks",
+              status: "pending"
+            }
+          end
+        end
+      end
+
+      # @report_rows is used for the "Showing X Records" badge in the view
+      @report_rows = Array.new(@total_report_count)
+    end
+
+    # DB-paginated version for individual assignment reports HTML format.
+    def fetch_individual_assignment_reports_paginated
+      set_report_filters
+      base_query = build_assignment_report_base_query
+
+      if @section_id.present? && @section_id != "all"
+        base_query = base_query.joins(participant: :section).where(sections: { id: @section_id })
+      end
+
+      if @participant_id.present? && @participant_id != "all"
+        base_query = base_query.where(participant_id: @participant_id)
+      end
+
+      if @assignment_id.present? && @assignment_id != "all"
+        base_query = base_query.where(assignment_id: @assignment_id)
+      end
+
+      if params[:search].present?
+        query_str = "%#{params[:search].strip.downcase}%"
+        base_query = base_query.left_outer_joins(participant: [ :user, :section ], assignment: [])
+                               .where("LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(users.email) LIKE :q OR LOWER(sections.name) LIKE :q OR LOWER(assignments.title) LIKE :q", q: query_str)
+      end
+
+      all_participants = build_all_participants_query
+      if @participant_id.present? && @participant_id != "all"
+        all_participants = all_participants.where(id: @participant_id)
+      end
+
+      # KPIs via COUNT queries
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      @submitted_count = submitted_participant_ids.size
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids)
+      @pending_count = not_submitted_query.count
+      @total_assigned_count = @submitted_count + @pending_count
+      @participation_rate = (@total_assigned_count > 0) ? ((@submitted_count.to_f / @total_assigned_count) * 100).round(1) : 0.0
+
+      resolve_report_titles
+
+      items_per_page = 15
+      page_num = [ (params[:page] || 1).to_i, 1 ].max
+
+      submitted_logs_count = base_query.count
+      submitted_participant_ids = base_query.distinct.pluck(:participant_id)
+      not_submitted_query = all_participants.where.not(id: submitted_participant_ids).order(:id)
+      pending_count = not_submitted_query.count
+
+      # Build paginated rows
+      if params[:submission_status] == "not_submitted"
+        @total_report_count = pending_count
+        @pagy, paginated_participants = pagy(not_submitted_query, items: items_per_page)
+        @paginated_rows = paginated_participants.map do |participant|
+          {
+            date: nil,
+            participant_name: participant.full_name,
+            participant_email: participant.email,
+            section_name: participant.section&.name || "N/A",
+            assignment_title: @assignment_title || "Assigned Tasks",
+            status: "pending"
+          }
+        end
+      elsif params[:submission_status] == "submitted"
+        @total_report_count = submitted_logs_count
+        @pagy, paginated_logs = pagy(base_query.order(response_date: :desc), items: items_per_page)
+        @paginated_rows = paginated_logs.map do |log|
+          {
+            date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
+            participant_name: log.participant.full_name,
+            participant_email: log.participant.email,
+            section_name: log.participant.section&.name || "N/A",
+            assignment_title: log.assignment&.title || "Assignment",
+            status: "submitted"
+          }
+        end
+      else
+        @total_report_count = submitted_logs_count + pending_count
+        @pagy = Pagy.new(count: @total_report_count, page: page_num, items: items_per_page)
+
+        page_offset = @pagy.offset
+        @paginated_rows = []
+
+        if page_offset < submitted_logs_count
+          logs_for_page = base_query.order(response_date: :desc).offset(page_offset).limit(items_per_page)
+          logs_for_page.each do |log|
+            @paginated_rows << {
+              date: log.response_date,
+              participant_id: log.participant_id,
+              assignment_id: log.assignment_id,
+              participant_name: log.participant.full_name,
+              participant_email: log.participant.email,
+              section_name: log.participant.section&.name || "N/A",
+              assignment_title: log.assignment&.title || "Assignment",
+              status: "submitted"
+            }
+          end
+
+          if @paginated_rows.size < items_per_page && pending_count > 0
+            needed = items_per_page - @paginated_rows.size
+            pending_for_page = not_submitted_query.offset(0).limit(needed)
+            pending_for_page.each do |participant|
+              @paginated_rows << {
+                date: nil,
+                participant_name: participant.full_name,
+                participant_email: participant.email,
+                section_name: participant.section&.name || "N/A",
+                assignment_title: @assignment_title || "Assigned Tasks",
+                status: "pending"
+              }
+            end
+          end
+        else
+          pending_offset = page_offset - submitted_logs_count
+          pending_for_page = not_submitted_query.offset(pending_offset).limit(items_per_page)
+          pending_for_page.each do |participant|
+            @paginated_rows << {
+              date: nil,
+              participant_name: participant.full_name,
+              participant_email: participant.email,
+              section_name: participant.section&.name || "N/A",
+              assignment_title: @assignment_title || "Assigned Tasks",
+              status: "pending"
+            }
+          end
+        end
+      end
+
+      @report_rows = Array.new(@total_report_count)
+    end
+
+    def set_report_filters
+      @date_range = params[:date_range]
+      @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
+      @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.current
+      @section_id = params[:section_id]
+      @participant_id = params[:participant_id]
+      @assignment_id = params[:assignment_id]
+    end
+
+    # Shared query builder for assignment report base query with date filtering.
+    def build_assignment_report_base_query
+      base_query = AssignmentResponseLog.includes(:participant, :assignment, participant: [ :section, :user ])
+                                        .where(institute: current_institute)
+
+      if params[:specific_date].present?
+        exact_date = begin
+          Date.parse(params[:specific_date])
+        rescue StandardError
+          nil
+        end
+        base_query = base_query.where(response_date: exact_date) if exact_date
+      elsif @date_range.present?
+        base_query = case @date_range
+        when "today"
+                       base_query.where(response_date: Date.current)
+        when "yesterday"
+                       base_query.where(response_date: Date.yesterday)
+        when "last_7_days"
+                       base_query.where(response_date: 7.days.ago.beginning_of_day..Time.current)
+        when "this_month"
+                       base_query.where(response_date: Time.current.beginning_of_month..Time.current)
+        when "custom"
+                       base_query.where(response_date: @start_date.beginning_of_day..@end_date.end_of_day)
+        else
+                       base_query
+        end
+      end
+
+      base_query
+    end
+
+    # Shared builder for all participants query, optionally filtered by section and search.
+    def build_all_participants_query
+      all_participants = if @section_id.present? && @section_id != "all"
+                           current_institute.participants.includes(:section, :user).where(section_id: @section_id)
+      else
+                           current_institute.participants.includes(:section, :user)
+      end
+
+      if params[:search].present?
+        query_str = "%#{params[:search].strip.downcase}%"
+        all_participants = all_participants.left_outer_joins(:user, :section)
+                                           .where("LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(users.email) LIKE :q OR LOWER(sections.name) LIKE :q", q:query_str)
+      end
+
+      all_participants
+    end
+
+    # Resolve assignment/section titles for display labels.
+    def resolve_report_titles
+      if @assignment_id.present? && @assignment_id != "all"
+        assignment = current_institute.assignments.find_by(id: @assignment_id)
+        @assignment_title = assignment&.title
+      end
+
+      if @section_id.present? && @section_id != "all"
+        section = current_institute.sections.find_by(id: @section_id)
+        @section_title = section&.name
+      end
+
+      if @participant_id.present? && @participant_id != "all"
+        participant = current_institute.participants.find_by(id: @participant_id)
+        @participant_title = participant&.full_name
+      end
+    end
+
+    def self.ferrum_browser
+      @ferrum_browser ||= Ferrum::Browser.new(
+        timeout: 15,
+        window_size: [ 1200, 1600 ],
+        browser_options: {
+          "no-sandbox": nil,
+          "disable-gpu": nil,
+          "disable-dev-shm-usage": nil
+        }
+      )
+    end
+
+    def self.reset_ferrum_browser!
+      if @ferrum_browser
+        begin
+          @ferrum_browser.quit
+        rescue StandardError
+          nil
+        end
+        @ferrum_browser = nil
+      end
+    end
+
+    def generate_assignment_pdf_with_ferrum
+      html_content = render_to_string(
+        template: "institute_admin/reports/assignment_reports_pdf",
+        formats: [ :html ],
+        layout: false,
+        locals: {
+          current_institute: current_institute
+        }
+      )
+
+      browser = self.class.ferrum_browser
+
+      begin
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          landscape: false,
+          print_background: true
+        )
+
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
+      rescue StandardError => e
+        Rails.logger.error("Ferrum PDF error: #{e.message}. Re-initializing Chrome instance...")
+        self.class.reset_ferrum_browser!
+        browser = self.class.ferrum_browser
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(format: :A4, landscape: false, print_background: true)
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
       end
     end
 
@@ -734,74 +1162,85 @@ module InstituteAdmin
       # Clear the data that's not needed based on submission status
       if params[:submission_status] == "submitted"
         @not_submitted_participants = []
-      else
+      elsif params[:submission_status] == "not_submitted"
         @submitted_feedbacks = []
       end
     end
 
     def fetch_individual_assignment_reports
-      # Only proceed if a participant is selected
-      return if @participant_id.blank?
+      set_report_filters
+      base_query = build_assignment_report_base_query
 
-      participant = current_institute.participants.find(@participant_id)
+      if @section_id.present? && @section_id != "all"
+        base_query = base_query.joins(participant: :section).where(sections: { id: @section_id })
+      end
+
+      if @participant_id.present? && @participant_id != "all"
+        base_query = base_query.where(participant_id: @participant_id)
+      end
+
+      if @assignment_id.present? && @assignment_id != "all"
+        base_query = base_query.where(assignment_id: @assignment_id)
+      end
+
+      if params[:search].present?
+        query_str = "%#{params[:search].strip.downcase}%"
+        base_query = base_query.left_outer_joins(participant: [ :user, :section ], assignment: [])
+                               .where("LOWER(users.first_name) LIKE :q OR LOWER(users.last_name) LIKE :q OR LOWER(users.email) LIKE :q OR LOWER(sections.name) LIKE :q OR LOWER(assignments.title) LIKE :q", q: query_str)
+      end
+
+      @submitted_logs = base_query.order(response_date: :desc)
+      all_participants = build_all_participants_query
+
+      if @participant_id.present? && @participant_id != "all"
+        all_participants = all_participants.where(id: @participant_id)
+      end
+
+      submitted_participant_ids = @submitted_logs.pluck(:participant_id).uniq
+      @not_submitted_participants = all_participants.where.not(id: submitted_participant_ids)
+
+      resolve_report_titles
+
+      # Calculate KPIs
+      @submitted_count = submitted_participant_ids.size
+      @pending_count = @not_submitted_participants.count
+      @total_assigned_count = @submitted_count + @pending_count
+      @participation_rate = (@total_assigned_count > 0) ? ((@submitted_count.to_f / @total_assigned_count) * 100).round(1) : 0.0
+
+      # Unified report rows
+      @report_rows = []
+
+      if params[:submission_status] != "not_submitted"
+        @submitted_logs.each do |log|
+          @report_rows << {
+            date: log.response_date,
+            participant_id: log.participant_id,
+            assignment_id: log.assignment_id,
+            participant_name: log.participant.full_name,
+            participant_email: log.participant.email,
+            section_name: log.participant.section&.name || "N/A",
+            assignment_title: log.assignment&.title || "Assignment",
+            status: "submitted"
+          }
+        end
+      end
+
+      if params[:submission_status] != "submitted"
+        @not_submitted_participants.each do |participant|
+          @report_rows << {
+            date: nil,
+            participant_name: participant.full_name,
+            participant_email: participant.email,
+            section_name: participant.section&.name || "N/A",
+            assignment_title: @assignment_title || "Assigned Tasks",
+            status: "pending"
+          }
+        end
+      end
 
       if params[:submission_status] == "submitted"
-        # Get submitted assignments for the participant
-        base_query = AssignmentResponseLog.includes(:participant, :assignment)
-                                        .where(institute: current_institute)
-                                        .where(participant_id: @participant_id)
-
-        # Apply date filters
-        base_query = case @date_range
-        when "today"
-                      base_query.where(response_date: Date.current)
-        when "yesterday"
-                      base_query.where(response_date: Date.yesterday)
-        when "last_7_days"
-                      base_query.where(response_date: 7.days.ago.beginning_of_day..Time.current)
-        when "this_month"
-                      base_query.where(response_date: Time.current.beginning_of_month..Time.current)
-        when "custom"
-                      base_query.where(response_date: @start_date.beginning_of_day..@end_date.end_of_day)
-        else
-                      base_query.where(response_date: Date.current)
-        end
-
-        # Apply assignment filter if selected
-        if @assignment_id.present? && @assignment_id != "all"
-          base_query = base_query.where(assignment_id: @assignment_id)
-        end
-
-        @submitted_logs = base_query.order(response_date: :desc)
-        @not_submitted_assignments = []
-      else
-        # Get all assignments the participant should have completed
-        available_assignments = Assignment.where(institute: current_institute)
-                                       .active
-                                       .where("end_date >= ?", @start_date)
-                                       .where("start_date <= ?", @end_date)
-
-        # Filter by specific assignment if selected
-        if @assignment_id.present? && @assignment_id != "all"
-          available_assignments = available_assignments.where(id: @assignment_id)
-        end
-
-        # Find assignments applicable to this participant
-        participant_assignments = available_assignments.select do |assignment|
-          if assignment.assignment_type == "individual"
-            assignment.participants.include?(participant)
-          else
-            assignment.sections.include?(participant.section)
-          end
-        end
-
-        # Find which assignments haven't been submitted
-        submitted_assignment_ids = AssignmentResponseLog.where(participant_id: @participant_id)
-                                                     .where(response_date: @start_date.beginning_of_day..@end_date.end_of_day)
-                                                     .pluck(:assignment_id)
-                                                     .uniq
-
-        @not_submitted_assignments = participant_assignments.reject { |a| submitted_assignment_ids.include?(a.id) }
+        @not_submitted_participants = []
+      elsif params[:submission_status] == "not_submitted"
         @submitted_logs = []
       end
     end
@@ -867,49 +1306,19 @@ module InstituteAdmin
       require "csv"
 
       CSV.generate(headers: true) do |csv|
-        if params[:submission_status] == "submitted"
-          # Generate submitted assignments CSV
-          header_row = [ "Date", "Participant", "Section", "Responses" ]
+        csv << [ "#", "Date", "Participant Name", "Email", "Section", "Assignment Title", "Status" ]
 
-          # Add assignment column to the header if no specific assignment is selected
-          header_row.insert(3, "Assignment") if @assignment_id.blank? || @assignment_id == "all"
-
-          csv << header_row
-
-          @submitted_logs.each do |log|
-            row = [
-              log.response_date.strftime("%B %d, %Y"),
-              log.participant.full_name,
-              log.participant.section.name
+        if @report_rows.present?
+          @report_rows.each_with_index do |row, index|
+            csv << [
+              index + 1,
+              row[:date].present? ? row[:date].strftime("%Y-%m-%d") : "N/A",
+              row[:participant_name],
+              row[:participant_email],
+              row[:section_name],
+              row[:assignment_title],
+              row[:status].titleize
             ]
-
-            # Add assignment title if no specific assignment is selected
-            row << log.assignment.title if @assignment_id.blank? || @assignment_id == "all"
-
-            row << log.assignment_response_ids.size
-
-            csv << row
-          end
-        else
-          # Generate not submitted assignments CSV
-          header_row = [ "Participant", "Section", "Email" ]
-
-          # Add assignment column to the header if specific assignment is selected
-          header_row << "Assignment" if @assignment_id.present? && @assignment_id != "all"
-
-          csv << header_row
-
-          @not_submitted_participants.each do |participant|
-            row = [
-              participant.full_name,
-              participant.section.name,
-              participant.email
-            ]
-
-            # Add assignment title if specific assignment is selected
-            row << @assignment_title if @assignment_id.present? && @assignment_id != "all"
-
-            csv << row
           end
         end
       end
@@ -921,9 +1330,10 @@ module InstituteAdmin
       CSV.generate(headers: true) do |csv|
         if params[:submission_status] == "submitted"
           # Generate submitted feedbacks CSV
-          csv << [ "Date", "Participant", "Section", "Training Program", "Rating", "Content" ]
-          @submitted_feedbacks.each do |feedback|
+          csv << [ "#", "Date", "Participant", "Section", "Training Program", "Rating", "Content" ]
+          @submitted_feedbacks.each_with_index do |feedback, index|
             csv << [
+              index + 1,
               feedback.created_at.strftime("%B %d, %Y"),
               feedback.participant.full_name,
               feedback.participant.section.name,
@@ -934,9 +1344,10 @@ module InstituteAdmin
           end
         else
           # Generate not submitted feedbacks CSV
-          csv << [ "Participant", "Section", "Email" ]
-          @not_submitted_participants.each do |participant|
+          csv << [ "#", "Participant", "Section", "Email" ]
+          @not_submitted_participants.each_with_index do |participant, index|
             csv << [
+              index + 1,
               participant.full_name,
               participant.section.name,
               participant.email
@@ -950,29 +1361,18 @@ module InstituteAdmin
       require "csv"
 
       CSV.generate(headers: true) do |csv|
-        if params[:submission_status] == "submitted"
-          # Generate submitted assignments CSV
-          csv << [ "Date", "Assignment", "Questions" ]
+        csv << [ "#", "Date", "Participant", "Email", "Section", "Assignment", "Status" ]
 
-          @submitted_logs.each do |log|
-            csv << [
-              log.response_date.strftime("%B %d, %Y"),
-              log.assignment.title,
-              log.assignment_response_ids.size
-            ]
-          end
-        else
-          # Generate not submitted assignments CSV
-          csv << [ "Assignment", "Start Date", "End Date", "Status" ]
-
-          @not_submitted_assignments.each do |assignment|
-            csv << [
-              assignment.title,
-              assignment.start_date.strftime("%B %d, %Y"),
-              assignment.end_date.strftime("%B %d, %Y"),
-              assignment.status
-            ]
-          end
+        (@report_rows || []).each_with_index do |row, index|
+          csv << [
+            index + 1,
+            row[:date].present? ? row[:date].strftime("%B %d, %Y") : "Pending",
+            row[:participant_name],
+            row[:participant_email],
+            row[:section_name],
+            row[:assignment_title],
+            row[:status].to_s.titleize
+          ]
         end
       end
     end
@@ -1224,52 +1624,53 @@ module InstituteAdmin
     end
 
     def render_individual_assignment_report_pdf
-      submission_status = params[:submission_status] || "submitted"
-      report_title = submission_status == "submitted" ? "Submitted Assignments Report" : "Not Submitted Assignments Report"
-
-      participant = current_institute.participants.find(@participant_id)
-
-      # Get filter information for the report header
-      date_range_text = case @date_range
-      when "today"
-                          "Today (#{Date.current.strftime('%b %d, %Y')})"
-      when "yesterday"
-                          "Yesterday (#{Date.yesterday.strftime('%b %d, %Y')})"
-      when "last_7_days"
-                          "Last 7 Days"
-      when "this_month"
-                          "This Month (#{Date.current.strftime('%B %Y')})"
-      when "custom"
-                          "#{@start_date.strftime('%b %d, %Y')} to #{@end_date.strftime('%b %d, %Y')}"
-      else
-                          "All Dates"
-      end
-
-      assignment_text = if @assignment_id.present? && @assignment_id != "all"
-                        assignment = current_institute.assignments.find(@assignment_id)
-                        "Assignment: #{assignment.title}"
-      else
-                        "All Assignments"
-      end
-
-      # Generate PDF using Prawn directly
-      pdf = generate_individual_assignment_pdf(
-        report_title: "Individual #{report_title} for #{participant.full_name}",
-        date_range: date_range_text,
-        participant: participant.full_name,
-        section: participant.section.name,
-        assignment: assignment_text,
-        institute_name: current_institute.name,
-        submission_status: submission_status
-      )
-
-      # Check if the user wants to download or preview
+      pdf_data = generate_individual_assignment_pdf_with_ferrum
       disposition = params[:download] == "true" ? "attachment" : "inline"
 
-      send_data pdf.render,
+      send_data pdf_data,
         filename: "individual_assignment_report_#{Date.current.strftime('%Y%m%d')}.pdf",
         type: "application/pdf",
         disposition: disposition
+    end
+
+    def generate_individual_assignment_pdf_with_ferrum
+      participant = current_institute.participants.find_by(id: @participant_id) if @participant_id.present? && @participant_id != "all"
+      @participant_title = participant&.full_name || "All Participants"
+
+      html_content = render_to_string(
+        template: "institute_admin/reports/individual_assignment_reports_pdf",
+        formats: [ :html ],
+        layout: false,
+        locals: {
+          current_institute: current_institute
+        }
+      )
+
+      browser = self.class.ferrum_browser
+
+      begin
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(
+          format: :A4,
+          landscape: false,
+          print_background: true
+        )
+
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
+      rescue StandardError => e
+        Rails.logger.error("Ferrum PDF error: #{e.message}. Re-initializing Chrome instance...")
+        self.class.reset_ferrum_browser!
+        browser = self.class.ferrum_browser
+        base64_html = Base64.strict_encode64(html_content)
+        data_uri = "data:text/html;base64,#{base64_html}"
+        browser.go_to(data_uri)
+        pdf_data = browser.pdf(format: :A4, landscape: false, print_background: true)
+        pdf_data = Base64.decode64(pdf_data) if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        pdf_data
+      end
     end
 
     def generate_individual_assignment_pdf(options = {})
@@ -1331,77 +1732,30 @@ module InstituteAdmin
       pdf.move_down 20
 
       # Report data
-      if options[:submission_status] == "submitted"
-        if @submitted_logs.any?
-          # Table header
-          header = [ "Date", "Assignment", "Questions" ]
+      if @report_rows.present? && @report_rows.any?
+        header = [ "Date", "Participant", "Section", "Assignment", "Status" ]
 
-          # Table data
-          data = []
-          @submitted_logs.each do |log|
-            row = [
-              log.response_date.strftime("%b %d, %Y"),
-              log.assignment.title,
-              log.assignment_response_ids.size.to_s
-            ]
+        data = @report_rows.map do |row|
+          [
+            row[:date].present? ? row[:date].strftime("%b %d, %Y") : "Pending",
+            row[:participant_name].to_s,
+            row[:section_name].to_s,
+            row[:assignment_title].to_s,
+            row[:status].to_s.titleize
+          ]
+        end
 
-            data << row
-          end
+        pdf.table([ header ] + data, header: true, width: pdf.bounds.width) do
+          cells.padding = [ 8, 10 ]
+          row(0).font_style = :bold
+          row(0).background_color = "EEEEEE"
 
-          # Generate table
-          pdf.table([ header ] + data, header: true, width: pdf.bounds.width) do
-            cells.padding = [ 8, 10 ]
-
-            row(0).font_style = :bold
-            row(0).background_color = "EEEEEE"
-
-            # Zebra striping
-            rows(1..data.length).each_with_index do |row, i|
-              row.background_color = "F5F5F5" if i.even?
-            end
-          end
-        else
-          pdf.text "No submitted assignments found for the selected criteria.", align: :center, style: :italic, color: "666666"
-          pdf.stroke do
-            pdf.rectangle [ 0, pdf.cursor ], pdf.bounds.width, 50
+          rows(1..data.length).each_with_index do |row, i|
+            row.background_color = "F5F5F5" if i.even?
           end
         end
       else
-        if @not_submitted_assignments.any?
-          # Table header
-          header = [ "Assignment", "Start Date", "End Date", "Status" ]
-
-          # Table data
-          data = []
-          @not_submitted_assignments.each do |assignment|
-            row = [
-              assignment.title,
-              assignment.start_date.strftime("%b %d, %Y"),
-              assignment.end_date.strftime("%b %d, %Y"),
-              assignment.status
-            ]
-
-            data << row
-          end
-
-          # Generate table
-          pdf.table([ header ] + data, header: true, width: pdf.bounds.width) do
-            cells.padding = [ 8, 10 ]
-
-            row(0).font_style = :bold
-            row(0).background_color = "EEEEEE"
-
-            # Zebra striping
-            rows(1..data.length).each_with_index do |row, i|
-              row.background_color = "F5F5F5" if i.even?
-            end
-          end
-        else
-          pdf.text "No pending assignments found for the selected criteria.", align: :center, style: :italic, color: "666666"
-          pdf.stroke do
-            pdf.rectangle [ 0, pdf.cursor ], pdf.bounds.width, 50
-          end
-        end
+        pdf.text "No assignment records found for the selected criteria.", align: :center, style: :italic, color: "666666"
       end
 
       # Footer
@@ -1456,11 +1810,11 @@ module InstituteAdmin
       )
 
       # Generate PDF using Ferrum
-      require 'ferrum'
-      require 'base64'
+      require "ferrum"
+      require "base64"
 
       pdf_data = nil
-      browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
+      browser = Ferrum::Browser.new(headless: true, window_size: [ 1024, 768 ])
       begin
         base64_html = Base64.strict_encode64(html)
         data_uri = "data:text/html;base64,#{base64_html}"
@@ -1477,8 +1831,8 @@ module InstituteAdmin
       end
 
       # Decode Base64 if needed (Ferrum returns Base64 encoded string)
-      if pdf_data.present? && !pdf_data.start_with?('%PDF')
-        require 'base64'
+      if pdf_data.present? && !pdf_data.start_with?("%PDF")
+        require "base64"
         pdf_data = Base64.decode64(pdf_data)
       end
 
@@ -1532,11 +1886,11 @@ module InstituteAdmin
       )
 
       # Generate PDF using Ferrum
-      require 'ferrum'
-      require 'base64'
+      require "ferrum"
+      require "base64"
 
       pdf_data = nil
-      browser = Ferrum::Browser.new(headless: true, window_size: [1024, 768])
+      browser = Ferrum::Browser.new(headless: true, window_size: [ 1024, 768 ])
       begin
         base64_html = Base64.strict_encode64(html)
         data_uri = "data:text/html;base64,#{base64_html}"
@@ -1553,7 +1907,7 @@ module InstituteAdmin
       end
 
       # Decode Base64 if needed (Ferrum returns Base64 encoded string)
-      if pdf_data.present? && !pdf_data.start_with?('%PDF')
+      if pdf_data.present? && !pdf_data.start_with?("%PDF")
         pdf_data = Base64.decode64(pdf_data)
       end
 

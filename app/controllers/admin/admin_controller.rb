@@ -74,13 +74,13 @@ module Admin
         avg_ratings: @institutes.map { |i| i[:stats][:feedbacks][:average_rating] }
       }
 
-      # Global totals
-      @total_programs = TrainingProgram.count
-      @active_programs_count = TrainingProgram.where(status: :ongoing).count
+      # Global totals derived from pre-aggregates
+      @total_programs = program_totals.values.sum
+      @active_programs_count = program_active_totals.values.sum
 
-      @total_participants = Participant.count
-      @total_approved_participants = Participant.joins(:user).where(users: { active: true }).count
-      @total_not_approved_participants = Participant.joins(:user).where(users: { active: false }).count
+      @total_participants = participant_totals.values.sum
+      @total_approved_participants = participant_active_totals.values.sum
+      @total_not_approved_participants = @total_participants - @total_approved_participants
 
       # Recent Data
       @recent_institutes = Institute.order(created_at: :desc).limit(5)
@@ -91,28 +91,30 @@ module Admin
                                                .order(created_at: :desc)
                                                .limit(5)
 
-  # Global totals for dashboard KPIs
-  @total_sections = Section.count
-  @active_sections = Section.active.count rescue Section.count
+      # Global totals for dashboard KPIs
+      @total_sections = section_totals.values.sum
+      @active_sections = section_active_totals.values.sum
 
-  @total_assignments = Assignment.count
-  @active_assignments = Assignment.active.count rescue Assignment.count
+      @total_assignments = assignment_totals.values.sum
+      @active_assignments = assignment_active_totals.values.sum
 
-  @total_questions = Question.count
-  @total_question_sets = QuestionSet.count rescue 0
+      @total_questions = question_totals.values.sum
+      @total_question_sets = question_set_totals.values.sum
 
-  @total_feedbacks = TrainingProgramFeedback.count
-  @average_rating = (TrainingProgramFeedback.average(:rating) || 0).to_f.round(1)
+      @total_feedbacks = feedback_totals.values.sum
+      all_ratings = feedback_avg_ratings.values.compact
+      @average_rating = all_ratings.empty? ? 0.0 : (all_ratings.sum.to_f / all_ratings.size).round(1)
 
-  @total_trainers = Trainer.count
-  # Total distinct responses (assignment + participant) for quick KPI on admin dashboard
-  begin
-    @total_responses = AssignmentResponse.joins(:participant)
-                        .count("DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id)")
-  rescue StandardError => e
-    Rails.logger.warn("Could not compute total_responses for admin dashboard: "); Rails.logger.warn(e.message)
-    @total_responses = 0
-  end
+      @total_trainers = Trainer.count
+      # Total distinct responses (assignment + participant) for quick KPI on admin dashboard
+      begin
+        @total_responses = AssignmentResponse.joins(:participant)
+                            .count("DISTINCT (assignment_responses.assignment_id, assignment_responses.participant_id)")
+      rescue StandardError => e
+        Rails.logger.warn("Could not compute total_responses for admin dashboard: ")
+        Rails.logger.warn(e.message)
+        @total_responses = 0
+      end
     end
 
     # GET /admin/responses
@@ -279,7 +281,7 @@ module Admin
     def questions
       @institutes = Institute.all.order(:name)
 
-      questions = Question.includes(:institute).order(created_at: :desc)
+      questions = Question.includes(:institute).order(position: :asc, created_at: :desc)
 
       if params[:institute_id].present?
         questions = questions.where(institute_id: params[:institute_id])

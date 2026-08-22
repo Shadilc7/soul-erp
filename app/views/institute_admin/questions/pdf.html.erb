@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Questions Bank Report - <%= institute.name %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    <%= File.read(Rails.root.join("app/assets/stylesheets/questions_pdf_report.css")).html_safe %>
+  </style>
+</head>
+<body>
+
+  <!-- HERO HEADER -->
+  <div class="hero-banner">
+    <table class="hero-table">
+      <tr>
+        <td style="vertical-align: middle;">
+          <div class="hero-title">Questions Bank Report</div>
+          <div class="hero-subtitle">Institute Question Repository</div>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <div class="hero-badge"><%= institute.name %></div>
+          <div style="font-size: 10.5px; color: #dbeafe; margin-top: 6px;">
+            Generated: <%= Time.current.strftime("%B %d, %Y") %>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- KPI SUMMARY ROW -->
+  <table class="kpi-table">
+    <tr>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-blue">
+          <div class="kpi-label" style="color: #1e40af;">Total Questions</div>
+          <div class="kpi-value" style="color: #1e3a8a;"><%= total_count %></div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-emerald">
+          <div class="kpi-label" style="color: #065f46;">Active Questions</div>
+          <div class="kpi-value" style="color: #064e3b;"><%= active_count %></div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-purple">
+          <div class="kpi-label" style="color: #6b21a8;">Question Types</div>
+          <div class="kpi-value" style="color: #581c87;"><%= types_count %></div>
+        </div>
+      </td>
+      <td style="width: 25%;">
+        <div class="kpi-card kpi-card-amber">
+          <div class="kpi-label" style="color: #92400e;">Mandatory</div>
+          <div class="kpi-value" style="color: #78350f;"><%= required_count %></div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATA TABLE -->
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 5%; text-align: center;">#</th>
+        <th style="width: 32%;">Question Title</th>
+        <th style="width: 22%;">Display Name</th>
+        <th style="width: 15%;">Question Type</th>
+        <th style="width: 12%;">Status</th>
+        <th style="width: 14%; text-align: center;">Options</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if questions.empty? %>
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 28px; color: #64748b; font-weight: 500;">
+            No questions found matching the report criteria.
+          </td>
+        </tr>
+      <% else %>
+        <% questions.each_with_index do |q, idx| %>
+          <tr>
+            <td style="text-align: center; font-weight: 700; color: #64748b;"><%= idx + 1 %></td>
+            <td>
+              <div style="font-weight: 700; color: #0f172a; font-size: 11.5px;"><%= q.title %></div>
+              <% if q.description.present? %>
+                <div style="font-size: 10px; color: #64748b; margin-top: 2px;"><%= truncate(q.description, length: 75) %></div>
+              <% end %>
+            </td>
+            <td>
+              <div style="font-size: 11px; color: #334155;">
+                <%= q.display_name.presence || "Not Set" %>
+              </div>
+            </td>
+            <td>
+              <span class="type-badge"><%= q.question_type.titleize %></span>
+            </td>
+            <td>
+              <% if q.active? %>
+                <span class="status-badge-active">Active</span>
+              <% else %>
+                <span class="status-badge-inactive">Inactive</span>
+              <% end %>
+            </td>
+            <td style="text-align: center; font-weight: 600; color: #475569;">
+              <%= q.options.count %>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+
+  <!-- FOOTER SECTION -->
+  <div class="footer-section">
+    <div>Soul ERP — Questions Repository Management</div>
+    <div>Page 1 of 1</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<%= form_with(model: [:admin, category], local: true, class: "row g-3") do |f| %>
+  <% if category.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-0" role="alert">
+        <h6 class="alert-heading font-weight-bold mb-1 d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill"></i> Please fix the following errors:
+        </h6>
+        <ul class="mb-0 ps-3 small">
+          <% category.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-12">
+    <%= f.label :question_bank_id, "Question Bank", class: "form-label fw-semibold text-dark" %>
+    <%= f.collection_select :question_bank_id, QuestionBank.ordered, :id, :name, { prompt: "-- Select Question Bank --" }, { class: "form-select rounded-3", required: true } %>
+  </div>
+
+  <div class="col-12">
+    <%= f.label :name, "Category Name", class: "form-label fw-semibold text-dark" %>
+    <%= f.text_field :name, class: "form-control rounded-3", placeholder: "e.g., Mathematics Q1 2026 / Medical Training Module A", required: true %>
+  </div>
+
+  <div class="col-12">
+    <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold text-dark" %>
+    <%= f.text_area :description, rows: 3, class: "form-control rounded-3", placeholder: "Briefly explain the purpose or scope of this question category..." %>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <%= f.label :duration_days, "No. of Days (Validity / Duration)", class: "form-label fw-semibold text-dark" %>
+    <%= f.number_field :duration_days, class: "form-control rounded-3", min: 1, placeholder: "e.g. 5, 10, 20, 30", required: true %>
+    <div class="form-text text-muted">Enter total active duration in days (e.g. 5 days, 10 days, 30 days).</div>
+  </div>
+
+  <div class="col-12 col-md-6 d-flex align-items-center">
+    <div class="form-check form-switch mt-3">
+      <%= f.check_box :active, class: "form-check-input", role: "switch", id: "activeSwitch" %>
+      <%= f.label :active, "Active Category", class: "form-check-label fw-semibold text-dark", for: "activeSwitch" %>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex justify-content-end gap-2 pt-3 border-top mt-4">
+    <%= link_to "Cancel", admin_question_categories_path, class: "btn btn-outline-secondary rounded-3 px-4" %>
+    <%= f.submit category.new_record? ? "Create Category" : "Update Category", class: "btn btn-primary rounded-3 px-4" %>
+  </div>
+<% end %>

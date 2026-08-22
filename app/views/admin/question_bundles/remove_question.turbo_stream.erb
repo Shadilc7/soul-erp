@@ -1,0 +1,37 @@
+<turbo-stream action="remove" target="bundle_item_<%= @bundle.id %>_<%= @question_id %>">
+</turbo-stream>
+
+<turbo-stream action="replace" target="bundle_count_<%= @bundle.id %>">
+  <template>
+    <span class="badge bg-secondary rounded-pill px-3 py-1 fw-medium" id="bundle_count_<%= @bundle.id %>" data-bundle-count-id="<%= @bundle.id %>">
+      <%= @bundle.questions.count %> <%= "question".pluralize(@bundle.questions.count) %>
+    </span>
+  </template>
+</turbo-stream>
+
+<% 
+  overlaps = true
+  if @question
+    q_from = @question.from_day || 1
+    q_to = @question.to_day || @category.duration_days || 30
+    b_from = @bundle.from_day || 1
+    b_to = @bundle.to_day || @category.duration_days || 30
+    overlaps = ([q_from, b_from].max <= [q_to, b_to].min)
+  end
+%>
+<turbo-stream action="replace" target="question_select_<%= @question_id %>_bundle_<%= @bundle.id %>">
+  <template>
+    <option value="<%= @bundle.id %>" id="question_select_<%= @question_id %>_bundle_<%= @bundle.id %>" <%= "disabled" unless overlaps %>>
+      <%= @bundle.name %> (<%= @bundle.day_range_text %>)<%= " - Schedule mismatch" unless overlaps %>
+    </option>
+  </template>
+</turbo-stream>
+
+<turbo-stream action="remove" target="q_<%= @question_id %>_b_badge_<%= @bundle.id %>">
+</turbo-stream>
+
+<turbo-stream action="append" target="toast-container">
+  <template>
+    <%= render partial: "admin/question_bundles/toast", formats: [:html], locals: { message: "Question removed from #{@bundle.name}", type: "success" } %>
+  </template>
+</turbo-stream>

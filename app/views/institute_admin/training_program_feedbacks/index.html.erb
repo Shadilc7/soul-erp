@@ -1,55 +1,544 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom py-3">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Feedbacks for <%= @training_program.title %></h5>
-      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary" do %>
-        <i class="bi bi-arrow-left"></i> Back to Programs
+<div class="container-fluid p-0">
+
+  <!-- PAGE HEADER -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-3 border-bottom gap-3">
+    <div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <h3 class="fw-bold text-dark mb-0">Program Feedbacks</h3>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold"><%= @training_program.title %></span>
+      </div>
+      <p class="text-muted small mb-0">Review feedback submissions, rating distributions, and user comments.</p>
+    </div>
+    <div class="header-actions d-flex flex-wrap align-items-center gap-2">
+      <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, format: :pdf, rating: params[:rating], participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "btn btn-outline-danger d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
+                  target: "_blank", 
+                  title: "Export PDF Report" do %>
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+        <span>Export PDF</span>
+      <% end %>
+
+      <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, format: :csv, rating: params[:rating], participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium", 
+                  title: "Export CSV Data" do %>
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        <span>Export CSV</span>
+      <% end %>
+
+      <%= link_to institute_admin_training_programs_path(view: 'feedbacks'), class: "btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-3 py-2 fw-medium" do %>
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Programs</span>
       <% end %>
     </div>
   </div>
 
-  <div class="card-body">
-    <% if @feedbacks.any? %>
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Participant</th>
-              <th>Rating</th>
-              <th>Feedback</th>
-              <th>Submitted On</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @feedbacks.each do |feedback| %>
-              <tr>
-                <td>
-                  <%= link_to institute_admin_participant_path(feedback.participant) do %>
-                    <%= feedback.participant.user.full_name %>
-                  <% end %>
-                </td>
-                <td>
-                  <div class="d-flex">
-                    <% feedback.rating.times do %>
-                      <i class="bi bi-star-fill text-warning"></i>
-                    <% end %>
-                    <% (5 - feedback.rating).times do %>
-                      <i class="bi bi-star text-muted"></i>
-                    <% end %>
-                  </div>
-                </td>
-                <td><%= feedback.content %></td>
-                <td><%= feedback.created_at.strftime("%b %d, %Y %I:%M %p") %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+  <!-- KPI SUMMARY ROW -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Total Feedbacks</div>
+          <div class="h4 fw-bold mb-0 text-dark"><%= @total_feedbacks_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-primary">
+          <i class="bi bi-chat-square-text"></i>
+        </div>
       </div>
-    <% else %>
-      <div class="text-center py-4">
-        <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
-        <p class="text-muted mb-0">No feedbacks submitted yet for this training program.</p>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Average Rating</div>
+          <div class="h4 fw-bold mb-0 text-warning d-flex align-items-center gap-1">
+            <span><%= @avg_rating %></span>
+            <i class="bi bi-star-fill fs-6"></i>
+          </div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-warning">
+          <i class="bi bi-star"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">5-Star Reviews</div>
+          <div class="h4 fw-bold mb-0 text-success"><%= @five_star_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-success">
+          <i class="bi bi-hand-thumbs-up"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="inst-kpi-card">
+        <div>
+          <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">User Categories</div>
+          <div class="h4 fw-bold mb-0 text-info"><%= @participant_types_count %></div>
+        </div>
+        <div class="inst-kpi-icon inst-kpi-icon-info">
+          <i class="bi bi-people"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATING OVERVIEW & HORIZONTAL DISTRIBUTION CARD -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden rating-analytics-card">
+    <div class="card-body p-4">
+      <div class="row g-4 align-items-center">
+        <!-- Left: Overall Rating Hero -->
+        <div class="col-12 col-lg-4 text-center border-lg-end pe-lg-4">
+          <div class="rating-hero-wrapper py-2">
+            <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">Overall Rating</div>
+            <div class="display-3 fw-bold text-dark mb-1 rating-hero-score"><%= @program_avg_rating %></div>
+            <div class="d-flex justify-content-center align-items-center gap-1 text-warning fs-4 mb-2">
+              <% @program_avg_rating.floor.times do %>
+                <i class="bi bi-star-fill"></i>
+              <% end %>
+              <% if @program_avg_rating - @program_avg_rating.floor >= 0.5 %>
+                <i class="bi bi-star-half"></i>
+                <% (4 - @program_avg_rating.floor).times do %>
+                  <i class="bi bi-star text-light-emphasis"></i>
+                <% end %>
+              <% else %>
+                <% (5 - @program_avg_rating.floor).times do %>
+                  <i class="bi bi-star text-light-emphasis"></i>
+                <% end %>
+              <% end %>
+            </div>
+            <div class="text-muted small fw-medium mb-3">
+              Based on <strong class="text-dark"><%= @program_total_feedbacks %></strong> <%= "review".pluralize(@program_total_feedbacks) %>
+            </div>
+            <% if @positive_rating_pct > 0 %>
+              <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 bg-success bg-opacity-10 text-success rounded-pill small fw-semibold">
+                <i class="bi bi-patch-check-fill"></i>
+                <span><%= @positive_rating_pct %>% Positive Reviews (4-5 ★)</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Right: Horizontal Breakdown Bars (5 to 1 Stars) -->
+        <div class="col-12 col-lg-8 ps-lg-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-bar-chart-line-fill text-primary fs-5"></i>
+              <h6 class="fw-bold text-dark mb-0">Feedback Rating Distribution</h6>
+            </div>
+            <% if params[:rating].present? %>
+              <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program, participant_type: params[:participant_type], search: params[:search], date_range: params[:date_range], start_date: params[:start_date], end_date: params[:end_date]), 
+                  class: "badge bg-primary bg-opacity-10 text-primary border border-primary-subtle text-decoration-none d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill",
+                  title: "Clear rating filter" do %>
+                <span>Active: <%= params[:rating] %> ★</span>
+                <i class="bi bi-x-circle-fill"></i>
+              <% end %>
+            <% else %>
+              <span class="text-muted small">Click any star tier to filter</span>
+            <% end %>
+          </div>
+
+          <div class="rating-breakdown-list d-flex flex-column gap-2.5">
+            <% @rating_distribution.each do |item| %>
+              <% 
+                is_selected = params[:rating].to_s == item[:stars].to_s
+                bar_color_class = case item[:stars]
+                                  when 5 then "rating-bar-5"
+                                  when 4 then "rating-bar-4"
+                                  when 3 then "rating-bar-3"
+                                  when 2 then "rating-bar-2"
+                                  when 1 then "rating-bar-1"
+                                  end
+              %>
+              <div class="rating-breakdown-row <%= 'rating-row-active' if is_selected %> d-flex align-items-center gap-3 p-2 rounded-3"
+                   onclick="filterByRating(<%= item[:stars] %>)"
+                   role="button"
+                   tabindex="0"
+                   title="Click to filter by <%= item[:stars] %> star ratings">
+                
+                <!-- Star Label -->
+                <div class="rating-star-label d-flex align-items-center gap-1 fw-bold text-secondary flex-shrink-0" style="width: 75px; font-size: 0.875rem;">
+                  <span><%= item[:stars] %></span>
+                  <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem;"></i>
+                  <span class="text-muted fw-normal" style="font-size: 0.75rem;"><%= item[:stars] == 1 ? 'star' : 'stars' %></span>
+                </div>
+
+                <!-- Horizontal Progress Bar -->
+                <div class="progress flex-grow-1 rating-progress-track" style="height: 12px; background-color: #f1f5f9; border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                  <div class="progress-bar <%= bar_color_class %>" 
+                       role="progressbar" 
+                       style="width: <%= item[:percentage] %>%; border-radius: 999px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);" 
+                       aria-valuenow="<%= item[:percentage] %>" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                  </div>
+                </div>
+
+                <!-- Count and Percentage -->
+                <div class="rating-count-label text-end text-nowrap flex-shrink-0" style="width: 100px;">
+                  <span class="fw-bold text-dark small"><%= item[:count] %></span>
+                  <span class="text-muted small ms-1" style="font-size: 0.75rem;">(<%= item[:percentage] %>%)</span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILLED MULTI-CRITERIA FILTER TOOLBAR -->
+  <div class="filled-toolbar mb-4">
+    <%= form_with url: institute_admin_training_program_training_program_feedbacks_path(@training_program), method: :get, local: true, id: "feedbackFilterForm" do |f| %>
+      <div class="row g-3 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" id="feedbackSearchInput" class="form-control border-start-0 ps-0" placeholder="Search name or comment..." value="<%= params[:search] %>">
+          </div>
+        </div>
+
+        <!-- User Type Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person-badge"></i></span>
+            <select name="participant_type" id="userTypeFilter" class="form-select border-start-0 ps-0" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:participant_type].blank? %>>All User Types</option>
+              <option value="student" <%= 'selected' if params[:participant_type] == 'student' %>>Student</option>
+              <option value="guardian" <%= 'selected' if params[:participant_type] == 'guardian' %>>Guardian</option>
+              <option value="employee" <%= 'selected' if params[:participant_type] == 'employee' %>>Employee</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Rating Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-warning border-end-0"><i class="bi bi-star-fill"></i></span>
+            <select name="rating" id="ratingFilter" class="form-select border-start-0 ps-0" onchange="this.form.submit()">
+              <option value="" <%= 'selected' if params[:rating].blank? %>>All Ratings</option>
+              <option value="5" <%= 'selected' if params[:rating] == '5' %>>5 Stars ★★★★★</option>
+              <option value="4" <%= 'selected' if params[:rating] == '4' %>>4 Stars ★★★★☆</option>
+              <option value="3" <%= 'selected' if params[:rating] == '3' %>>3 Stars ★★★☆☆</option>
+              <option value="2" <%= 'selected' if params[:rating] == '2' %>>2 Stars ★★☆☆☆</option>
+              <option value="1" <%= 'selected' if params[:rating] == '1' %>>1 Star ★☆☆☆☆</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submitted Date Filter -->
+        <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-calendar-event"></i></span>
+            <select name="date_range" id="dateRangeFilter" class="form-select border-start-0 ps-0" onchange="toggleCustomDateInputs(this)">
+              <option value="all" <%= 'selected' if params[:date_range].blank? || params[:date_range] == 'all' %>>All Submitted Dates</option>
+              <option value="today" <%= 'selected' if params[:date_range] == 'today' %>>Today</option>
+              <option value="yesterday" <%= 'selected' if params[:date_range] == 'yesterday' %>>Yesterday</option>
+              <option value="last_7_days" <%= 'selected' if params[:date_range] == 'last_7_days' %>>Last 7 Days</option>
+              <option value="this_month" <%= 'selected' if params[:date_range] == 'this_month' %>>This Month</option>
+              <option value="custom" <%= 'selected' if params[:date_range] == 'custom' %>>Custom Date Range</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submit & Reset Action Buttons -->
+        <div class="col-12 col-md-2 col-lg-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+            <i class="bi bi-funnel-fill"></i>
+            <span>Filter</span>
+          </button>
+          <%= link_to institute_admin_training_program_training_program_feedbacks_path(@training_program), class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center px-2.5", title: "Reset All Filters" do %>
+            <i class="bi bi-arrow-counterclockwise"></i>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- CUSTOM DATE RANGE INPUTS (Collapsible row when Custom is selected) -->
+      <div id="customDateRow" class="row g-3 mt-1 align-items-center <%= 'd-none' unless params[:date_range] == 'custom' %>">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 offset-lg-7">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white text-muted">From</span>
+            <input type="date" name="start_date" id="startDateInput" class="form-control" value="<%= params[:start_date] %>">
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white text-muted">To</span>
+            <input type="date" name="end_date" id="endDateInput" class="form-control" value="<%= params[:end_date] %>">
+          </div>
+        </div>
       </div>
     <% end %>
   </div>
-</div> 
+
+  <script>
+    function toggleCustomDateInputs(selectElem) {
+      const customRow = document.getElementById('customDateRow');
+      if (selectElem.value === 'custom') {
+        customRow.classList.remove('d-none');
+      } else {
+        customRow.classList.add('d-none');
+        selectElem.form.submit();
+      }
+    }
+  </script>
+
+  <!-- MAIN DATA CARD -->
+  <div class="table-card">
+    <!-- Table Header Info Bar -->
+    <div class="table-card-header d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-chat-left-text text-primary fs-5"></i>
+        <h6 class="fw-bold mb-0 text-dark">Feedback Responses</h6>
+      </div>
+      <span class="badge bg-light text-secondary border px-2.5 py-1" id="visibleFeedbackCount">
+        Showing <%= @feedbacks.count %> of <%= @total_feedbacks_count %>
+      </span>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-responsive">
+      <table class="table align-middle mb-0" id="feedbacksTable">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px;" class="text-center">#</th>
+            <th style="min-width: 200px;">Participant</th>
+            <th style="min-width: 140px;">User Type</th>
+            <th style="min-width: 130px;">Rating</th>
+            <th style="min-width: 320px;">Feedback Comment</th>
+            <th style="min-width: 160px;">Submitted On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @feedbacks.empty? %>
+            <tr id="emptyStateRow">
+              <td colspan="6" class="text-center py-5">
+                <div class="text-muted mb-2"><i class="bi bi-chat-square-quote fs-1"></i></div>
+                <h6 class="fw-bold text-dark mb-1">No Feedback Records Found</h6>
+                <p class="text-muted small mb-0">No feedbacks match the current filters or none have been submitted yet.</p>
+              </td>
+            </tr>
+          <% else %>
+            <% @feedbacks.each_with_index do |feedback, idx| %>
+              <% 
+                participant = feedback.participant
+                user = participant&.user
+                user_type = participant&.participant_type.presence || 'student'
+                content_length = feedback.content.to_s.length
+              %>
+              <tr class="feedback-row" 
+                  data-name="<%= user&.full_name.to_s.downcase %>" 
+                  data-content="<%= feedback.content.to_s.downcase %>" 
+                  data-user-type="<%= user_type.downcase %>" 
+                  data-rating="<%= feedback.rating %>">
+                
+                <!-- SL NO COLUMN -->
+                <td class="text-center fw-semibold text-secondary" style="font-size: 0.85rem;"><%= idx + 1 %></td>
+
+                <!-- PARTICIPANT COLUMN -->
+                <td>
+                  <div class="d-flex align-items-center gap-2.5">
+                    <div class="institute-avatar bg-light text-primary border fw-bold">
+                      <%= user&.first_name.to_s.first.upcase.presence || "P" %>
+                    </div>
+                    <div>
+                      <%= link_to institute_admin_participant_path(participant), class: "fw-semibold text-dark text-decoration-none hover-primary d-block" do %>
+                        <%= user&.full_name.presence || "Unknown User" %>
+                      <% end %>
+                      <% if user&.email.present? %>
+                        <div class="text-muted small" style="font-size: 0.75rem;"><%= user.email %></div>
+                      <% elsif participant&.phone_number.present? %>
+                        <div class="text-muted small" style="font-size: 0.75rem;"><%= participant.phone_number %></div>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- USER TYPE COLUMN -->
+                <td>
+                  <% case user_type.to_s.downcase %>
+                  <% when 'student' %>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-mortarboard-fill me-1"></i> Student
+                    </span>
+                  <% when 'guardian' %>
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-person-heart me-1"></i> Guardian
+                    </span>
+                  <% when 'employee' %>
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-briefcase-fill me-1"></i> Employee
+                    </span>
+                  <% else %>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1 fw-medium">
+                      <i class="bi bi-person-fill me-1"></i> <%= user_type.titleize %>
+                    </span>
+                  <% end %>
+                </td>
+
+                <!-- RATING COLUMN -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="d-inline-flex gap-1 text-warning" style="font-size: 0.9rem;">
+                      <% feedback.rating.times do %>
+                        <i class="bi bi-star-fill"></i>
+                      <% end %>
+                      <% (5 - feedback.rating).times do %>
+                        <i class="bi bi-star text-light-emphasis"></i>
+                      <% end %>
+                    </div>
+                    <span class="fw-bold small text-secondary"><%= feedback.rating %>.0</span>
+                  </div>
+                </td>
+
+                <!-- FULL FEEDBACK COMMENT COLUMN (MULTI-LINE WRAPPED) -->
+                <td class="feedback-comment-cell">
+                  <div class="p-3 bg-light rounded-3 border-start border-3 border-primary shadow-xs position-relative">
+                    <i class="bi bi-quote text-primary opacity-50 fs-5 d-block mb-1"></i>
+                    
+                    <div class="feedback-full-text text-dark fs-6" style="white-space: pre-wrap; word-break: break-word; line-height: 1.6;">
+                      <%= feedback.content %>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- SUBMITTED ON COLUMN -->
+                <td class="text-muted small">
+                  <div class="d-flex align-items-center gap-1 text-dark fw-medium">
+                    <i class="bi bi-calendar-event text-secondary"></i>
+                    <span><%= feedback.created_at.strftime("%b %d, %Y") %></span>
+                  </div>
+                  <span class="d-block text-muted ms-3" style="font-size: 0.725rem;"><%= feedback.created_at.strftime("%I:%M %p") %></span>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE CLIENT-SIDE FILTERING SCRIPT -->
+<script>
+  function filterFeedbacksTable() {
+    const searchVal = document.getElementById('feedbackSearchInput').value.toLowerCase().trim();
+    const typeVal = document.getElementById('userTypeFilter').value.toLowerCase();
+    const ratingVal = document.getElementById('ratingFilter').value;
+
+    const rows = document.querySelectorAll('#feedbacksTable tbody tr.feedback-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const content = row.getAttribute('data-content') || '';
+      const userType = row.getAttribute('data-user-type') || '';
+      const rating = row.getAttribute('data-rating') || '';
+
+      const matchesSearch = !searchVal || name.includes(searchVal) || content.includes(searchVal);
+      const matchesType = (typeVal === 'all') || (userType === typeVal);
+      const matchesRating = (ratingVal === 'all') || (rating === ratingVal);
+
+      if (matchesSearch && matchesType && matchesRating) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    const emptyState = document.getElementById('emptyStateRow');
+    if (emptyState) {
+      emptyState.style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    const countBadge = document.getElementById('visibleFeedbackCount');
+    if (countBadge) {
+      countBadge.textContent = `Showing ${visibleCount} of <%= @total_feedbacks_count %>`;
+    }
+  }
+
+  function resetFeedbackFilters() {
+    document.getElementById('feedbackSearchInput').value = '';
+    document.getElementById('userTypeFilter').value = 'all';
+    document.getElementById('ratingFilter').value = 'all';
+    filterFeedbacksTable();
+  }
+
+  function filterByRating(stars) {
+    const ratingSelect = document.getElementById('ratingFilter');
+    if (ratingSelect) {
+      if (ratingSelect.value == stars) {
+        ratingSelect.value = '';
+      } else {
+        ratingSelect.value = stars;
+      }
+      ratingSelect.form.submit();
+    }
+  }
+</script>
+
+<style>
+  .rating-analytics-card {
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .rating-hero-score {
+    font-size: clamp(2.75rem, 4.5vw, 3.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .border-lg-end {
+    border-right: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  @media (max-width: 991.98px) {
+    .border-lg-end {
+      border-right: none;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  .rating-breakdown-row {
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .rating-breakdown-row:hover {
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateX(3px);
+  }
+
+  .rating-row-active {
+    background: rgba(99, 102, 241, 0.08) !important;
+    outline: 1px solid rgba(99, 102, 241, 0.3);
+  }
+
+  .rating-bar-5 {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  }
+
+  .rating-bar-4 {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  }
+
+  .rating-bar-3 {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  }
+
+  .rating-bar-2 {
+    background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+  }
+
+  .rating-bar-1 {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  }
+</style>

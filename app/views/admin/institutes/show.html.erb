@@ -1,270 +1,496 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom">
-    <!-- Desktop header (md and up): keep original inline actions -->
-    <div class="d-none d-md-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Institute Details</h5>
-      <div>
+<% content_for :styles do %>
+  <style>
+    .inst-profile-header-card {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      margin-bottom: 1.5rem;
+    }
+
+    .inst-avatar-large {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+      flex-shrink: 0;
+    }
+
+    .inst-code-badge {
+      background: #f1f5f9;
+      color: #334155;
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.82rem;
+    }
+
+    .glass-card {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .glass-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .glass-card-body {
+      padding: 1.5rem;
+    }
+
+    .detail-item {
+      margin-bottom: 1.25rem;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+    }
+
+    .detail-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* Modern Buttons */
+    .btn-action-login {
+      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-action-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+      color: #ffffff;
+    }
+
+    .btn-action-edit {
+      background: linear-gradient(135deg, #141c2f 0%, #ea02e9 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(234, 2, 233, 0.3);
+    }
+    .btn-action-edit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(234, 2, 233, 0.45);
+      color: #ffffff;
+    }
+
+    .admin-user-row {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+
+    .admin-user-row:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .user-avatar-sm {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-pill-active {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+    }
+
+    .status-pill-inactive {
+      background: #ffe4e6;
+      color: #be123c;
+      border: 1px solid #fecdd3;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+    }
+  </style>
+<% end %>
+
+<div class="container-fluid p-0">
+
+  <!-- BREADCRUMB HEADER -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent p-0 mb-0 align-items-center" style="font-size: 0.85rem;">
+      <li class="breadcrumb-item"><%= link_to "Dashboard", admin_root_path, class: "text-muted text-decoration-none" %></li>
+      <li class="breadcrumb-item"><%= link_to "Institutes", admin_institutes_path, class: "text-muted text-decoration-none" %></li>
+      <li class="breadcrumb-item text-primary fw-semibold active" aria-current="page"><%= @institute.name %></li>
+    </ol>
+  </nav>
+
+  <!-- INSTITUTE HEADER PROFILE CARD -->
+  <div class="inst-profile-header-card">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <% if @institute.logo.attached? %>
+          <%= image_tag rails_blob_path(@institute.logo, only_path: true),
+                alt: "#{@institute.name} logo",
+                style: "width:64px;height:64px;object-fit:contain;border-radius:14px;border:1px solid #e2e8f0;padding:4px;background:#fff;" %>
+        <% else %>
+          <div class="inst-avatar-large">
+            <%= @institute.name.presence ? @institute.name.strip.first.upcase : 'I' %>
+          </div>
+        <% end %>
+
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+            <h3 class="fw-bold text-dark mb-0"><%= @institute.name %></h3>
+            <span class="inst-code-badge"><%= @institute.code %></span>
+            <% if @institute.active? %>
+              <span class="status-pill-active"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
+            <% else %>
+              <span class="status-pill-inactive"><i class="bi bi-x-circle-fill me-1"></i>Inactive</span>
+            <% end %>
+          </div>
+          <p class="text-muted small mb-0"><%= @institute.email.presence || 'No email specified' %> • Type: <strong><%= @institute.institution_type.presence || 'Standard' %></strong></p>
+        </div>
+      </div>
+
+      <!-- Header CTAs -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
         <%= button_to login_as_institute_admin_admin_institute_path(@institute), 
-            class: "btn btn-primary", 
-            form: { class: "d-inline-block me-2", data: { turbo: true } } do %>
-          <i class="bi bi-box-arrow-in-right"></i> Log in as Institute Admin
+            class: "btn btn-action-login d-inline-flex align-items-center gap-2 justify-content-center", 
+            form: { class: "d-inline-block m-0", data: { turbo: true } } do %>
+          <i class="bi bi-box-arrow-in-right fs-6"></i>
+          <span>Log in as Institute Admin</span>
         <% end %>
-        <%= link_to edit_admin_institute_path(@institute), class: "btn btn-outline-custom me-2" do %>
-          <i class="bi bi-pencil"></i> Edit
+
+        <%= link_to edit_admin_institute_path(@institute), class: "btn btn-action-edit d-inline-flex align-items-center gap-2 justify-content-center" do %>
+          <i class="bi bi-pencil fs-6"></i>
+          <span>Edit</span>
         <% end %>
-        <%= link_to admin_institutes_path, class: "btn btn-outline-custom" do %>
-          <i class="bi bi-arrow-left"></i> Back
+
+        <%= link_to admin_institutes_path, class: "btn btn-outline-secondary px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 justify-content-center", style: "border-radius: 10px !important; line-height: 1.5;" do %>
+          <i class="bi bi-arrow-left"></i>
+          <span>Back</span>
         <% end %>
       </div>
     </div>
-
-    <!-- Mobile header (smaller screens): stacked, touch-friendly layout (always visible) -->
-    <div class="d-flex d-md-none flex-column gap-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 fs-6">Institute Details</h5>
-      </div>
-
-      <div class="mb-2">
-        <%= button_to login_as_institute_admin_admin_institute_path(@institute), 
-            class: "btn btn-primary w-100", 
-            form: { class: "d-inline-block w-100", data: { turbo: true } } do %>
-          <i class="bi bi-box-arrow-in-right"></i> Log in as Institute Admin
-        <% end %>
-      </div>
-      <div class="d-flex gap-2">
-        <%= link_to edit_admin_institute_path(@institute), class: "btn btn-outline-custom flex-fill" do %>
-          <i class="bi bi-pencil"></i> Edit
-        <% end %>
-        <%= link_to '#', onclick: 'history.back(); return false;', class: "btn btn-outline-custom flex-fill" do %>
-          <i class="bi bi-arrow-left"></i> Back
-        <% end %>
-      </div>
-    </div>
-        <% content_for :styles do %>
-          <style>
-            /* Mobile header tweaks for admin/institutes/show */
-            @media (max-width: 767.98px) {
-              .card-header.card-header-custom { padding: 0.75rem 0.9rem; }
-              .card-header.card-header-custom h5 { font-size: 1rem; margin-bottom: 0; }
-              .btn-outline-custom { border-color: rgba(0,0,0,0.08); }
-              /* make collapse toggle subtle */
-              .card-header .btn-sm.btn-light { border: none; color: rgba(0,0,0,0.6); }
-            }
-          </style>
-        <% end %>
   </div>
 
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Institute Name</h6>
-          <p class="fs-5"><%= @institute.name %></p>
+  <!-- DETAILS GRID ROW 1 -->
+  <div class="row g-4 mb-4">
+    <!-- General & Contact Information Card -->
+    <div class="col-12 col-lg-6">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">General & Contact Information</h6>
+          </div>
         </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Code</h6>
-          <p class="fs-5"><%= @institute.code %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Email</h6>
-          <p class="fs-5"><%= @institute.email %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Contact Number</h6>
-          <p class="fs-5"><%= @institute.contact_number %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Institution Type</h6>
-          <p class="fs-5"><%= @institute.institution_type %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Registered POC</h6>
-          <p class="fs-5"><%= @institute.registered_poc.present? ? @institute.registered_poc : "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Owner Name</h6>
-          <p class="fs-5"><%= @institute.owner_name.present? ? @institute.owner_name : "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Sections</h6>
-          <ul class="list-group">
-            <% @institute.sections.each do |section| %>
-              <li class="list-group-item">
-                <%= section.name %>
-              </li>
-            <% end %>
-          </ul>
+        <div class="glass-card-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Institute Name</div>
+                <div class="detail-value"><%= @institute.name %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Tenant Code</div>
+                <div class="detail-value"><span class="inst-code-badge"><%= @institute.code %></span></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Email Address</div>
+                <div class="detail-value"><%= @institute.email.presence || 'N/A' %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value"><%= @institute.contact_number.presence || 'N/A' %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Registered POC</div>
+                <div class="detail-value"><%= @institute.registered_poc.presence || 'Not specified' %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Owner Name</div>
+                <div class="detail-value"><%= @institute.owner_name.presence || 'Not specified' %></div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="detail-item mb-0">
+                <div class="detail-label">Physical Address</div>
+                <div class="detail-value"><%= @institute.address.presence || 'No address specified' %></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="col-md-6">
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Status</h6>
-          <span class="badge <%= @institute.active? ? 'badge-success' : 'badge-danger' %> fs-6">
-            <%= @institute.active? ? 'Active' : 'Inactive' %>
-          </span>
+    <!-- Subscription & Service Metadata Card -->
+    <div class="col-12 col-lg-6">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">Subscription & Service Details</h6>
+          </div>
         </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Service Started On</h6>
-          <p class="fs-5"><%= @institute.service_started_on.present? ? @institute.service_started_on.strftime("%b %d, %Y") : "Not specified" %></p>
+        <div class="glass-card-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Institution Type</div>
+                <div class="detail-value"><%= @institute.institution_type.presence || 'Standard' %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Billing Type</div>
+                <div class="detail-value"><%= @institute.billing_type.presence || 'Not specified' %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Service Started On</div>
+                <div class="detail-value"><%= @institute.service_started_on.present? ? @institute.service_started_on.strftime("%b %d, %Y") : "Not specified" %></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="detail-item">
+                <div class="detail-label">Expiry Date</div>
+                <div class="detail-value text-danger"><%= @institute.expiry_date.present? ? @institute.expiry_date.strftime("%b %d, %Y") : "Not specified" %></div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="detail-item">
+                <div class="detail-label">Age of Service</div>
+                <div class="detail-value">
+                  <% if @institute.service_started_on.present? %>
+                    <% start  = @institute.service_started_on
+                       today  = Date.today
+                       years  = today.year  - start.year
+                       months = today.month - start.month
+                       days   = today.day   - start.day
+                       if days < 0
+                         months -= 1
+                         days   += (today - today.change(day: 1)).to_i + 1
+                       end
+                       if months < 0
+                         years  -= 1
+                         months += 12
+                       end %>
+                    <span class="badge bg-primary-subtle text-primary border px-2.5 py-1 fw-semibold" style="font-size:0.85rem;">
+                      <%= "#{years} yr#{'s' if years != 1} #{months} mo#{'s' if months != 1} #{days} day#{'s' if days != 1}" %>
+                    </span>
+                  <% else %>
+                    Not specified
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="detail-item mb-0">
+                <div class="detail-label">Description / Remarks</div>
+                <div class="detail-value text-muted small"><%= @institute.description.presence || 'No additional description provided.' %></div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Age of Service</h6>
-          <p class="fs-5">
-            <% if @institute.service_started_on.present? %>
-              <% start  = @institute.service_started_on
-                 today  = Date.today
-                 years  = today.year  - start.year
-                 months = today.month - start.month
-                 days   = today.day   - start.day
-                 if days < 0
-                   months -= 1
-                   days   += (today - today.change(day: 1)).to_i + 1
-                 end
-                 if months < 0
-                   years  -= 1
-                   months += 12
-                 end %>
-              <%= "#{years} yr#{'s' if years != 1} #{months} mo#{'s' if months != 1} #{days} day#{'s' if days != 1}" %>
-            <% else %>
-              Not specified
+  <!-- ADMIN MANAGEMENT & PROGRAMS GRID -->
+  <div class="row g-4">
+    <!-- Assigned Institute Admins Card -->
+    <div class="col-12 col-lg-6">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-people text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">Assigned Institute Admins</h6>
+          </div>
+          <span class="badge bg-light text-secondary border px-2 py-1"><%= @institute_admins.count %> Assigned</span>
+        </div>
+        <div class="glass-card-body">
+          <% if @institute_admins.any? %>
+            <% @institute_admins.each do |admin| %>
+              <div class="admin-user-row">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="user-avatar-sm">
+                    <%= admin.username.strip.first.upcase rescue 'U' %>
+                  </div>
+                  <div>
+                    <div class="fw-semibold text-dark mb-0" style="font-size: 0.9rem;"><%= admin.username %></div>
+                    <div class="text-muted small"><%= admin.email %></div>
+                  </div>
+                </div>
+                <%= button_to unassign_admin_admin_institute_path(@institute, user_id: admin.id),
+                    method: :delete,
+                    class: "btn btn-sm btn-outline-danger rounded-2 px-2.5 py-1",
+                    data: { turbo_confirm: "Are you sure you want to unassign this admin?" } do %>
+                  <i class="bi bi-person-dash me-1"></i> Remove
+                <% end %>
+              </div>
             <% end %>
-          </p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Billing Type</h6>
-          <p class="fs-5"><%= @institute.billing_type.present? ? @institute.billing_type : "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Expiry Date</h6>
-          <p class="fs-5"><%= @institute.expiry_date.present? ? @institute.expiry_date.strftime("%b %d, %Y") : "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Address</h6>
-          <p class="fs-5"><%= @institute.address %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Description</h6>
-          <p class="fs-5"><%= @institute.description %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Other Details</h6>
-          <p class="fs-5"><%= @institute.other_details.present? ? @institute.other_details : "Not specified" %></p>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="text-muted mb-2">Logo</h6>
-          <% if @institute.logo.attached? %>
-            <%= image_tag rails_blob_path(@institute.logo, only_path: true),
-                  alt: "#{@institute.name} logo",
-                  style: "max-height:100px;max-width:200px;object-fit:contain;border:1px solid #dee2e6;border-radius:6px;padding:6px;background:#fff;" %>
           <% else %>
-            <p class="text-muted mb-0">No logo uploaded</p>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-person-x fs-2 mb-2 d-block text-secondary"></i>
+              <p class="mb-0 small">No institute admins assigned yet.</p>
+            </div>
           <% end %>
         </div>
       </div>
     </div>
 
-    <div class="row mt-4">
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">Assigned Admins</h6>
+    <!-- Available Admins to Assign Card -->
+    <div class="col-12 col-lg-6">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-person-plus text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">Available Admins for Assignment</h6>
           </div>
-          <div class="card-body">
-            <% if @institute_admins.any? %>
-              <div class="list-group">
-                <% @institute_admins.each do |admin| %>
-                  <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="mb-0"><%= admin.username %></h6>
-                      <small class="text-muted"><%= admin.email %></small>
-                    </div>
-                    <%= button_to unassign_admin_admin_institute_path(@institute, user_id: admin.id),
-                        method: :delete,
-                        class: "btn btn-sm btn-outline-danger",
-                        data: { confirm: "Are you sure?" } do %>
-                      <i class="bi bi-person-dash"></i> Remove
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            <% else %>
-              <p class="text-muted mb-0">No admins assigned yet.</p>
-            <% end %>
-          </div>
+          <span class="badge bg-light text-secondary border px-2 py-1"><%= @available_admins.count %> Available</span>
         </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">Available Admins</h6>
-          </div>
-          <div class="card-body">
-            <% if @available_admins.any? %>
-              <div class="list-group">
-                <% @available_admins.each do |admin| %>
-                  <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="mb-0"><%= admin.username %></h6>
-                      <small class="text-muted"><%= admin.email %></small>
-                    </div>
-                    <%= button_to assign_admin_admin_institute_path(@institute, user_id: admin.id),
-                        method: :post,
-                        class: "btn btn-sm btn-outline-success" do %>
-                      <i class="bi bi-person-plus"></i> Assign
-                    <% end %>
+        <div class="glass-card-body">
+          <% if @available_admins.any? %>
+            <% @available_admins.each do |admin| %>
+              <div class="admin-user-row">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="user-avatar-sm" style="background:#eff6ff; color:#2563eb;">
+                    <%= admin.username.strip.first.upcase rescue 'U' %>
                   </div>
+                  <div>
+                    <div class="fw-semibold text-dark mb-0" style="font-size: 0.9rem;"><%= admin.username %></div>
+                    <div class="text-muted small"><%= admin.email %></div>
+                  </div>
+                </div>
+                <%= button_to assign_admin_admin_institute_path(@institute, user_id: admin.id),
+                    method: :post,
+                    class: "btn btn-sm btn-outline-success rounded-2 px-2.5 py-1" do %>
+                  <i class="bi bi-person-plus me-1"></i> Assign
                 <% end %>
               </div>
-            <% else %>
-              <p class="text-muted mb-0">No available admins.</p>
             <% end %>
-          </div>
+          <% else %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-check-circle fs-2 mb-2 d-block text-secondary"></i>
+              <p class="mb-0 small">No unassigned admins available.</p>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>
 
-    <div class="row mt-4">
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">Training Programs</h6>
+    <!-- Sections & Training Programs Overview Card -->
+    <div class="col-12">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-diagram-3 text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">Sections & Active Training Programs</h6>
           </div>
-          <div class="card-body">
-            <% if @institute.training_programs.any? %>
-              <ul class="list-group list-group-flush">
-                <% @institute.training_programs.each do |program| %>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <%= program.title %>
-                    <small class="text-muted">
-                      <%= program.start_date.strftime("%b %d, %Y") %> - 
-                      <%= program.end_date.strftime("%b %d, %Y") %>
-                    </small>
-                  </li>
-                <% end %>
-              </ul>
-            <% else %>
-              <p class="text-muted mb-0">No programs.</p>
-            <% end %>
+        </div>
+        <div class="glass-card-body">
+          <div class="row g-4">
+            <!-- Sections Column -->
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-3"><i class="bi bi-grid-3x3 me-1 text-primary"></i> Institute Sections (<%= @institute.sections.count %>)</h6>
+              <% if @institute.sections.any? %>
+                <div class="d-flex flex-wrap gap-2">
+                  <% @institute.sections.each do |sec| %>
+                    <span class="badge bg-light text-dark border px-3 py-2 fw-semibold" style="font-size:0.85rem;">
+                      <i class="bi bi-hash text-muted"></i> <%= sec.name %>
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-muted small mb-0">No sections created for this institute yet.</p>
+              <% end %>
+            </div>
+
+            <!-- Programs Column -->
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-3"><i class="bi bi-journal-bookmark me-1 text-primary"></i> Training Programs (<%= @institute.training_programs.count %>)</h6>
+              <% if @institute.training_programs.any? %>
+                <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                  <% @institute.training_programs.each do |prog| %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2.5 px-3">
+                      <span class="fw-semibold text-dark" style="font-size: 0.9rem;"><%= prog.title %></span>
+                      <span class="text-muted extra-small" style="font-size: 0.78rem;">
+                        <%= prog.start_date.strftime("%b %d, %Y") %> - <%= prog.end_date.strftime("%b %d, %Y") %>
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-muted small mb-0">No training programs associated with this institute yet.</p>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
 </div> 

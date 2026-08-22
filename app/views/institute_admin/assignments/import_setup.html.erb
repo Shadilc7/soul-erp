@@ -1,0 +1,2244 @@
+<div class="container-fluid px-3 px-md-4 py-4" style="background-color: #f8fafc; min-height: 100vh;">
+  <!-- Top Navigation & Header Bar -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 bg-white p-3 p-md-4 rounded-4 shadow-sm border">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <%= link_to new_institute_admin_assignment_path(mode: 'import_select', question_bank_id: @question_bank&.id), class: "btn btn-sm btn-light border text-dark rounded-circle p-2 d-inline-flex align-items-center justify-content-center shadow-xs me-1", title: "Back to Question Bank Selection", style: "width: 36px; height: 36px;" do %>
+          <i class="bi bi-arrow-left fs-5"></i>
+        <% end %>
+        <h3 class="fw-bold text-dark mb-0" style="color: #0f172a; font-weight: 700;">Question Bank Import & Assignment Setup</h3>
+      </div>
+      <p class="text-muted small mb-0 ps-5 ms-2">
+        Configure schedules, custom titles, question bundle selections, and participant allocations for each category before persisting assignments.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" style="background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.85rem;">
+        <i class="bi bi-box-seam me-1"></i> Source: <strong><%= @question_bank.name %></strong>
+      </span>
+      <span class="badge rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.85rem;">
+        <i class="bi bi-layers me-1"></i> <%= pluralize(@categories.size, 'Assignment') %> to Create
+      </span>
+    </div>
+  </div>
+
+  <%= form_with url: finalize_import_institute_admin_assignments_path, method: :post, local: true, id: "import_finalize_form" do |f| %>
+
+    <!-- Global Bulk Recipient Helper -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer select-none"
+           data-bs-toggle="collapse" data-bs-target="#globalRecipientsCollapse" aria-expanded="false">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-2.5 rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+            <i class="bi bi-people-fill fs-4"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Bulk Recipient Allocation (Optional)</h5>
+            <span class="text-muted small">Select participants or sections below to quickly apply them across ALL imported category assignments with one click.</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-xs" onclick="syncGlobalRecipients(event)">
+          <i class="bi bi-chevron-double-down fs-6" id="globalCollapseIcon"></i> Apply to All Cards
+        </button>
+      </div>
+
+      <div class="collapse p-3 p-md-4 border-top bg-light-subtle" id="globalRecipientsCollapse">
+        <div class="row g-4">
+          <!-- Global Section Selection -->
+          <div class="col-md-6 border-end-md">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-diagram-3 text-primary"></i> Target Sections (Apply to All Cards)
+              </h6>
+              <div class="form-check mb-0">
+                <input type="checkbox" class="form-check-input cursor-pointer" id="global_select_all_secs" onchange="toggleSelectAllGlobalSections(this.checked)">
+                <label class="form-check-label small fw-semibold text-dark cursor-pointer" for="global_select_all_secs">Select All</label>
+              </div>
+            </div>
+            <div class="sections-list overflow-auto border rounded-3 p-3 bg-white" style="max-height: 200px;">
+              <% if @sections.any? %>
+                <% @sections.each do |sec| %>
+                  <div class="form-check mb-2 p-1.5 rounded hover-bg-light d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input global-section-cb cursor-pointer m-0 ms-1" id="global_sec_<%= sec.id %>" value="<%= sec.id %>" onchange="syncGlobalSections()">
+                    <label class="form-check-label fw-semibold text-dark small cursor-pointer flex-grow-1 mb-0" for="global_sec_<%= sec.id %>">
+                      <%= sec.name.presence || "Section #{sec.id}" %>
+                    </label>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="text-muted small py-3 text-center">No active sections available.</div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Global Participant Selection -->
+          <div class="col-md-6">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-person-lines-fill text-primary"></i> Individual Participants (Apply to All Cards)
+              </h6>
+              <div class="form-check mb-0">
+                <input type="checkbox" class="form-check-input cursor-pointer" id="global_select_all_parts" onchange="toggleSelectAllGlobalParticipants(this.checked)">
+                <label class="form-check-label small fw-semibold text-dark cursor-pointer" for="global_select_all_parts">Select All</label>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <select id="global-participant-type-filter" class="form-select form-select-sm rounded-3" onchange="filterGlobalParticipants(this.value)">
+                <option value="all">All Participant Types</option>
+                <option value="student">Students</option>
+                <option value="guardian">Guardians</option>
+                <option value="employee">Employees</option>
+              </select>
+            </div>
+
+            <!-- Global Participant Legend Breakdown -->
+            <div id="global_participant_breakdown" class="d-flex align-items-center gap-1.5 flex-wrap mb-2 d-none"></div>
+
+            <div class="participants-list overflow-auto border rounded-3 p-3 bg-white" style="max-height: 170px;">
+              <% if @participants.any? %>
+                <% @participants.each do |p| %>
+                  <% p_type = p.participant_type.to_s.downcase %>
+                  <% 
+                    badge_style = case p_type
+                    when 'student' then 'background-color: #06b6d4; color: #ffffff;'
+                    when 'guardian' then 'background-color: #f59e0b; color: #ffffff;'
+                    when 'employee' then 'background-color: #10b981; color: #ffffff;'
+                    else 'background-color: #64748b; color: #ffffff;'
+                    end
+                  %>
+                  <div class="form-check mb-2 p-1.5 rounded hover-bg-light d-flex align-items-center gap-2 global-part-item" data-participant-type="<%= p_type %>">
+                    <input type="checkbox" class="form-check-input global-participant-cb cursor-pointer m-0 ms-1" id="global_part_<%= p.id %>" value="<%= p.id %>" onchange="syncGlobalParticipants()">
+                    <label class="form-check-label small cursor-pointer flex-grow-1 mb-0" for="global_part_<%= p.id %>">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold text-dark"><%= p.user&.full_name || "Participant #{p.id}" %></span>
+                        <span class="badge rounded-pill px-2.5 py-1 fw-bold" style="<%= badge_style %> font-size: 0.68rem;">
+                          <%= p.participant_type&.capitalize %>
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="text-muted small py-3 text-center">No active participants available.</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Assignment Setup Cards -->
+    <div class="d-flex flex-column gap-4 mb-4">
+      <% @categories.each_with_index do |cat, cat_idx| %>
+        <% 
+          duration = (cat.duration_days.to_i > 0) ? cat.duration_days.to_i : 30
+          default_start = Date.current
+          default_end = default_start + duration.days
+          bundled_items = cat.question_bundles.flat_map(&:question_bundle_items).select(&:question_id)
+          bundled_questions_count = bundled_items.map(&:question_id).uniq.size
+        %>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden category-assignment-card" id="category_card_<%= cat.id %>" data-category-duration="<%= duration %>">
+          <!-- Category Card Header -->
+          <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-3 cursor-pointer select-none"
+               data-bs-toggle="collapse" 
+               data-bs-target="#category_collapse_<%= cat.id %>" 
+               aria-expanded="true">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge text-white rounded-circle p-2 fw-bold d-inline-flex align-items-center justify-content-center shadow-xs" 
+                    style="width: 38px; height: 38px; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); font-size: 0.95rem;">
+                #<%= cat_idx + 1 %>
+              </span>
+              <div>
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 1.1rem; color: #1e293b;">
+                  <i class="bi bi-folder-fill text-primary"></i> <%= cat.name %>
+                </h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small">
+                    <i class="bi bi-collection me-1"></i> <%= pluralize(bundled_questions_count, 'bundled question') %>
+                  </span>
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 small">
+                    <i class="bi bi-clock-history me-1"></i> <%= duration %> Days Category Duration
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small fw-semibold border">
+                Will create Assignment #<%= cat_idx + 1 %>
+              </span>
+              <i class="bi bi-chevron-down text-secondary fs-5 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Category Card Body (Accordion Content) -->
+          <div class="collapse show p-3 p-md-4" id="category_collapse_<%= cat.id %>">
+            <div class="row g-4 align-items-stretch">
+              <!-- Left Side: Basic Info & Schedule -->
+              <div class="col-lg-6">
+                <div class="p-3.5 p-md-4 bg-light-subtle rounded-4 border h-100 d-flex flex-column">
+                  <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2 border-bottom pb-2.5" style="font-size: 1rem;">
+                    <i class="bi bi-pencil-square text-primary"></i> 1. Assignment Details
+                  </h6>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark small">Assignment Title <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           name="assignments[<%= cat.id %>][title]" 
+                           id="title_<%= cat.id %>" 
+                           value="<%= cat.name %>" 
+                           class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                           required 
+                           placeholder="Enter assignment title...">
+                  </div>
+
+                  <div class="mb-3 flex-grow-1 d-flex flex-column">
+                    <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                    <textarea name="assignments[<%= cat.id %>][description]" 
+                              class="form-control rounded-3 border-secondary-subtle flex-grow-1" 
+                              rows="4" 
+                              style="min-height: 110px;"
+                              placeholder="Brief instructions for participants..."><%= cat.description %></textarea>
+                  </div>
+
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="form-label fw-semibold text-dark small mb-0">Schedule Duration</label>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs" id="selected_days_badge_<%= cat.id %>" style="font-size: 0.75rem;">
+                      <i class="bi bi-calendar-range me-1 text-primary"></i><span id="selected_days_text_<%= cat.id %>"><%= (default_end.to_date - default_start.to_date).to_i + 1 %> Days Selected</span>
+                    </span>
+                  </div>
+
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-dark small">Start Date <span class="text-danger">*</span></label>
+                      <input type="text" 
+                             name="assignments[<%= cat.id %>][start_date]" 
+                             id="start_date_<%= cat.id %>"
+                             value="<%= default_start.strftime('%Y-%m-%d') %>" 
+                             class="form-control rounded-3 border-secondary-subtle datepicker" 
+                             required
+                             onchange="autoUpdateEndDate(<%= cat.id %>, <%= duration %>); updateSelectedDaysCount(<%= cat.id %>);"
+                             oninput="updateSelectedDaysCount(<%= cat.id %>)">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-dark small">End Date <span class="text-danger">*</span></label>
+                      <input type="text" 
+                             name="assignments[<%= cat.id %>][end_date]" 
+                             id="end_date_<%= cat.id %>"
+                             value="<%= default_end.strftime('%Y-%m-%d') %>" 
+                             class="form-control rounded-3 border-secondary-subtle datepicker" 
+                             required
+                             onchange="updateSelectedDaysCount(<%= cat.id %>)"
+                             oninput="updateSelectedDaysCount(<%= cat.id %>)">
+                    </div>
+                  </div>
+
+                  <div class="pt-1">
+                    <div class="form-check mb-0 d-flex align-items-center gap-1.5">
+                      <input type="checkbox" name="assignments[<%= cat.id %>][active]" value="1" id="active_<%= cat.id %>" class="form-check-input cursor-pointer m-0" checked>
+                      <label class="form-check-label fw-semibold text-dark small cursor-pointer mb-0 ms-1" for="active_<%= cat.id %>">
+                        Active Assignment
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Side: Assignment Type & Target Recipients (Matching Screenshot #2 & Legend Breakdown) -->
+              <div class="col-lg-6">
+                <div class="d-flex flex-column gap-3">
+                  <!-- Assignment Type Box -->
+                  <div class="card border-0 shadow-xs rounded-4 bg-white border">
+                    <div class="card-header bg-white border-bottom p-3">
+                      <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                        <i class="bi bi-sliders text-primary"></i> Assignment Type
+                      </h6>
+                    </div>
+                    <div class="card-body p-3">
+                      <div class="btn-group w-100 p-1 bg-light rounded-3 border" role="group">
+                        <input type="radio" 
+                               name="assignments[<%= cat.id %>][assignment_type]" 
+                               value="individual" 
+                               id="type_ind_<%= cat.id %>" 
+                               class="btn-check" 
+                               checked 
+                               onchange="toggleCategoryRecipientMode(<%= cat.id %>, 'individual')">
+                        <label for="type_ind_<%= cat.id %>" class="btn btn-outline-primary rounded-2 py-2 fw-semibold border-0">
+                          <i class="bi bi-person me-1.5"></i> Individual
+                        </label>
+
+                        <input type="radio" 
+                               name="assignments[<%= cat.id %>][assignment_type]" 
+                               value="section" 
+                               id="type_sec_<%= cat.id %>" 
+                               class="btn-check" 
+                               onchange="toggleCategoryRecipientMode(<%= cat.id %>, 'section')">
+                        <label for="type_sec_<%= cat.id %>" class="btn btn-outline-primary rounded-2 py-2 fw-semibold border-0">
+                          <i class="bi bi-people me-1.5"></i> Section
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recipients Card Box -->
+                  <div class="card border-0 shadow-xs rounded-4 bg-white border">
+                    <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between">
+                      <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                        <i class="bi bi-people-fill text-primary"></i> <span id="recipients_card_title_<%= cat.id %>">Participants</span>
+                      </h6>
+                      <div class="form-check mb-0">
+                        <input type="checkbox" 
+                               id="select_all_recipients_<%= cat.id %>" 
+                               class="form-check-input cursor-pointer"
+                               onchange="toggleSelectAllCardRecipients(<%= cat.id %>, this.checked)">
+                        <label for="select_all_recipients_<%= cat.id %>" class="form-check-label small fw-semibold text-dark cursor-pointer">
+                          Select All
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="card-body p-3">
+                      <!-- Individual View -->
+                      <div id="individual_recipients_<%= cat.id %>">
+                        <input type="hidden" name="assignments[<%= cat.id %>][participant_ids][]" value="">
+                        
+                        <!-- Participant Type Filter -->
+                        <div class="mb-3">
+                          <select id="participant_filter_<%= cat.id %>" 
+                                  class="form-select form-select-sm rounded-3 border-secondary-subtle"
+                                  onchange="filterCategoryParticipants(<%= cat.id %>, this.value)">
+                            <option value="all">All Participant Types</option>
+                            <option value="student">Students</option>
+                            <option value="guardian">Guardians</option>
+                            <option value="employee">Employees</option>
+                          </select>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                          <span class="text-dark small fw-bold">Assign Participants</span>
+                          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="recipient_count_badge_<%= cat.id %>">
+                            0 Selected
+                          </span>
+                        </div>
+
+                        <!-- Participant Breakdown Legend -->
+                        <div id="participant_breakdown_<%= cat.id %>" class="d-flex align-items-center gap-1.5 flex-wrap mb-2 d-none"></div>
+
+                        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 200px;">
+                          <% if @participants.any? %>
+                            <% @participants.each do |p| %>
+                              <% p_type = p.participant_type.to_s.downcase %>
+                              <% 
+                                badge_style = case p_type
+                                when 'student' then 'background-color: #06b6d4; color: #ffffff;'
+                                when 'guardian' then 'background-color: #f59e0b; color: #ffffff;'
+                                when 'employee' then 'background-color: #10b981; color: #ffffff;'
+                                else 'background-color: #64748b; color: #ffffff;'
+                                end
+                              %>
+                              <div class="list-group-item p-2.5 border-bottom hover-bg-light cat-part-item-<%= cat.id %>" data-participant-type="<%= p_type %>">
+                                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                                  <input type="checkbox" 
+                                         name="assignments[<%= cat.id %>][participant_ids][]" 
+                                         value="<%= p.id %>" 
+                                         id="part_<%= cat.id %>_<%= p.id %>" 
+                                         class="form-check-input cat-part-cb-<%= cat.id %> cursor-pointer m-0 ms-1"
+                                         onchange="updateCardRecipientCount(<%= cat.id %>)">
+                                  <label class="form-check-label small mb-0 flex-grow-1 cursor-pointer" for="part_<%= cat.id %>_<%= p.id %>">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                      <span class="fw-semibold text-dark"><%= p.user&.full_name || "Participant #{p.id}" %></span>
+                                      <span class="badge rounded-pill px-2.5 py-1 fw-bold" style="<%= badge_style %> font-size: 0.68rem;">
+                                        <%= p.participant_type&.capitalize %>
+                                      </span>
+                                    </div>
+                                  </label>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <div class="p-3 text-center text-muted small">No active participants available.</div>
+                          <% end %>
+                        </div>
+                      </div>
+
+                      <!-- Section View (Hidden by default) -->
+                      <div id="section_recipients_<%= cat.id %>" class="d-none">
+                        <input type="hidden" name="assignments[<%= cat.id %>][section_ids][]" value="">
+                        
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                          <span class="text-dark small fw-bold">Assign Sections</span>
+                          <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="sec_count_badge_<%= cat.id %>">
+                            0 Selected
+                          </span>
+                        </div>
+
+                        <div class="list-group rounded-3 border overflow-auto bg-white" style="max-height: 240px;">
+                          <% if @sections.any? %>
+                            <% @sections.each do |sec| %>
+                              <div class="list-group-item p-2.5 border-bottom hover-bg-light">
+                                <div class="form-check mb-0 d-flex align-items-center gap-2">
+                                  <input type="checkbox" 
+                                         name="assignments[<%= cat.id %>][section_ids][]" 
+                                         value="<%= sec.id %>" 
+                                         id="sec_<%= cat.id %>_<%= sec.id %>" 
+                                         class="form-check-input cat-sec-cb-<%= cat.id %> cursor-pointer m-0 ms-1"
+                                         onchange="updateCardRecipientCount(<%= cat.id %>)">
+                                  <label class="form-check-label small mb-0 flex-grow-1 cursor-pointer fw-semibold text-dark" for="sec_<%= cat.id %>_<%= sec.id %>">
+                                    <%= sec.name.presence || "Section #{sec.id}" %>
+                                  </label>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <div class="p-3 text-center text-muted small">No active sections available.</div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question Pool & Custom Bundles Workspace Section (2-Column Parity with Master Admin Builder) -->
+            <div class="mt-4 pt-4 border-top">
+              <input type="hidden" name="assignments[<%= cat.id %>][question_ids][]" value="">
+              
+              <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div>
+                  <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 1.05rem;">
+                    <i class="bi bi-diagram-3-fill text-primary fs-5"></i> 3. Question Pool & Bundles Workspace
+                    <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-normal" id="cat_total_questions_pill_<%= cat.id %>">
+                      <%= cat.questions.size %> <%= 'Question'.pluralize(cat.questions.size) %>, <%= cat.question_bundles.size %> <%= 'Bundle'.pluralize(cat.question_bundles.size) %>
+                    </span>
+                  </h6>
+                  <span class="text-muted small">Select questions from pool, edit details, and group into custom bundle parts.</span>
+                </div>
+              </div>
+
+              <!-- Mobile Tab Switcher Bar (< 992px) -->
+              <div class="d-lg-none mb-3 btn-group w-100 shadow-sm rounded-3">
+                <button type="button" class="btn btn-primary active py-2 fw-semibold cat-tab-btn-pool-<%= cat.id %>" onclick="switchCategoryMobileTab(<%= cat.id %>, 'pool')">
+                  <i class="bi bi-card-list me-1"></i> Question Pool (<%= cat.questions.size %>)
+                </button>
+                <button type="button" class="btn btn-outline-primary py-2 fw-semibold cat-tab-btn-bundles-<%= cat.id %>" onclick="switchCategoryMobileTab(<%= cat.id %>, 'bundles')">
+                  <i class="bi bi-layers me-1"></i> Custom Bundles (<%= cat.question_bundles.size %>)
+                </button>
+              </div>
+
+              <!-- 2-Column Workspace Grid (Question Pool + Custom Bundles) -->
+              <div class="row g-4">
+                <!-- Left Column: Question Pool -->
+                <div class="col-lg-5 cat-col-pool-<%= cat.id %>" id="question_pool_col_<%= cat.id %>">
+                  <div class="card border border-secondary-subtle shadow-sm rounded-4 h-100 bg-light-subtle">
+                    <div class="card-header bg-white border-bottom p-3.5 p-md-4 rounded-top-4">
+                      <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                        <div>
+                          <h6 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-card-list text-primary fs-5"></i>
+                            <span>Question Pool</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="cat_pool_count_<%= cat.id %>">
+                              <%= cat.questions.size %> <%= cat.questions.size == 1 ? 'question' : 'questions' %>
+                            </span>
+                          </h6>
+                          <span class="text-muted small d-block mt-1">Select questions from pool to assign to custom bundles.</span>
+                        </div>
+
+                        <button type="button" 
+                                class="btn btn-sm btn-primary rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white border-0" 
+                                style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);"
+                                onclick="autoAssignQuestionsToBundles(<%= cat.id %>)"
+                                title="Auto-assign questions to matching bundles based on schedule day ranges">
+                          <i class="bi bi-magic fs-6"></i>
+                          <span>Auto Assign to Bundles</span>
+                        </button>
+                      </div>
+
+                      <!-- Search Filter -->
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 ps-3 pe-2"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" 
+                               class="form-control bg-light border-start-0 ps-0 py-2" 
+                               placeholder="Search questions by title..." 
+                               oninput="filterPoolQuestions(<%= cat.id %>, this.value)">
+                      </div>
+                    </div>
+
+                    <!-- Question Pool Cards List -->
+                    <div class="card-body p-3 overflow-auto" style="max-height: 700px;">
+                      <% if cat.questions.any? %>
+                        <div class="d-flex flex-column gap-3" id="question_pool_container_<%= cat.id %>">
+                          <% cat.questions.each_with_index do |q, q_idx| %>
+                            <div class="card border border-light-subtle rounded-3 p-3 bg-white shadow-sm hover-shadow transition-all position-relative pool-question-card-<%= cat.id %>" 
+                                 id="pool_card_<%= cat.id %>_<%= q.id %>"
+                                 data-question-title="<%= q.title.downcase %>">
+
+                              <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                  <input type="hidden" 
+                                         name="assignments[<%= cat.id %>][question_ids][]" 
+                                         value="<%= q.id %>" 
+                                         id="cat_q_cb_<%= cat.id %>_<%= q.id %>" 
+                                         class="cat-q-cb-<%= cat.id %>">
+
+                                  <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                    #<%= q_idx + 1 %>
+                                  </span>
+
+                                  <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                                    <%= q.question_type.titleize %>
+                                  </span>
+
+                                  <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;" title="Question Schedule Range">
+                                    <i class="bi bi-clock-history me-1"></i><span id="q_schedule_display_<%= cat.id %>_<%= q.id %>"><%= q.day_range_text %></span>
+                                  </span>
+                                </div>
+
+                                <!-- Quick Actions (View & Edit) -->
+                                <div class="d-flex align-items-center gap-1">
+                                  <!-- View Button -->
+                                  <button type="button" 
+                                          class="btn btn-sm btn-outline-info rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                          style="width: 28px; height: 28px;"
+                                          title="View Question Details"
+                                          data-bs-toggle="modal" 
+                                          data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= q.id %>">
+                                    <i class="bi bi-eye" style="font-size: 0.85rem;"></i>
+                                  </button>
+
+                                  <!-- Edit Button -->
+                                  <button type="button" 
+                                          class="btn btn-sm btn-outline-primary rounded-2 p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                          style="width: 28px; height: 28px;"
+                                          title="Edit Question Details"
+                                          data-bs-toggle="modal" 
+                                          data-bs-target="#editQuestionModal_<%= cat.id %>_<%= q.id %>">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <!-- Question Title -->
+                              <h6 class="fw-bold text-dark mb-1" style="font-size: 0.925rem; line-height: 1.35;" id="q_title_display_<%= cat.id %>_<%= q.id %>">
+                                <%= q.title %>
+                              </h6>
+
+                              <% if q.display_name.present? %>
+                                <div class="text-muted small mb-2" id="q_disp_display_<%= cat.id %>_<%= q.id %>"><%= q.display_name %></div>
+                              <% end %>
+
+                              <!-- Assigned Bundles Badges -->
+                              <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="q_assigned_bundle_badges_<%= cat.id %>_<%= q.id %>">
+                                <% q.question_bundles.where(question_category_id: cat.id).each do |b| %>
+                                  <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate q-bundle-pill-<%= cat.id %>-<%= q.id %>-<%= b.id %>" style="max-width: 140px;">
+                                    <i class="bi bi-layers me-1"></i><%= b.name %>
+                                  </span>
+                                <% end %>
+                              </div>
+
+                              <!-- Quick Assign to Bundle Select -->
+                              <% if cat.question_bundles.any? %>
+                                <div class="mt-3 pt-2 border-top">
+                                  <select class="form-select form-select-sm rounded-3 text-muted q-bundle-assign-select-<%= cat.id %>-<%= q.id %>" 
+                                          data-q-id="<%= q.id %>"
+                                          onchange="handleQuestionBundleSelect(<%= cat.id %>, <%= q.id %>, this)">
+                                    <option value="">+ Assign to Bundle...</option>
+                                    <% cat.question_bundles.order(:position).each do |b| %>
+                                      <% is_assigned = q.question_bundles.include?(b) %>
+                                      <% base_text = "#{b.name} (#{b.day_range_text})" %>
+                                      <option value="<%= b.id %>" 
+                                              <%= 'disabled' if is_assigned %> 
+                                              id="q_select_opt_<%= cat.id %>_<%= q.id %>_<%= b.id %>"
+                                              data-bundle-base-name="<%= base_text %>">
+                                        <%= base_text %><%= " - Assigned" if is_assigned %>
+                                      </option>
+                                    <% end %>
+                                  </select>
+                                </div>
+                              <% end %>
+                            </div>
+
+                            <!-- Modal: View Question -->
+                            <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                  <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                      <i class="bi bi-eye-fill text-success"></i> Question Details
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                      <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
+                                        <%= q.question_type.titleize %>
+                                      </span>
+                                      <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
+                                      <% if q.display_name.present? %>
+                                        <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
+                                      <% end %>
+                                      <% if q.description.present? %>
+                                        <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+                                      <% end %>
+                                    </div>
+
+                                    <% if q.requires_options? && q.options.any? %>
+                                      <div class="mb-3">
+                                        <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                                        <div class="list-group rounded-3">
+                                          <% q.options.each_with_index do |opt, opt_idx| %>
+                                            <div class="list-group-item d-flex align-items-center justify-content-between p-2.5">
+                                              <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                              <% if opt.correct? %>
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
+                                              <% end %>
+                                            </div>
+                                          <% end %>
+                                        </div>
+                                      </div>
+                                    <% elsif q.rating? %>
+                                      <div class="mb-3">
+                                        <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+                                      </div>
+                                    <% end %>
+
+                                    <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                                      <span class="text-muted small">Schedule Day Range:</span>
+                                      <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                                        <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                    <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Modal: Edit Question -->
+                            <div class="modal fade" id="editQuestionModal_<%= cat.id %>_<%= q.id %>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                  <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                      <i class="bi bi-pencil-square text-primary"></i> Edit Question Details
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                    <div id="q_modal_error_<%= cat.id %>_<%= q.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                                      <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                      <label class="form-label fw-semibold text-dark small">Question Title <span class="text-danger">*</span></label>
+                                      <input type="text" 
+                                             id="modal_q_title_<%= cat.id %>_<%= q.id %>" 
+                                             value="<%= q.title %>" 
+                                             class="form-control rounded-3 fw-semibold border-secondary-subtle">
+                                    </div>
+
+                                    <div class="mb-3">
+                                      <label class="form-label fw-semibold text-dark small">Display Name (Optional)</label>
+                                      <input type="text" 
+                                             id="modal_q_disp_name_<%= cat.id %>_<%= q.id %>" 
+                                             value="<%= q.display_name %>" 
+                                             class="form-control rounded-3 border-secondary-subtle">
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                      <div class="col-6">
+                                        <label class="form-label fw-semibold text-dark small">Active From Day <span class="text-danger">*</span></label>
+                                        <input type="number" 
+                                               id="modal_q_from_<%= cat.id %>_<%= q.id %>" 
+                                               value="<%= q.from_day || 1 %>" 
+                                               min="1" 
+                                               max="<%= cat.duration_days || duration %>" 
+                                               class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                      </div>
+                                      <div class="col-6">
+                                        <label class="form-label fw-semibold text-dark small">Active To Day <span class="text-danger">*</span></label>
+                                        <input type="number" 
+                                               id="modal_q_to_<%= cat.id %>_<%= q.id %>" 
+                                               value="<%= q.to_day || cat.duration_days || duration %>" 
+                                               min="1" 
+                                               max="<%= cat.duration_days || duration %>" 
+                                               class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                      </div>
+                                      <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                        Category active schedule range: 1 to <%= duration %> Days.
+                                      </div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                      <label class="form-label fw-semibold text-dark small">Description / Prompt (Optional)</label>
+                                      <textarea id="modal_q_desc_<%= cat.id %>_<%= q.id %>" 
+                                                rows="3" 
+                                                class="form-control rounded-3 border-secondary-subtle"><%= q.description %></textarea>
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="saveQuestionEdits(<%= cat.id %>, <%= q.id %>, <%= cat.duration_days || 30 %>)">
+                                      <i class="bi bi-check-lg me-1"></i> Save Question
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% else %>
+                        <div class="text-center py-4 text-muted">
+                          <i class="bi bi-journal-x fs-2 opacity-50 d-block mb-1"></i>
+                          <p class="mb-0 small">No questions found in this category pool.</p>
+                        </div>
+                      <% end %>
+
+                      <!-- Institution Custom Questions Section -->
+                      <% if @custom_questions.present? && @custom_questions.any? %>
+                        <div class="card border rounded-4 bg-white shadow-sm p-2.5 p-sm-3 mt-4" id="custom_questions_section_<%= cat.id %>">
+                          <div class="card-header bg-light border-0 rounded-3 p-2.5 p-sm-3 mb-0 d-flex align-items-center justify-content-between gap-2 cursor-pointer"
+                               data-bs-toggle="collapse" 
+                               data-bs-target="#custom_q_collapse_<%= cat.id %>" 
+                               aria-expanded="true">
+                            <div class="d-flex align-items-center flex-wrap gap-2 min-w-0">
+                              <i class="bi bi-chevron-down text-secondary transition-transform"></i>
+                              <i class="bi bi-building-gear text-secondary fs-5"></i>
+                              <h6 class="fw-bold text-dark mb-0 fs-6 text-nowrap">Institution Custom Questions</h6>
+                              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1 fw-semibold text-nowrap">
+                                <%= pluralize(@custom_questions.size, 'question') %>
+                              </span>
+                            </div>
+                            <span class="text-secondary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Click &quot;+ Assign to Bundle&quot; to assign questions">
+                              <i class="bi bi-info-circle fs-6"></i>
+                            </span>
+                          </div>
+
+                          <div class="collapse show mt-3" id="custom_q_collapse_<%= cat.id %>">
+                            <div class="d-flex flex-column gap-3">
+                              <% @custom_questions.each_with_index do |cq, cq_idx| %>
+                                <div class="card border border-light-subtle rounded-3 p-2.5 p-sm-3 bg-white shadow-sm hover-shadow transition-all pool-question-card-<%= cat.id %> overflow-hidden" 
+                                     id="pool_card_<%= cat.id %>_<%= cq.id %>"
+                                     data-question-title="<%= cq.title.downcase %>">
+                                  
+                                  <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                                    <div class="d-flex align-items-center flex-wrap gap-1.5 min-w-0">
+                                      <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                                        #<%= cq_idx + 1 %>
+                                      </span>
+
+                                      <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                                        <%= cq.question_type.titleize %>
+                                      </span>
+
+                                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;" title="Question Schedule Range">
+                                        <i class="bi bi-clock-history me-1"></i><span id="q_schedule_display_<%= cat.id %>_<%= cq.id %>"><%= cq.day_range_text %></span>
+                                      </span>
+                                    </div>
+
+                                    <!-- Quick Action Buttons -->
+                                    <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 flex-shrink-0 ms-auto" data-bs-toggle="modal" data-bs-target="#viewQuestionModal_<%= cat.id %>_<%= cq.id %>">
+                                      <i class="bi bi-eye me-1"></i> Preview
+                                    </button>
+                                  </div>
+
+                                  <!-- Question Title -->
+                                  <h6 class="fw-bold text-dark mb-1 text-break" style="font-size: 0.925rem; line-height: 1.35; word-break: break-word;" id="q_title_display_<%= cat.id %>_<%= cq.id %>">
+                                    <%= cq.title %>
+                                  </h6>
+
+                                  <% if cq.requires_options? && cq.options.any? %>
+                                    <div class="text-muted small mb-1">
+                                      <i class="bi bi-list-check me-1"></i><%= cq.options.size %> Answer Options
+                                    </div>
+                                  <% end %>
+
+                                  <!-- Assigned Bundles Badges -->
+                                  <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="q_assigned_bundle_badges_<%= cat.id %>_<%= cq.id %>">
+                                  </div>
+
+                                  <!-- Quick Assign to Bundle Select -->
+                                  <% if cat.question_bundles.any? %>
+                                    <div class="mt-3 pt-2 border-top">
+                                      <select class="form-select form-select-sm rounded-3 text-muted w-100 q-bundle-assign-select-<%= cat.id %>-<%= cq.id %>" 
+                                              data-q-id="<%= cq.id %>"
+                                              onchange="handleQuestionBundleSelect(<%= cat.id %>, <%= cq.id %>, this)">
+                                        <option value="">+ Assign to Bundle...</option>
+                                        <% cat.question_bundles.order(:position).each do |b| %>
+                                          <% base_text = "#{b.name} (#{b.day_range_text})" %>
+                                          <option value="<%= b.id %>" 
+                                                  id="q_select_opt_<%= cat.id %>_<%= cq.id %>_<%= b.id %>"
+                                                  data-bundle-base-name="<%= base_text %>">
+                                            <%= base_text %>
+                                          </option>
+                                        <% end %>
+                                      </select>
+                                    </div>
+                                  <% end %>
+                                </div>
+
+                                <!-- Modal: View Custom Question -->
+                                <div class="modal fade" id="viewQuestionModal_<%= cat.id %>_<%= cq.id %>" tabindex="-1" aria-hidden="true">
+                                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                                      <div class="modal-header border-bottom-0 pb-0">
+                                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                          <i class="bi bi-eye text-primary"></i> View Custom Question Details
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body p-4">
+                                        <div class="mb-3">
+                                          <label class="text-muted small fw-semibold d-block mb-1">Question Title:</label>
+                                          <div class="fw-bold text-dark fs-6"><%= cq.title %></div>
+                                        </div>
+                                        <% if cq.display_name.present? %>
+                                          <div class="mb-3">
+                                            <label class="text-muted small fw-semibold d-block mb-1">Display Name:</label>
+                                            <div class="text-dark"><%= cq.display_name %></div>
+                                          </div>
+                                        <% end %>
+                                        <% if cq.requires_options? && cq.options.any? %>
+                                          <div class="mb-3">
+                                            <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= cq.options.size %>):</h6>
+                                            <div class="list-group rounded-3">
+                                              <% cq.options.each_with_index do |opt, opt_idx| %>
+                                                <div class="list-group-item d-flex align-items-center justify-content-between">
+                                                  <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                                </div>
+                                              <% end %>
+                                            </div>
+                                          </div>
+                                        <% end %>
+                                      </div>
+                                      <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                        <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Close</button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Column: Custom Question Bundles -->
+                <div class="col-lg-7 cat-col-bundles-<%= cat.id %>" id="bundles_col_<%= cat.id %>">
+                  <div class="card border border-secondary-subtle shadow-sm rounded-4 h-100 bg-light-subtle">
+                    <div class="card-header bg-white border-bottom p-3.5 p-md-4 rounded-top-4">
+                      <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                        <div>
+                          <h6 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-layers-fill text-warning fs-5"></i>
+                            <span>Custom Question Bundles</span>
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+                              <%= cat.question_bundles.size %> <%= cat.question_bundles.size == 1 ? 'bundle' : 'bundles' %>
+                            </span>
+                          </h6>
+                          <span class="text-muted small d-block mt-1">Split category questions into customizable parts or sections.</span>
+                        </div>
+
+                        <button type="button" 
+                                class="btn btn-sm btn-primary rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white border-0" 
+                                style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#newBundleModal_<%= cat.id %>">
+                          <i class="bi bi-plus-circle-fill text-white fs-6"></i>
+                          <span>Add Bundle / Part</span>
+                        </button>
+                      </div>
+
+                      <!-- Search Filter for Bundles -->
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 ps-3 pe-2"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" 
+                               class="form-control bg-light border-start-0 ps-0 py-2" 
+                               placeholder="Search bundles by name..." 
+                               oninput="filterCategoryBundles(<%= cat.id %>, this.value)">
+                      </div>
+                    </div>
+
+                    <!-- New Bundle Modal -->
+                    <div class="modal fade" id="newBundleModal_<%= cat.id %>" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                          <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                              <i class="bi bi-plus-circle-fill text-primary"></i> Add Custom Bundle / Part
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body p-4">
+                            <div id="new_bundle_error_<%= cat.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                              <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold text-dark small">Bundle / Part Name <span class="text-danger">*</span></label>
+                              <input type="text" 
+                                     id="new_bundle_name_<%= cat.id %>" 
+                                     class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                                     placeholder="e.g. Part 3, Module C">
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                              <div class="col-6">
+                                <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       id="new_bundle_from_<%= cat.id %>" 
+                                       value="1" 
+                                       min="1" 
+                                       max="<%= cat.duration_days || duration %>" 
+                                       class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                              </div>
+                              <div class="col-6">
+                                <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       id="new_bundle_to_<%= cat.id %>" 
+                                       value="<%= duration %>" 
+                                       min="1" 
+                                       max="<%= cat.duration_days || duration %>" 
+                                       class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                              </div>
+                              <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                Category active schedule duration: 1 to <%= duration %> Days.
+                              </div>
+                            </div>
+
+                            <div class="mb-0">
+                              <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                              <textarea id="new_bundle_desc_<%= cat.id %>" 
+                                        rows="2" 
+                                        class="form-control rounded-3 border-secondary-subtle" 
+                                        placeholder="Brief description..."></textarea>
+                            </div>
+                          </div>
+                          <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                            <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="addNewBundleCard(<%= cat.id %>, <%= cat.duration_days || 30 %>)">
+                              <i class="bi bi-check-lg me-1"></i> Create Bundle
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card-body p-3 overflow-auto" style="max-height: 700px;">
+                      <div class="d-flex flex-column gap-3" id="cat_bundles_container_<%= cat.id %>">
+                        <% if cat.question_bundles.any? %>
+                          <% cat.question_bundles.order(:position).each do |bundle| %>
+                            <% items = bundle.question_bundle_items.order(:position).includes(:question) %>
+
+                            <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative bundle-card-<%= cat.id %>" id="bundle_card_<%= cat.id %>_<%= bundle.id %>">
+                              <!-- Hidden inputs for institution-edited bundle params -->
+                              <div class="cat-bundle-hidden-inputs-<%= cat.id %>" data-bundle-id="<%= bundle.id %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][name]" id="bundle_input_name_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.name %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][from_day]" id="bundle_input_from_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.from_day || 1 %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][to_day]" id="bundle_input_to_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.to_day || cat.duration_days || 30 %>">
+                                <input type="hidden" name="assignments[<%= cat.id %>][bundles][<%= bundle.id %>][description]" id="bundle_input_desc_<%= cat.id %>_<%= bundle.id %>" value="<%= bundle.description %>">
+                              </div>
+
+                              <!-- Bundle Card Header -->
+                              <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                  <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+                                    <i class="bi bi-layers-fill me-1"></i><span id="bundle_name_display_<%= cat.id %>_<%= bundle.id %>"><%= bundle.name %></span>
+                                  </span>
+                                  <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1" id="bundle_q_count_pill_<%= cat.id %>_<%= bundle.id %>">
+                                    <%= items.size %> <%= items.size == 1 ? 'question' : 'questions' %>
+                                  </span>
+                                  <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-calendar-event me-1"></i><span id="bundle_schedule_display_<%= cat.id %>_<%= bundle.id %>"><%= bundle.day_range_text %></span>
+                                  </span>
+                                </div>
+
+                                <!-- Bundle Right Actions -->
+                                <div class="d-flex align-items-center gap-2">
+                                  <!-- Edit Button -->
+                                  <button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1" title="Edit Bundle" data-bs-toggle="modal" data-bs-target="#editBundleModal_<%= cat.id %>_<%= bundle.id %>">
+                                    <i class="bi bi-pencil"></i>
+                                  </button>
+                                  <!-- Delete Button -->
+                                  <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1" title="Delete Bundle" onclick="deleteBundleCard(<%= cat.id %>, <%= bundle.id %>)">
+                                    <i class="bi bi-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <!-- Edit Bundle Modal -->
+                              <div class="modal fade" id="editBundleModal_<%= cat.id %>_<%= bundle.id %>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                  <div class="modal-content rounded-4 border-0 shadow-lg">
+                                    <div class="modal-header border-bottom-0 pb-0">
+                                      <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="bi bi-pencil-square text-primary"></i> Edit Bundle / Part
+                                      </h5>
+                                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                      <div id="bundle_modal_error_<%= cat.id %>_<%= bundle.id %>" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3">
+                                        <i class="bi bi-exclamation-triangle-fill me-1.5"></i><span class="error-msg"></span>
+                                      </div>
+
+                                      <div class="mb-3">
+                                        <label class="form-label fw-semibold text-dark small">Bundle / Part Name <span class="text-danger">*</span></label>
+                                        <input type="text" 
+                                               id="modal_bundle_name_<%= cat.id %>_<%= bundle.id %>" 
+                                               value="<%= bundle.name %>" 
+                                               class="form-control rounded-3 fw-semibold border-secondary-subtle" 
+                                               placeholder="e.g. Part 1, Module A">
+                                      </div>
+
+                                      <div class="row g-3 mb-3">
+                                         <div class="col-6">
+                                           <label class="form-label fw-semibold text-dark small">From Day <span class="text-danger">*</span></label>
+                                           <input type="number" 
+                                                  id="modal_bundle_from_<%= cat.id %>_<%= bundle.id %>" 
+                                                  value="<%= bundle.from_day || 1 %>" 
+                                                  min="1" 
+                                                  max="<%= cat.duration_days || duration %>" 
+                                                  class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                         </div>
+                                         <div class="col-6">
+                                           <label class="form-label fw-semibold text-dark small">To Day <span class="text-danger">*</span></label>
+                                           <input type="number" 
+                                                  id="modal_bundle_to_<%= cat.id %>_<%= bundle.id %>" 
+                                                  value="<%= bundle.to_day || cat.duration_days || duration %>" 
+                                                  min="1" 
+                                                  max="<%= cat.duration_days || duration %>" 
+                                                  class="form-control rounded-3 border-secondary-subtle cat-day-input-max-<%= cat.id %>">
+                                         </div>
+                                         <div class="form-text text-muted small mt-1 cat-duration-subtext-<%= cat.id %>">
+                                           Category active schedule duration: 1 to <%= duration %> Days.
+                                         </div>
+                                      </div>
+
+                                      <div class="mb-0">
+                                        <label class="form-label fw-semibold text-dark small">Description (Optional)</label>
+                                        <textarea id="modal_bundle_desc_<%= cat.id %>_<%= bundle.id %>" 
+                                                  rows="2" 
+                                                  class="form-control rounded-3 border-secondary-subtle" 
+                                                  placeholder="Brief instructions or notes..."><%= bundle.description %></textarea>
+                                      </div>
+                                    </div>
+                                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                                      <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                                      <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold shadow-xs" onclick="saveBundleEdits(<%= cat.id %>, <%= bundle.id %>, <%= cat.duration_days || 30 %>)">
+                                        <i class="bi bi-check-lg me-1"></i> Save Bundle
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- Dropzone Container with Dashed Border -->
+                              <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10" style="min-height: 100px; border: 2px dashed #94a3b8 !important;">
+                                <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_<%= cat.id %>_<%= bundle.id %>">
+                                  <% items.each_with_index do |item, item_idx| %>
+                                    <% q = item.question %>
+                                    <% next unless q %>
+
+                                    <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_<%= cat.id %>_<%= bundle.id %>_<%= q.id %>">
+                                      <div class="d-flex align-items-start gap-2">
+                                        <!-- Left Controls Column (Selection Checkbox, Drag Handle, Serial Badge, Chevrons) -->
+                                        <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+                                          <input type="hidden" name="assignments[<%= cat.id %>][bundle_items][][question_id]" value="<%= q.id %>">
+                                          <input type="hidden" name="assignments[<%= cat.id %>][bundle_items][][bundle_name]" value="<%= bundle.name %>" class="bundle-item-name-input-<%= cat.id %>-<%= bundle.id %>">
+                                          <input type="hidden" 
+                                                 name="assignments[<%= cat.id %>][question_ids][]" 
+                                                 value="<%= q.id %>" 
+                                                 id="cat_q_<%= cat.id %>_<%= q.id %>" 
+                                                 class="cat-q-cb-<%= cat.id %> bundle-q-cb-<%= cat.id %>-<%= bundle.id %>">
+
+                                          <i class="bi bi-list fs-5 text-secondary drag-handle me-1" title="Drag to reorder" style="cursor: grab;"></i>
+
+                                          <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold bundle-item-serial me-1" style="font-size: 0.75rem;">
+                                            #<%= item_idx + 1 %>
+                                          </span>
+
+                                          <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-2">
+                                            <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
+                                              <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
+                                              <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <!-- Content Column -->
+                                        <div class="flex-grow-1 min-w-0">
+                                          <div class="d-flex align-items-start justify-content-between gap-2">
+                                            <label for="cat_q_<%= cat.id %>_<%= q.id %>" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;" id="bundle_item_title_<%= cat.id %>_<%= q.id %>">
+                                              <%= q.title %>
+                                            </label>
+
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0 ms-1" 
+                                                    style="width: 24px; height: 24px; min-width: 24px;"
+                                                    title="Remove from bundle" 
+                                                    onclick="removeQuestionFromBundle(<%= cat.id %>, <%= q.id %>, '<%= bundle.id %>')">
+                                              <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+                                            </button>
+                                          </div>
+
+                                          <div class="d-flex align-items-center flex-wrap gap-1.5 mt-2">
+                                            <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;" id="bundle_item_type_<%= cat.id %>_<%= q.id %>">
+                                              <%= q.question_type.titleize %>
+                                            </span>
+                                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                              <i class="bi bi-clock-history me-1 text-primary"></i><span id="bundle_item_eff_sched_<%= cat.id %>_<%= q.id %>"><%= item.effective_day_range_text %></span>
+                                            </span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                                              <i class="bi bi-calendar-check me-1 text-success"></i><span id="bundle_item_days_<%= cat.id %>_<%= q.id %>"><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle</span>
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  <% end %>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
+                        <% else %>
+                          <div class="text-center py-4 text-muted bg-light rounded-4 border">
+                            <i class="bi bi-layers fs-2 opacity-50 d-block mb-1 text-warning"></i>
+                            <p class="mb-2 small">No bundles created for this category yet.</p>
+                            <button type="button" class="btn btn-sm btn-primary rounded-3 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newBundleModal_<%= cat.id %>">
+                              <i class="bi bi-plus-circle-fill me-1"></i> Create First Bundle
+                            </button>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Sticky Floating Bottom Action Dock -->
+    <div class="position-sticky bottom-0 bg-white border shadow-lg p-3 p-md-3.5 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-3 z-3 mb-3 mt-4" style="bottom: 1rem;">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-2 rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <i class="bi bi-check-circle-fill fs-5"></i>
+        </div>
+        <div>
+          <h6 class="fw-bold text-dark mb-0">Ready to create <%= pluralize(@categories.size, 'Assignment') %></h6>
+          <span class="text-muted small">Configured from <strong><%= @question_bank.name %></strong></span>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <%= link_to "Cancel", new_institute_admin_assignment_path(mode: 'import_select', question_bank_id: @question_bank&.id), class: "btn btn-light border text-secondary px-4 py-2 rounded-3 fw-semibold shadow-xs" %>
+        <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none;">
+          <i class="bi bi-box-arrow-in-down fs-5"></i> Create <%= pluralize(@categories.size, 'Assignment') %>
+        </button>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function getOrdinal(n) {
+    if (isNaN(n)) return n;
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  function renderParticipantBreakdown(containerId, counts) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const types = Object.keys(counts);
+    if (types.length === 0) {
+      container.classList.add('d-none');
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    types.forEach(type => {
+      const cnt = counts[type];
+      if (cnt > 0) {
+        let formattedType = type === 'student' ? (cnt === 1 ? 'Student' : 'Students') : 
+                           (type === 'guardian' ? (cnt === 1 ? 'Guardian' : 'Guardians') : 
+                           (type === 'employee' ? (cnt === 1 ? 'Employee' : 'Employees') : type));
+        
+        let pillStyle = '';
+        if (type === 'student') {
+          pillStyle = 'background-color: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc;';
+        } else if (type === 'guardian') {
+          pillStyle = 'background-color: #fefce8; color: #ca8a04; border: 1px solid #fef08a;';
+        } else if (type === 'employee') {
+          pillStyle = 'background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;';
+        } else {
+          pillStyle = 'background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
+        }
+
+        html += `<span class="badge rounded-pill px-2.5 py-1 fw-bold" style="${pillStyle} font-size: 0.72rem;">${cnt} ${formattedType}</span>`;
+      }
+    });
+
+    if (html !== '') {
+      container.innerHTML = html;
+      container.classList.remove('d-none');
+    } else {
+      container.classList.add('d-none');
+      container.innerHTML = '';
+    }
+  }
+
+  function toggleCategoryRecipientMode(catId, mode) {
+    const indDiv = document.getElementById('individual_recipients_' + catId);
+    const secDiv = document.getElementById('section_recipients_' + catId);
+    const titleSpan = document.getElementById('recipients_card_title_' + catId);
+    
+    if (mode === 'section') {
+      indDiv.classList.add('d-none');
+      secDiv.classList.remove('d-none');
+      if (titleSpan) titleSpan.textContent = 'Sections';
+    } else {
+      secDiv.classList.add('d-none');
+      indDiv.classList.remove('d-none');
+      if (titleSpan) titleSpan.textContent = 'Participants';
+    }
+    updateCardRecipientCount(catId);
+  }
+
+  function filterCategoryParticipants(catId, type) {
+    const items = document.querySelectorAll(`.cat-part-item-${catId}`);
+    items.forEach(item => {
+      if (type === 'all' || item.dataset.participantType === type) {
+        item.classList.remove('d-none');
+      } else {
+        item.classList.add('d-none');
+      }
+    });
+  }
+
+  function toggleSelectAllCardRecipients(catId, checked) {
+    const modeRadio = document.querySelector(`input[name="assignments[${catId}][assignment_type]"]:checked`);
+    const mode = modeRadio ? modeRadio.value : 'individual';
+
+    if (mode === 'section') {
+      const secCbs = document.querySelectorAll(`.cat-sec-cb-${catId}`);
+      secCbs.forEach(cb => cb.checked = checked);
+    } else {
+      const partItems = document.querySelectorAll(`.cat-part-item-${catId}:not(.d-none)`);
+      partItems.forEach(item => {
+        const cb = item.querySelector('.form-check-input');
+        if (cb) cb.checked = checked;
+      });
+    }
+    updateCardRecipientCount(catId);
+  }
+
+  function updateCardRecipientCount(catId) {
+    const modeRadio = document.querySelector(`input[name="assignments[${catId}][assignment_type]"]:checked`);
+    const mode = modeRadio ? modeRadio.value : 'individual';
+
+    const partBadge = document.getElementById('recipient_count_badge_' + catId);
+    const secBadge = document.getElementById('sec_count_badge_' + catId);
+
+    if (mode === 'section') {
+      const checkedSecs = document.querySelectorAll(`.cat-sec-cb-${catId}:checked`);
+      const count = checkedSecs.length;
+      if (secBadge) {
+        secBadge.textContent = `${count} Selected`;
+        secBadge.className = count > 0 ? "badge bg-primary text-white rounded-pill px-2.5 py-1.5 fw-semibold" : "badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5 fw-semibold";
+      }
+      renderParticipantBreakdown('participant_breakdown_' + catId, {});
+    } else {
+      const checkedParts = document.querySelectorAll(`.cat-part-cb-${catId}:checked`);
+      const count = checkedParts.length;
+      if (partBadge) {
+        partBadge.textContent = `${count} Selected`;
+        partBadge.className = count > 0 ? "badge bg-primary text-white rounded-pill px-2.5 py-1.5 fw-semibold" : "badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1.5 fw-semibold";
+      }
+
+      const counts = {};
+      checkedParts.forEach(cb => {
+        const item = cb.closest('.cat-part-item-' + catId);
+        if (item && item.dataset.participantType) {
+          const t = item.dataset.participantType;
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      });
+
+      renderParticipantBreakdown('participant_breakdown_' + catId, counts);
+    }
+  }
+
+  function filterGlobalParticipants(type) {
+    const items = document.querySelectorAll('.global-part-item');
+    items.forEach(item => {
+      if (type === 'all' || item.dataset.participantType === type) {
+        item.classList.remove('d-none');
+      } else {
+        item.classList.add('d-none');
+      }
+    });
+  }
+
+  function toggleSelectAllGlobalParticipants(checked) {
+    const visibleItems = document.querySelectorAll('.global-part-item:not(.d-none)');
+    visibleItems.forEach(item => {
+      const cb = item.querySelector('.global-participant-cb');
+      if (cb) cb.checked = checked;
+    });
+    syncGlobalParticipants();
+  }
+
+  function toggleSelectAllGlobalSections(checked) {
+    const cbs = document.querySelectorAll('.global-section-cb');
+    cbs.forEach(cb => cb.checked = checked);
+    syncGlobalSections();
+  }
+
+  function toggleAllCatQuestions(catId, checked) {
+    const cbs = document.querySelectorAll(`.cat-q-cb-${catId}`);
+    cbs.forEach(cb => cb.checked = checked);
+    const bundleCbs = document.querySelectorAll(`[class*="bundle-select-all-cb-${catId}-"]`);
+    bundleCbs.forEach(cb => cb.checked = checked);
+  }
+
+  function toggleBundleQuestions(catId, bundleId, checked) {
+    const cbs = document.querySelectorAll(`.bundle-q-cb-${catId}-${bundleId}`);
+    cbs.forEach(cb => cb.checked = checked);
+    const bundleCb = document.getElementById(`bundle_cb_${catId}_${bundleId}`);
+    if (bundleCb) bundleCb.checked = checked;
+  }
+
+  function toggleSingleQuestion(catId, qId) {
+    const cb = document.getElementById(`cat_q_${catId}_${qId}`);
+    if (cb) cb.checked = !cb.checked;
+  }
+
+  function syncGlobalSections() {
+    const globalCbs = document.querySelectorAll('.global-section-cb');
+    globalCbs.forEach(gCb => {
+      const secId = gCb.value;
+      const targetCbs = document.querySelectorAll(`input[name$="[section_ids][]"][value="${secId}"]`);
+      targetCbs.forEach(tCb => {
+        tCb.checked = gCb.checked;
+        const catIdMatch = tCb.name.match(/assignments\[(\d+)\]/);
+        if (catIdMatch && catIdMatch[1]) {
+          updateCardRecipientCount(catIdMatch[1]);
+        }
+      });
+    });
+  }
+
+  function syncGlobalParticipants() {
+    const globalCbs = document.querySelectorAll('.global-participant-cb');
+    const counts = {};
+
+    globalCbs.forEach(gCb => {
+      const partId = gCb.value;
+      if (gCb.checked) {
+        const item = gCb.closest('.global-part-item');
+        if (item && item.dataset.participantType) {
+          const t = item.dataset.participantType;
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      }
+      const targetCbs = document.querySelectorAll(`input[name$="[participant_ids][]"][value="${partId}"]`);
+      targetCbs.forEach(tCb => {
+        tCb.checked = gCb.checked;
+        const catIdMatch = tCb.name.match(/assignments\[(\d+)\]/);
+        if (catIdMatch && catIdMatch[1]) {
+          updateCardRecipientCount(catIdMatch[1]);
+        }
+      });
+    });
+
+    renderParticipantBreakdown('global_participant_breakdown', counts);
+  }
+
+  function syncGlobalRecipients(e) {
+    if (e) e.preventDefault();
+    syncGlobalSections();
+    syncGlobalParticipants();
+  }
+
+  function parseInputDate(dateStr) {
+    if (!dateStr) return null;
+    let parts;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      parts = dateStr.split('-').map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      parts = dateStr.split('/').map(Number);
+      const d = parts[0], m = parts[1], y = parts[2];
+      if (m > 12) {
+        return new Date(y, d - 1, m);
+      }
+      return new Date(y, m - 1, d);
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function updateSelectedDaysCount(catId) {
+    const startDateInput = document.querySelector(`input[name="assignments[${catId}][start_date]"]`);
+    const endDateInput = document.querySelector(`input[name="assignments[${catId}][end_date]"]`);
+    const textEl = document.getElementById(`selected_days_text_${catId}`);
+    const badgeEl = document.getElementById(`selected_days_badge_${catId}`);
+
+    if (!startDateInput || !endDateInput || !textEl) return;
+
+    const start = parseInputDate(startDateInput.value);
+    const end = parseInputDate(endDateInput.value);
+
+    if (start && end) {
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const totalDays = diffDays >= 0 ? diffDays + 1 : 0;
+
+      if (totalDays > 0) {
+        textEl.textContent = `${totalDays} ${totalDays === 1 ? 'Day' : 'Days'} Selected`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+
+        // Store active duration on category card dataset
+        const catCard = document.getElementById(`category_card_${catId}`);
+        if (catCard) {
+          const oldDuration = parseInt(catCard.dataset.categoryDuration) || 0;
+          catCard.dataset.categoryDuration = totalDays;
+
+          // If new_bundle_to input value was set to old duration or empty, update to new totalDays
+          const newBundleToInput = document.getElementById(`new_bundle_to_${catId}`);
+          if (newBundleToInput && (parseInt(newBundleToInput.value) === oldDuration || !newBundleToInput.value)) {
+            newBundleToInput.value = totalDays;
+          }
+        }
+
+        // Dynamically update subtext in modals for catId
+        const durationSubtexts = document.querySelectorAll(`.cat-duration-subtext-${catId}`);
+        durationSubtexts.forEach(el => {
+          if (el.textContent.includes('schedule range:')) {
+            el.textContent = `Category active schedule range: 1 to ${totalDays} Days.`;
+          } else {
+            el.textContent = `Category active schedule duration: 1 to ${totalDays} Days.`;
+          }
+        });
+
+        // Dynamically update max attribute of To Day / From Day inputs
+        const dayInputs = document.querySelectorAll(`.cat-day-input-max-${catId}`);
+        dayInputs.forEach(input => {
+          input.max = totalDays;
+        });
+      } else {
+        textEl.textContent = `Invalid Date Range`;
+        if (badgeEl) {
+          badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-bold shadow-xs';
+        }
+      }
+    }
+  }
+
+  function autoUpdateEndDate(catId, durationDays) {
+    const startDateInput = document.querySelector(`input[name="assignments[${catId}][start_date]"]`);
+    const endDateInput = document.querySelector(`input[name="assignments[${catId}][end_date]"]`);
+    if (startDateInput && endDateInput && startDateInput.value) {
+      const start = parseInputDate(startDateInput.value);
+      if (start && !isNaN(start.getTime())) {
+        start.setDate(start.getDate() + parseInt(durationDays) - 1);
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`;
+        endDateInput.value = formatted;
+        if (endDateInput._flatpickr) {
+          endDateInput._flatpickr.setDate(formatted, true);
+        }
+      }
+    }
+    updateSelectedDaysCount(catId);
+  }
+
+  function moveQuestionItemUp(btn) {
+    const item = btn.closest('.bundle-question-item');
+    if (!item) return;
+    const prev = item.previousElementSibling;
+    if (prev && prev.classList.contains('bundle-question-item')) {
+      item.parentNode.insertBefore(item, prev);
+      updateBundleSerials(item.parentNode);
+    }
+  }
+
+  function moveQuestionItemDown(btn) {
+    const item = btn.closest('.bundle-question-item');
+    if (!item) return;
+    const next = item.nextElementSibling;
+    if (next && next.classList.contains('bundle-question-item')) {
+      item.parentNode.insertBefore(next, item);
+      updateBundleSerials(item.parentNode);
+    }
+  }
+
+  function updateBundleSerials(container) {
+    if (!container) return;
+    const items = container.querySelectorAll('.bundle-question-item');
+    items.forEach((item, idx) => {
+      const serialBadge = item.querySelector('.bundle-item-serial');
+      if (serialBadge) {
+        serialBadge.textContent = '#' + (idx + 1);
+      }
+    });
+  }
+
+  function initBundleSortables() {
+    if (typeof Sortable !== "undefined") {
+      const containers = document.querySelectorAll('.bundle-items-container');
+      containers.forEach(container => {
+        if (!container.dataset.sortableInitialized) {
+          container.dataset.sortableInitialized = 'true';
+          new Sortable(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: function(evt) {
+              updateBundleSerials(evt.to);
+            }
+          });
+        }
+      });
+    }
+  }
+
+  function setupFlatpickrInstances() {
+    if (typeof flatpickr !== "undefined") {
+      flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true
+      });
+    }
+  }
+
+  function saveBundleEdits(catId, bundleId, categoryDuration) {
+    const nameInput = document.getElementById(`modal_bundle_name_${catId}_${bundleId}`);
+    const fromInput = document.getElementById(`modal_bundle_from_${catId}_${bundleId}`);
+    const toInput = document.getElementById(`modal_bundle_to_${catId}_${bundleId}`);
+    const descInput = document.getElementById(`modal_bundle_desc_${catId}_${bundleId}`);
+    const errorBox = document.getElementById(`bundle_modal_error_${catId}_${bundleId}`);
+
+    const catCard = document.getElementById(`category_card_${catId}`);
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10);
+    }
+
+    if (!nameInput || !fromInput || !toInput) return;
+
+    const nameVal = nameInput.value.trim();
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+    const descVal = descInput ? descInput.value.trim() : '';
+
+    // 1. Name validation
+    if (!nameVal) {
+      showBundleModalError(errorBox, "Bundle name is required.");
+      return;
+    }
+
+    // 2. From Day validation
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be a valid number greater than or equal to 1.");
+      return;
+    }
+
+    // 3. To Day validation
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${isNaN(toVal) ? 0 : toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    // 4. Category Duration check
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration) {
+        showBundleModalError(errorBox, `From Day cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+      if (toVal > categoryDuration) {
+        showBundleModalError(errorBox, `To Day cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    // 5. Overlap check with other bundles under category catId
+    let overlapFound = false;
+    let overlapBundleName = '';
+
+    document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`).forEach(container => {
+      const bId = container.dataset.bundleId;
+      if (bId != bundleId) {
+        const otherFromInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+        const otherToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+        const otherNameInput = document.getElementById(`bundle_input_name_${catId}_${bId}`);
+
+        if (otherFromInput && otherToInput) {
+          const otherF = parseInt(otherFromInput.value, 10) || 1;
+          const otherT = parseInt(otherToInput.value, 10) || categoryDuration || 30;
+
+          if (fromVal <= otherT && toVal >= otherF) {
+            overlapFound = true;
+            overlapBundleName = otherNameInput ? otherNameInput.value : `Bundle #${bId}`;
+          }
+        }
+      }
+    });
+
+    if (overlapFound) {
+      showBundleModalError(errorBox, `Bundle day range (Day ${fromVal} - ${toVal}) overlaps with existing bundle '${overlapBundleName}'.`);
+      return;
+    }
+
+    // Clear error banner
+    hideBundleModalError(errorBox);
+
+    // Update hidden inputs
+    const hiddenName = document.getElementById(`bundle_input_name_${catId}_${bundleId}`);
+    const hiddenFrom = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+    const hiddenTo = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+    const hiddenDesc = document.getElementById(`bundle_input_desc_${catId}_${bundleId}`);
+
+    if (hiddenName) hiddenName.value = nameVal;
+    if (hiddenFrom) hiddenFrom.value = fromVal;
+    if (hiddenTo) hiddenTo.value = toVal;
+    if (hiddenDesc) hiddenDesc.value = descVal;
+
+    // Update visible UI displays
+    const displayName = document.getElementById(`bundle_name_display_${catId}_${bundleId}`);
+    const displaySchedule = document.getElementById(`bundle_schedule_display_${catId}_${bundleId}`);
+
+    if (displayName) displayName.textContent = nameVal;
+    if (displaySchedule) {
+      displaySchedule.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+    }
+
+    // Update question item schedule badges inside this bundle
+    const itemsContainer = document.getElementById(`bundle_items_${catId}_${bundleId}`);
+    if (itemsContainer) {
+      itemsContainer.querySelectorAll('.bundle-question-item').forEach(itemCard => {
+        const idParts = itemCard.id.split('_');
+        if (idParts.length >= 6) {
+          const qId = idParts[5];
+          const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+          const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+
+          let qFrom = 1;
+          let qTo = categoryDuration || 30;
+          if (qFromInput && qToInput) {
+            qFrom = parseInt(qFromInput.value, 10) || 1;
+            qTo = parseInt(qToInput.value, 10) || (categoryDuration || 30);
+          }
+
+          const effFrom = Math.max(qFrom, fromVal);
+          const effTo = Math.min(qTo, toVal);
+
+          let effSchedText = '';
+          let daysInBundle = 0;
+
+          if (effFrom <= effTo) {
+            daysInBundle = effTo - effFrom + 1;
+            if (effFrom === effTo) {
+              effSchedText = `Day ${getOrdinal(effFrom)}`;
+            } else {
+              effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+            }
+          } else {
+            effSchedText = (qFrom === qTo) ? `Day ${getOrdinal(qFrom)}` : `Day ${getOrdinal(qFrom)} - ${getOrdinal(qTo)} Day`;
+            daysInBundle = 0;
+          }
+
+          const effSchedEl = itemCard.querySelector(`[id^="bundle_item_eff_sched_"]`);
+          const daysEl = itemCard.querySelector(`[id^="bundle_item_days_"]`);
+
+          if (effSchedEl) effSchedEl.textContent = effSchedText;
+          if (daysEl) daysEl.textContent = `${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle`;
+        }
+      });
+    }
+
+    // Close Bootstrap modal
+    const modalEl = document.getElementById(`editBundleModal_${catId}_${bundleId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+  }
+
+  function showBundleModalError(box, msg) {
+    if (!box) return;
+    const msgSpan = box.querySelector('.error-msg');
+    if (msgSpan) msgSpan.textContent = msg;
+    box.classList.remove('d-none');
+  }
+
+  function hideBundleModalError(box) {
+    if (!box) return;
+    box.classList.add('d-none');
+  }
+
+  function filterPoolQuestions(catId, query) {
+    const cards = document.querySelectorAll(`.pool-question-card-${catId}`);
+    const q = query.trim().toLowerCase();
+    cards.forEach(card => {
+      const title = card.dataset.questionTitle || '';
+      if (!q || title.includes(q)) {
+        card.classList.remove('d-none');
+      } else {
+        card.classList.add('d-none');
+      }
+    });
+  }
+
+  function filterCategoryBundles(catId, query) {
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll(`.bundle-card-${catId}`);
+    cards.forEach(card => {
+      const nameEl = card.querySelector(`[id*="bundle_name_display_${catId}_"]`);
+      const bundleName = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+      if (!q || bundleName.includes(q)) {
+        card.classList.remove('d-none');
+      } else {
+        card.classList.add('d-none');
+      }
+    });
+  }
+
+  function switchCategoryMobileTab(catId, target) {
+    const poolCol = document.getElementById(`question_pool_col_${catId}`);
+    const bundlesCol = document.getElementById(`bundles_col_${catId}`);
+    const poolBtn = document.querySelector(`.cat-tab-btn-pool-${catId}`);
+    const bundleBtn = document.querySelector(`.cat-tab-btn-bundles-${catId}`);
+
+    if (target === 'pool') {
+      if (poolCol) poolCol.classList.remove('d-none');
+      if (bundlesCol) bundlesCol.classList.add('d-none');
+      if (poolBtn) { poolBtn.classList.add('btn-primary', 'active'); poolBtn.classList.remove('btn-outline-primary'); }
+      if (bundleBtn) { bundleBtn.classList.remove('btn-primary', 'active'); bundleBtn.classList.add('btn-outline-primary'); }
+    } else {
+      if (poolCol) poolCol.classList.add('d-none');
+      if (bundlesCol) bundlesCol.classList.remove('d-none');
+      if (bundleBtn) { bundleBtn.classList.add('btn-primary', 'active'); bundleBtn.classList.remove('btn-outline-primary'); }
+      if (poolBtn) { poolBtn.classList.remove('btn-primary', 'active'); poolBtn.classList.add('btn-outline-primary'); }
+    }
+  }
+
+  function togglePoolQuestionInclusion(catId, qId, checked) {
+    const bundleCbs = document.querySelectorAll(`.cat-q-cb-${catId}[value="${qId}"]`);
+    bundleCbs.forEach(cb => cb.checked = checked);
+  }
+
+  function saveQuestionEdits(catId, qId, categoryDuration) {
+    const titleInput = document.getElementById(`modal_q_title_${catId}_${qId}`);
+    const dispInput = document.getElementById(`modal_q_disp_name_${catId}_${qId}`);
+    const fromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+    const toInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+    const errorBox = document.getElementById(`q_modal_error_${catId}_${qId}`);
+
+    if (!titleInput || !fromInput || !toInput) return;
+
+    const titleVal = titleInput.value.trim();
+    const dispVal = dispInput ? dispInput.value.trim() : '';
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+
+    if (!titleVal) {
+      showBundleModalError(errorBox, "Question title is required.");
+      return;
+    }
+
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be at least 1.");
+      return;
+    }
+
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration || toVal > categoryDuration) {
+        showBundleModalError(errorBox, `Day range cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    hideBundleModalError(errorBox);
+
+    const catCard = document.getElementById(`category_card_${catId}`);
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10);
+    }
+
+    // Update displays in Pool
+    const poolTitle = document.getElementById(`q_title_display_${catId}_${qId}`);
+    const poolDisp = document.getElementById(`q_disp_display_${catId}_${qId}`);
+    const poolSched = document.getElementById(`q_schedule_display_${catId}_${qId}`);
+
+    if (poolTitle) poolTitle.textContent = titleVal;
+    if (poolDisp) poolDisp.textContent = dispVal;
+    if (poolSched) poolSched.textContent = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+
+    // Update displays & schedule badges in Bundle Items
+    const bundleTitles = document.querySelectorAll(`[id^="bundle_item_title_${catId}_${qId}"]`);
+    bundleTitles.forEach(t => t.textContent = titleVal);
+
+    document.querySelectorAll(`[id^="bundle_item_card_${catId}_"][id$="_${qId}"]`).forEach(itemCard => {
+      const idParts = itemCard.id.split('_');
+      if (idParts.length >= 6) {
+        const bId = idParts[4];
+        const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+        const bToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+
+        let bFrom = 1;
+        let bTo = categoryDuration || 30;
+        if (bFromInput && bToInput) {
+          bFrom = parseInt(bFromInput.value, 10) || 1;
+          bTo = parseInt(bToInput.value, 10) || (categoryDuration || 30);
+        }
+
+        const effFrom = Math.max(fromVal, bFrom);
+        const effTo = Math.min(toVal, bTo);
+
+        let effSchedText = '';
+        let daysInBundle = 0;
+
+        if (effFrom <= effTo) {
+          daysInBundle = effTo - effFrom + 1;
+          if (effFrom === effTo) {
+            effSchedText = `Day ${getOrdinal(effFrom)}`;
+          } else {
+            effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+          }
+        } else {
+          effSchedText = (fromVal === toVal) ? `Day ${getOrdinal(fromVal)}` : `Day ${getOrdinal(fromVal)} - ${getOrdinal(toVal)} Day`;
+          daysInBundle = 0;
+        }
+
+        const effSchedEl = itemCard.querySelector(`[id^="bundle_item_eff_sched_"]`);
+        const daysEl = itemCard.querySelector(`[id^="bundle_item_days_"]`);
+
+        if (effSchedEl) effSchedEl.textContent = effSchedText;
+        if (daysEl) daysEl.textContent = `${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle`;
+      }
+    });
+
+    // Hide Modal
+    const modalEl = document.getElementById(`editQuestionModal_${catId}_${qId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+  }
+
+  function handleQuestionBundleSelect(catId, qId, selectEl) {
+    const bundleId = selectEl.value;
+    if (!bundleId) return;
+
+    const selectedOpt = selectEl.options[selectEl.selectedIndex];
+    const baseName = selectedOpt.dataset.bundleBaseName || selectedOpt.textContent.replace(/\s*-\s*Assigned$/, '');
+    const bundleName = baseName ? baseName.split(' (')[0] : 'Bundle';
+
+    const bundleItemsContainer = document.getElementById(`bundle_items_${catId}_${bundleId}`);
+    if (!bundleItemsContainer) return;
+
+    // Check if item already exists in bundle
+    const existingCard = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+    if (existingCard) {
+      selectEl.value = "";
+      return;
+    }
+
+    const qTitleEl = document.getElementById(`q_title_display_${catId}_${qId}`);
+    const qTitle = qTitleEl ? qTitleEl.textContent.trim() : 'Question Title';
+    const qTypeEl = document.getElementById(`bundle_item_type_${catId}_${qId}`);
+    const qType = qTypeEl ? qTypeEl.textContent.trim() : 'Short Answer';
+
+    // Calculate Question Schedule Range [qFrom, qTo]
+    let qFrom = 1, qTo = 30;
+    const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+    const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+    if (qFromInput && qToInput && qFromInput.value && qToInput.value) {
+      qFrom = parseInt(qFromInput.value, 10);
+      qTo = parseInt(qToInput.value, 10);
+    } else {
+      const qSchedEl = document.getElementById(`q_schedule_display_${catId}_${qId}`);
+      if (qSchedEl) {
+        const text = qSchedEl.textContent.trim();
+        const numbers = text.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          qFrom = parseInt(numbers[0], 10);
+          qTo = parseInt(numbers[1], 10);
+        } else if (numbers && numbers.length === 1) {
+          qFrom = parseInt(numbers[0], 10);
+          qTo = parseInt(numbers[0], 10);
+        }
+      }
+    }
+
+    // Calculate Bundle Schedule Range [bFrom, bTo]
+    let bFrom = 1, bTo = 30;
+    const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+    const bToInput = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+    if (bFromInput && bToInput && bFromInput.value && bToInput.value) {
+      bFrom = parseInt(bFromInput.value, 10);
+      bTo = parseInt(bToInput.value, 10);
+    } else {
+      const bSchedEl = document.getElementById(`bundle_schedule_display_${catId}_${bundleId}`);
+      if (bSchedEl) {
+        const text = bSchedEl.textContent.trim();
+        const numbers = text.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          bFrom = parseInt(numbers[0], 10);
+          bTo = parseInt(numbers[1], 10);
+        } else if (numbers && numbers.length === 1) {
+          bFrom = parseInt(numbers[0], 10);
+          bTo = parseInt(numbers[0], 10);
+        }
+      }
+    }
+
+    const effFrom = Math.max(qFrom, bFrom);
+    const effTo = Math.min(qTo, bTo);
+
+    let effSchedText = '';
+    let daysInBundle = 0;
+
+    if (effFrom <= effTo) {
+      daysInBundle = effTo - effFrom + 1;
+      if (effFrom === effTo) {
+        effSchedText = `Day ${getOrdinal(effFrom)}`;
+      } else {
+        effSchedText = `Day ${getOrdinal(effFrom)} - ${getOrdinal(effTo)} Day`;
+      }
+    } else {
+      effSchedText = (qFrom === qTo) ? `Day ${getOrdinal(qFrom)}` : `Day ${getOrdinal(qFrom)} - ${getOrdinal(qTo)} Day`;
+      daysInBundle = 0;
+    }
+
+    const itemCount = bundleItemsContainer.querySelectorAll('.bundle-question-item').length + 1;
+
+    const newCardHtml = `
+      <div class="bundle-question-item bg-white p-3 rounded-3 border shadow-xs position-relative hover-shadow-sm transition-all mb-2" id="bundle_item_card_${catId}_${bundleId}_${qId}">
+        <div class="d-flex align-items-start gap-2">
+          <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+            <input type="hidden" name="assignments[${catId}][bundle_items][][question_id]" value="${qId}">
+            <input type="hidden" name="assignments[${catId}][bundle_items][][bundle_name]" value="${bundleName}" class="bundle-item-name-input-${catId}-${bundleId}">
+            <input type="hidden" name="assignments[${catId}][question_ids][]" value="${qId}" id="cat_q_${catId}_${qId}" class="cat-q-cb-${catId} bundle-q-cb-${catId}-${bundleId}">
+            <i class="bi bi-list fs-5 text-secondary drag-handle me-1" title="Drag to reorder" style="cursor: grab;"></i>
+            <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold bundle-item-serial me-1" style="font-size: 0.75rem;">#${itemCount}</span>
+            <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-2">
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Up" onclick="moveQuestionItemUp(this)">
+                <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+              </button>
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1.5 border-0" title="Move Down" onclick="moveQuestionItemDown(this)">
+                <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <label for="cat_q_${catId}_${qId}" class="fw-bold text-dark mb-0 cursor-pointer text-break pe-1" style="font-size: 0.925rem; line-height: 1.35;" id="bundle_item_title_${catId}_${qId}">
+                ${qTitle}
+              </label>
+              <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-xs flex-shrink-0 ms-1" style="width: 24px; height: 24px; min-width: 24px;" title="Remove from bundle" onclick="removeQuestionFromBundle(${catId}, ${qId}, '${bundleId}')">
+                <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+              </button>
+            </div>
+            <div class="d-flex align-items-center flex-wrap gap-1.5 mt-2">
+              <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;" id="bundle_item_type_${catId}_${qId}">${qType}</span>
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-clock-history me-1 text-primary"></i><span id="bundle_item_eff_sched_${catId}_${qId}">${effSchedText}</span>
+              </span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;">
+                <i class="bi bi-calendar-check me-1 text-success"></i><span id="bundle_item_days_${catId}_${qId}">${daysInBundle} ${daysInBundle === 1 ? 'day' : 'days'} in bundle</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    bundleItemsContainer.insertAdjacentHTML('beforeend', newCardHtml);
+
+    // Add pill under pool question
+    const badgesContainer = document.getElementById(`q_assigned_bundle_badges_${catId}_${qId}`);
+    if (badgesContainer) {
+      const pillHtml = `<span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate q-bundle-pill-${catId}-${qId}-${bundleId}" style="max-width: 140px;"><i class="bi bi-layers me-1"></i>${bundleName}</span>`;
+      badgesContainer.insertAdjacentHTML('beforeend', pillHtml);
+    }
+
+    // Disable option in select dropdown & mark as Assigned
+    selectedOpt.disabled = true;
+    selectedOpt.textContent = `${baseName} - Assigned`;
+    selectEl.value = "";
+
+    // Update bundle serials and count pill
+    updateBundleSerials(bundleItemsContainer);
+    const countPill = document.getElementById(`bundle_q_count_pill_${catId}_${bundleId}`);
+    if (countPill) {
+      const cnt = bundleItemsContainer.querySelectorAll('.bundle-question-item').length;
+      countPill.textContent = `${cnt} ${cnt === 1 ? 'question' : 'questions'}`;
+    }
+  }
+
+  function removeQuestionFromBundle(catId, qId, bundleId) {
+    const card = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+    if (card) {
+      const container = card.parentNode;
+      card.remove();
+      updateBundleSerials(container);
+
+      const countPill = document.getElementById(`bundle_q_count_pill_${catId}_${bundleId}`);
+      if (countPill && container) {
+        const cnt = container.querySelectorAll('.bundle-question-item').length;
+        countPill.textContent = `${cnt} ${cnt === 1 ? 'question' : 'questions'}`;
+      }
+    }
+
+    // Remove pill under pool question
+    const pill = document.querySelector(`.q-bundle-pill-${catId}-${qId}-${bundleId}`);
+    if (pill) pill.remove();
+
+    // Re-enable dropdown option and restore base text (removing " - Assigned")
+    const opt = document.getElementById(`q_select_opt_${catId}_${qId}_${bundleId}`);
+    if (opt) {
+      opt.disabled = false;
+      const baseName = opt.dataset.bundleBaseName || opt.textContent.replace(/\s*-\s*Assigned$/, '');
+      opt.textContent = baseName;
+    }
+  }
+
+  function autoAssignQuestionsToBundles(catId) {
+    const bundleContainers = document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`);
+    if (bundleContainers.length === 0) {
+      alert("No custom bundles found in this category. Please create a bundle first.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to auto-assign matching questions to bundles based on schedule day ranges?")) {
+      return;
+    }
+
+    let assignedCount = 0;
+    const poolCards = document.querySelectorAll(`.pool-question-card-${catId}`);
+
+    poolCards.forEach(card => {
+      const qIdMatch = card.id.match(/pool_card_\d+_(\d+)/);
+      if (!qIdMatch) return;
+      const qId = qIdMatch[1];
+
+      const qFromInput = document.getElementById(`modal_q_from_${catId}_${qId}`);
+      const qToInput = document.getElementById(`modal_q_to_${catId}_${qId}`);
+
+      const qFrom = qFromInput ? parseInt(qFromInput.value, 10) : 1;
+      const qTo = qToInput ? parseInt(qToInput.value, 10) : 30;
+
+      const selectEl = document.querySelector(`.q-bundle-assign-select-${catId}-${qId}`);
+      if (!selectEl) return;
+
+      bundleContainers.forEach(bContainer => {
+        const bundleId = bContainer.dataset.bundleId;
+        const bFromInput = document.getElementById(`bundle_input_from_${catId}_${bundleId}`);
+        const bToInput = document.getElementById(`bundle_input_to_${catId}_${bundleId}`);
+
+        if (bFromInput && bToInput) {
+          const bFrom = parseInt(bFromInput.value, 10) || 1;
+          const bTo = parseInt(bToInput.value, 10) || 30;
+
+          const overlapFrom = Math.max(qFrom, bFrom);
+          const overlapTo = Math.min(qTo, bTo);
+
+          if (overlapFrom <= overlapTo) {
+            const existingCard = document.getElementById(`bundle_item_card_${catId}_${bundleId}_${qId}`);
+            if (!existingCard) {
+              const opt = document.getElementById(`q_select_opt_${catId}_${qId}_${bundleId}`);
+              if (opt && !opt.disabled) {
+                selectEl.value = bundleId;
+                handleQuestionBundleSelect(catId, qId, selectEl);
+                assignedCount++;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    if (assignedCount > 0) {
+      alert(`Auto-assigned matching questions to bundles based on schedule day ranges (${assignedCount} question-bundle assignments created).`);
+    } else {
+      alert("All questions are already assigned to their matching bundles, or no new schedule overlaps were found.");
+    }
+  }
+
+  function addNewBundleCard(catId, categoryDuration) {
+    const nameInput = document.getElementById(`new_bundle_name_${catId}`);
+    const fromInput = document.getElementById(`new_bundle_from_${catId}`);
+    const toInput = document.getElementById(`new_bundle_to_${catId}`);
+    const descInput = document.getElementById(`new_bundle_desc_${catId}`);
+    const errorBox = document.getElementById(`new_bundle_error_${catId}`);
+
+    if (!nameInput || !fromInput || !toInput) return;
+
+    const nameVal = nameInput.value.trim();
+    const fromVal = parseInt(fromInput.value, 10);
+    const toVal = parseInt(toInput.value, 10);
+    const descVal = descInput ? descInput.value.trim() : '';
+
+    if (!nameVal) {
+      showBundleModalError(errorBox, "Bundle name is required.");
+      return;
+    }
+
+    if (isNaN(fromVal) || fromVal < 1) {
+      showBundleModalError(errorBox, "From Day must be at least 1.");
+      return;
+    }
+
+    if (isNaN(toVal) || toVal < fromVal) {
+      showBundleModalError(errorBox, `To Day (${toVal}) must be greater than or equal to From Day (${fromVal}).`);
+      return;
+    }
+
+    if (categoryDuration && categoryDuration > 0) {
+      if (fromVal > categoryDuration || toVal > categoryDuration) {
+        showBundleModalError(errorBox, `Bundle day range cannot exceed category duration of ${categoryDuration} days.`);
+        return;
+      }
+    }
+
+    hideBundleModalError(errorBox);
+
+    const bundleId = 'new_' + Date.now();
+    const scheduleText = (fromVal === toVal) ? `Day ${fromVal}` : `Day ${fromVal} - ${toVal}`;
+
+    const bundlesContainer = document.getElementById(`cat_bundles_container_${catId}`);
+    if (!bundlesContainer) return;
+
+    const bundleCardHtml = `
+      <div class="card border rounded-4 bg-white shadow-sm p-3 border-light-subtle position-relative bundle-card-${catId}" id="bundle_card_${catId}_${bundleId}">
+        <div class="cat-bundle-hidden-inputs-${catId}" data-bundle-id="${bundleId}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][name]" id="bundle_input_name_${catId}_${bundleId}" value="${nameVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][from_day]" id="bundle_input_from_${catId}_${bundleId}" value="${fromVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][to_day]" id="bundle_input_to_${catId}_${bundleId}" value="${toVal}">
+          <input type="hidden" name="assignments[${catId}][bundles][${bundleId}][description]" id="bundle_input_desc_${catId}_${bundleId}" value="${descVal}">
+        </div>
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+              <i class="bi bi-layers-fill me-1"></i><span id="bundle_name_display_${catId}_${bundleId}">${nameVal}</span>
+            </span>
+            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1" id="bundle_q_count_pill_${catId}_${bundleId}">
+              0 questions
+            </span>
+            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+              <i class="bi bi-calendar-event me-1"></i><span id="bundle_schedule_display_${catId}_${bundleId}">${scheduleText}</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1" title="Delete Bundle" onclick="deleteBundleCard(${catId}, '${bundleId}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10" style="min-height: 100px; border: 2px dashed #94a3b8 !important;">
+          <div class="d-flex flex-column gap-2 bundle-items-container" id="bundle_items_${catId}_${bundleId}"></div>
+        </div>
+      </div>
+    `;
+
+    bundlesContainer.insertAdjacentHTML('beforeend', bundleCardHtml);
+
+    // Add option to select dropdowns
+    const selects = document.querySelectorAll(`[class*="q-bundle-assign-select-${catId}-"]`);
+    selects.forEach(select => {
+      const opt = document.createElement('option');
+      opt.value = bundleId;
+      opt.textContent = `${nameVal} (${scheduleText})`;
+      opt.id = `q_select_opt_${catId}_${select.dataset.qId || 'x'}_${bundleId}`;
+      select.appendChild(opt);
+    });
+
+    // Reset modal form inputs
+    nameInput.value = '';
+    fromInput.value = '1';
+    toInput.value = categoryDuration || '30';
+    if (descInput) descInput.value = '';
+
+    // Hide Modal
+    const modalEl = document.getElementById(`newBundleModal_${catId}`);
+    if (modalEl) {
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+    }
+
+    initBundleSortables();
+  }
+
+  function deleteBundleCard(catId, bundleId) {
+    if (!confirm("Are you sure you want to delete this custom bundle? Questions assigned to it will remain in the pool.")) return;
+
+    const card = document.getElementById(`bundle_card_${catId}_${bundleId}`);
+    if (card) card.remove();
+
+    // Remove pills
+    const pills = document.querySelectorAll(`[class*="q-bundle-pill-${catId}-"][class*="-${bundleId}"]`);
+    pills.forEach(p => p.remove());
+
+    // Remove options
+    const opts = document.querySelectorAll(`[id*="q_select_opt_${catId}_"][id*="_${bundleId}"]`);
+    opts.forEach(o => o.remove());
+  }
+
+  function setupGlobalCollapseIconListener() {
+    const globalCollapseEl = document.getElementById('globalRecipientsCollapse');
+    const globalCollapseIcon = document.getElementById('globalCollapseIcon');
+    if (globalCollapseEl && globalCollapseIcon) {
+      globalCollapseEl.addEventListener('show.bs.collapse', function () {
+        globalCollapseIcon.className = 'bi bi-chevron-double-up fs-6';
+      });
+      globalCollapseEl.addEventListener('hide.bs.collapse', function () {
+        globalCollapseIcon.className = 'bi bi-chevron-double-down fs-6';
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setupFlatpickrInstances();
+    initBundleSortables();
+    setupGlobalCollapseIconListener();
+    const catCards = document.querySelectorAll('.category-assignment-card');
+    catCards.forEach(card => {
+      const catId = card.id.replace('category_card_', '');
+      updateCardRecipientCount(catId);
+    });
+  });
+
+  document.addEventListener('turbo:load', function() {
+    setupFlatpickrInstances();
+    initBundleSortables();
+    setupGlobalCollapseIconListener();
+  });
+</script>

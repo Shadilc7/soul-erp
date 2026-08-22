@@ -1,0 +1,132 @@
+<!-- Import Question Bank Modal -->
+<div class="modal fade" id="importQuestionBankModal" tabindex="-1" aria-labelledby="importQuestionBankModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="importQuestionBankModalLabel">
+          <i class="bi bi-box-arrow-in-down me-2"></i>Import Question Bank
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <%= form_with url: import_setup_institute_admin_assignments_path, method: :get, local: true do |f| %>
+        <div class="modal-body p-4">
+          <p class="text-muted mb-4">
+            Select a Master Admin Question Bank and choose which Categories to import. Only questions assigned to bundles will be imported as assignments.
+          </p>
+
+          <% if @available_question_banks.present? && @available_question_banks.any? %>
+            <div class="row g-3">
+              <% @available_question_banks.each_with_index do |bank, index| %>
+                <div class="col-12">
+                  <div class="card border border-light-subtle shadow-sm hover-shadow transition bank-card">
+                    <div class="card-body p-3">
+                      <div class="form-check d-flex align-items-start gap-3 mb-2">
+                        <input class="form-check-input mt-1 fs-5 bank-radio" 
+                               type="radio" 
+                               name="question_bank_id" 
+                               id="bank_<%= bank.id %>" 
+                               value="<%= bank.id %>" 
+                               <%= 'checked' if index == 0 %>
+                               onchange="toggleCategorySelectability(<%= bank.id %>)">
+                        
+                        <label class="form-check-label flex-grow-1" for="bank_<%= bank.id %>">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold text-dark"><%= bank.name %></h6>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                              <%= pluralize(bank.question_categories.count, 'Category') %>
+                            </span>
+                          </div>
+                          
+                          <% if bank.description.present? %>
+                            <p class="text-muted small mb-2"><%= bank.description %></p>
+                          <% end %>
+                        </label>
+                      </div>
+
+                      <!-- Category Multi-Select Section -->
+                      <div class="ps-4 ms-2 pt-2 border-top category-selection-container" id="bank_categories_<%= bank.id %>">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <small class="fw-semibold text-secondary">Select Categories to Import:</small>
+                          <div>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="toggleAllBankCategories(<%= bank.id %>, true)">Select All</button>
+                            <span class="text-muted mx-1">|</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" onclick="toggleAllBankCategories(<%= bank.id %>, false)">Deselect All</button>
+                          </div>
+                        </div>
+
+                        <div class="row g-2">
+                          <% bank.question_categories.where(active: true).each do |category| %>
+                            <% bundled_count = category.question_bundles.joins(:question_bundle_items).count %>
+                            <div class="col-md-6">
+                              <div class="form-check p-2 border rounded bg-light-subtle d-flex align-items-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                  <input class="form-check-input ms-0 category-checkbox category-checkbox-<%= bank.id %>" 
+                                         type="checkbox" 
+                                         name="category_ids[]" 
+                                         id="category_<%= category.id %>" 
+                                         value="<%= category.id %>" 
+                                         checked>
+                                  <label class="form-check-label text-truncate small fw-medium text-dark" for="category_<%= category.id %>" title="<%= category.name %>">
+                                    <i class="bi bi-folder2 me-1 text-primary"></i><%= category.name %>
+                                  </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle flex-shrink-0" style="font-size: 0.65rem;">
+                                  <i class="bi bi-collection me-1"></i><%= pluralize(bundled_count, 'bundled Q') %>
+                                </span>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-4">
+              <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
+              <p class="text-muted">No Question Banks are currently available for import.</p>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="modal-footer bg-light px-4 py-3">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <% if @available_question_banks.present? && @available_question_banks.any? %>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-download me-1"></i> Import Question Bank
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleAllBankCategories(bankId, selectState) {
+    const checkboxes = document.querySelectorAll('.category-checkbox-' + bankId);
+    checkboxes.forEach(cb => cb.checked = selectState);
+  }
+
+  function toggleCategorySelectability(activeBankId) {
+    const allBanks = document.querySelectorAll('[id^="bank_categories_"]');
+    allBanks.forEach(container => {
+      const isCurrent = container.id === 'bank_categories_' + activeBankId;
+      const checkboxes = container.querySelectorAll('.category-checkbox');
+      checkboxes.forEach(cb => {
+        cb.disabled = !isCurrent;
+      });
+      container.style.opacity = isCurrent ? '1' : '0.5';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const selectedRadio = document.querySelector('.bank-radio:checked');
+    if (selectedRadio) {
+      toggleCategorySelectability(selectedRadio.value);
+    }
+  });
+</script>

@@ -1,412 +1,436 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">View Responses</h5>
-    <%= link_to institute_admin_root_path, class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-arrow-left"></i> Back
+<div class="container-fluid px-0 pt-3 pb-4">
+  <!-- PAGE HEADER (NO BREADCRUMB AS REQUESTED) -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-1 mb-4">
+    <div>
+      <h3 class="fw-bold text-dark mb-0" style="letter-spacing: -0.3px;">Assignment Responses</h3>
+      <p class="text-secondary small mb-0 mt-1">Filter and inspect participant assignment answers and submission logs</p>
+    </div>
+    <div class="header-actions d-flex flex-wrap align-items-center gap-2">
+      <%= link_to institute_admin_root_path, class: "btn btn-outline-secondary d-inline-flex align-items-center gap-1.5 rounded-3 px-3 py-2 fw-medium shadow-sm" do %>
+        <i class="bi bi-arrow-left"></i>
+        <span>Back</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- FILLED FILTER TOOLBAR (MATCHING ASSIGNMENT REPORT TOOLBAR STYLING) -->
+  <div class="filled-toolbar mb-4">
+    <%= form_tag institute_admin_responses_path, method: :get, id: "responsesFilterForm" do %>
+      <div class="row g-2 align-items-center">
+        <!-- Date Filter Select -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <%= select_tag :date_filter,
+                options_for_select([
+                  ['Today', 'today'],
+                  ['Yesterday', 'yesterday'],
+                  ['Last 7 Days', 'last_7_days'],
+                  ['Last Month', 'last_month'],
+                  ['Custom', 'custom']
+                ], params[:date_filter] || 'today'),
+                class: "form-select",
+                id: "date_filter_select",
+                onchange: "toggleCustomDateFields(this.value)" %>
+          </div>
+        </div>
+
+        <!-- Section Select -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-people"></i></span>
+            <%= select_tag :section_id, 
+                options_from_collection_for_select(@sections || [], :id, :name, params[:section_id]),
+                prompt: "Choose a section",
+                class: "form-select",
+                id: "section_filter_select",
+                onchange: "onSectionFilterChange(this.value)",
+                required: true %>
+          </div>
+        </div>
+
+        <!-- Participant Select -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <% if @participants&.any? %>
+              <%= select_tag :participant_id,
+                  options_from_collection_for_select(@participants, :id, :full_name, params[:participant_id]),
+                  prompt: "Choose a participant",
+                  class: "form-select", 
+                  id: "participant_filter_select",
+                  required: true %>
+            <% else %>
+              <%= select_tag :participant_id,
+                  options_for_select([]),
+                  prompt: "First select a section",
+                  class: "form-select",
+                  id: "participant_filter_select",
+                  disabled: params[:section_id].blank?,
+                  required: true %>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center gap-2">
+          <button type="submit" name="commit" value="View Responses" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-1.5 px-3 py-2 fw-medium rounded-3 border-0 flex-grow-1 shadow-sm" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+            <i class="bi bi-funnel-fill"></i>
+            <span>View Responses</span>
+          </button>
+          <%= link_to institute_admin_responses_path, class: "btn btn-outline-secondary d-inline-flex align-items-center justify-content-center p-2 rounded-3 shadow-sm", title: "Reset Filters" do %>
+            <i class="bi bi-arrow-counterclockwise"></i>
+          <% end %>
+        </div>
+
+        <!-- Custom Date Fields Row (Hidden unless custom is selected) -->
+        <div class="col-12 <%= 'd-none' unless params[:date_filter] == 'custom' %>" id="custom_date_fields">
+          <div class="row g-2 pt-2 mt-1 border-top align-items-center">
+            <div class="col-12 col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                <%= date_field_tag :start_date, params[:start_date], 
+                    class: "form-control",
+                    placeholder: "Start Date",
+                    id: "start_date_field" %>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                <%= date_field_tag :end_date, params[:end_date], 
+                    class: "form-control",
+                    placeholder: "End Date",
+                    id: "end_date_field" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     <% end %>
   </div>
 
-  <div class="card-body">
-    <div class="row mb-4">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">Filter Responses</h6>
+  <!-- ASSIGNMENT SELECTION & RESPONSES DISPLAY -->
+  <% if params[:commit].present? && params[:participant_id].present? %>
+    <% if @assignments.present? %>
+      <!-- ASSIGNMENT CHIPS SELECTOR CARD BOX -->
+      <div class="table-card shadow-sm mb-4">
+        <div class="table-card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between py-3 px-4 gap-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-collection-fill text-primary fs-5"></i>
+            <div>
+              <h6 class="fw-bold mb-0 text-dark">Select Assignment</h6>
+              <small class="text-muted">Choose an assignment to view participant response details</small>
+            </div>
           </div>
-          <div class="card-body">
-            <%= form_tag institute_admin_responses_path, method: :get, class: "row g-3", data: { controller: "participant-select date-range" } do %>
-              
-              <!-- Date Range Selection -->
-              <div class="col-md-12">
-                <div class="row align-items-center">
-                  <div class="col-md-3">
-                    <label for="date_filter" class="form-label mb-0">Date Filter</label>
-                  </div>
-                  <div class="col-md-9">
-                    <%= select_tag :date_filter,
-                        options_for_select([
-                          ['Today', 'today'],
-                          ['Yesterday', 'yesterday'],
-                          ['Last 7 Days', 'last_7_days'],
-                          ['Last Month', 'last_month'],
-                          ['Custom', 'custom']
-                        ], params[:date_filter] || 'today'),
-                        class: "form-select",
-                        id: "date_filter_select",
-                        onchange: "toggleCustomDateFields(this.value)",
-                        data: { 
-                          date_range_target: "filter",
-                          action: "change->date-range#toggleCustomDates"
-                        },
-                        required: true %>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Custom Date Range (Hidden by default) -->
-              <div class="col-md-12" id="custom_date_fields" data-date-range-target="customDates" style="display: none;">
-                <div class="row align-items-center">
-                  <div class="col-md-3">
-                    <!-- Empty space to align with dropdown -->
-                  </div>
-                  <div class="col-md-9">
-                    <div class="row g-3">
-                      <div class="col-md-6">
-                        <label for="start_date" class="form-label mb-1">Start Date</label>
-                        <%= date_field_tag :start_date, params[:start_date], 
-                            class: "form-control",
-                            id: "start_date_field",
-                            data: { date_range_target: "startDate" } %>
+          <span class="badge bg-light text-secondary border px-3 py-1.5 fw-medium align-self-start align-self-md-center">
+            <%= pluralize(@assignments.size, 'Assignment') %> Available
+          </span>
+        </div>
+
+        <div class="p-4 bg-light bg-opacity-25">
+          <div class="row g-3">
+            <% @assignments.each do |assignment| %>
+              <% is_active = (@assignment == assignment) %>
+              <% response_count = @assignment_response_counts[assignment.id] || 0 %>
+              <div class="col-12 col-md-6 col-lg-4">
+                <%= link_to institute_admin_responses_path(
+                      date_filter: @date_filter,
+                      start_date: @start_date,
+                      end_date: @end_date,
+                      section_id: @section&.id,
+                      participant_id: @participant&.id,
+                      assignment_id: assignment.id,
+                      commit: "View Responses"
+                    ),
+                    class: "text-decoration-none d-block h-100" do %>
+                  <div class="p-3 rounded-3 border transition-all h-100 d-flex justify-content-between align-items-center shadow-sm <%= is_active ? 'border-primary bg-primary bg-opacity-10' : 'bg-white hover-shadow' %>" 
+                       style="<%= 'background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(79, 70, 229, 0.04) 100%); border-color: #6366f1 !important; border-width: 2px !important;' if is_active %>">
+                    <div>
+                      <div class="fw-bold mb-1 <%= is_active ? 'text-primary' : 'text-dark' %>" style="font-size: 0.95rem;">
+                        <%= assignment.title %>
                       </div>
-                      <div class="col-md-6">
-                        <label for="end_date" class="form-label mb-1">End Date</label>
-                        <%= date_field_tag :end_date, params[:end_date], 
-                            class: "form-control",
-                            id: "end_date_field",
-                            data: { date_range_target: "endDate" } %>
+                      <div class="small text-muted d-flex align-items-center gap-2">
+                        <span><i class="bi bi-question-circle me-1"></i><%= pluralize(assignment.questions.count, 'question') %></span>
                       </div>
                     </div>
+                    <div>
+                      <span class="badge <%= is_active ? 'bg-primary text-white' : 'bg-light text-dark border' %> rounded-pill px-3 py-1.5 fw-semibold" style="<%= 'background-color: #6366f1 !important;' if is_active %>">
+                        <%= response_count %> responses
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              <script>
-                function toggleCustomDateFields(filterValue) {
-                  const customFields = document.getElementById('custom_date_fields');
-                  const startDateField = document.getElementById('start_date_field');
-                  const endDateField = document.getElementById('end_date_field');
-                  
-                  if (filterValue === 'custom') {
-                    customFields.style.display = 'block';
-                    startDateField.required = true;
-                    endDateField.required = true;
-                  } else {
-                    customFields.style.display = 'none';
-                    startDateField.required = false;
-                    endDateField.required = false;
-                  }
-                }
-                
-                // Call on page load to set initial state
-                document.addEventListener('DOMContentLoaded', function() {
-                  const filterSelect = document.getElementById('date_filter_select');
-                  if (filterSelect) {
-                    toggleCustomDateFields(filterSelect.value);
-                  }
-                });
-              </script>
-              
-              <!-- Section Selection -->
-              <div class="col-md-12">
-                <div class="row align-items-center">
-                  <div class="col-md-3">
-                    <label for="section_id" class="form-label mb-0">Select Section</label>
-                  </div>
-                  <div class="col-md-9">
-                    <%= select_tag :section_id, 
-                        options_from_collection_for_select(current_institute.sections.active, :id, :name, params[:section_id]),
-                        prompt: "Choose a section",
-                        class: "form-select",
-                        data: { 
-                          participant_select_target: "section",
-                          action: "change->participant-select#sectionChanged"
-                        },
-                        required: true %>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Participant Selection -->
-              <div class="col-md-12">
-                <div class="row align-items-center">
-                  <div class="col-md-3">
-                    <label for="participant_id" class="form-label mb-0">Select Participant</label>
-                  </div>
-                  <div class="col-md-9">
-                    <% if @participants&.any? %>
-                      <%= select_tag :participant_id,
-                          options_from_collection_for_select(@participants, :id, :full_name, params[:participant_id]),
-                          prompt: "Choose a participant",
-                          class: "form-select", 
-                          data: { participant_select_target: "participant" },
-                          required: true %>
-                    <% else %>
-                      <%= select_tag :participant_id,
-                          options_for_select([]),
-                          prompt: "First select a section",
-                          class: "form-select",
-                          data: { participant_select_target: "participant" },
-                          disabled: params[:section_id].blank?,
-                          required: true %>
-                      <% if params[:section_id].present? && @participants.nil? %>
-                        <small class="text-muted">Loading participants for this section...</small>
-                      <% end %>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Submit Button -->
-              <div class="col-md-12 mt-4">
-                <div class="row align-items-center">
-                  <div class="col-md-3">
-                  </div>
-                  <div class="col-md-9">
-                    <%= submit_tag "View Responses", class: "btn btn-primary" %>
-                  </div>
-                </div>
+                <% end %>
               </div>
             <% end %>
           </div>
         </div>
       </div>
-    </div>
+    <% elsif @participant.present? %>
+      <div class="alert alert-info border-0 shadow-sm rounded-3 d-flex align-items-center gap-3 p-3 mb-4" style="background-color: #eff6ff; color: #1e40af;">
+        <i class="bi bi-info-circle-fill fs-4 text-primary"></i>
+        <div>
+          <div class="fw-bold mb-0">No assignments found</div>
+          <div class="small opacity-85">No assignments are associated with <strong><%= @participant.full_name %></strong> for the selected date range.</div>
+        </div>
+      </div>
+    <% end %>
 
-    <!-- Responses Display - Only show after form submission -->
-    <% if params[:commit].present? && params[:participant_id].present? %>
-      <% if @assignments.present? %>
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-light">
-                <h6 class="mb-0">Select Assignment</h6>
-              </div>
-              <div class="card-body">
-                <div class="list-group">
-                  <% @assignments.each do |assignment| %>
-                    <%= link_to institute_admin_responses_path(
-                          date_filter: @date_filter,
-                          start_date: @start_date,
-                          end_date: @end_date,
-                          section_id: @section.id,
-                          participant_id: @participant.id,
-                          assignment_id: assignment.id,
-                          commit: "View Responses"
-                        ),
-                        class: "list-group-item list-group-item-action #{'active' if @assignment == assignment}" do %>
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h6 class="mb-1"><%= assignment.title %></h6>
-                          <small><%= pluralize(assignment.questions.count, 'question') %></small>
-                        </div>
-                        <span class="badge bg-primary rounded-pill">
-                          <%= assignment.assignment_responses.where(participant: @participant, response_date: @start_date..@end_date).count %> responses
-                        </span>
-                      </div>
+    <!-- RESPONSES DATA TABLE CARD WITH INNER FILTERS -->
+    <% if @assignment.present? %>
+      <div class="table-card shadow-sm" id="responses-table">
+        <!-- CARD HEADER -->
+        <div class="table-card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between py-3 px-4 gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-chat-left-text-fill text-primary fs-5"></i>
+            <div>
+              <h6 class="fw-bold mb-0 text-dark">
+                Responses for <span class="text-primary"><%= @assignment.title %></span>
+              </h6>
+              <small class="text-muted">
+                Participant: <strong><%= @participant.full_name %></strong> | 
+                Date: <strong><%= @start_date == @end_date ? @start_date.strftime('%B %d, %Y') : "#{@start_date.strftime('%B %d, %Y')} - #{@end_date.strftime('%B %d, %Y')}" %></strong>
+              </small>
+            </div>
+          </div>
+          <span class="badge bg-light text-secondary border px-3 py-1.5 fw-medium align-self-start align-self-md-center">
+            Showing <%= @responses&.total_count || 0 %> Responses
+          </span>
+        </div>
+
+        <!-- INNER FILTER TOOLBAR (QUESTIONS & DATE - MATCHING FILLED-TOOLBAR DESIGN SYSTEM) -->
+        <div class="filled-toolbar border-0 border-top border-bottom rounded-0 px-4 py-3" style="background-color: #f8fafc;">
+          <%= form_tag institute_admin_responses_path, method: :get, class: "row g-2 align-items-center" do %>
+            <%= hidden_field_tag :date_filter, @date_filter %>
+            <%= hidden_field_tag :start_date, @start_date %>
+            <%= hidden_field_tag :end_date, @end_date %>
+            <%= hidden_field_tag :section_id, @section&.id %>
+            <%= hidden_field_tag :participant_id, @participant&.id %>
+            <%= hidden_field_tag :assignment_id, @assignment&.id %>
+            <%= hidden_field_tag :commit, "View Responses" %>
+
+            <!-- Filter by Unique Question -->
+            <div class="col-12 col-md-5">
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-question-circle"></i></span>
+                <select name="question_id" class="form-select" onchange="this.form.submit()">
+                  <option value="" <%= 'selected' if params[:question_id].blank? %>>All Questions (<%= @assignment_questions&.size || 0 %>)</option>
+                  <% if @assignment_questions.present? %>
+                    <% @assignment_questions.each do |q| %>
+                      <option value="<%= q.id %>" <%= 'selected' if params[:question_id].to_s == q.id.to_s %>><%= truncate(q.title, length: 75) %></option>
                     <% end %>
                   <% end %>
-                </div>
+                </select>
               </div>
             </div>
-          </div>
-        </div>
-      <% elsif @participant.present? && @selected_date.present? %>
-        <div class="alert alert-info">
-          No assignments found for this participant on the selected date.
-        </div>
-      <% end %>
-      
-      <!-- Responses Data Display -->
-      <% if @responses&.any? %>
-        <div class="card" id="responses-table">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">
-              Responses for <%= @assignment.title %> by <%= @participant.full_name %>
-              <br>
-              <small class="text-muted">
-                <%= @start_date == @end_date ? @start_date.strftime('%B %d, %Y') : "#{@start_date.strftime('%B %d, %Y')} - #{@end_date.strftime('%B %d, %Y')}" %>
-              </small>
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>SI.No</th>
-                    <th>Date</th>
-                    <th>Question</th>
-                    <th>Response</th>
-                    <th>Submitted At</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @responses.each_with_index do |response, index| %>
-                    <tr>
-                      <td>
-                        <strong><%= @responses.offset_value + index + 1 %></strong>
-                      </td>
-                      <td>
-                        <small><%= response.response_date.strftime('%b %d, %Y') %></small>
-                      </td>
-                      <td>
-                        <div class="fw-medium"><%= response.question.title %></div>
-                      </td>
-                      <td>
-                        <% if response.answer.present? %>
-                          <%= truncate(response.answer, length: 100) %>
-                        <% elsif response.selected_options.present? %>
-                          <%= response.selected_options.join(", ") %>
-                        <% else %>
-                          <span class="text-muted">No response</span>
-                        <% end %>
-                      </td>
-                      <td><%= response.created_at&.strftime("%I:%M %p") || "Not submitted" %></td>
-                      <td>
-                        <span class="badge bg-<%= response.answer.present? ? 'success' : 'warning' %>">
-                          <%= response.answer.present? ? 'Submitted' : 'Pending' %>
-                        </span>
-                      </td>
-                      <td>
-                        <%= link_to institute_admin_response_path(response), 
-                            class: "btn btn-sm btn-outline-primary" do %>
-                          <i class="bi bi-eye"></i>
-                        <% end %>
-                      </td>
-                    </tr>
+
+            <!-- Filter by Specific Response Date -->
+            <div class="col-12 col-md-4">
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                <select name="response_date" class="form-select" onchange="this.form.submit()">
+                  <option value="" <%= 'selected' if params[:response_date].blank? %>>All Dates (<%= @assignment_dates&.size || 0 %>)</option>
+                  <% if @assignment_dates.present? %>
+                    <% @assignment_dates.each do |d| %>
+                      <option value="<%= d.to_s %>" <%= 'selected' if params[:response_date].to_s == d.to_s %>><%= d.strftime('%b %d, %Y') %></option>
+                    <% end %>
                   <% end %>
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Pagination -->
-            <% if @responses.total_pages > 1 %>
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="text-muted">
-                  Showing <%= @responses.offset_value + 1 %> to <%= [@responses.offset_value + @responses.limit_value, @responses.total_count].min %> of <%= @responses.total_count %> responses
-                </div>
-                <div>
-                  <%= paginate @responses, 
-                      params: { 
-                        date_filter: @date_filter,
-                        start_date: @start_date,
-                        end_date: @end_date,
-                        section_id: @section&.id,
-                        participant_id: @participant&.id,
-                        assignment_id: @assignment&.id,
-                        commit: "View Responses",
-                        anchor: "responses-table"
-                      } %>
-                </div>
+                </select>
               </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="col-12 col-md-3 d-flex align-items-center gap-2">
+              <button type="submit" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-1.5 px-3 py-2 fw-medium rounded-3 border-0 flex-grow-1 shadow-sm" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                <i class="bi bi-funnel-fill"></i>
+                <span>Filter</span>
+              </button>
+              <% if params[:question_id].present? || params[:response_date].present? %>
+                <%= link_to institute_admin_responses_path(
+                      date_filter: @date_filter,
+                      start_date: @start_date,
+                      end_date: @end_date,
+                      section_id: @section&.id,
+                      participant_id: @participant&.id,
+                      assignment_id: @assignment&.id,
+                      commit: "View Responses"
+                    ),
+                    class: "btn btn-outline-danger d-inline-flex align-items-center justify-content-center p-2 rounded-3 shadow-sm",
+                    title: "Clear Inner Filter" do %>
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if @responses&.any? %>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 50px;" class="text-center">#</th>
+                  <th style="min-width: 110px;">Date</th>
+                  <th style="min-width: 220px;">Question</th>
+                  <th style="min-width: 240px;">Response</th>
+                  <th style="min-width: 110px;">Submitted At</th>
+                  <th style="min-width: 110px;" class="text-center">Status</th>
+                  <th style="min-width: 90px;" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @responses.each_with_index do |response, index| %>
+                  <% row_num = @responses.offset_value + index + 1 %>
+                  <tr>
+                    <td class="text-center fw-semibold text-secondary" style="font-size: 0.85rem;"><%= row_num %></td>
+                    <td class="text-nowrap fw-medium text-secondary">
+                      <%= response.response_date.strftime('%b %d, %Y') %>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark"><%= response.question.title %></div>
+                    </td>
+                    <td>
+                      <% if response.answer.present? %>
+                        <span class="text-dark"><%= truncate(response.answer, length: 90) %></span>
+                      <% elsif response.selected_options.present? %>
+                        <span class="badge bg-light text-dark border px-2 py-1"><%= response.selected_options.join(", ") %></span>
+                      <% else %>
+                        <span class="badge bg-light text-muted border px-2 py-1">No response</span>
+                      <% end %>
+                    </td>
+                    <td class="text-nowrap small text-muted">
+                      <i class="bi bi-clock me-1"></i><%= response.created_at&.strftime("%I:%M %p") || "Not submitted" %>
+                    </td>
+                    <td class="text-center">
+                      <% if response.answer.present? || response.selected_options.present? %>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
+                          <i class="bi bi-check-circle-fill me-1"></i>Submitted
+                        </span>
+                      <% else %>
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1.5 fw-semibold">
+                          <i class="bi bi-clock-history me-1"></i>Pending
+                        </span>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <%= link_to institute_admin_response_path(response), 
+                          class: "btn btn-sm btn-outline-primary rounded-2 px-2.5 py-1 shadow-sm", 
+                          title: "View Full Response Details" do %>
+                        <i class="bi bi-eye-fill"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PAGINATION FOOTER -->
+          <% if @responses.total_pages > 1 %>
+            <div class="table-card-footer d-flex flex-column flex-md-row align-items-center justify-content-between py-3 px-4 bg-white border-top gap-3">
+              <div class="text-secondary small fw-medium">
+                Showing <span class="fw-semibold text-dark"><%= @responses.offset_value + 1 %></span> to <span class="fw-semibold text-dark"><%= [@responses.offset_value + @responses.limit_value, @responses.total_count].min %></span> of <span class="fw-semibold text-dark"><%= @responses.total_count %></span> responses
+              </div>
+              <div class="pagy-bootstrap-nav">
+                <%= paginate @responses, 
+                    params: { 
+                      date_filter: @date_filter,
+                      start_date: @start_date,
+                      end_date: @end_date,
+                      section_id: @section&.id,
+                      participant_id: @participant&.id,
+                      assignment_id: @assignment&.id,
+                      question_id: params[:question_id],
+                      response_date: params[:response_date],
+                      commit: "View Responses",
+                      anchor: "responses-table"
+                    } %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-filter-square fs-3 text-secondary mb-2 d-block"></i>
+            <div class="fw-medium">No matching responses found for the selected question/date filter.</div>
+            <% if params[:question_id].present? || params[:response_date].present? %>
+              <%= link_to "Reset Inner Filter", 
+                  institute_admin_responses_path(
+                    date_filter: @date_filter,
+                    start_date: @start_date,
+                    end_date: @end_date,
+                    section_id: @section&.id,
+                    participant_id: @participant&.id,
+                    assignment_id: @assignment&.id,
+                    commit: "View Responses"
+                  ),
+                  class: "btn btn-sm btn-link text-primary mt-2 text-decoration-none" %>
             <% end %>
           </div>
-        </div>
-      <% elsif @assignment.present? %>
-        <div class="alert alert-warning">
-          No responses found for this assignment and participant in the selected date range.
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     <% end %>
-  </div>
+  <% end %>
 </div>
 
-<% content_for :scripts do %>
-  <script>
-    // Scroll to responses table on page load if page parameter exists
-    document.addEventListener('DOMContentLoaded', function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const responsesTable = document.getElementById('responses-table');
-      
-      // If page parameter exists and responses table is visible, scroll to it
-      if (urlParams.has('page') && responsesTable) {
-        setTimeout(function() {
-          responsesTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-      
-      // Add click event to all pagination links
-      const paginationLinks = document.querySelectorAll('.pagination a');
-      paginationLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-          // Let the link navigate normally, but add a flag
-          sessionStorage.setItem('scrollToResponses', 'true');
-        });
+<script>
+  function toggleCustomDateFields(filterValue) {
+    const customFields = document.getElementById('custom_date_fields');
+    const startDateField = document.getElementById('start_date_field');
+    const endDateField = document.getElementById('end_date_field');
+    
+    if (filterValue === 'custom') {
+      customFields.classList.remove('d-none');
+      if (startDateField) startDateField.required = true;
+      if (endDateField) endDateField.required = true;
+    } else {
+      customFields.classList.add('d-none');
+      if (startDateField) startDateField.required = false;
+      if (endDateField) endDateField.required = false;
+    }
+  }
+
+  function onSectionFilterChange(sectionId) {
+    const participantSelect = document.getElementById('participant_filter_select');
+    if (!participantSelect) return;
+
+    if (!sectionId) {
+      participantSelect.innerHTML = '<option value="">First select a section</option>';
+      participantSelect.disabled = true;
+      return;
+    }
+
+    participantSelect.disabled = true;
+    participantSelect.innerHTML = '<option value="">Loading participants...</option>';
+
+    fetch(`/institute_admin/sections/${sectionId}/participants?format=json`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(participants => {
+        participantSelect.innerHTML = '<option value="">Choose a participant</option>';
+        if (participants && participants.length > 0) {
+          participants.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.full_name;
+            participantSelect.appendChild(option);
+          });
+          participantSelect.disabled = false;
+        } else {
+          participantSelect.innerHTML = '<option value="">No participants found in this section</option>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching participants:', error);
+        participantSelect.innerHTML = '<option value="">Error loading participants</option>';
       });
-      
-      // Check if we should scroll after navigation
-      if (sessionStorage.getItem('scrollToResponses') === 'true' && responsesTable) {
-        sessionStorage.removeItem('scrollToResponses');
-        setTimeout(function() {
-          responsesTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    });
-  </script>
-<% end %>
+  }
 
-<% content_for :styles do %>
-  <style>
-    .list-group-item {
-      transition: all 0.2s ease;
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterSelect = document.getElementById('date_filter_select');
+    if (filterSelect) {
+      toggleCustomDateFields(filterSelect.value);
     }
-
-    .list-group-item:hover {
-      background-color: #f8f9fa;
-      transform: translateX(5px);
-    }
-
-    /* Keep active item blue on hover */
-    .list-group-item.active:hover {
-      background-color: #0d6efd !important;
-      border-color: #0d6efd !important;
-      color: white !important;
-    }
-
-    .badge {
-      transition: all 0.2s ease;
-    }
-
-    .list-group-item:hover .badge {
-      transform: scale(1.1);
-    }
-
-    /* Kaminari Pagination Styling */
-    .pagination {
-      margin: 0;
-    }
-    
-    .pagination a,
-    .pagination .page,
-    .pagination .current,
-    .pagination .gap {
-      display: inline-block;
-      padding: 0.375rem 0.75rem;
-      margin: 0 2px;
-      line-height: 1.5;
-      color: #0d6efd;
-      text-decoration: none;
-      background-color: #fff;
-      border: 1px solid #dee2e6;
-      border-radius: 0.25rem;
-    }
-    
-    .pagination a:hover {
-      color: #0a58ca;
-      background-color: #e9ecef;
-      border-color: #dee2e6;
-    }
-    
-    .pagination .current {
-      color: #fff;
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-    }
-    
-    .pagination .disabled {
-      color: #6c757d;
-      pointer-events: none;
-      background-color: #fff;
-      border-color: #dee2e6;
-    }
-    
-    .pagination .first a,
-    .pagination .prev a,
-    .pagination .next a,
-    .pagination .last a {
-      font-weight: 500;
-    }
-  </style>
-<% end %> 
+  });
+</script>

@@ -15,3 +15,10 @@ two:
   role: 3
   institute: two
   active: true
+
+master_admin:
+  email: master_admin@example.com
+  username: master_admin
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  role: 0
+  active: true

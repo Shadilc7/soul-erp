@@ -1,4 +1,5 @@
 module ApplicationHelper
+  include Pagy::Frontend
   def active_link?(controller_name)
     case controller_name
     when "dashboard"
@@ -26,6 +27,8 @@ module ApplicationHelper
       controller.controller_name == "assignments"
     when "profile"
       controller.controller_name == "profile"
+    when "question_categories", "category_questions", "question_bundles"
+      controller.controller_name.in?(%w[question_categories category_questions question_bundles])
     else
       false
     end

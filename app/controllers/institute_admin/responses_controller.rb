@@ -24,17 +24,46 @@ module InstituteAdmin
 
       # Only proceed with fetching assignments if the form was submitted
       if params[:commit].present? && @participant && @start_date && @end_date
-        @assignments = @participant.assignments_for_date_range(@start_date, @end_date)
+        @assignments = @participant.assignments_for_date_range(@start_date, @end_date).includes(:questions)
         Rails.logger.debug "Found #{@assignments.count} assignments for participant #{@participant.id} from #{@start_date} to #{@end_date}"
+
+        # Pre-group response counts per assignment to prevent N+1 queries in view
+        @assignment_response_counts = AssignmentResponse.where(
+          participant: @participant,
+          assignment_id: @assignments.map(&:id),
+          response_date: @start_date..@end_date
+        ).group(:assignment_id).count
 
         # If assignment_id is provided, fetch responses
         if @assignment
-          @responses = @assignment.assignment_responses
-            .where(participant: @participant)
-            .where(response_date: @start_date..@end_date)
-            .joins(:question)
-            .order("assignment_responses.response_date DESC, questions.title")
-            .page(params[:page]).per(20)
+          @assignment_questions = @assignment.questions.order(:title).distinct
+
+          # Fetch unique response dates for this participant & assignment in range
+          @assignment_dates = @assignment.assignment_responses
+                                          .where(participant: @participant)
+                                          .where(response_date: @start_date..@end_date)
+                                          .pluck(:response_date)
+                                          .compact
+                                          .uniq
+                                          .sort
+                                          .reverse
+
+          scope = @assignment.assignment_responses
+                             .where(participant: @participant)
+                             .where(response_date: @start_date..@end_date)
+                             .includes(:question)
+                             .joins(:question)
+
+          if params[:question_id].present?
+            scope = scope.where(question_id: params[:question_id])
+          end
+
+          if params[:response_date].present?
+            scope = scope.where(response_date: params[:response_date])
+          end
+
+          @responses = scope.order("assignment_responses.response_date DESC, questions.title")
+                            .page(params[:page]).per(20)
 
           # Let's log some debug info
           Rails.logger.debug "Date Range: #{@start_date} to #{@end_date}"
@@ -48,9 +77,10 @@ module InstituteAdmin
 
     def show
       @response = if @assignment
-        @assignment.assignment_responses.find(params[:id])
+        @assignment.assignment_responses.includes(:question, :participant).find(params[:id])
       else
-        AssignmentResponse.joins(:participant)
+        AssignmentResponse.includes(:question, :participant)
+          .joins(:participant)
           .where(participants: { institute_id: current_institute.id })
           .find(params[:id])
       end

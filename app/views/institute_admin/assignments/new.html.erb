@@ -1,16 +1,494 @@
-<div class="card card-custom">
-  <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Create Assignment</h5>
-    <%= link_to institute_admin_assignments_path, class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-arrow-left"></i> Back
-    <% end %>
-  </div>
+<% content_for :styles do %>
+  <style>
+    .creation-mode-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      background: #ffffff;
+      border-radius: 1.25rem;
+    }
+    
+    .creation-mode-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(0, 0, 0, 0.04) !important;
+      border-color: rgba(99, 102, 241, 0.35) !important;
+    }
 
-  <div class="card-body py-4">
-    <div class="row justify-content-center">
-      <div class="col-xxl-10">
-        <%= render 'form' %>
+    .icon-shape-gradient-primary {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+    }
+
+    .icon-shape-gradient-success {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .feature-check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-check-item i {
+      color: #10b981;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .bank-selection-card {
+      transition: all 0.25s ease;
+      border: 2px solid #e2e8f0;
+      border-radius: 1rem;
+      cursor: pointer;
+      background-color: #ffffff;
+    }
+
+    .bank-selection-card:hover {
+      border-color: #a5b4fc;
+      background-color: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    .bank-selection-card.selected {
+      border-color: #6366f1;
+      background-color: #f5f7ff;
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.12);
+    }
+
+    .category-card-item {
+      transition: all 0.2s ease;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      background: #ffffff;
+    }
+
+    .category-card-item:hover {
+      border-color: #6366f1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .custom-checkbox-item,
+    .custom-radio-item {
+      position: relative !important;
+      float: none !important;
+      margin: 0 !important;
+      width: 1.25rem !important;
+      height: 1.25rem !important;
+      cursor: pointer;
+      flex-shrink: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+  </style>
+<% end %>
+
+<div class="container-fluid px-4 py-4">
+  <% if params[:mode] == 'custom' %>
+    <!-- MODE B: CUSTOM ASSIGNMENT FORM BUILDER -->
+    <div class="d-flex align-items-center justify-content-between mb-4 bg-white p-3.5 rounded-4 border shadow-xs">
+      <div class="d-flex align-items-center gap-3">
+        <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 fw-medium d-inline-flex align-items-center gap-1.5 shadow-xs" do %>
+          <i class="bi bi-arrow-left"></i> Back to Creation Modes
+        <% end %>
+        <div class="vr text-secondary opacity-25"></div>
+        <div>
+          <h4 class="fw-bold text-dark mb-0">Create Custom Assignment</h4>
+          <p class="text-muted small mb-0">Configure dates, custom question pool, and section/participant allocations.</p>
+        </div>
+      </div>
+      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
+        <i class="bi bi-sliders me-1"></i> Custom Assignment Mode
+      </span>
+    </div>
+
+    <%= render 'form' %>
+
+  <% elsif params[:mode] == 'import_select' %>
+    <!-- MODE C: DEDICATED QUESTION BANK & CATEGORY SELECTION PAGE -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 fw-medium d-inline-flex align-items-center gap-1.5 shadow-xs" do %>
+          <i class="bi bi-arrow-left"></i> Back to Creation Modes
+        <% end %>
+        <div class="vr text-secondary opacity-25"></div>
+        <span class="text-muted small fw-semibold text-primary">
+          <i class="bi bi-box-arrow-in-down me-1"></i> Question Bank Import Selection
+        </span>
       </div>
     </div>
-  </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-4 border-bottom">
+          <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold mb-2">
+              <i class="bi bi-database me-1"></i> Step 1 of 2
+            </span>
+            <h3 class="fw-bold text-dark mb-1">Import from Question Bank</h3>
+            <p class="text-muted small mb-0">Select a master admin Question Bank and choose which Categories to import as assignments.</p>
+          </div>
+          <div>
+            <span class="badge bg-light text-secondary border px-3.5 py-2 fs-7 rounded-3 shadow-2xs">
+              <i class="bi bi-building me-1 text-primary"></i> <%= @available_question_banks.to_a.size %> Available Question Banks
+            </span>
+          </div>
+        </div>
+
+        <% if @available_question_banks.present? && @available_question_banks.any? %>
+          <%= form_with url: import_setup_institute_admin_assignments_path, method: :get, local: true, id: "importSelectForm" do |f| %>
+            <!-- QUESTION BANK SELECTION CARDS -->
+            <div class="mb-5">
+              <h5 class="fw-bold text-dark mb-3.5 d-flex align-items-center gap-2">
+                <i class="bi bi-collection-play text-primary fs-5"></i>
+                <span>1. Select Master Question Bank:</span>
+              </h5>
+
+              <div class="row g-3.5">
+                <% @available_question_banks.each_with_index do |bank, index| %>
+                  <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card bank-selection-card <%= 'selected' if index == 0 %> p-3.5 p-sm-4 h-100" id="bank_card_<%= bank.id %>" onclick="selectQuestionBank(<%= bank.id %>)">
+                      <div class="d-flex align-items-start gap-3">
+                        <input class="form-check-input custom-radio-item bank-radio mt-1 flex-shrink-0" 
+                               type="radio" 
+                               name="question_bank_id" 
+                               id="bank_radio_<%= bank.id %>" 
+                               value="<%= bank.id %>" 
+                               <%= 'checked' if index == 0 %>>
+                        
+                        <div class="flex-grow-1 min-w-0">
+                          <div class="d-flex align-items-start justify-content-between gap-2 mb-1.5 flex-wrap">
+                            <h6 class="fw-bold text-dark mb-0 text-break" style="word-break: break-word; line-height: 1.35;"><%= bank.name %></h6>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 flex-shrink-0 text-nowrap" style="font-size: 0.7rem;">
+                              <%= pluralize(bank.question_categories.count, 'Category') %>
+                            </span>
+                          </div>
+
+                          <% if bank.description.present? %>
+                            <p class="text-muted small mb-0 text-break" style="font-size: 0.82rem; word-break: break-word;"><%= bank.description %></p>
+                          <% else %>
+                            <p class="text-muted small mb-0 fst-italic" style="font-size: 0.82rem;">No description provided.</p>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- CATEGORY SELECTION SECTION -->
+            <div class="mb-4 pt-4 border-top">
+              <% @available_question_banks.each_with_index do |bank, index| %>
+                <div class="bank-category-panel <%= 'd-none' unless index == 0 %>" id="categories_panel_<%= bank.id %>">
+                  <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-4">
+                    <div>
+                      <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-folder2-open text-primary fs-5"></i>
+                        <span>2. Choose Categories to Import for "<%= bank.name %>":</span>
+                      </h5>
+                      <p class="text-muted small mb-0">Check the categories you want to generate into individual assignments.</p>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 fw-semibold fs-7 shadow-2xs d-inline-flex align-items-center gap-1" onclick="toggleCategoriesForBank(<%= bank.id %>, true)">
+                        <i class="bi bi-check-all fs-6"></i> Select All
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-medium fs-7 shadow-2xs" onclick="toggleCategoriesForBank(<%= bank.id %>, false)">
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  <% active_cats = bank.question_categories.where(active: true) %>
+                  <% if active_cats.any? %>
+                    <div class="row g-3.5">
+                      <% active_cats.each do |category| %>
+                        <% bundled_count = category.question_bundles.joins(:question_bundle_items).count %>
+                        <div class="col-12 col-md-6 col-xl-4">
+                          <div class="card category-card-item p-3.5 p-sm-4 rounded-4 border bg-white shadow-2xs h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                              <input class="form-check-input custom-checkbox-item cat-cb-<%= bank.id %> mt-1 flex-shrink-0" 
+                                     type="checkbox" 
+                                     name="category_ids[]" 
+                                     id="cat_cb_<%= category.id %>" 
+                                     value="<%= category.id %>" 
+                                     checked>
+                              
+                              <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i class="bi bi-folder2-open fs-5"></i>
+                              </div>
+
+                              <div class="flex-grow-1 min-w-0">
+                                <label class="fw-bold text-dark mb-0 text-break cursor-pointer d-block fs-6" style="word-break: break-word; line-height: 1.35;" for="cat_cb_<%= category.id %>" title="<%= category.name %>">
+                                  <%= category.name %>
+                                </label>
+                                <% if category.description.present? %>
+                                  <span class="text-muted small text-break d-block mt-0.5" style="font-size: 0.78rem; word-break: break-word;"><%= category.description %></span>
+                                <% end %>
+                              </div>
+                            </div>
+
+                            <div class="d-flex align-items-center flex-wrap gap-2 pt-2.5 border-top border-light-subtle mt-auto">
+                              <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 fw-medium text-nowrap" style="font-size: 0.72rem;">
+                                <i class="bi bi-calendar3 me-1"></i><%= category.duration_days %> Active Days
+                              </span>
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-medium text-nowrap" style="font-size: 0.72rem;">
+                                <i class="bi bi-collection me-1"></i><%= bundled_count %> Q Bundles
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <div class="alert alert-info border-0 rounded-4 text-center py-4 mb-0">
+                      <i class="bi bi-info-circle fs-4 d-block mb-1 text-primary"></i>
+                      No active categories found for this question bank.
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- BOTTOM SUBMIT ACTION BAR -->
+            <div class="pt-4 mt-4 border-top d-flex align-items-center justify-content-between flex-wrap gap-3">
+              <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-secondary px-4 py-2.5 rounded-3 fw-medium" do %>
+                Cancel & Go Back
+              <% end %>
+
+              <button type="submit" class="btn btn-primary px-4 py-2.5 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 shadow">
+                <i class="bi bi-box-arrow-in-down fs-6"></i>
+                <span>Proceed to Import Setup</span>
+                <i class="bi bi-arrow-right fs-6"></i>
+              </button>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+            <h5 class="fw-bold text-dark mb-1">No Question Banks Available</h5>
+            <p class="text-muted small mb-3">There are currently no active question banks configured for import.</p>
+            <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-primary rounded-3 px-4 py-2" do %>
+              Back to Creation Modes
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+  <% else %>
+    <!-- MODE A: INITIAL CREATION MODE CHOICE HUB -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-10 col-xl-9 text-center">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-semibold mb-2">
+          <i class="bi bi-sparkles me-1"></i> Setup Workflow Selection
+        </span>
+        <h2 class="fw-bold text-dark mb-2">How would you like to create your assignment?</h2>
+        <p class="text-muted lead fs-6 mb-4">Choose between importing structured templates from master question banks or building a custom assignment from scratch.</p>
+      </div>
+    </div>
+
+    <div class="row justify-content-center g-4">
+      <!-- OPTION 1: IMPORT FROM QUESTION BANK -->
+      <div class="col-12 col-lg-6">
+        <div class="card creation-mode-card shadow-sm h-100 p-4 p-md-4.5">
+          <div class="card-body p-0 d-flex flex-column justify-content-between h-100">
+            <div>
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="icon-shape-gradient-primary">
+                  <i class="bi bi-box-arrow-in-down"></i>
+                </div>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-semibold">
+                  <i class="bi bi-lightning-charge-fill me-1"></i> Fast & Structured
+                </span>
+              </div>
+
+              <h3 class="fw-bold text-dark mb-2">Import from Question Bank</h3>
+              <p class="text-muted small mb-4">
+                Bulk create assignments using master admin Question Banks. Categories and day-wise question bundles will be auto-configured into structured evaluation assignments.
+              </p>
+
+              <div class="mb-4">
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Auto-generate assignments from master categories</span>
+                </div>
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Pre-configured day-wise question bundles & duration schedules</span>
+                </div>
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Batch allocation to active sections or participants</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-top mt-3">
+              <%= link_to new_institute_admin_assignment_path(mode: 'import_select'), class: "btn btn-primary w-100 rounded-3 py-3 fw-semibold fs-6 d-inline-flex align-items-center justify-content-center gap-2 shadow" do %>
+                <i class="bi bi-box-arrow-in-down fs-5 me-1"></i>
+                <span>Import from Question Bank</span>
+                <i class="bi bi-arrow-right fs-5"></i>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTION 2: CUSTOM ASSIGNMENT CREATION -->
+      <div class="col-12 col-lg-6">
+        <div class="card creation-mode-card shadow-sm h-100 p-4 p-md-4.5">
+          <div class="card-body p-0 d-flex flex-column justify-content-between h-100">
+            <div>
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="icon-shape-gradient-success">
+                  <i class="bi bi-pencil-square"></i>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
+                  <i class="bi bi-sliders me-1"></i> Full Control
+                </span>
+              </div>
+
+              <h3 class="fw-bold text-dark mb-2">Create Custom Assignment</h3>
+              <p class="text-muted small mb-4">
+                Build a tailored assignment from scratch. Configure unique start and end dates, assemble custom question pools, and target specific audience segments.
+              </p>
+
+              <div class="mb-4">
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Custom assignment titles, instructions, and dates</span>
+                </div>
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Select custom questions from institute question bank pool</span>
+                </div>
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Dynamic day-range scheduling & custom bundle grouping</span>
+                </div>
+                <div class="feature-check-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Target individual participants or whole sections/batches</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-top mt-3">
+              <%= link_to new_institute_admin_assignment_path(mode: 'custom'), class: "btn btn-success w-100 rounded-3 py-3 fw-semibold fs-6 d-inline-flex align-items-center justify-content-center gap-2 shadow text-white" do %>
+                <i class="bi bi-plus-lg fs-5 me-1"></i>
+                <span>Start Custom Assignment</span>
+                <i class="bi bi-arrow-right fs-5"></i>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
+
+<script>
+  function selectQuestionBank(bankId) {
+    // Highlight bank card
+    document.querySelectorAll('.bank-selection-card').forEach(card => card.classList.remove('selected'));
+    const selectedCard = document.getElementById('bank_card_' + bankId);
+    if (selectedCard) selectedCard.classList.add('selected');
+
+    // Check radio button
+    const radio = document.getElementById('bank_radio_' + bankId);
+    if (radio) radio.checked = true;
+
+    // Switch categories panel
+    document.querySelectorAll('.bank-category-panel').forEach(panel => {
+      const isCurrent = panel.id === 'categories_panel_' + bankId;
+      if (isCurrent) {
+        panel.classList.remove('d-none');
+        panel.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+      } else {
+        panel.classList.add('d-none');
+        panel.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+      }
+    });
+  }
+
+  function toggleCategoriesForBank(bankId, selectState) {
+    document.querySelectorAll('.cat-cb-' + bankId).forEach(cb => {
+      cb.checked = selectState;
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const selectedRadio = document.querySelector('#importSelectForm input[name="question_bank_id"]:checked');
+    if (selectedRadio) {
+      selectQuestionBank(selectedRadio.value);
+    }
+
+    const selectForm = document.getElementById('importSelectForm');
+    if (selectForm) {
+      selectForm.addEventListener('submit', function(e) {
+        const selectedRadio = document.querySelector('#importSelectForm input[name="question_bank_id"]:checked');
+        if (!selectedRadio) {
+          e.preventDefault();
+          alert('Please select a Question Bank.');
+          return false;
+        }
+
+        const bankId = selectedRadio.value;
+        const checkedCategories = document.querySelectorAll('.cat-cb-' + bankId + ':checked:not([disabled])');
+        if (checkedCategories.length === 0) {
+          e.preventDefault();
+          
+          let alertBox = document.getElementById('category_validation_alert');
+          if (!alertBox) {
+            alertBox = document.createElement('div');
+            alertBox.id = 'category_validation_alert';
+            alertBox.className = 'alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4 d-flex align-items-center gap-2.5';
+            alertBox.innerHTML = `
+              <i class="bi bi-exclamation-triangle-fill fs-5 text-danger flex-shrink-0"></i>
+              <div class="flex-grow-1 fw-semibold text-danger">Please select at least one category to proceed with the import setup.</div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            selectForm.prepend(alertBox);
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          // Auto-hide alert message after 4 seconds
+          if (alertBox._autoDismissTimer) clearTimeout(alertBox._autoDismissTimer);
+          alertBox._autoDismissTimer = setTimeout(function() {
+            if (alertBox && alertBox.parentNode) {
+              alertBox.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+              alertBox.style.opacity = '0';
+              alertBox.style.transform = 'translateY(-10px)';
+              setTimeout(function() {
+                if (alertBox && alertBox.parentNode) alertBox.remove();
+              }, 500);
+            }
+          }, 4000);
+
+          return false;
+        }
+      });
+    }
+  });
+</script>

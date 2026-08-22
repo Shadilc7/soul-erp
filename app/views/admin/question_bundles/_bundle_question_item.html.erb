@@ -1,0 +1,59 @@
+<% idx = local_assigns[:idx] || 0 %>
+<% bundle = local_assigns[:bundle] %>
+<% item = local_assigns[:item] %>
+<% q = item.question %>
+
+<div class="bundle-question-item bg-white p-2.5 p-sm-3 rounded-3 border shadow-sm position-relative mb-2" 
+     id="bundle_item_<%= bundle.id %>_<%= q.id %>"
+     draggable="true"
+     data-question-id="<%= q.id %>"
+     data-action="dragstart->bundle-builder#bundleItemDragStart dragend->bundle-builder#bundleItemDragEnd"
+     style="cursor: grab; overflow: hidden;">
+  
+  <div class="d-flex align-items-start gap-2">
+    <!-- Controls Column (Drag Handle, Chevrons, Serial Badge) -->
+    <div class="d-flex align-items-center gap-1 flex-shrink-0 pt-0.5">
+      <i class="bi bi-list fs-5 text-secondary me-0.5 drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
+
+      <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5">
+        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" data-bundle-id="<%= bundle.id %>" data-action="click->bundle-builder#moveBundleItemUp">
+          <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+        </button>
+        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" data-bundle-id="<%= bundle.id %>" data-action="click->bundle-builder#moveBundleItemDown">
+          <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+        </button>
+      </div>
+
+      <span class="badge bg-dark text-white rounded-pill px-2 py-1 fw-bold bundle-item-serial" style="font-size: 0.75rem;">
+        #<%= idx + 1 %>
+      </span>
+    </div>
+
+    <!-- Content Column (Title, Badges, Remove Button) -->
+    <div class="flex-grow-1 min-w-0">
+      <div class="d-flex align-items-start justify-content-between gap-1">
+        <div class="fw-bold text-dark mb-0 text-break pe-1" style="font-size: 0.875rem; line-height: 1.3; word-break: break-word;"><%= q.title %></div>
+        
+        <button type="button" 
+                class="btn btn-sm btn-outline-danger rounded-circle p-0 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0 ms-1" 
+                style="width: 24px; height: 24px; min-width: 24px;"
+                title="Remove from bundle" 
+                data-bundle-id="<%= bundle.id %>" 
+                data-question-id="<%= q.id %>" 
+                data-action="click->bundle-builder#removeQuestion">
+          <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+        </button>
+      </div>
+
+      <div class="d-flex align-items-center flex-wrap gap-1 mt-1.5">
+        <span class="badge bg-secondary-subtle text-dark border px-2 py-0.5" style="font-size: 0.68rem;"><%= q.question_type.titleize %></span>
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;" title="Active in bundle: <%= item.effective_day_range_text %> (Overall question schedule: <%= q.day_range_text %>)">
+          <i class="bi bi-clock-history me-1 text-primary"></i><%= item.effective_day_range_text %>
+        </span>
+        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.68rem;" title="Days present in this bundle">
+          <i class="bi bi-calendar-check me-1 text-success"></i><%= item.days_in_bundle %> <%= 'day'.pluralize(item.days_in_bundle) %> in bundle
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

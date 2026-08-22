@@ -1,0 +1,562 @@
+<style>
+  @media (max-width: 991.98px) {
+    .d-none-mobile { display: none !important; }
+  }
+  .drag-handle {
+    touch-action: none;
+    cursor: grab;
+  }
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+  .pool-question-card, .bundle-question-item {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .min-w-0 {
+    min-width: 0 !important;
+  }
+</style>
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4" data-controller="bundle-builder" data-bundle-builder-category-id-value="<%= @category.id %>">
+  <!-- Top Navigation & Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to admin_question_categories_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Back to Question Categories
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          <%= @category.name %>
+        </li>
+      </ol>
+    </nav>
+
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.8rem;">
+      <i class="bi bi-folder2-open me-1"></i> Question Bank Builder
+    </span>
+  </div>
+
+  <!-- Header Banner -->
+  <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-md-8 col-lg-9">
+        <h2 class="fw-bold text-white mb-1 fs-4 fs-md-3"><%= @category.name %></h2>
+        <p class="text-white-50 mb-2 small"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5">
+            <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name || "Master Question Bank" %>
+          </span>
+          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5 text-nowrap">
+            <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
+          </span>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-lg-3 text-md-end">
+        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm text-nowrap w-100 w-md-auto fw-semibold" do %>
+          <i class="bi bi-plus-lg fs-6"></i> <span>Add New Question</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Tab Switcher Bar (< 992px) -->
+  <div class="d-lg-none mb-3 btn-group w-100 shadow-sm rounded-3">
+    <button type="button" class="btn btn-primary active py-2 fw-semibold" data-tab-target="pool" data-action="click->bundle-builder#switchMobileTab">
+      <i class="bi bi-card-list me-1"></i> Question Pool (<%= @questions.size %>)
+    </button>
+    <button type="button" class="btn btn-outline-primary py-2 fw-semibold" data-tab-target="bundles" data-action="click->bundle-builder#switchMobileTab">
+      <i class="bi bi-layers me-1"></i> Custom Bundles (<%= @bundles.size %>)
+    </button>
+  </div>
+
+  <!-- Builder Workspace Grid -->
+  <div class="row g-3 g-md-4">
+    <!-- Left Column: Question Pool -->
+    <div class="col-lg-5 col-12" id="question-pool-column">
+      <div class="card border-0 shadow-sm rounded-4 h-100 bg-light-subtle">
+        <div class="card-header bg-white border-bottom p-2.5 p-sm-3 rounded-top-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 mb-sm-3">
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-card-list text-primary"></i> Question Pool
+              <span class="badge bg-primary rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+                <%= @questions.size %> <%= @questions.size == 1 ? 'question' : 'questions' %>
+              </span>
+            </h5>
+
+            <%= button_to auto_assign_bundles_admin_question_category_path(@category), method: :post, form: { class: "d-inline" }, class: "btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold text-nowrap", data: { turbo_confirm: "Auto-assign questions to matching bundles based on schedule day ranges?" } do %>
+              <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
+            <% end %>
+          </div>
+
+          <!-- Search Filter -->
+          <div class="input-group input-group-sm mt-1">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" 
+                   class="form-control bg-light border-start-0 ps-0" 
+                   placeholder="Search questions by title..." 
+                   data-bundle-builder-target="questionSearch" 
+                   data-action="input->bundle-builder#filterQuestions">
+          </div>
+        </div>
+
+        <!-- Question Cards List -->
+        <div class="card-body p-2 p-sm-3 overflow-auto" style="max-height: 720px;">
+          <% if @questions.size > 0 %>
+            <div class="d-flex flex-column gap-3" id="question-pool-container" data-action="dragover->bundle-builder#poolDragOver drop->bundle-builder#poolDrop">
+              <% @questions.each_with_index do |q, index| %>
+                <div class="card border border-light-subtle rounded-3 p-2.5 p-sm-3 bg-white shadow-sm hover-shadow transition-all position-relative pool-question-card" 
+                     draggable="true" 
+                     data-bundle-builder-target="questionItem" 
+                     data-question-id="<%= q.id %>"
+                     data-question-title="<%= q.title %>"
+                     data-action="dragstart->bundle-builder#dragStart dragend->bundle-builder#dragEnd"
+                     style="cursor: grab;">
+
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-items-center flex-wrap gap-1.5 min-w-0">
+                      <!-- 3 Horizontal Lines Drag Handle -->
+                      <i class="bi bi-list fs-5 text-secondary me-1 drag-handle" title="Drag to reorder" style="cursor: grab;"></i>
+
+                      <!-- Serial Number Badge -->
+                      <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold pool-item-serial" style="font-size: 0.75rem;">
+                        #<%= index + 1 %>
+                      </span>
+
+                      <span class="badge bg-secondary-subtle text-dark fw-semibold text-uppercase" style="font-size: 0.7rem;">
+                        <%= q.question_type.titleize %>
+                      </span>
+
+                      <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.7rem;" title="Question Schedule Range">
+                        <i class="bi bi-clock-history me-1"></i> <%= q.day_range_text %>
+                      </span>
+
+                      <!-- Re-order buttons -->
+                      <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5" draggable="false">
+                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" draggable="false" data-action="click->bundle-builder#moveUp">
+                          <i class="bi bi-chevron-up" style="font-size: 0.75rem;" draggable="false"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" draggable="false" data-action="click->bundle-builder#moveDown">
+                          <i class="bi bi-chevron-down" style="font-size: 0.75rem;" draggable="false"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Quick Action Buttons & Dropdown Menu -->
+                    <div class="d-flex align-items-center flex-shrink-0 ms-auto" style="gap: 6px;" draggable="false" onmousedown="event.stopPropagation();">
+                      <!-- View Button -->
+                      <button type="button" 
+                              class="btn p-0 border-0 text-white d-flex align-items-center justify-content-center shadow-xs gradient-action-btn" 
+                              title="View Question Details" 
+                              data-bs-toggle="modal" 
+                              data-bs-target="#viewQuestionModal<%= q.id %>"
+                              style="width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);"
+                              draggable="false">
+                        <i class="bi bi-eye" style="font-size: 0.85rem; color: #fff;"></i>
+                      </button>
+
+                      <!-- Edit Button -->
+                      <%= link_to edit_admin_question_category_question_path(@category, q), 
+                                  class: "btn p-0 border-0 text-white d-flex align-items-center justify-content-center shadow-xs gradient-action-btn", 
+                                  title: "Edit Question",
+                                  style: "width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #4c1d95 0%, #c026d3 100%);",
+                                  draggable: "false" do %>
+                        <i class="bi bi-pencil" style="font-size: 0.85rem; color: #fff;"></i>
+                      <% end %>
+
+                      <!-- 3-Dots Dropdown Button (Old Light Circular Style) -->
+                      <div class="dropdown d-inline-block" draggable="false" onmousedown="event.stopPropagation();">
+                        <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
+                                type="button" 
+                                id="q_dropdown_btn_<%= q.id %>"
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false" 
+                                draggable="false"
+                                onmousedown="event.stopPropagation();"
+                                title="More Options"
+                                style="width: 28px; height: 28px; min-width: 28px;">
+                          <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem; pointer-events: none;" draggable="false"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small" aria-labelledby="q_dropdown_btn_<%= q.id %>" style="z-index: 1060;">
+                          <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#viewQuestionModal<%= q.id %>">
+                              <i class="bi bi-eye text-primary"></i> View Question
+                            </button>
+                          </li>
+                          <li>
+                            <%= link_to edit_admin_question_category_question_path(@category, q), class: "dropdown-item d-flex align-items-center gap-2" do %>
+                              <i class="bi bi-pencil text-secondary"></i> Edit Question
+                            <% end %>
+                          </li>
+                          <li>
+                            <%= button_to duplicate_admin_question_category_question_path(@category, q), method: :post, form: { class: "w-100", data: { turbo_confirm: "Are you sure you want to duplicate question '#{q.title}'?" } }, class: "dropdown-item d-flex align-items-center gap-2" do %>
+                              <i class="bi bi-copy text-warning"></i> Duplicate Question
+                            <% end %>
+                          </li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <%= button_to admin_question_category_question_path(@category, q), method: :delete, form: { class: "w-100" }, data: { turbo_confirm: "Delete this question?" }, class: "dropdown-item text-danger d-flex align-items-center gap-2" do %>
+                              <i class="bi bi-trash"></i> Delete Question
+                            <% end %>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h6 class="fw-bold text-dark mb-1 text-break" style="font-size: 0.95rem; line-height: 1.4; word-break: break-word;"><%= q.title %></h6>
+                  <% if q.display_name.present? %>
+                    <div class="text-muted small mb-1 text-break" style="word-break: break-word;"><%= q.display_name %></div>
+                  <% end %>
+
+                  <% if q.requires_options? && q.options_count > 0 %>
+                    <div class="text-muted small mb-2">
+                      <i class="bi bi-list-check me-1"></i><%= q.options_count %> answer options
+                    </div>
+                  <% end %>
+
+                  <!-- Assigned Bundles Pills -->
+                  <div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top" id="question_badges_<%= q.id %>">
+                    <% q.question_bundles.each do |b| %>
+                      <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 text-truncate bundle-badge-item" id="q_<%= q.id %>_b_badge_<%= b.id %>" style="max-width: 100%;">
+                        <i class="bi bi-layers me-1"></i><%= b.name %>
+                      </span>
+                    <% end %>
+                  </div>
+
+                  <!-- Quick Assign to Bundle Select -->
+                  <% if @bundles.size > 0 %>
+                    <div class="mt-3 pt-2 border-top" draggable="false">
+                      <select class="form-select form-select-sm rounded-3 text-muted w-100" 
+                              data-question-id="<%= q.id %>" 
+                              data-action="change->bundle-builder#assignFromSelect"
+                              draggable="false">
+                        <option value="">+ Assign to Bundle...</option>
+                        <% assigned_bundle_ids = q.question_bundles.map(&:id) %>
+                        <% q_from = q.from_day || 1 %>
+                        <% q_to = q.to_day || @category.duration_days || 30 %>
+                        <% @bundles.each do |b| %>
+                          <% is_assigned = assigned_bundle_ids.include?(b.id) %>
+                          <% b_from = b.from_day || 1 %>
+                          <% b_to = b.to_day || @category.duration_days || 30 %>
+                          <% overlaps = ([q_from, b_from].max <= [q_to, b_to].min) %>
+                          <% is_disabled = is_assigned || !overlaps %>
+                          <% status_suffix = if is_assigned
+                                               " - Already added"
+                                             elsif !overlaps
+                                               " - Schedule mismatch"
+                                             else
+                                               ""
+                                             end %>
+                          <option value="<%= b.id %>" id="question_select_<%= q.id %>_bundle_<%= b.id %>" <%= "disabled" if is_disabled %>>
+                            <%= b.name %> (<%= b.day_range_text %>)<%= status_suffix %>
+                          </option>
+                        <% end %>
+                      </select>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Modals container outside #question-pool-container -->
+            <div id="question-modals-container">
+              <% @questions.each do |q| %>
+                <div class="modal fade" id="viewQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                      <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+                          <i class="bi bi-eye-fill text-success"></i> Question Details
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body p-4">
+                        <div class="mb-3">
+                          <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
+                            <%= q.question_type.titleize %>
+                          </span>
+                          <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
+                          <% if q.display_name.present? %>
+                            <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
+                          <% end %>
+                          <% if q.description.present? %>
+                            <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+                          <% end %>
+                        </div>
+
+                        <% if q.requires_options? && q.options.any? %>
+                          <div class="mb-3">
+                            <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                            <div class="list-group rounded-3">
+                              <% q.options.each_with_index do |opt, opt_idx| %>
+                                <div class="list-group-item d-flex align-items-center justify-content-between">
+                                  <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                                  <% if opt.correct? %>
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
+                                  <% end %>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        <% elsif q.rating? %>
+                          <div class="mb-3">
+                            <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+                          </div>
+                        <% end %>
+
+                        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                          <span class="text-muted small">Active Question Schedule:</span>
+                          <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                            <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
+                          </span>
+                        </div>
+                      </div>
+                      <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+                        <%= link_to edit_admin_question_category_question_path(@category, q), class: "btn btn-primary rounded-3 px-3" do %>
+                          <i class="bi bi-pencil me-1"></i> Edit Question
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-journal-x fs-1 opacity-50 d-block mb-2"></i>
+              <p class="mb-2">No questions created under this category yet.</p>
+              <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-sm btn-primary rounded-3 px-3" do %>
+                <i class="bi bi-plus-lg me-1"></i> Create First Question
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Custom Bundles -->
+    <div class="col-lg-7 col-12 d-none-mobile" id="bundles-column">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-bottom p-2.5 p-sm-3 rounded-top-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-layers-fill text-warning"></i> Custom Question Bundles
+            </h5>
+            <span class="text-muted small">Split category questions into customizable parts or sections.</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white border-0 btn-add-bundle" data-bs-toggle="modal" data-bs-target="#newBundleModal">
+            <i class="bi bi-plus-circle-fill text-white me-1" style="font-size: 0.95rem;"></i>
+            <span>Add Bundle / Part</span>
+          </button>
+        </div>
+
+        <!-- Bundles Grid / Timeline -->
+        <div class="card-body p-2 p-sm-3 p-md-4 overflow-auto" style="max-height: 720px;">
+          <% if @bundles.size > 0 %>
+            <div class="row g-3 g-md-4">
+              <% @bundles.each do |bundle| %>
+                <div class="col-12">
+                  <div class="card border rounded-4 bg-white shadow-sm p-2"
+                       data-bundle-builder-target="bundleDropZone"
+                       data-bundle-id="<%= bundle.id %>"
+                       data-bundle-name="<%= bundle.name %>"
+                       data-action="dragover->bundle-builder#dragOver dragleave->bundle-builder#dragLeave drop->bundle-builder#drop">
+                    <!-- Bundle Card Header -->
+                    <div class="card-header bg-white border-0 pb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                      <div class="d-flex align-items-center flex-wrap gap-2">
+                        <span class="badge bg-primary text-white rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+                          <%= bundle.name %>
+                        </span>
+                        <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1">
+                          <%= bundle.question_bundle_items.size %> <%= bundle.question_bundle_items.size == 1 ? 'question' : 'questions' %>
+                        </span>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+                          <i class="bi bi-calendar-event me-1"></i><%= bundle.day_range_text %>
+                        </span>
+                      </div>
+
+                      <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1" title="Edit Bundle" data-bs-toggle="modal" data-bs-target="#editBundleModal<%= bundle.id %>">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <%= button_to admin_question_category_bundle_path(@category, bundle), 
+                                    method: :delete, 
+                                    data: { turbo_confirm: "Are you sure you want to delete bundle '#{bundle.name}'?" }, 
+                                    class: "btn btn-sm btn-outline-danger rounded-2 px-2 py-1", 
+                                    title: "Delete Bundle" do %>
+                          <i class="bi bi-trash"></i>
+                        <% end %>
+                      </div>
+                    </div>
+
+                    <!-- Modal: Edit Bundle -->
+                    <div class="modal fade" id="editBundleModal<%= bundle.id %>" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                          <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+                              <i class="bi bi-pencil-square text-primary"></i> Edit Bundle / Part
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <%= form_with(model: [@category, bundle], url: admin_question_category_bundle_path(@category, bundle), method: :patch, local: true) do |f| %>
+                            <div class="modal-body pt-3">
+                              <div class="mb-3">
+                                <%= f.label :name, "Bundle / Part Name", class: "form-label fw-semibold" %>
+                                <%= f.text_field :name, class: "form-control rounded-3", required: true %>
+                              </div>
+
+                              <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                  <%= f.label :from_day, "From Day", class: "form-label fw-semibold" %>
+                                  <%= f.number_field :from_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
+                                </div>
+                                <div class="col-6">
+                                  <%= f.label :to_day, "To Day", class: "form-label fw-semibold" %>
+                                  <%= f.number_field :to_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
+                                </div>
+                                <div class="form-text text-muted small">Active schedule range within Category Duration (1 to <%= @category.duration_days %> Days).</div>
+                              </div>
+
+                              <div class="mb-3">
+                                <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold" %>
+                                <%= f.text_area :description, rows: 2, class: "form-control rounded-3" %>
+                              </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                              <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                              <%= f.submit "Save Changes", class: "btn btn-primary rounded-3 px-4" %>
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Dropzone for questions -->
+                    <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10"
+                         data-bundle-id="<%= bundle.id %>"
+                         data-bundle-name="<%= bundle.name %>"
+                         data-action="dragover->bundle-builder#dragOver dragleave->bundle-builder#dragLeave drop->bundle-builder#drop"
+                         style="min-height: 120px; border: 2px dashed #94a3b8 !important; transition: all 0.2s ease;">
+
+                      <div class="d-flex flex-column gap-2.5 bundle-items-container" 
+                           id="bundle_items_<%= bundle.id %>"
+                           data-bundle-id="<%= bundle.id %>" 
+                           data-action="dragover->bundle-builder#bundleItemDragOver drop->bundle-builder#bundleItemDrop">
+                        <% bundle.question_bundle_items.each_with_index do |item, idx| %>
+                          <%= render partial: "admin/question_bundles/bundle_question_item", locals: { bundle: bundle, item: item, idx: idx } %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-5 text-muted bg-light rounded-4 border">
+              <i class="bi bi-layers fs-1 opacity-50 d-block mb-2 text-warning"></i>
+              <p class="mb-2 fw-medium">No bundles created for this category yet.</p>
+              <p class="small text-muted mb-3">Create custom bundles (e.g. Part 1, Part 2) to group your questions.</p>
+              <button type="button" class="btn btn-primary rounded-3 px-4 py-2.5 fw-semibold d-inline-flex align-items-center gap-2 shadow btn-add-bundle" data-bs-toggle="modal" data-bs-target="#newBundleModal">
+                <i class="bi bi-plus-circle-fill text-white fs-5"></i> Create First Bundle
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New Bundle Creation -->
+<div class="modal fade" id="newBundleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+          <i class="bi bi-layers-fill text-warning"></i> Create New Custom Bundle
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <%= form_with(model: [@category, @new_bundle], url: admin_question_category_bundles_path(@category), local: true) do |f| %>
+        <div class="modal-body pt-3">
+          <div class="mb-3">
+            <%= f.label :name, "Bundle / Part Name", class: "form-label fw-semibold" %>
+            <%= f.text_field :name, class: "form-control rounded-3", placeholder: "e.g., Part 1 / Section A / Module 1", required: true %>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <%= f.label :from_day, "From Day", class: "form-label fw-semibold" %>
+              <%= f.number_field :from_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, value: 1, required: true %>
+            </div>
+            <div class="col-6">
+              <%= f.label :to_day, "To Day", class: "form-label fw-semibold" %>
+              <%= f.number_field :to_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, value: @category.duration_days, required: true %>
+            </div>
+            <div class="form-text text-muted small">Active schedule range within Category Duration (1 to <%= @category.duration_days %> Days).</div>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold" %>
+            <%= f.text_area :description, rows: 2, class: "form-control rounded-3", placeholder: "Brief notes about this bundle section..." %>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Create Bundle", class: "btn btn-primary rounded-3 px-4" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% content_for :styles do %>
+  <style>
+    .modal-backdrop.show {
+      opacity: 0.4 !important;
+      background-color: #0f172a !important;
+    }
+    .gradient-action-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      cursor: pointer;
+    }
+    .gradient-action-btn:hover {
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25) !important;
+    }
+    .gradient-action-btn:active {
+      transform: translateY(0) scale(0.95) !important;
+    }
+    .btn-add-bundle {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      gap: 8px !important;
+    }
+    .btn-add-bundle:hover {
+      background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+    }
+  </style>
+<% end %>
+
+<script>
+  (function() {
+    function cleanupModalBackdrops() {
+      document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('padding-right');
+      document.body.style.removeProperty('overflow');
+    }
+    document.addEventListener('turbo:before-cache', cleanupModalBackdrops);
+    document.addEventListener('turbo:load', cleanupModalBackdrops);
+    document.addEventListener('DOMContentLoaded', cleanupModalBackdrops);
+  })();
+</script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.bigint "participant_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["assignment_id", "participant_id"], name: "index_assignment_participants_uniqueness", unique: true
     t.index ["assignment_id"], name: "index_assignment_participants_on_assignment_id"
     t.index ["participant_id"], name: "index_assignment_participants_on_participant_id"
   end
@@ -57,6 +58,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.integer "order_number"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["assignment_id", "question_set_id"], name: "index_assignment_question_sets_uniqueness", unique: true
     t.index ["assignment_id"], name: "index_assignment_question_sets_on_assignment_id"
     t.index ["question_set_id"], name: "index_assignment_question_sets_on_question_set_id"
   end
@@ -67,6 +69,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.integer "order_number"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "bundle_name"
+    t.index ["assignment_id", "question_id", "bundle_name"], name: "index_assignment_questions_uniqueness", unique: true
     t.index ["assignment_id"], name: "index_assignment_questions_on_assignment_id"
     t.index ["question_id"], name: "index_assignment_questions_on_question_id"
   end
@@ -122,7 +126,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.datetime "updated_at", null: false
     t.string "assignment_type", default: "individual"
     t.integer "section_id"
+    t.bigint "question_category_id"
     t.index ["institute_id"], name: "index_assignments_on_institute_id"
+    t.index ["question_category_id"], name: "index_assignments_on_question_category_id"
     t.index ["section_id"], name: "index_assignments_on_section_id"
   end
 
@@ -255,6 +261,52 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.index ["user_id"], name: "index_participants_on_user_id"
   end
 
+  create_table "question_banks", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "question_bundle_items", force: :cascade do |t|
+    t.bigint "question_bundle_id", null: false
+    t.bigint "question_id", null: false
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "effective_from_day"
+    t.integer "effective_to_day"
+    t.index ["question_bundle_id", "question_id"], name: "idx_qb_items_unique", unique: true
+    t.index ["question_bundle_id"], name: "index_question_bundle_items_on_question_bundle_id"
+    t.index ["question_id"], name: "index_question_bundle_items_on_question_id"
+  end
+
+  create_table "question_bundles", force: :cascade do |t|
+    t.bigint "question_category_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "from_day", default: 1, null: false
+    t.integer "to_day"
+    t.index ["question_category_id"], name: "index_question_bundles_on_question_category_id"
+  end
+
+  create_table "question_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "question_bank_id"
+    t.integer "duration_days", default: 30, null: false
+    t.bigint "institute_id"
+    t.index ["institute_id"], name: "index_question_categories_on_institute_id"
+    t.index ["question_bank_id"], name: "index_question_categories_on_question_bank_id"
+  end
+
   create_table "question_set_items", force: :cascade do |t|
     t.bigint "question_set_id", null: false
     t.bigint "question_id", null: false
@@ -279,7 +331,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
   end
 
   create_table "questions", force: :cascade do |t|
-    t.bigint "institute_id", null: false
+    t.bigint "institute_id"
     t.string "title", null: false
     t.text "description"
     t.integer "question_type", default: 0, null: false
@@ -289,7 +341,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
     t.boolean "required", default: false
     t.integer "max_rating", default: 5
     t.string "display_name"
+    t.integer "position", default: 0
+    t.bigint "question_category_id"
+    t.integer "options_count", default: 0, null: false
+    t.integer "duration_days"
+    t.integer "from_day", default: 1, null: false
+    t.integer "to_day"
     t.index ["institute_id"], name: "index_questions_on_institute_id"
+    t.index ["question_category_id"], name: "index_questions_on_question_category_id"
   end
 
   create_table "registration_settings", force: :cascade do |t|
@@ -552,6 +611,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
   add_foreign_key "assignment_sections", "assignments"
   add_foreign_key "assignment_sections", "sections"
   add_foreign_key "assignments", "institutes"
+  add_foreign_key "assignments", "question_categories"
   add_foreign_key "attendances", "participants"
   add_foreign_key "attendances", "training_programs"
   add_foreign_key "attendances", "users", column: "marked_by_id"
@@ -568,10 +628,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_26_064509) do
   add_foreign_key "participants", "institutes"
   add_foreign_key "participants", "sections"
   add_foreign_key "participants", "users"
+  add_foreign_key "question_bundle_items", "question_bundles"
+  add_foreign_key "question_bundle_items", "questions"
+  add_foreign_key "question_bundles", "question_categories"
+  add_foreign_key "question_categories", "institutes"
+  add_foreign_key "question_categories", "question_banks"
   add_foreign_key "question_set_items", "question_sets"
   add_foreign_key "question_set_items", "questions"
   add_foreign_key "question_sets", "institutes"
   add_foreign_key "questions", "institutes"
+  add_foreign_key "questions", "question_categories"
   add_foreign_key "sections", "institutes"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
