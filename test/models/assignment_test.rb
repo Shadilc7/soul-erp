@@ -107,4 +107,58 @@ class AssignmentTest < ActiveSupport::TestCase
       assert_equal Date.new(2026, 8, 3), @assignment.latest_unanswered_date_for(participant)
     end
   end
+
+  test "cannot destroy assignment when individual certificates exist and adds error" do
+    section = Section.create!(name: "Cert Section", code: "CSEC#{SecureRandom.hex(2)}", capacity: 30, institute: @institute)
+    user = User.create!(
+      email: "cert_user_#{SecureRandom.hex(3)}@example.com",
+      password: "password123",
+      first_name: "Cert",
+      last_name: "Participant",
+      role: "participant",
+      institute: @institute,
+      section_id: section.id
+    )
+    participant = Participant.create!(
+      user: user,
+      institute: @institute,
+      date_of_birth: Date.new(2000, 1, 1),
+      section_id: section.id
+    )
+    config = CertificateConfiguration.create!(
+      institute: @institute,
+      name: "Completion Cert",
+      duration_period: 10
+    )
+    IndividualCertificate.create!(
+      institute: @institute,
+      participant: participant,
+      assignment: @assignment,
+      certificate_configuration: config,
+      generated_at: Time.current
+    )
+
+    assert_no_difference("Assignment.count") do
+      refute @assignment.destroy
+    end
+
+    assert @assignment.errors[:base].present?
+    assert_includes @assignment.errors[:base].first, "Cannot delete assignment"
+    assert_includes @assignment.errors[:base].first, "certificate"
+  end
+
+  test "can destroy assignment when no individual certificates exist" do
+    assignment_to_delete = Assignment.create!(
+      title: "Clean Assignment",
+      start_date: Date.new(2026, 8, 1),
+      end_date: Date.new(2026, 8, 31),
+      assignment_type: "individual",
+      institute: @institute,
+      skip_association_validation: true
+    )
+
+    assert_difference("Assignment.count", -1) do
+      assert assignment_to_delete.destroy
+    end
+  end
 end

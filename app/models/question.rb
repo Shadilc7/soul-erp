@@ -77,7 +77,7 @@ class Question < ApplicationRecord
 
   # Add scope for active and ordered questions
   scope :active, -> { where(active: true) }
-  scope :ordered, -> { order(position: :asc, created_at: :desc) }
+  scope :ordered, -> { order(position: :asc, created_at: :asc, id: :asc) }
   scope :master, -> { where(institute_id: nil) }
 
   before_destroy :check_assignment_associations, prepend: true

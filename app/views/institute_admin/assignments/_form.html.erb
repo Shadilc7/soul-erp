@@ -184,7 +184,7 @@
 
   <!-- 2-COLUMN QUESTION BANK WORKSPACE BUILDER GRID -->
   <% category = @assignment.question_category %>
-  <% category_questions = category.present? ? category.questions.includes(:options).order(position: :asc, created_at: :desc) : @assignment.questions.includes(:options).order(position: :asc, created_at: :desc) %>
+  <% category_questions = category.present? ? category.questions.includes(:options).order(position: :asc, created_at: :asc, id: :asc) : @assignment.questions.includes(:options).order(position: :asc, created_at: :asc, id: :asc) %>
   <% category_bundles = category.present? ? category.question_bundles.includes(question_bundle_items: { question: :options }).order(:position) : [] %>
 
   <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">

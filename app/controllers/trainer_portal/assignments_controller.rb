@@ -51,9 +51,13 @@ module TrainerPortal
     end
 
     def destroy
-      @assignment.destroy
-      redirect_to trainer_portal_assignments_path,
-        notice: "Assignment was successfully deleted."
+      if @assignment.destroy
+        redirect_to trainer_portal_assignments_path,
+          notice: "Assignment was successfully deleted."
+      else
+        redirect_to trainer_portal_assignments_path,
+          alert: @assignment.errors.full_messages.to_sentence.presence || "Assignment could not be deleted."
+      end
     end
 
     private

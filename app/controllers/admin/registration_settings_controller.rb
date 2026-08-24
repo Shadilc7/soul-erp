@@ -1,5 +1,5 @@
 module Admin
-  class RegistrationSettingsController < AdminController
+  class RegistrationSettingsController < Admin::BaseController
     def edit
       @registration_setting = RegistrationSetting.instance
       @institutes = Institute.active
