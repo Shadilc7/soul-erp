@@ -95,7 +95,7 @@ module Admin
     private
 
     def set_category
-      @category = QuestionCategory.find(params[:question_category_id])
+      @category = QuestionCategory.master.find(params[:question_category_id])
     end
 
     def set_question
@@ -120,22 +120,11 @@ module Admin
     end
 
     def sanitize_question_params(params)
-      if params[:options_attributes].present?
-        params[:options_attributes].each do |_key, option_attrs|
-          unless option_attrs[:_destroy] == "1"
-            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs[:text].blank?
-          end
-        end
-      end
       params
     end
 
     def ensure_options_have_text(question)
-      question.options.each do |option|
-        if option.text.blank? && !option.marked_for_destruction?
-          option.text = "Option #{Time.now.to_i}"
-        end
-      end
+      # No-op: validation handled by Question model
     end
   end
 end

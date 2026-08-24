@@ -68,6 +68,9 @@ class Participant < ApplicationRecord
 
   scope :active, -> { where(status: :active) }
   scope :with_user, -> { includes(:user) }
+  scope :ordered_by_name, -> {
+    joins(:user).order(Arel.sql("LOWER(COALESCE(users.first_name, '')) ASC, LOWER(COALESCE(users.last_name, '')) ASC, LOWER(COALESCE(users.email, '')) ASC"))
+  }
 
   delegate :full_name, :email, to: :user
 

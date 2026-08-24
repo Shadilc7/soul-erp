@@ -354,4 +354,52 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
       assert_select "button[title='Edit Question']", count: 0
     end
   end
+
+  test "should list participants in alphabetical order in new assignment page" do
+    # Create users with out-of-order names for the current institute
+    section = Section.create!(name: "Batch A", code: "BA1", capacity: 30, institute: @institute)
+    u_z = User.create!(first_name: "Zara", last_name: "Alvarez", email: "zara@example.com", password: "Password123!", institute: @institute)
+    Participant.create!(user: u_z, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    u_a = User.create!(first_name: "Aaron", last_name: "Smith", email: "aaron@example.com", password: "Password123!", institute: @institute)
+    Participant.create!(user: u_a, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    u_m = User.create!(first_name: "Maya", last_name: "Lin", email: "maya@example.com", password: "Password123!", institute: @institute)
+    Participant.create!(user: u_m, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    get new_institute_admin_assignment_path, params: { mode: 'custom' }
+    assert_response :success
+
+    aaron_pos = response.body.index("Aaron Smith")
+    maya_pos = response.body.index("Maya Lin")
+    zara_pos = response.body.index("Zara Alvarez")
+
+    assert aaron_pos, "Aaron Smith should be in response"
+    assert maya_pos, "Maya Lin should be in response"
+    assert zara_pos, "Zara Alvarez should be in response"
+    assert aaron_pos < maya_pos, "Aaron should appear before Maya"
+    assert maya_pos < zara_pos, "Maya should appear before Zara"
+  end
+
+  test "should list participants in alphabetical order in import_setup page" do
+    section = Section.create!(name: "Batch A", code: "BA2", capacity: 30, institute: @institute)
+    u_z = User.create!(first_name: "Zara", last_name: "Alvarez", email: "zara2@example.com", password: "Password123!", institute: @institute)
+    Participant.create!(user: u_z, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    u_a = User.create!(first_name: "Aaron", last_name: "Smith", email: "aaron2@example.com", password: "Password123!", institute: @institute)
+    Participant.create!(user: u_a, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    get import_setup_institute_admin_assignments_path, params: {
+      question_bank_id: @question_bank.id,
+      category_ids: [@category_a.id]
+    }
+    assert_response :success
+
+    aaron_pos = response.body.index("Aaron Smith")
+    zara_pos = response.body.index("Zara Alvarez")
+
+    assert aaron_pos, "Aaron Smith should be in response"
+    assert zara_pos, "Zara Alvarez should be in response"
+    assert aaron_pos < zara_pos, "Aaron should appear before Zara in import_setup"
+  end
 end

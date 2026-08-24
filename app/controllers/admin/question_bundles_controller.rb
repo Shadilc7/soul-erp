@@ -105,7 +105,7 @@ module Admin
     private
 
     def set_category
-      @category = QuestionCategory.find(params[:question_category_id])
+      @category = QuestionCategory.master.find(params[:question_category_id])
     end
 
     def set_bundle

@@ -14,8 +14,8 @@ module Admin
       bank_ids = @question_banks.pluck(:id)
       @total_banks_count = @question_banks.count
       @active_banks_count = @question_banks.where(active: true).count
-      @total_categories_count = QuestionCategory.where(question_bank_id: bank_ids).count
-      @categories_count_by_bank_id = QuestionCategory.where(question_bank_id: bank_ids).group(:question_bank_id).count
+      @total_categories_count = QuestionCategory.master.where(question_bank_id: bank_ids).count
+      @categories_count_by_bank_id = QuestionCategory.master.where(question_bank_id: bank_ids).group(:question_bank_id).count
     end
 
     def show

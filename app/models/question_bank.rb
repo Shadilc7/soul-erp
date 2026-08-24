@@ -9,24 +9,10 @@ class QuestionBank < ApplicationRecord
   before_destroy :check_associations_before_destroy, prepend: true
 
   def total_categories_count
-    question_categories.count
+    question_categories.master.count
   end
 
   def total_questions_count
-    Question.where(question_category_id: question_categories.select(:id)).count
-  end
-
-  private
-
-  def check_associations_before_destroy
-    used_categories = question_categories.select do |cat|
-      cat.assignments.exists? || cat.questions.joins(:assignment_questions).exists?
-    end
-
-    if used_categories.any?
-      cat_names = used_categories.map(&:name).join(", ")
-      errors.add(:base, "Cannot delete Question Bank '#{name}' because category '#{cat_names}' is being used in assignments.")
-      throw :abort
-    end
+    Question.where(question_category_id: question_categories.master.select(:id)).count
   end
 end

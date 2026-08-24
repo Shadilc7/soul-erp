@@ -95,31 +95,31 @@ function initializeSubmenuStates() {
  */
 function initializeBootstrapComponents() {
   try {
-    const bs = window.bootstrap || bootstrap;
+    const bs = typeof window !== 'undefined' ? window.bootstrap : null;
     if (!bs) return;
 
     // Dropdowns
     const dropdownElementList = document.querySelectorAll('[data-bs-toggle="dropdown"]');
     dropdownElementList.forEach(el => {
-      if (!bs.Dropdown.getInstance(el)) {
-        new bs.Dropdown(el);
-      }
+      try {
+        bs.Dropdown.getOrCreateInstance(el);
+      } catch (e) {}
     });
     
     // Tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltipTriggerList.forEach(el => {
-      if (!bs.Tooltip.getInstance(el)) {
-        new bs.Tooltip(el);
-      }
+      try {
+        bs.Tooltip.getOrCreateInstance(el);
+      } catch (e) {}
     });
     
     // Popovers
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
     popoverTriggerList.forEach(el => {
-      if (!bs.Popover.getInstance(el)) {
-        new bs.Popover(el);
-      }
+      try {
+        bs.Popover.getOrCreateInstance(el);
+      } catch (e) {}
     });
     
     pageInitialized = true;
@@ -133,10 +133,11 @@ function initializeBootstrapComponents() {
  */
 function cleanupModalBackdrops() {
   try {
+    const bs = typeof window !== 'undefined' ? window.bootstrap : null;
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
     document.querySelectorAll('.modal.show').forEach(modalEl => {
       try {
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        const modalInstance = bs?.Modal?.getInstance(modalEl);
         if (modalInstance) modalInstance.hide();
       } catch (e) {}
       modalEl.classList.remove('show');
@@ -156,30 +157,31 @@ function cleanupModalBackdrops() {
  */
 function cleanupBootstrapComponents() {
   try {
+    const bs = typeof window !== 'undefined' ? window.bootstrap : null;
     cleanupModalBackdrops();
 
-    // Clean up tooltips
-    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltips.forEach(element => {
-      const tooltip = bootstrap.Tooltip.getInstance(element);
-      if (tooltip) tooltip.dispose();
-    });
-    
-    // Clean up popovers
-    const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
-    popovers.forEach(element => {
-      const popover = bootstrap.Popover.getInstance(element);
-      if (popover) popover.dispose();
-    });
-    
-    // Clean up dropdowns
-    const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-    dropdowns.forEach(element => {
-      const dropdown = bootstrap.Dropdown.getInstance(element);
-      if (dropdown) dropdown.dispose();
-    });
-    
-    // We don't dispose collapse instances as they conflict with our custom submenu handling
+    if (bs) {
+      // Clean up tooltips
+      const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      tooltips.forEach(element => {
+        const tooltip = bs.Tooltip?.getInstance(element);
+        if (tooltip) tooltip.dispose();
+      });
+      
+      // Clean up popovers
+      const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+      popovers.forEach(element => {
+        const popover = bs.Popover?.getInstance(element);
+        if (popover) popover.dispose();
+      });
+      
+      // Clean up dropdowns
+      const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+      dropdowns.forEach(element => {
+        const dropdown = bs.Dropdown?.getInstance(element);
+        if (dropdown) dropdown.dispose();
+      });
+    }
   } catch (error) {
     console.error('Error cleaning up Bootstrap components:', error);
   }
@@ -215,15 +217,12 @@ function setupDynamicOptionFields() {
 
 // Initialize components when Turbo loads a page
 document.addEventListener('turbo:load', () => {
-  console.log('Turbo load: Initializing components');
   cleanupModalBackdrops();
   
-  // Use requestAnimationFrame to batch DOM operations and reduce reflows
   requestAnimationFrame(() => {
     initializeSubmenuStates();
     initializeBootstrapComponents();
     setupDynamicOptionFields();
-    console.log('Components initialized');
   });
 });
 
@@ -240,7 +239,6 @@ document.addEventListener('turbo:before-cache', () => {
 
 // Clean up components before navigation
 document.addEventListener('turbo:before-render', () => {
-  console.log('Cleaning up components before navigation');
   cleanupBootstrapComponents();
 });
 
@@ -256,7 +254,8 @@ document.addEventListener('turbo:submit-start', (e) => {
   const modalEl = e.target.closest('.modal');
   if (modalEl) {
     try {
-      const instance = bootstrap.Modal.getInstance(modalEl);
+      const bs = typeof window !== 'undefined' ? window.bootstrap : null;
+      const instance = bs?.Modal?.getInstance(modalEl);
       if (instance) instance.hide();
     } catch (err) {}
     cleanupModalBackdrops();

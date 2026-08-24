@@ -520,15 +520,61 @@
         transition: all 0.3s ease-in-out;
       }
 
-      @media (max-width: 991.98px) {
-        .sidebar {
+      @media (max-width: 992px) {
+        #sidebar {
           transform: translateX(-100%);
           box-shadow: none;
+          width: var(--sidebar-width) !important;
+          z-index: 1060 !important;
         }
 
-        .sidebar.show {
+        #sidebar.show {
           transform: translateX(0);
           box-shadow: 8px 0 24px rgba(0,0,0,0.3);
+        }
+
+        #sidebar .sidebar-header,
+        #sidebar.show .sidebar-header,
+        #sidebar.collapsed .sidebar-header {
+          justify-content: flex-start !important;
+          padding: 0 1.25rem !important;
+          display: flex !important;
+        }
+
+        #sidebar .sidebar-header .sidebar-logo-link,
+        #sidebar.show .sidebar-header .sidebar-logo-link,
+        #sidebar.collapsed .sidebar-header .sidebar-logo-link,
+        #sidebar .sidebar-header .sidebar-logo,
+        #sidebar.show .sidebar-header .sidebar-logo,
+        #sidebar.collapsed .sidebar-header .sidebar-logo {
+          display: flex !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        #sidebar .nav-link span,
+        #sidebar.show .nav-link span,
+        #sidebar.collapsed .nav-link span,
+        #sidebar .btn span,
+        #sidebar.show .btn span,
+        #sidebar.collapsed .btn span {
+          display: inline-block !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .sidebar-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(4px);
+          z-index: 1055 !important;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease-in-out;
         }
 
         .sidebar-backdrop.show {
@@ -538,6 +584,12 @@
 
         #main-content {
           margin-left: 0 !important;
+        }
+
+        .topbar {
+          padding: 0 1rem;
+          position: relative;
+          z-index: 10;
         }
       }
     </style>

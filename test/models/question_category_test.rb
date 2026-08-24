@@ -24,8 +24,7 @@ class QuestionCategoryTest < ActiveSupport::TestCase
     assert_includes cat.errors[:duration_days], "must be greater than 0"
   end
 
-  test "should prevent destroy if assigned to assignments" do
-    cat = QuestionCategory.create!(name: "Test Cat", duration_days: 10)
+  test "should prevent destroy of institute category if assigned to assignments" do
     inst = Institute.first || Institute.create!(
       name: "Test Inst",
       code: "INST01",
@@ -33,6 +32,7 @@ class QuestionCategoryTest < ActiveSupport::TestCase
       contact_number: "9876543210",
       institution_type: "college"
     )
+    cat = QuestionCategory.create!(name: "Test Cat", duration_days: 10, institute: inst)
     Assignment.create!(
       title: "Test Assignment for Destroy",
       institute: inst,
@@ -46,5 +46,27 @@ class QuestionCategoryTest < ActiveSupport::TestCase
       refute cat.destroy
     end
     assert_includes cat.errors[:base].join, "Cannot delete Question Category"
+  end
+
+  test "should allow destroy of master category even if referenced by assignments" do
+    inst = Institute.first || Institute.create!(
+      name: "Test Inst",
+      code: "INST01",
+      email: "inst@example.com",
+      contact_number: "9876543210",
+      institution_type: "college"
+    )
+    master_cat = QuestionCategory.create!(name: "Master Cat", duration_days: 10, institute: nil)
+    assignment = Assignment.create!(
+      title: "Test Assignment for Master Destroy",
+      institute: inst,
+      question_category: master_cat,
+      start_date: Date.today,
+      end_date: Date.today + 5.days,
+      assignment_type: "individual"
+    )
+
+    assert master_cat.destroy
+    assert_nil assignment.reload.question_category_id
   end
 end

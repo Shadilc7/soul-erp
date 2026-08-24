@@ -3,13 +3,14 @@ class QuestionCategory < ApplicationRecord
   belongs_to :institute, optional: true
   has_many :questions, -> { order(position: :asc, created_at: :desc) }, dependent: :destroy
   has_many :question_bundles, -> { order(position: :asc) }, dependent: :destroy
-  has_many :assignments, dependent: :restrict_with_error
+  has_many :assignments, dependent: :nullify
 
   validates :name, presence: true
   validates :duration_days, presence: true, numericality: { greater_than: 0 }
 
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(created_at: :desc) }
+  scope :master, -> { where(institute_id: nil) }
 
   before_destroy :check_associations_before_destroy, prepend: true
 
@@ -24,6 +25,8 @@ class QuestionCategory < ApplicationRecord
   private
 
   def check_associations_before_destroy
+    return if institute_id.nil?
+
     if assignments.exists?
       count = assignments.count
       errors.add(:base, "Cannot delete Question Category '#{name}' because it is being used in #{count} #{'assignment'.pluralize(count)}.")
