@@ -69,14 +69,20 @@
           </div>
         </div>
 
-        <%= f.submit "LOGIN", class: "login-btn" %>
-        
-        <div class="form-footer">
+        <div class="d-flex align-items-center justify-content-between my-3">
+          <div class="form-check d-flex align-items-center gap-2 mb-0">
+            <%= f.check_box :remember_me, class: "form-check-input", checked: true, id: "user_remember_me", style: "cursor: pointer; width: 1.15rem; height: 1.15rem; accent-color: #00B67A;" %>
+            <label class="form-check-label small cursor-pointer text-muted fw-semibold" for="user_remember_me" style="font-size: 0.875rem;">
+              Remember me
+            </label>
+          </div>
           <%= link_to new_user_password_path, class: "forgot-password" do %>
             <i class="bi bi-key"></i>
             Forgot Password?
           <% end %>
         </div>
+
+        <%= f.submit "LOGIN", class: "login-btn", style: "margin-top: 0.5rem;" %>
       <% end %>
     </div>
   </div>
