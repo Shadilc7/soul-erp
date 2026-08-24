@@ -24,17 +24,10 @@ default: &default
 
 development:
   <<: *default
-  # database: soul_erp_prod_dump
-  database: soul_erp_prod_dump_aug_24
+  database: soul_erp_prod_dump
   # database: soul_erp_development
   # database: soul_erp_development_2
 
-  #Import
-  # pg_dump -U soul -d soul_production -F c -f public/soul_db_dump.sql -v
-
-  #Export
-  # /usr/lib/postgresql/17/bin/pg_restore -U postgres -d soul_erp_prod_dump_aug_24 -v --no-owner --no-privileges soul_db_dump_aug.sql
-  
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
