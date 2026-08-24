@@ -228,6 +228,157 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     refute_includes grouped.keys, "Part B - OOP Concepts"
   end
 
+  test "should finalize_import with custom new bundles and shortened schedule duration" do
+    participant = participants(:one)
+
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - 2 Week Sprint",
+            description: "Intensive 15-day schedule",
+            start_date: "2026-08-24",
+            end_date: "2026-09-07",
+            assignment_type: "individual",
+            active: "1",
+            participant_ids: [participant.id],
+            bundles: {
+              "new_1724510001" => {
+                name: "Week 1",
+                from_day: "1",
+                to_day: "7",
+                description: "Days 1 to 7"
+              },
+              "new_1724510002" => {
+                name: "Week 2",
+                from_day: "8",
+                to_day: "14",
+                description: "Days 8 to 14"
+              }
+            },
+            bundle_items: [
+              { question_id: @q1.id.to_s, bundle_name: "Week 1" },
+              { question_id: @q1.id.to_s, bundle_name: "Week 2" },
+              { question_id: @q2.id.to_s, bundle_name: "Week 1" }
+            ],
+            question_ids: [@q1.id.to_s, @q2.id.to_s]
+          }
+        }
+      }
+    end
+
+    assert_redirected_to institute_admin_assignments_path
+    assign = Assignment.find_by(title: "Ruby Fundamentals - 2 Week Sprint")
+    assert_not_nil assign
+    assert_equal Date.parse("2026-08-24"), assign.start_date
+    assert_equal Date.parse("2026-09-07"), assign.end_date
+    assert_includes assign.participant_ids, participant.id
+
+    # Verify custom bundles created under institute category
+    inst_bundles = assign.question_category.question_bundles.order(:position)
+    assert_equal 2, inst_bundles.count
+    assert_equal ["Week 1", "Week 2"], inst_bundles.pluck(:name)
+    assert_equal [1, 8], inst_bundles.pluck(:from_day)
+    assert_equal [7, 14], inst_bundles.pluck(:to_day)
+
+    # Verify assignment questions linked to custom bundle names
+    week_1_q_titles = assign.assignment_questions.where(bundle_name: "Week 1").map { |aq| aq.question.title }
+    week_2_q_titles = assign.assignment_questions.where(bundle_name: "Week 2").map { |aq| aq.question.title }
+    assert_equal ["What is a Symbol?", "Explain duck typing in Ruby"], week_1_q_titles
+    assert_equal ["What is a Symbol?"], week_2_q_titles
+  end
+
+  test "should finalize_import with customized question modal overrides" do
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Custom Questions",
+            start_date: "2026-08-24",
+            end_date: "2026-09-07",
+            questions: {
+              @q1.id.to_s => {
+                title: "Customized Symbol Explanation",
+                display_name: "Symbols 101",
+                from_day: "1",
+                to_day: "14",
+                description: "Deep explanation of symbols in Ruby"
+              }
+            },
+            question_ids: [@q1.id.to_s, @q2.id.to_s]
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Custom Questions")
+    assert_not_nil assign
+
+    cloned_q1 = assign.questions.find_by(title: "Customized Symbol Explanation")
+    assert_not_nil cloned_q1
+    assert_equal "Symbols 101", cloned_q1.display_name
+    assert_equal 1, cloned_q1.from_day
+    assert_equal 14, cloned_q1.to_day
+    assert_equal "Deep explanation of symbols in Ruby", cloned_q1.description
+    assert_equal @institute.id, cloned_q1.institute_id
+  end
+
+  test "should finalize_import with all bundles deleted and fallback to unbundled questions" do
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Flat Unbundled",
+            custom_setup: "1",
+            start_date: "2026-08-24",
+            end_date: "2026-09-07",
+            question_ids: [@q1.id.to_s, @q2.id.to_s]
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Flat Unbundled")
+    assert_not_nil assign
+    assert_equal 0, assign.question_category.question_bundles.count
+    assert_equal 2, assign.assignment_questions.count
+    assert_nil assign.assignment_questions.first.bundle_name
+    assert_nil assign.assignment_questions.second.bundle_name
+  end
+
+  test "should finalize_import with section assignment type" do
+    section = Section.create!(name: "Batch X", code: "BX1", capacity: 30, institute: @institute)
+    user = users(:one)
+    participant = Participant.create!(
+      user: user,
+      institute: @institute,
+      section_id: section.id,
+      date_of_birth: 20.years.ago.to_date,
+      participant_type: "student"
+    )
+
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Section Cohort",
+            assignment_type: "section",
+            section_ids: [section.id.to_s],
+            start_date: "2026-08-24",
+            end_date: "2026-09-07",
+            question_ids: [@q1.id.to_s]
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Section Cohort")
+    assert_not_nil assign
+    assert_equal "section", assign.assignment_type
+    assert_includes assign.section_ids, section.id
+    assert_includes assign.participant_ids, participant.id
+  end
+
   test "should redirect import_question_bank request to import_setup page" do
     post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
     assert_redirected_to import_setup_institute_admin_assignments_path(question_bank_id: @question_bank.id, category_ids: nil)

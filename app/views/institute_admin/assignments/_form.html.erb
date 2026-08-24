@@ -1,4 +1,4 @@
-<%= form_with(model: [:institute_admin, @assignment], local: true, data: { controller: "assignment-form" }) do |f| %>
+<%= form_with(model: [:institute_admin, @assignment], local: true, html: { novalidate: true }, data: { controller: "assignment-form" }) do |f| %>
   <!-- Hidden default fields -->
   <%= hidden_field_tag "assignment[question_ids][]", nil %>
 
@@ -976,7 +976,7 @@
         <div class="modal-body p-4">
           <div class="mb-3">
             <label class="form-label small fw-bold text-dark">Bundle Name <span class="text-danger">*</span></label>
-            <input type="text" id="new_form_bundle_name" class="form-control rounded-3" placeholder="e.g. Part 3 - Reflection" required>
+            <input type="text" id="new_form_bundle_name" class="form-control rounded-3" placeholder="e.g. Part 3 - Reflection">
           </div>
           <div class="row g-3">
             <div class="col-6">
@@ -1013,7 +1013,7 @@
         <div class="modal-body p-4">
           <div class="mb-3">
             <label class="form-label small fw-bold text-dark">Bundle Name <span class="text-danger">*</span></label>
-            <input type="text" id="edit_form_bundle_name" class="form-control rounded-3" required>
+            <input type="text" id="edit_form_bundle_name" class="form-control rounded-3">
           </div>
           <div class="row g-3">
             <div class="col-6">
@@ -1052,7 +1052,7 @@
           <div class="row g-3 mb-3">
             <div class="col-md-8">
               <label class="form-label small fw-bold text-dark">Question Title <span class="text-danger">*</span></label>
-              <input type="text" id="new_form_q_title" class="form-control rounded-3" placeholder="Enter question title..." required>
+              <input type="text" id="new_form_q_title" class="form-control rounded-3" placeholder="Enter question title...">
             </div>
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
@@ -1125,7 +1125,7 @@
           <div class="row g-3 mb-3">
             <div class="col-md-8">
               <label class="form-label small fw-bold text-dark">Question Title <span class="text-danger">*</span></label>
-              <input type="text" id="edit_form_q_title" class="form-control rounded-3" required>
+              <input type="text" id="edit_form_q_title" class="form-control rounded-3">
             </div>
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
