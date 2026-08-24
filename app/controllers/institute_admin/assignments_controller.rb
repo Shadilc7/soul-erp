@@ -71,7 +71,7 @@ module InstituteAdmin
         return
       end
 
-      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
+      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :asc, id: :asc)
       @sections = current_institute.sections.active.joins(:participants).distinct.order(:name)
       @participants = current_institute.participants.active.includes(:user).ordered_by_name
     end
@@ -108,23 +108,45 @@ module InstituteAdmin
           description = data[:description].presence || category.description
 
           # Clone bundles for the institution category with custom overrides
-          bundle_map = {} # master_bundle.id => inst_bundle
+          bundle_map = {} # client_bundle_id_or_master_id => inst_bundle
           bundles_param = data[:bundles] || data["bundles"]
 
-          category.question_bundles.order(:position).each do |m_bundle|
-            bundle_override = bundles_param ? (bundles_param[m_bundle.id.to_s] || bundles_param[m_bundle.id.to_i] || bundles_param[m_bundle.id]) : nil
-            custom_b_name = bundle_override.respond_to?(:[]) ? (bundle_override[:name] || bundle_override["name"]).presence : nil
-            custom_b_from = bundle_override.respond_to?(:[]) ? (bundle_override[:from_day] || bundle_override["from_day"]).presence : nil
-            custom_b_to = bundle_override.respond_to?(:[]) ? (bundle_override[:to_day] || bundle_override["to_day"]).presence : nil
+          if bundles_param.present?
+            pos = 0
+            bundles_param.each do |b_key, b_data|
+              b_hash = b_data.respond_to?(:to_unsafe_h) ? b_data.to_unsafe_h : b_data
+              b_name = (b_hash[:name] || b_hash["name"]).to_s.strip
+              next if b_name.blank?
 
-            inst_bundle = inst_category.question_bundles.create!(
-              name: custom_b_name || m_bundle.name,
-              description: m_bundle.description,
-              position: m_bundle.position,
-              from_day: custom_b_from.present? ? custom_b_from.to_i : m_bundle.from_day,
-              to_day: custom_b_to.present? ? custom_b_to.to_i : (m_bundle.to_day || duration)
-            )
-            bundle_map[m_bundle.id] = inst_bundle
+              b_from = (b_hash[:from_day] || b_hash["from_day"]).to_i
+              b_to = (b_hash[:to_day] || b_hash["to_day"]).to_i
+              b_desc = (b_hash[:description] || b_hash["description"]).to_s.presence
+
+              m_bundle = category.question_bundles.find_by(id: b_key)
+
+              inst_bundle = inst_category.question_bundles.create!(
+                name: b_name,
+                description: b_desc || m_bundle&.description,
+                position: pos += 1,
+                from_day: b_from > 0 ? b_from : (m_bundle&.from_day || 1),
+                to_day: b_to > 0 ? b_to : (m_bundle&.to_day || duration)
+              )
+              bundle_map[b_key.to_s] = inst_bundle
+              bundle_map[m_bundle.id.to_s] = inst_bundle if m_bundle
+              bundle_map[m_bundle.id] = inst_bundle if m_bundle
+            end
+          else
+            category.question_bundles.order(:position).each do |m_bundle|
+              inst_bundle = inst_category.question_bundles.create!(
+                name: m_bundle.name,
+                description: m_bundle.description,
+                position: m_bundle.position,
+                from_day: m_bundle.from_day || 1,
+                to_day: m_bundle.to_day || duration
+              )
+              bundle_map[m_bundle.id] = inst_bundle
+              bundle_map[m_bundle.id.to_s] = inst_bundle
+            end
           end
 
           # Clone master questions for current institute under inst_category
@@ -139,20 +161,49 @@ module InstituteAdmin
           end
 
           # Reconnect QuestionBundleItems for institute bundles and cloned questions
-          category.question_bundles.each do |m_bundle|
-            inst_bundle = bundle_map[m_bundle.id]
-            next unless inst_bundle
+          bundle_items = data[:bundle_items] || data["bundle_items"]
+          if bundle_items.present?
+            item_positions = Hash.new(0)
+            added_bundle_question_ids = Set.new
 
-            m_bundle.question_bundle_items.order(:position).each do |m_item|
-              inst_q = question_map[m_item.question_id]
+            bundle_items.each do |bi|
+              bi_hash = bi.respond_to?(:to_unsafe_h) ? bi.to_unsafe_h : bi
+              orig_qid = (bi_hash[:question_id] || bi_hash["question_id"]).to_i
+              b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.strip
+              next if orig_qid.zero? || b_name.blank?
+
+              inst_bundle = inst_category.question_bundles.find_by(name: b_name)
+              next unless inst_bundle
+
+              inst_q = question_map[orig_qid] || Question.find_by(id: orig_qid)
               next unless inst_q
+              next if added_bundle_question_ids.include?([inst_bundle.id, inst_q.id])
 
+              item_positions[inst_bundle.id] += 1
               inst_bundle.question_bundle_items.create!(
                 question: inst_q,
-                position: m_item.position,
-                effective_from_day: m_item.effective_from_day,
-                effective_to_day: m_item.effective_to_day
+                position: item_positions[inst_bundle.id],
+                effective_from_day: inst_bundle.from_day || 1,
+                effective_to_day: inst_bundle.to_day || duration
               )
+              added_bundle_question_ids.add([inst_bundle.id, inst_q.id])
+            end
+          else
+            category.question_bundles.each do |m_bundle|
+              inst_bundle = bundle_map[m_bundle.id]
+              next unless inst_bundle
+
+              m_bundle.question_bundle_items.order(:position).each do |m_item|
+                inst_q = question_map[m_item.question_id]
+                next unless inst_q
+
+                inst_bundle.question_bundle_items.create!(
+                  question: inst_q,
+                  position: m_item.position,
+                  effective_from_day: m_item.effective_from_day,
+                  effective_to_day: m_item.effective_to_day
+                )
+              end
             end
           end
 
@@ -170,16 +221,20 @@ module InstituteAdmin
 
           order_index = 0
           imported_pairs = Set.new
-          has_q_param = data.key?(:question_ids)
-          selected_qids = data[:question_ids]&.map(&:to_i)&.reject(&:zero?) || []
+          has_q_param = data.key?(:question_ids) || data.key?("question_ids")
+          selected_qids = (data[:question_ids] || data["question_ids"])&.map(&:to_i)&.reject(&:zero?) || []
 
-          bundle_items = data[:bundle_items] || data["bundle_items"]
           if bundle_items.present?
             bundle_items.each do |bi|
               bi_hash = bi.respond_to?(:to_unsafe_h) ? bi.to_unsafe_h : bi
               orig_qid = (bi_hash[:question_id] || bi_hash["question_id"]).to_i
-              next if orig_qid.zero?
+              b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.strip
+              next if orig_qid.zero? || b_name.blank?
               next if has_q_param && !selected_qids.include?(orig_qid)
+
+              # Only assign to bundle if the bundle actually exists in inst_category
+              inst_bundle = inst_category.question_bundles.find_by(name: b_name)
+              next unless inst_bundle
 
               target_q = question_map[orig_qid]
               if target_q.nil?
@@ -190,7 +245,6 @@ module InstituteAdmin
                 end
               end
 
-              b_name = (bi_hash[:bundle_name] || bi_hash["bundle_name"]).to_s.presence || "Part 1"
               next if target_q.nil? || imported_pairs.include?([target_q.id, b_name])
 
               assignment.assignment_questions.create!(
@@ -200,35 +254,37 @@ module InstituteAdmin
               )
               imported_pairs.add([target_q.id, b_name])
             end
-          end
+          else
+            inst_category.question_bundles.order(:position).each do |inst_bundle|
+              inst_bundle.question_bundle_items.order(:position).each do |item|
+                target_q = item.question
+                next if target_q.nil? || imported_pairs.include?([target_q.id, inst_bundle.name])
 
-          category.question_bundles.order(:position).each do |m_bundle|
-            inst_bundle = bundle_map[m_bundle.id]
-            effective_bundle_name = inst_bundle&.name || m_bundle.name
-
-            m_bundle.question_bundle_items.order(:position).each do |m_item|
-              orig_qid = m_item.question_id
-              next if orig_qid.blank?
-
-              target_q = question_map[orig_qid]
-              if target_q.nil?
-                target_q = Question.find_by(id: orig_qid)
-                if target_q && target_q.institute_id != current_institute.id
-                  target_q = target_q.deep_clone_for_institute(current_institute, inst_category)
-                  question_map[orig_qid] = target_q
+                orig_master_qid = question_map.key(target_q) || target_q.id
+                if !has_q_param || selected_qids.include?(target_q.id) || selected_qids.include?(orig_master_qid)
+                  assignment.assignment_questions.create!(
+                    question_id: target_q.id,
+                    bundle_name: inst_bundle.name,
+                    order_number: order_index += 1
+                  )
+                  imported_pairs.add([target_q.id, inst_bundle.name])
                 end
               end
+            end
+          end
 
-              next if target_q.nil? || imported_pairs.include?([target_q.id, effective_bundle_name])
+          # If inst_category has no bundles (all deleted or none exist), assign selected questions unbundled
+          if inst_category.question_bundles.empty? && has_q_param && selected_qids.any?
+            selected_qids.each do |orig_qid|
+              target_q = question_map[orig_qid] || Question.find_by(id: orig_qid)
+              next if target_q.nil? || imported_pairs.include?([target_q.id, nil])
 
-              if !has_q_param || selected_qids.include?(orig_qid)
-                assignment.assignment_questions.create!(
-                  question_id: target_q.id,
-                  bundle_name: effective_bundle_name,
-                  order_number: order_index += 1
-                )
-                imported_pairs.add([target_q.id, effective_bundle_name])
-              end
+              assignment.assignment_questions.create!(
+                question_id: target_q.id,
+                bundle_name: nil,
+                order_number: order_index += 1
+              )
+              imported_pairs.add([target_q.id, nil])
             end
           end
 
@@ -451,8 +507,11 @@ module InstituteAdmin
     end
 
     def destroy
-      @assignment.destroy
-      redirect_to institute_admin_assignments_path, notice: "Assignment was successfully deleted."
+      if @assignment.destroy
+        redirect_to institute_admin_assignments_path, notice: "Assignment was successfully deleted."
+      else
+        redirect_to institute_admin_assignments_path, alert: @assignment.errors.full_messages.to_sentence.presence || "Assignment could not be deleted."
+      end
     end
 
     private
@@ -463,7 +522,7 @@ module InstituteAdmin
       @selected_participants = @assignment.participants.includes(:user).ordered_by_name
       @participants = current_institute.participants.active.includes(:user).ordered_by_name
       @grouped_questions = @assignment.edit_questions_grouped_by_bundle
-      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
+      @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :asc, id: :asc)
       @available_question_banks = QuestionBank.where(active: true).includes(:question_categories).order(:name)
     end
 

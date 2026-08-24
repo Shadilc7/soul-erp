@@ -68,7 +68,7 @@ module Admin
     end
 
     def builder
-      @questions = @category.questions.includes(:question_bundles).order(position: :asc, created_at: :desc)
+      @questions = @category.questions.includes(:question_bundles).order(position: :asc, created_at: :asc, id: :asc)
       @bundles = @category.question_bundles.includes(:question_bundle_items).ordered
       @new_question = @category.questions.build(duration_days: 1)
       @new_bundle = @category.question_bundles.build

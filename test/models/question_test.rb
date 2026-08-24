@@ -52,14 +52,14 @@ class QuestionTest < ActiveSupport::TestCase
     assert_includes invalid_range_q.errors[:to_day], "must be greater than or equal to From Day (10)"
   end
 
-  test "orders questions with latest created first at the top" do
+  test "orders questions with first created first (#1) and last created last" do
     category = QuestionCategory.create!(name: "Order Test Category", duration_days: 30)
     q1 = category.questions.create!(title: "First Question", question_type: "short_answer", created_at: 2.hours.ago)
     q2 = category.questions.create!(title: "Second Question", question_type: "short_answer", created_at: 1.hour.ago)
     q3 = category.questions.create!(title: "Third Question", question_type: "short_answer", created_at: Time.current)
 
-    assert_equal [ q3.id, q2.id, q1.id ], category.questions.pluck(:id)
-    assert_equal [ q3.id, q2.id, q1.id ], Question.where(id: [ q1.id, q2.id, q3.id ]).ordered.pluck(:id)
+    assert_equal [ q1.id, q2.id, q3.id ], category.questions.pluck(:id)
+    assert_equal [ q1.id, q2.id, q3.id ], Question.where(id: [ q1.id, q2.id, q3.id ]).ordered.pluck(:id)
   end
 
   test "new Option initializes with nil text instead of pre-filled dummy value" do

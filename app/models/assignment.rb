@@ -19,6 +19,9 @@ class Assignment < ApplicationRecord
 
   has_many :assignment_responses, dependent: :destroy
   has_many :assignment_response_logs, dependent: :destroy
+  has_many :individual_certificates, dependent: :restrict_with_error
+
+  before_destroy :check_associations_before_destroy, prepend: true
 
   validates :title, presence: true
   validates :start_date, presence: true
@@ -147,8 +150,8 @@ class Assignment < ApplicationRecord
     if assignment_questions.where.not(order_number: nil).any?
       questions.joins(:assignment_questions).order("assignment_questions.order_number ASC, questions.id ASC")
     else
-      questions.order(position: :asc, created_at: :desc) +
-      question_sets.includes(:questions).flat_map { |qs| qs.questions.order(position: :asc, created_at: :desc) }
+      questions.order(position: :asc, created_at: :asc, id: :asc) +
+      question_sets.includes(:questions).flat_map { |qs| qs.questions.order(position: :asc, created_at: :asc, id: :asc) }
     end
   end
 
@@ -260,7 +263,7 @@ class Assignment < ApplicationRecord
       if institute.present?
         inst_custom_questions = institute.questions.includes(:options)
                                          .where("question_category_id IS NULL OR question_category_id != ?", question_category.id)
-                                         .order(position: :asc, created_at: :desc).to_a
+                                         .order(position: :asc, created_at: :asc, id: :asc).to_a
         groups["Institution Custom Questions"] = inst_custom_questions if inst_custom_questions.any?
       end
 
@@ -269,7 +272,7 @@ class Assignment < ApplicationRecord
       assigned_q_ids = assigned_aqs.map(&:question_id)
       inst_q_ids = institute&.questions&.pluck(:id) || []
       all_available_ids = (assigned_q_ids + inst_q_ids).uniq
-      all_q = Question.includes(:options).where(id: all_available_ids).order(position: :asc, created_at: :desc).to_a
+      all_q = Question.includes(:options).where(id: all_available_ids).order(position: :asc, created_at: :asc, id: :asc).to_a
       { "Institution Questions" => all_q }
     end
   end
@@ -314,6 +317,14 @@ class Assignment < ApplicationRecord
     return if end_date.blank? || start_date.blank?
     if end_date < start_date
       errors.add(:end_date, "must be after start date")
+    end
+  end
+
+  def check_associations_before_destroy
+    if individual_certificates.exists?
+      count = individual_certificates.count
+      errors.add(:base, "Cannot delete assignment '#{title}' because #{count} #{'certificate'.pluralize(count)} #{count == 1 ? 'has' : 'have'} been generated for it.")
+      throw :abort
     end
   end
 end

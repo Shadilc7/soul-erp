@@ -183,6 +183,51 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_equal @institute.id, aq.question.institute_id
   end
 
+  test "should not include deleted bundle or its questions when bundle is deleted during finalize_import" do
+    # @category_a has @bundle1 (Part A - Basic Syntax with @q1) and @bundle2 (Part B - OOP Concepts with @q2)
+    assert_difference("Assignment.count", 1) do
+      post finalize_import_institute_admin_assignments_path, params: {
+        assignments: {
+          @category_a.id => {
+            title: "Ruby Fundamentals - Only Part A",
+            start_date: Date.current.to_s,
+            end_date: (Date.current + 30.days).to_s,
+            bundles: {
+              @bundle1.id.to_s => {
+                name: "Part A - Basic Syntax",
+                from_day: "1",
+                to_day: "15"
+              }
+              # @bundle2 was deleted by user in import setup and not submitted in params
+            },
+            bundle_items: [
+              { question_id: @q1.id.to_s, bundle_name: "Part A - Basic Syntax" }
+            ],
+            question_ids: [@q1.id.to_s, @q2.id.to_s]
+          }
+        }
+      }
+    end
+
+    assign = Assignment.find_by(title: "Ruby Fundamentals - Only Part A")
+    assert_not_nil assign
+
+    # Institute category should only have Part A, NOT Part B
+    inst_bundles = assign.question_category.question_bundles
+    assert_equal 1, inst_bundles.count
+    assert_equal "Part A - Basic Syntax", inst_bundles.first.name
+
+    # Assignment questions should only have @q1 under Part A, and NOT have @q2 under deleted Part B
+    assert_equal 1, assign.assignment_questions.count
+    assert_equal "Part A - Basic Syntax", assign.assignment_questions.first.bundle_name
+    assert_equal @q1.title, assign.assignment_questions.first.question.title
+
+    # Grouped questions for participant portal should not contain Part B
+    grouped = assign.questions_grouped_by_bundle_for_date(Date.current)
+    assert_includes grouped.keys, "Part A - Basic Syntax"
+    refute_includes grouped.keys, "Part B - OOP Concepts"
+  end
+
   test "should redirect import_question_bank request to import_setup page" do
     post import_question_bank_institute_admin_assignments_path, params: { question_bank_id: @question_bank.id }
     assert_redirected_to import_setup_institute_admin_assignments_path(question_bank_id: @question_bank.id, category_ids: nil)
