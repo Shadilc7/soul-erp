@@ -61,4 +61,72 @@ class QuestionTest < ActiveSupport::TestCase
     assert_equal [ q3.id, q2.id, q1.id ], category.questions.pluck(:id)
     assert_equal [ q3.id, q2.id, q1.id ], Question.where(id: [ q1.id, q2.id, q3.id ]).ordered.pluck(:id)
   end
+
+  test "new Option initializes with nil text instead of pre-filled dummy value" do
+    opt = Option.new
+    assert_nil opt.text
+    assert_nil opt.value
+  end
+
+  test "multiple choice question validates presence of at least 2 options" do
+    category = QuestionCategory.create!(name: "MC Category", duration_days: 30)
+    q = category.questions.build(
+      title: "Multiple Choice Q",
+      question_type: "multiple_choice"
+    )
+    assert_not q.valid?
+    assert_includes q.errors[:base], "Questions requiring options must have at least 2 options"
+
+    q.options.build(text: "Choice A")
+    q.options.build(text: "Choice B")
+    assert q.valid?
+  end
+
+  test "allows destroy of master question even if attached to assignment questions" do
+    inst = Institute.first || Institute.create!(
+      name: "Test Inst",
+      code: "INST02",
+      email: "inst2@example.com",
+      contact_number: "9876543210",
+      institution_type: "college"
+    )
+    master_cat = QuestionCategory.create!(name: "Master Cat Q", duration_days: 10, institute: nil)
+    master_q = master_cat.questions.create!(title: "Master Q", question_type: "short_answer", institute: nil)
+    assignment = Assignment.create!(
+      title: "Test Assignment for Master Q",
+      institute: inst,
+      start_date: Date.today,
+      end_date: Date.today + 5.days,
+      assignment_type: "individual"
+    )
+    aq = assignment.assignment_questions.create!(question: master_q, order_number: 1)
+
+    assert master_q.destroy
+    assert_not AssignmentQuestion.exists?(id: aq.id)
+  end
+
+  test "blocks destroy of institute question when attached to assignments" do
+    inst = Institute.first || Institute.create!(
+      name: "Test Inst",
+      code: "INST03",
+      email: "inst3@example.com",
+      contact_number: "9876543210",
+      institution_type: "college"
+    )
+    inst_cat = QuestionCategory.create!(name: "Inst Cat Q", duration_days: 10, institute: inst)
+    inst_q = inst_cat.questions.create!(title: "Inst Q", question_type: "short_answer", institute: inst)
+    assignment = Assignment.create!(
+      title: "Test Assignment for Inst Q",
+      institute: inst,
+      start_date: Date.today,
+      end_date: Date.today + 5.days,
+      assignment_type: "individual"
+    )
+    assignment.assignment_questions.create!(question: inst_q, order_number: 1)
+
+    assert_no_difference "Question.count" do
+      refute inst_q.destroy
+    end
+    assert_includes inst_q.errors[:base].join, "This question cannot be deleted because it is being used in"
+  end
 end

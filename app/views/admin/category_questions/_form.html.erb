@@ -111,7 +111,7 @@
                   class: "form-control form-control-sm rounded-2",
                   placeholder: "Option text",
                   required: true,
-                  value: option.object.text.presence || "Option #{Time.now.to_i}" %>
+                  value: "" %>
               <div class="form-check me-2">
                 <%= option.check_box :correct, class: "form-check-input" %>
                 <label class="form-check-label small text-muted">Correct</label>
@@ -126,6 +126,7 @@
 
       <div data-nested-form-target="items">
         <%= f.fields_for :options do |option| %>
+          <% opt_idx = (option.index.is_a?(Integer) ? option.index + 1 : 1) %>
           <div class="option-item mb-2 p-2 bg-white rounded-3 border">
             <div class="d-flex align-items-center gap-2">
               <div class="option-indicator text-muted">
@@ -133,9 +134,9 @@
               </div>
               <%= option.text_field :text, 
                   class: "form-control form-control-sm rounded-2",
-                  placeholder: "Option text",
+                  placeholder: "Option #{opt_idx}",
                   required: true,
-                  value: option.object.text.presence || "Option #{Time.now.to_i}" %>
+                  value: option.object.text %>
               <div class="form-check me-2">
                 <%= option.check_box :correct, class: "form-check-input" %>
                 <label class="form-check-label small text-muted">Correct</label>

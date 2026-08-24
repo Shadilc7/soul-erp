@@ -36,7 +36,9 @@ export default class extends Controller {
     const isMobile = window.innerWidth < 992
     
     if (isMobile) {
-      // Mobile: show/hide sidebar
+      // Mobile: show/hide sidebar and ensure full width/expanded state
+      sidebar.classList.remove('collapsed')
+      if (mainContent) mainContent.classList.remove('collapsed')
       sidebar.classList.toggle('show')
       if (this.hasBackdropTarget) {
         this.backdropTarget.classList.toggle('show')
@@ -62,6 +64,9 @@ export default class extends Controller {
     if (window.innerWidth >= 992) {
       sidebar.classList.remove('collapsed')
       if (mainContent) mainContent.classList.remove('collapsed')
+    } else {
+      sidebar.classList.remove('collapsed')
+      if (mainContent) mainContent.classList.remove('collapsed')
     }
   }
 
@@ -72,7 +77,9 @@ export default class extends Controller {
     const sidebar = this.sidebarTarget
     if (sidebar) {
       sidebar.classList.remove('show')
-      this.backdropTarget.classList.remove('show')
+      if (this.hasBackdropTarget) {
+        this.backdropTarget.classList.remove('show')
+      }
       document.body.style.overflow = ''
     }
   }
@@ -85,6 +92,13 @@ export default class extends Controller {
       this.hide()
       // Restore collapsed state for desktop
       this.loadSidebarState()
+    } else {
+      if (this.hasSidebarTarget) {
+        this.sidebarTarget.classList.remove('collapsed')
+      }
+      if (this.hasMainContentTarget) {
+        this.mainContentTarget.classList.remove('collapsed')
+      }
     }
   }
   

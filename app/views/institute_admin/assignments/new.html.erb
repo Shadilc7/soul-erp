@@ -102,37 +102,48 @@
   </style>
 <% end %>
 
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-3 px-md-4 py-4">
   <% if params[:mode] == 'custom' %>
     <!-- MODE B: CUSTOM ASSIGNMENT FORM BUILDER -->
-    <div class="d-flex align-items-center justify-content-between mb-4 bg-white p-3.5 rounded-4 border shadow-xs">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 bg-white p-3.5 p-md-4 rounded-4 shadow-sm border">
       <div class="d-flex align-items-center gap-3">
-        <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 fw-medium d-inline-flex align-items-center gap-1.5 shadow-xs" do %>
-          <i class="bi bi-arrow-left"></i> Back to Creation Modes
+        <%= link_to new_institute_admin_assignment_path, class: "btn btn-light bg-white border text-dark rounded-circle d-inline-flex align-items-center justify-content-center shadow-2xs hover-shadow-sm transition-all", title: "Back to Creation Modes", style: "width: 42px; height: 42px; flex-shrink: 0;" do %>
+          <i class="bi bi-arrow-left fs-5 text-dark"></i>
         <% end %>
-        <div class="vr text-secondary opacity-25"></div>
         <div>
-          <h4 class="fw-bold text-dark mb-0">Create Custom Assignment</h4>
+          <div class="d-flex align-items-center gap-2 mb-0.5">
+            <h4 class="fw-bold text-dark mb-0" style="letter-spacing: -0.02em;">Create Custom Assignment</h4>
+          </div>
           <p class="text-muted small mb-0">Configure dates, custom question pool, and section/participant allocations.</p>
         </div>
       </div>
-      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
-        <i class="bi bi-sliders me-1"></i> Custom Assignment Mode
-      </span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge rounded-pill px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.82rem;">
+          <i class="bi bi-sliders text-success"></i> Custom Assignment Mode
+        </span>
+      </div>
     </div>
 
     <%= render 'form' %>
 
   <% elsif params[:mode] == 'import_select' %>
     <!-- MODE C: DEDICATED QUESTION BANK & CATEGORY SELECTION PAGE -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 bg-white p-3.5 p-md-4 rounded-4 shadow-sm border">
       <div class="d-flex align-items-center gap-3">
-        <%= link_to new_institute_admin_assignment_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 fw-medium d-inline-flex align-items-center gap-1.5 shadow-xs" do %>
-          <i class="bi bi-arrow-left"></i> Back to Creation Modes
+        <%= link_to new_institute_admin_assignment_path, class: "btn btn-light bg-white border text-dark rounded-circle d-inline-flex align-items-center justify-content-center shadow-2xs hover-shadow-sm transition-all", title: "Back to Creation Modes", style: "width: 42px; height: 42px; flex-shrink: 0;" do %>
+          <i class="bi bi-arrow-left fs-5 text-dark"></i>
         <% end %>
-        <div class="vr text-secondary opacity-25"></div>
-        <span class="text-muted small fw-semibold text-primary">
-          <i class="bi bi-box-arrow-in-down me-1"></i> Question Bank Import Selection
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-0.5">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.72rem;">Step 1 of 2</span>
+            <h4 class="fw-bold text-dark mb-0" style="letter-spacing: -0.02em;">Import from Question Bank</h4>
+          </div>
+          <p class="text-muted small mb-0">Select a master admin Question Bank and choose which Categories to import as assignments.</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge rounded-pill px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs" style="background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.82rem;">
+          <i class="bi bi-box-arrow-in-down text-primary"></i> Question Bank Import Mode
         </span>
       </div>
     </div>

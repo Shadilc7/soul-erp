@@ -268,30 +268,14 @@ module InstituteAdmin
       )
     end
 
-    # Sanitize parameters to ensure no null values for options text
+    # Sanitize parameters
     def sanitize_question_params(params)
-      if params[:options_attributes].present?
-        opts = params[:options_attributes]
-        if opts.is_a?(Hash)
-          opts.each_value do |option_attrs|
-            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
-          end
-        elsif opts.is_a?(Array)
-          opts.each do |option_attrs|
-            option_attrs[:text] = "Option #{Time.now.to_i}" if option_attrs.is_a?(Hash) && option_attrs[:text].blank? && option_attrs[:_destroy] != "1"
-          end
-        end
-      end
       params
     end
 
-    # Ensure all options have text
+    # Ensure all options have text check
     def ensure_options_have_text(question)
-      question.options.each do |option|
-        if option.text.blank? && !option.marked_for_destruction?
-          option.text = "Option #{Time.now.to_i}"
-        end
-      end
+      # No-op: validation handled by Question model
     end
 
     def generate_questions_csv(questions)

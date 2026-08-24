@@ -1087,12 +1087,12 @@
             </div>
             <div id="new_form_q_options_container" class="d-flex flex-column gap-2">
               <div class="input-group input-group-sm">
-                <input type="text" class="form-control new-q-opt-text" placeholder="Option 1">
-                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
+                <input type="text" class="form-control new-q-opt-text" placeholder="Option 1" value="">
+                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove(); updateFormQuestionOptionPlaceholders('new');"><i class="bi bi-trash"></i></button>
               </div>
               <div class="input-group input-group-sm">
-                <input type="text" class="form-control new-q-opt-text" placeholder="Option 2">
-                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
+                <input type="text" class="form-control new-q-opt-text" placeholder="Option 2" value="">
+                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove(); updateFormQuestionOptionPlaceholders('new');"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           </div>
@@ -1340,6 +1340,21 @@
     if (wrapper) {
       if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
         wrapper.classList.remove('d-none');
+        const container = document.getElementById(`${prefix}_form_q_options_container`);
+        if (container) {
+          const inputs = container.querySelectorAll(`.${prefix}-q-opt-text`);
+          if (type === 'yes_or_no') {
+            if (inputs[0]) inputs[0].value = 'Yes';
+            if (inputs[1]) inputs[1].value = 'No';
+          } else {
+            inputs.forEach(input => {
+              if (input.value === 'Yes' || input.value === 'No') {
+                input.value = '';
+              }
+            });
+            updateFormQuestionOptionPlaceholders(prefix);
+          }
+        }
       } else {
         wrapper.classList.add('d-none');
       }
@@ -1361,14 +1376,24 @@
   function addFormQuestionOptionRow(prefix, text = '', id = '') {
     const container = document.getElementById(`${prefix}_form_q_options_container`);
     if (!container) return;
+    const count = container.querySelectorAll('.input-group').length + 1;
     const row = document.createElement('div');
     row.className = 'input-group input-group-sm mb-1';
     row.innerHTML = `
       ${id ? `<input type="hidden" class="${prefix}-q-opt-id" value="${id}">` : ''}
-      <input type="text" class="form-control ${prefix}-q-opt-text" value="${text.replace(/"/g, '&quot;')}" placeholder="Option text">
-      <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
+      <input type="text" class="form-control ${prefix}-q-opt-text" value="${text ? text.replace(/"/g, '&quot;') : ''}" placeholder="Option ${count}">
+      <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove(); updateFormQuestionOptionPlaceholders('${prefix}');"><i class="bi bi-trash"></i></button>
     `;
     container.appendChild(row);
+  }
+
+  function updateFormQuestionOptionPlaceholders(prefix) {
+    const container = document.getElementById(`${prefix}_form_q_options_container`);
+    if (!container) return;
+    const inputs = container.querySelectorAll(`.${prefix}-q-opt-text`);
+    inputs.forEach((input, idx) => {
+      input.placeholder = `Option ${idx + 1}`;
+    });
   }
 
   function submitNewFormQuestion(e) {
@@ -1644,8 +1669,8 @@
           addFormQuestionOptionRow('edit', opt.text || '', opt.id || '');
         });
       } else if (['multiple_choice', 'checkboxes', 'dropdown', 'yes_or_no'].includes(type)) {
-        addFormQuestionOptionRow('edit', 'Option 1');
-        addFormQuestionOptionRow('edit', 'Option 2');
+        addFormQuestionOptionRow('edit', (type === 'yes_or_no' ? 'Yes' : ''));
+        addFormQuestionOptionRow('edit', (type === 'yes_or_no' ? 'No' : ''));
       }
     }
 

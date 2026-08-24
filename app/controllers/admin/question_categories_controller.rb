@@ -4,7 +4,7 @@ module Admin
 
     def index
       @question_banks = QuestionBank.ordered
-      @categories = QuestionCategory.includes(:question_bank).ordered
+      @categories = QuestionCategory.master.includes(:question_bank).ordered
 
       if params[:question_bank_id].present?
         @selected_bank = QuestionBank.find_by(id: params[:question_bank_id])
@@ -19,10 +19,10 @@ module Admin
       category_ids = @categories.pluck(:id)
       @total_categories_count = category_ids.size
       @active_categories_count = @categories.where(active: true).count
-      @total_questions_count = Question.where(question_category_id: category_ids).count
+      @total_questions_count = Question.master.where(question_category_id: category_ids).count
       @total_bundles_count = QuestionBundle.where(question_category_id: category_ids).count
 
-      @questions_count_by_category_id = Question.where(question_category_id: category_ids).group(:question_category_id).count
+      @questions_count_by_category_id = Question.master.where(question_category_id: category_ids).group(:question_category_id).count
       @bundles_count_by_category_id = QuestionBundle.where(question_category_id: category_ids).group(:question_category_id).count
     end
 
@@ -109,7 +109,7 @@ module Admin
     private
 
     def set_category
-      @category = QuestionCategory.find(params[:id])
+      @category = QuestionCategory.master.find(params[:id])
     end
 
     def category_params

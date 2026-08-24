@@ -75,6 +75,7 @@ export default class extends Controller {
     // If coming from yes_or_no type, restore correct checkboxes
     if (type !== 'yes_or_no') {
       this.restoreCorrectCheckboxes()
+      this.clearOptionInputs()
     }
     
     // Show appropriate preview based on type
@@ -93,13 +94,17 @@ export default class extends Controller {
         this.optionsSectionTarget.style.display = 'block'
         this.updateOptionIndicators(type)
         
+        // Ensure option inputs have required attribute enabled
+        this.optionsSectionTarget.querySelectorAll('input[name*="[text]"]').forEach(input => {
+          input.required = true
+        })
+
         // Ensure we have at least two options
+        const nestedFormController = this.application.getControllerForElementAndIdentifier(
+          this.element, 'nested-form'
+        )
         const optionsCount = this.optionsSectionTarget.querySelectorAll('.option-item').length
         if (optionsCount < 2) {
-          // Use the nested form controller to add options
-          const nestedFormController = this.application.getControllerForElementAndIdentifier(
-            this.element, 'nested-form'
-          )
           if (nestedFormController) {
             if (optionsCount === 0) {
               nestedFormController.add()
@@ -108,6 +113,8 @@ export default class extends Controller {
               nestedFormController.add()
             }
           }
+        } else if (nestedFormController) {
+          nestedFormController.updatePlaceholders()
         }
         
         // Hide correct checkboxes for these question types
@@ -137,6 +144,20 @@ export default class extends Controller {
     }
   }
 
+  clearOptionInputs() {
+    const optionItems = this.optionsSectionTarget ? this.optionsSectionTarget.querySelectorAll('.option-item') : this.element.querySelectorAll('.option-item')
+    optionItems.forEach(item => {
+      const textField = item.querySelector('input[name*="[text]"]')
+      if (textField) {
+        textField.value = ''
+      }
+      const correctBox = item.querySelector('input[type="checkbox"][name*="[correct]"]')
+      if (correctBox) {
+        correctBox.checked = false
+      }
+    })
+  }
+
   hideAllPreviews() {
     console.log("Hiding all previews")
     this.shortAnswerPreviewTarget.classList.add('d-none')
@@ -145,8 +166,12 @@ export default class extends Controller {
     this.timePreviewTarget.classList.add('d-none')
     this.numberPreviewTarget.classList.add('d-none')
     
-    // Hide options section but don't remove it from DOM
+    // Hide options section and disable required attribute so non-option types can submit
     this.optionsSectionTarget.classList.add('d-none')
+    this.optionsSectionTarget.style.display = 'none'
+    this.optionsSectionTarget.querySelectorAll('input[name*="[text]"]').forEach(input => {
+      input.required = false
+    })
     this.showRatingOptions(false)
   }
 

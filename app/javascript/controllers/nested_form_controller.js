@@ -4,24 +4,21 @@ export default class extends Controller {
   static targets = ["template", "items"]
 
   connect() {
-    console.log("Nested form controller connected")
-    
     // Add at least two options for question types that require options
     const questionType = document.getElementById('question_question_type')?.value
-    const existingOptions = this.itemsTarget.querySelectorAll('.option-item')
-    
-    console.log("Question type:", questionType, "Existing options:", existingOptions.length)
+    const existingOptions = this.visibleOptionItems()
     
     if (['multiple_choice', 'checkboxes', 'dropdown'].includes(questionType) && existingOptions.length === 0) {
-      console.log("Adding default options")
       this.add()
       this.add()
     }
+
+    this.updatePlaceholders()
+    this.updateOptionIndicators()
   }
 
   add(event) {
     if (event) event.preventDefault()
-    console.log("Adding new option")
     
     // Get the template HTML and replace NEW_RECORD with a unique ID
     const timestamp = new Date().getTime()
@@ -30,32 +27,14 @@ export default class extends Controller {
     // Append the new option to the items container
     this.itemsTarget.insertAdjacentHTML('beforeend', content)
     
-    // Set default text for the newly added option
     const newOption = this.itemsTarget.lastElementChild
     const textField = newOption.querySelector('input[name*="[text]"]')
-    if (textField) {
-      const optionCount = this.itemsTarget.querySelectorAll('.option-item').length
-      textField.value = `Option ${optionCount}`
-      
-      // Add event listener to ensure field is never empty
-      textField.addEventListener('blur', () => {
-        if (!textField.value.trim()) {
-          textField.value = `Option ${optionCount}`
-        }
-      })
-      
-      // Add event listener to ensure field is never empty on form submission
-      const form = textField.closest('form')
-      if (form) {
-        form.addEventListener('submit', () => {
-          if (!textField.value.trim()) {
-            textField.value = `Option ${optionCount}`
-          }
-        })
-      }
+    if (textField && !textField.getAttribute('value')) {
+      textField.value = ''
     }
     
-    // Update the option indicators based on the current question type
+    // Update placeholders and indicators
+    this.updatePlaceholders()
     this.updateOptionIndicators()
   }
 
@@ -63,11 +42,10 @@ export default class extends Controller {
     event.preventDefault()
     
     const item = event.target.closest('.option-item')
-    const allItems = this.itemsTarget.querySelectorAll('.option-item')
+    const allVisible = this.visibleOptionItems()
     
     // Don't allow removing if there are only 2 options left
-    if (allItems.length <= 2) {
-      console.log("Cannot remove option - minimum 2 required")
+    if (allVisible.length <= 2) {
       return
     }
     
@@ -80,13 +58,29 @@ export default class extends Controller {
       // Otherwise just remove it from the DOM
       item.remove()
     }
+
+    this.updatePlaceholders()
   }
   
+  visibleOptionItems() {
+    return Array.from(this.itemsTarget.querySelectorAll('.option-item')).filter(
+      el => el.style.display !== 'none'
+    )
+  }
+
+  updatePlaceholders() {
+    const visibleOptions = this.visibleOptionItems()
+    visibleOptions.forEach((optionItem, index) => {
+      const textField = optionItem.querySelector('input[name*="[text]"]')
+      if (textField) {
+        textField.placeholder = `Option ${index + 1}`
+      }
+    })
+  }
+
   updateOptionIndicators() {
     const questionType = document.getElementById('question_question_type')?.value
     if (!questionType) return
-    
-    console.log("Updating option indicators for", questionType)
     
     const indicators = document.querySelectorAll('.option-indicator i')
     indicators.forEach(indicator => {

@@ -350,7 +350,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         backdrop-filter: blur(10px);
         position: relative;
-        z-index: 1050;
         overflow: visible;
       }
 
@@ -518,19 +517,61 @@
         transition: all 0.3s ease-in-out;
       }
 
-      @media (max-width: 991.98px) {
-        .sidebar {
+      @media (max-width: 992px) {
+        #sidebar {
           transform: translateX(-100%);
           box-shadow: none;
+          width: var(--sidebar-width) !important;
+          z-index: 1060 !important;
         }
 
-        .sidebar.show {
+        #sidebar.show {
           transform: translateX(0);
           box-shadow: 8px 0 24px rgba(0,0,0,0.3);
         }
 
-        .sidebar.collapsed {
-          width: var(--sidebar-width);
+        #sidebar .sidebar-header,
+        #sidebar.show .sidebar-header,
+        #sidebar.collapsed .sidebar-header {
+          justify-content: flex-start !important;
+          padding: 0 1.25rem !important;
+          display: flex !important;
+        }
+
+        #sidebar .sidebar-header .sidebar-logo-link,
+        #sidebar.show .sidebar-header .sidebar-logo-link,
+        #sidebar.collapsed .sidebar-header .sidebar-logo-link,
+        #sidebar .sidebar-header .sidebar-logo,
+        #sidebar.show .sidebar-header .sidebar-logo,
+        #sidebar.collapsed .sidebar-header .sidebar-logo {
+          display: flex !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        #sidebar .nav-link span,
+        #sidebar.show .nav-link span,
+        #sidebar.collapsed .nav-link span,
+        #sidebar .btn span,
+        #sidebar.show .btn span,
+        #sidebar.collapsed .btn span {
+          display: inline-block !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .sidebar-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(4px);
+          z-index: 1055 !important;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease-in-out;
         }
 
         .sidebar-backdrop.show {
@@ -541,12 +582,18 @@
         #main-content {
           margin-left: 0 !important;
         }
+
+        .topbar {
+          padding: 0 1rem;
+          position: relative;
+          z-index: 10;
+        }
       }
 
       /* ── Profile Switcher ─────────────────────────────── */
       .profile-switcher {
         position: relative;
-        z-index: 1051;
+        z-index: 100;
       }
 
       .profile-avatar-btn {
@@ -607,7 +654,7 @@
         border-radius: 16px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.06);
         border: 1px solid rgba(99, 102, 241, 0.1);
-        z-index: 9999;
+        z-index: 1040;
         overflow: hidden;
         opacity: 0;
         transform: translateY(-8px) scale(0.97);
@@ -933,7 +980,7 @@
       <div id="main-content" data-sidebar-target="mainContent">
         <!-- Topbar -->
         <div class="topbar d-flex align-items-center justify-content-between">
-          <button class="hamburger-btn d-lg-none" data-action="sidebar#toggle">
+          <button class="hamburger-btn mobile-toggle d-lg-none" data-action="click->sidebar#toggle" type="button" aria-label="Toggle Sidebar">
             <i class="bi bi-list"></i>
           </button>
 

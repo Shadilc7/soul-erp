@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_22_213500) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_24_055023) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -227,7 +227,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_213500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "value"
-    t.string "text", default: "Default Option", null: false
+    t.string "text"
     t.index ["question_id"], name: "index_options_on_question_id"
   end
 

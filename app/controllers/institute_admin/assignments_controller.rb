@@ -72,8 +72,8 @@ module InstituteAdmin
       end
 
       @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
-      @sections = current_institute.sections.active.joins(:participants).distinct
-      @participants = current_institute.participants.active.includes(:user)
+      @sections = current_institute.sections.active.joins(:participants).distinct.order(:name)
+      @participants = current_institute.participants.active.includes(:user).ordered_by_name
     end
 
     def finalize_import
@@ -458,10 +458,10 @@ module InstituteAdmin
     private
 
     def set_form_variables
-      @sections = current_institute.sections.active
-      @selected_sections = @assignment.sections
-      @selected_participants = @assignment.participants.includes(:user)
-      @participants = current_institute.participants.active.includes(:user)
+      @sections = current_institute.sections.active.order(:name)
+      @selected_sections = @assignment.sections.order(:name)
+      @selected_participants = @assignment.participants.includes(:user).ordered_by_name
+      @participants = current_institute.participants.active.includes(:user).ordered_by_name
       @grouped_questions = @assignment.edit_questions_grouped_by_bundle
       @custom_questions = current_institute.questions.includes(:options).order(position: :asc, created_at: :desc)
       @available_question_banks = QuestionBank.where(active: true).includes(:question_categories).order(:name)

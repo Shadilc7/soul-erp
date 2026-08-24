@@ -78,6 +78,7 @@ class Question < ApplicationRecord
   # Add scope for active and ordered questions
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(position: :asc, created_at: :desc) }
+  scope :master, -> { where(institute_id: nil) }
 
   before_destroy :check_assignment_associations, prepend: true
   after_save :sync_question_bundle_items
@@ -124,20 +125,16 @@ class Question < ApplicationRecord
 
   def validate_options_and_answers
     if requires_options?
-      if options.size < 2
-        errors.add(:options, "must have at least 2 options")
-      end
-
-      # Ensure all options have text
-      options.each do |option|
-        if option.text.blank? && !option.marked_for_destruction?
-          option.text = "Option #{Time.now.to_i}"
-        end
+      valid_options = options.reject(&:marked_for_destruction?)
+      if valid_options.size < 2
+        errors.add(:base, "Questions requiring options must have at least 2 options")
       end
     end
   end
 
   def check_assignment_associations
+    return if institute_id.nil?
+
     if assignments.exists?
       errors.add(:base, "This question cannot be deleted because it is being used in #{assignments.count} #{'assignment'.pluralize(assignments.count)}")
       throw :abort
