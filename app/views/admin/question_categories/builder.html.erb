@@ -293,8 +293,7 @@
                   <div class="card border rounded-4 bg-white shadow-sm p-2"
                        data-bundle-builder-target="bundleDropZone"
                        data-bundle-id="<%= bundle.id %>"
-                       data-bundle-name="<%= bundle.name %>"
-                       data-action="dragover->bundle-builder#dragOver dragleave->bundle-builder#dragLeave drop->bundle-builder#drop">
+                       data-bundle-name="<%= bundle.name %>">
                     <!-- Bundle Card Header -->
                     <div class="card-header bg-white border-0 pb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
                       <div class="d-flex align-items-center flex-wrap gap-2">
@@ -332,8 +331,7 @@
 
                       <div class="d-flex flex-column gap-2.5 bundle-items-container" 
                            id="bundle_items_<%= bundle.id %>"
-                           data-bundle-id="<%= bundle.id %>" 
-                           data-action="dragover->bundle-builder#bundleItemDragOver drop->bundle-builder#bundleItemDrop">
+                           data-bundle-id="<%= bundle.id %>">
                         <% bundle.question_bundle_items.each_with_index do |item, idx| %>
                           <%= render partial: "admin/question_bundles/bundle_question_item", locals: { bundle: bundle, item: item, idx: idx } %>
                         <% end %>

@@ -29,7 +29,7 @@ export default class extends Controller {
         animation: 150,
         sort: true,
         handle: ".drag-handle",
-        filter: "button, a, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, i, svg",
+        filter: "button, button *, a, a *, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, .gradient-action-btn *",
         preventOnFilter: false,
         onEnd: async (evt) => {
           this.updatePoolSerialNumbers()
@@ -68,7 +68,7 @@ export default class extends Controller {
       },
       animation: 150,
       handle: ".drag-handle",
-      filter: "button, a, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, i, svg",
+      filter: "button, button *, a, a *, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, .gradient-action-btn *",
       preventOnFilter: false,
       onAdd: async (evt) => {
         const itemEl = evt.item
@@ -370,18 +370,33 @@ export default class extends Controller {
     const zone = event.currentTarget.closest('[data-bundle-builder-target="bundleDropZone"]') || event.currentTarget
     zone.classList.remove("border-primary", "bg-primary-subtle", "shadow-sm")
 
-    const questionId = event.dataTransfer.getData("text/plain")
-    const bundleId = zone.dataset.bundleId
-    const bundleName = zone.dataset.bundleName
-
     if (this.draggedBundleItem) {
       const container = this.draggedBundleItem.parentNode
       this.updateBundleSerialNumbers(container)
-      const bId = container.dataset.bundleId || bundleId
+      const bId = container.dataset.bundleId || zone.dataset.bundleId
       await this.saveBundleQuestionsOrder(bId, container)
       this.draggedBundleItem = null
       return
     }
+
+    let questionId = null
+    try {
+      const jsonData = event.dataTransfer.getData("application/json")
+      if (jsonData) {
+        const parsed = JSON.parse(jsonData)
+        if (parsed && parsed.id) questionId = parsed.id
+      }
+    } catch (e) {}
+
+    if (!questionId) {
+      const rawText = event.dataTransfer.getData("text/plain")?.trim()
+      if (rawText && /^\d+$/.test(rawText)) {
+        questionId = rawText
+      }
+    }
+
+    const bundleId = zone.dataset.bundleId
+    const bundleName = zone.dataset.bundleName
 
     if (!questionId || !bundleId) return
 
@@ -425,7 +440,10 @@ export default class extends Controller {
             window.Turbo.renderStreamMessage(streamHtml)
           }
           const container = document.getElementById(`bundle_items_${bundleId}`)
-          if (container) this.updateBundleSerialNumbers(container)
+          if (container) {
+            this.updateBundleSerialNumbers(container)
+            this.initBundleContainerSortable(container)
+          }
         } else {
           const data = await response.json()
           this.showToast(data.message, data.status === "warning" ? "warning" : "success")
@@ -441,9 +459,10 @@ export default class extends Controller {
 
   // --- Helper Methods ---
   async assignQuestionToBundle(questionId, bundleId, bundleName, zone) {
-    if (!questionId || !bundleId) return
+    const qIdStr = String(questionId).trim()
+    if (!qIdStr || !/^\d+$/.test(qIdStr) || !bundleId) return
 
-    const lockKey = `${questionId}_${bundleId}`
+    const lockKey = `${qIdStr}_${bundleId}`
     if (!this.pendingAssignments) this.pendingAssignments = new Set()
     if (this.pendingAssignments.has(lockKey)) {
       return
@@ -458,7 +477,7 @@ export default class extends Controller {
           "X-CSRF-Token": this.csrfToken,
           "Accept": "text/vnd.turbo-stream.html, application/json"
         },
-        body: JSON.stringify({ question_id: questionId })
+        body: JSON.stringify({ question_id: qIdStr })
       })
 
       if (response.ok) {
@@ -469,7 +488,10 @@ export default class extends Controller {
             window.Turbo.renderStreamMessage(streamHtml)
           }
           const container = zone || document.getElementById(`bundle_items_${bundleId}`)
-          if (container) this.updateBundleSerialNumbers(container)
+          if (container) {
+            this.updateBundleSerialNumbers(container)
+            this.initBundleContainerSortable(container)
+          }
         } else {
           const data = await response.json()
           this.showToast(data.message, data.status === "warning" ? "warning" : "success")

@@ -63,6 +63,11 @@ module Admin
       else
         render_already_added_warning(@item.errors.full_messages.to_sentence)
       end
+    rescue ActiveRecord::RecordNotFound
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.append("toast-container", partial: "admin/question_bundles/toast", formats: [:html], locals: { message: "Question not found", type: "danger" }) }
+        format.json { render json: { status: "error", message: "Question not found" }, status: :not_found }
+      end
     rescue ActiveRecord::RecordNotUnique
       render_already_added_warning
     end
