@@ -5,10 +5,8 @@
 
 <div class="bundle-question-item bg-white p-2.5 p-sm-3 rounded-3 border shadow-sm position-relative mb-2" 
      id="bundle_item_<%= bundle.id %>_<%= q.id %>"
-     draggable="true"
      data-question-id="<%= q.id %>"
-     data-action="dragstart->bundle-builder#bundleItemDragStart dragend->bundle-builder#bundleItemDragEnd"
-     style="cursor: grab; overflow: hidden;">
+     style="overflow: hidden;">
   
   <div class="d-flex align-items-start gap-2">
     <!-- Controls Column (Drag Handle, Chevrons, Serial Badge) -->

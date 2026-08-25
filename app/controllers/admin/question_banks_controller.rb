@@ -50,10 +50,10 @@ module Admin
     def destroy
       name = @question_bank.name
       if @question_bank.destroy
-        redirect_to admin_question_banks_path, notice: "Question Bank '#{name}' was deleted."
+        redirect_to admin_question_banks_path, notice: "Question Bank '#{name}' was deleted.", status: :see_other
       else
         error_msg = @question_bank.errors.full_messages.to_sentence.presence || "Cannot delete Question Bank '#{name}' because it contains categories in use by assignments."
-        redirect_to admin_question_banks_path, alert: error_msg
+        redirect_to admin_question_banks_path, alert: error_msg, status: :see_other
       end
     end
 

@@ -138,7 +138,10 @@ function cleanupModalBackdrops() {
     document.querySelectorAll('.modal.show').forEach(modalEl => {
       try {
         const modalInstance = bs?.Modal?.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
+        if (modalInstance) {
+          modalInstance.hide();
+          modalInstance.dispose();
+        }
       } catch (e) {}
       modalEl.classList.remove('show');
       modalEl.style.display = 'none';
@@ -232,6 +235,10 @@ document.addEventListener('turbo:visit', () => {
   cleanupModalBackdrops();
 });
 
+document.addEventListener('turbo:before-visit', () => {
+  cleanupModalBackdrops();
+});
+
 // Clean up lingering modal backdrops before Turbo caches page snapshot
 document.addEventListener('turbo:before-cache', () => {
   cleanupModalBackdrops();
@@ -240,6 +247,25 @@ document.addEventListener('turbo:before-cache', () => {
 // Clean up components before navigation
 document.addEventListener('turbo:before-render', () => {
   cleanupBootstrapComponents();
+});
+
+// Close modal backdrop automatically when clicking links inside modals
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.modal a[href]');
+  if (link) {
+    const modalEl = link.closest('.modal');
+    if (modalEl) {
+      try {
+        const bs = typeof window !== 'undefined' ? window.bootstrap : null;
+        const instance = bs?.Modal?.getInstance(modalEl);
+        if (instance) {
+          instance.hide();
+          instance.dispose();
+        }
+      } catch (err) {}
+    }
+    cleanupModalBackdrops();
+  }
 });
 
 // Close modal backdrop automatically when submitting forms inside modals

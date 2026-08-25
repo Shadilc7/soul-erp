@@ -106,15 +106,12 @@
         <!-- Question Cards List -->
         <div class="card-body p-2 p-sm-3 overflow-auto" style="max-height: 720px;">
           <% if @questions.size > 0 %>
-            <div class="d-flex flex-column gap-3" id="question-pool-container" data-action="dragover->bundle-builder#poolDragOver drop->bundle-builder#poolDrop">
+            <div class="d-flex flex-column gap-3" id="question-pool-container">
               <% @questions.each_with_index do |q, index| %>
                 <div class="card border border-light-subtle rounded-3 p-2.5 p-sm-3 bg-white shadow-sm hover-shadow transition-all position-relative pool-question-card" 
-                     draggable="true" 
                      data-bundle-builder-target="questionItem" 
                      data-question-id="<%= q.id %>"
-                     data-question-title="<%= q.title %>"
-                     data-action="dragstart->bundle-builder#dragStart dragend->bundle-builder#dragEnd"
-                     style="cursor: grab;">
+                     data-question-title="<%= q.title %>">
 
                   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                     <div class="d-flex align-items-center flex-wrap gap-1.5 min-w-0">
@@ -135,26 +132,25 @@
                       </span>
 
                       <!-- Re-order buttons -->
-                      <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5" draggable="false">
-                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" draggable="false" data-action="click->bundle-builder#moveUp">
-                          <i class="bi bi-chevron-up" style="font-size: 0.75rem;" draggable="false"></i>
+                      <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5">
+                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" data-action="click->bundle-builder#moveUp">
+                          <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
                         </button>
-                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" draggable="false" data-action="click->bundle-builder#moveDown">
-                          <i class="bi bi-chevron-down" style="font-size: 0.75rem;" draggable="false"></i>
+                        <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" data-action="click->bundle-builder#moveDown">
+                          <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
                         </button>
                       </div>
                     </div>
 
                     <!-- Quick Action Buttons & Dropdown Menu -->
-                    <div class="d-flex align-items-center flex-shrink-0 ms-auto" style="gap: 6px;" draggable="false" onmousedown="event.stopPropagation();">
+                    <div class="d-flex align-items-center flex-shrink-0 ms-auto" style="gap: 6px;">
                       <!-- View Button -->
                       <button type="button" 
                               class="btn p-0 border-0 text-white d-flex align-items-center justify-content-center shadow-xs gradient-action-btn" 
                               title="View Question Details" 
                               data-bs-toggle="modal" 
                               data-bs-target="#viewQuestionModal<%= q.id %>"
-                              style="width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);"
-                              draggable="false">
+                              style="width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
                         <i class="bi bi-eye" style="font-size: 0.85rem; color: #fff;"></i>
                       </button>
 
@@ -162,23 +158,21 @@
                       <%= link_to edit_admin_question_category_question_path(@category, q), 
                                   class: "btn p-0 border-0 text-white d-flex align-items-center justify-content-center shadow-xs gradient-action-btn", 
                                   title: "Edit Question",
-                                  style: "width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #4c1d95 0%, #c026d3 100%);",
-                                  draggable: "false" do %>
+                                  style: "width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: linear-gradient(135deg, #4c1d95 0%, #c026d3 100%);" do %>
                         <i class="bi bi-pencil" style="font-size: 0.85rem; color: #fff;"></i>
                       <% end %>
 
                       <!-- 3-Dots Dropdown Button (Light Circular Style) -->
-                      <div class="dropdown d-inline-block" draggable="false">
+                      <div class="dropdown d-inline-block">
                         <button class="btn btn-sm btn-light text-secondary border rounded-circle p-1 d-flex align-items-center justify-content-center shadow-xs" 
                                 type="button" 
                                 id="q_dropdown_btn_<%= q.id %>"
                                 data-bs-toggle="dropdown" 
                                 data-bs-auto-close="true"
                                 aria-expanded="false" 
-                                draggable="false"
                                 title="More Options"
                                 style="width: 28px; height: 28px; min-width: 28px;">
-                          <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem; pointer-events: none;" draggable="false"></i>
+                          <i class="bi bi-three-dots-vertical" style="font-size: 0.85rem; pointer-events: none;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 small" aria-labelledby="q_dropdown_btn_<%= q.id %>" style="z-index: 1060;">
                           <li>
@@ -261,71 +255,6 @@
                 </div>
               <% end %>
             </div>
-
-            <!-- Modals container outside #question-pool-container -->
-            <div id="question-modals-container">
-              <% @questions.each do |q| %>
-                <div class="modal fade" id="viewQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content rounded-4 border-0 shadow-lg">
-                      <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
-                          <i class="bi bi-eye-fill text-success"></i> Question Details
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                      </div>
-                      <div class="modal-body p-4">
-                        <div class="mb-3">
-                          <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
-                            <%= q.question_type.titleize %>
-                          </span>
-                          <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
-                          <% if q.display_name.present? %>
-                            <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
-                          <% end %>
-                          <% if q.description.present? %>
-                            <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
-                          <% end %>
-                        </div>
-
-                        <% if q.requires_options? && q.options.any? %>
-                          <div class="mb-3">
-                            <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
-                            <div class="list-group rounded-3">
-                              <% q.options.each_with_index do |opt, opt_idx| %>
-                                <div class="list-group-item d-flex align-items-center justify-content-between">
-                                  <span><%= opt_idx + 1 %>. <%= opt.text %></span>
-                                  <% if opt.correct? %>
-                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
-                                  <% end %>
-                                </div>
-                              <% end %>
-                            </div>
-                          </div>
-                        <% elsif q.rating? %>
-                          <div class="mb-3">
-                            <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
-                          </div>
-                        <% end %>
-
-                        <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
-                          <span class="text-muted small">Active Question Schedule:</span>
-                          <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
-                            <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
-                          </span>
-                        </div>
-                      </div>
-                      <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
-                        <%= link_to edit_admin_question_category_question_path(@category, q), class: "btn btn-primary rounded-3 px-3" do %>
-                          <i class="bi bi-pencil me-1"></i> Edit Question
-                        <% end %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
           <% else %>
             <div class="text-center py-5 text-muted">
               <i class="bi bi-journal-x fs-1 opacity-50 d-block mb-2"></i>
@@ -394,49 +323,6 @@
                       </div>
                     </div>
 
-                    <!-- Modal: Edit Bundle -->
-                    <div class="modal fade" id="editBundleModal<%= bundle.id %>" tabindex="-1" aria-hidden="true">
-                      <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content rounded-4 border-0 shadow-lg">
-                          <div class="modal-header border-0 pb-0">
-                            <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
-                              <i class="bi bi-pencil-square text-primary"></i> Edit Bundle / Part
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                          </div>
-                          <%= form_with(model: [@category, bundle], url: admin_question_category_bundle_path(@category, bundle), method: :patch, local: true) do |f| %>
-                            <div class="modal-body pt-3">
-                              <div class="mb-3">
-                                <%= f.label :name, "Bundle / Part Name", class: "form-label fw-semibold" %>
-                                <%= f.text_field :name, class: "form-control rounded-3", required: true %>
-                              </div>
-
-                              <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                  <%= f.label :from_day, "From Day", class: "form-label fw-semibold" %>
-                                  <%= f.number_field :from_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
-                                </div>
-                                <div class="col-6">
-                                  <%= f.label :to_day, "To Day", class: "form-label fw-semibold" %>
-                                  <%= f.number_field :to_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
-                                </div>
-                                <div class="form-text text-muted small">Active schedule range within Category Duration (1 to <%= @category.duration_days %> Days).</div>
-                              </div>
-
-                              <div class="mb-3">
-                                <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold" %>
-                                <%= f.text_area :description, rows: 2, class: "form-control rounded-3" %>
-                              </div>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                              <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                              <%= f.submit "Save Changes", class: "btn btn-primary rounded-3 px-4" %>
-                            </div>
-                          <% end %>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Dropzone for questions -->
                     <div class="card-body bg-light-subtle rounded-3 p-2.5 min-vh-10"
                          data-bundle-id="<%= bundle.id %>"
@@ -471,6 +357,118 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Question Modals (outside scrollable containers) -->
+<div id="question-modals-container">
+  <% @questions.each do |q| %>
+    <div class="modal fade" id="viewQuestionModal<%= q.id %>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+          <div class="modal-header border-bottom-0 pb-0">
+            <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+              <i class="bi bi-eye-fill text-success"></i> Question Details
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <span class="badge bg-secondary-subtle text-dark text-uppercase px-2.5 py-1 mb-2" style="font-size: 0.75rem;">
+                <%= q.question_type.titleize %>
+              </span>
+              <h4 class="fw-bold text-dark mb-1"><%= q.title %></h4>
+              <% if q.display_name.present? %>
+                <p class="text-muted small mb-2">Display Name: <%= q.display_name %></p>
+              <% end %>
+              <% if q.description.present? %>
+                <div class="p-3 bg-light rounded-3 text-muted small mb-3"><%= q.description %></div>
+              <% end %>
+            </div>
+
+            <% if q.requires_options? && q.options.any? %>
+              <div class="mb-3">
+                <h6 class="fw-semibold text-dark mb-2">Answer Options (<%= q.options.size %>):</h6>
+                <div class="list-group rounded-3">
+                  <% q.options.each_with_index do |opt, opt_idx| %>
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                      <span><%= opt_idx + 1 %>. <%= opt.text %></span>
+                      <% if opt.correct? %>
+                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Correct</span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% elsif q.rating? %>
+              <div class="mb-3">
+                <h6 class="fw-semibold text-dark mb-1">Max Rating Scale: <%= q.max_rating || 5 %> Stars</h6>
+              </div>
+            <% end %>
+
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+              <span class="text-muted small">Active Question Schedule:</span>
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                <i class="bi bi-clock-history me-1"></i><%= q.day_range_text %>
+              </span>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+            <%= link_to edit_admin_question_category_question_path(@category, q), class: "btn btn-primary rounded-3 px-3" do %>
+              <i class="bi bi-pencil me-1"></i> Edit Question
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Bundle Edit Modals (outside scrollable containers) -->
+<div id="bundle-edit-modals-container">
+  <% @bundles.each do |bundle| %>
+    <div class="modal fade" id="editBundleModal<%= bundle.id %>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title font-weight-bold d-flex align-items-center gap-2">
+              <i class="bi bi-pencil-square text-primary"></i> Edit Bundle / Part
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <%= form_with(model: [@category, bundle], url: admin_question_category_bundle_path(@category, bundle), method: :patch, local: true) do |f| %>
+            <div class="modal-body pt-3">
+              <div class="mb-3">
+                <%= f.label :name, "Bundle / Part Name", class: "form-label fw-semibold" %>
+                <%= f.text_field :name, class: "form-control rounded-3", required: true %>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <%= f.label :from_day, "From Day", class: "form-label fw-semibold" %>
+                  <%= f.number_field :from_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
+                </div>
+                <div class="col-6">
+                  <%= f.label :to_day, "To Day", class: "form-label fw-semibold" %>
+                  <%= f.number_field :to_day, class: "form-control rounded-3", min: 1, max: @category.duration_days, required: true %>
+                </div>
+                <div class="form-text text-muted small">Active schedule range within Category Duration (1 to <%= @category.duration_days %> Days).</div>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :description, "Description (Optional)", class: "form-label fw-semibold" %>
+                <%= f.text_area :description, rows: 2, class: "form-control rounded-3" %>
+              </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+              <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+              <%= f.submit "Save Changes", class: "btn btn-primary rounded-3 px-4" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 <!-- Modal: New Bundle Creation -->

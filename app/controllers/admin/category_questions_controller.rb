@@ -78,6 +78,7 @@ module Admin
     def duplicate
       new_question = @question.dup
       new_question.title = "Copy of #{@question.title}"
+      new_question.position = nil
       new_question.validate_options_on_save = false if new_question.respond_to?(:validate_options_on_save=)
 
       ActiveRecord::Base.transaction do
