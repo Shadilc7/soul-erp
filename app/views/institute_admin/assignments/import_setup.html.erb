@@ -1578,6 +1578,7 @@
     // 5. Overlap check with other bundles under category catId
     let overlapFound = false;
     let overlapBundleName = '';
+    let overlapRangeText = '';
 
     document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`).forEach(container => {
       const bId = container.dataset.bundleId;
@@ -1592,14 +1593,15 @@
 
           if (fromVal <= otherT && toVal >= otherF) {
             overlapFound = true;
-            overlapBundleName = otherNameInput ? otherNameInput.value : `Bundle #${bId}`;
+            overlapBundleName = (otherNameInput && otherNameInput.value.trim()) ? otherNameInput.value.trim() : `Bundle #${bId}`;
+            overlapRangeText = (otherF === otherT) ? `Day ${otherF}` : `Day ${otherF} - ${otherT}`;
           }
         }
       }
     });
 
     if (overlapFound) {
-      showBundleModalError(errorBox, `Bundle day range (Day ${fromVal} - ${toVal}) overlaps with existing bundle '${overlapBundleName}'.`);
+      showBundleModalError(errorBox, `Bundle day range (Day ${fromVal} - ${toVal}) overlaps with existing bundle '${overlapBundleName}' (${overlapRangeText}). Please choose a non-overlapping day range.`);
       return;
     }
 
@@ -2149,12 +2151,49 @@
     }
   }
 
+  function prepareNewBundleModal(catId) {
+    const catCard = document.getElementById(`category_card_${catId}`);
+    let categoryDuration = 30;
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10) || 30;
+    }
+
+    let maxExistingTo = 0;
+    document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`).forEach(container => {
+      const bId = container.dataset.bundleId;
+      const otherToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+      if (otherToInput) {
+        const tVal = parseInt(otherToInput.value, 10) || 0;
+        if (tVal > maxExistingTo) maxExistingTo = tVal;
+      }
+    });
+
+    const nameInput = document.getElementById(`new_bundle_name_${catId}`);
+    const fromInput = document.getElementById(`new_bundle_from_${catId}`);
+    const toInput = document.getElementById(`new_bundle_to_${catId}`);
+    const descInput = document.getElementById(`new_bundle_desc_${catId}`);
+    const errorBox = document.getElementById(`new_bundle_error_${catId}`);
+
+    if (errorBox) hideBundleModalError(errorBox);
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+
+    const nextFrom = Math.min(maxExistingTo + 1, categoryDuration);
+    if (fromInput) fromInput.value = nextFrom > 0 ? nextFrom : 1;
+    if (toInput) toInput.value = categoryDuration;
+  }
+
   function addNewBundleCard(catId, categoryDuration) {
     const nameInput = document.getElementById(`new_bundle_name_${catId}`);
     const fromInput = document.getElementById(`new_bundle_from_${catId}`);
     const toInput = document.getElementById(`new_bundle_to_${catId}`);
     const descInput = document.getElementById(`new_bundle_desc_${catId}`);
     const errorBox = document.getElementById(`new_bundle_error_${catId}`);
+
+    const catCard = document.getElementById(`category_card_${catId}`);
+    if (catCard && catCard.dataset.categoryDuration) {
+      categoryDuration = parseInt(catCard.dataset.categoryDuration, 10);
+    }
 
     if (!nameInput || !fromInput || !toInput) return;
 
@@ -2183,6 +2222,34 @@
         showBundleModalError(errorBox, `Bundle day range cannot exceed category duration of ${categoryDuration} days.`);
         return;
       }
+    }
+
+    // Overlap check with existing bundles under category catId
+    let overlapFound = false;
+    let overlapBundleName = '';
+    let overlapRangeText = '';
+
+    document.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`).forEach(container => {
+      const bId = container.dataset.bundleId;
+      const otherFromInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+      const otherToInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+      const otherNameInput = document.getElementById(`bundle_input_name_${catId}_${bId}`);
+
+      if (otherFromInput && otherToInput) {
+        const otherF = parseInt(otherFromInput.value, 10) || 1;
+        const otherT = parseInt(otherToInput.value, 10) || categoryDuration || 30;
+
+        if (fromVal <= otherT && toVal >= otherF) {
+          overlapFound = true;
+          overlapBundleName = (otherNameInput && otherNameInput.value.trim()) ? otherNameInput.value.trim() : `Bundle #${bId}`;
+          overlapRangeText = (otherF === otherT) ? `Day ${otherF}` : `Day ${otherF} - ${otherT}`;
+        }
+      }
+    });
+
+    if (overlapFound) {
+      showBundleModalError(errorBox, `Bundle day range (Day ${fromVal} - ${toVal}) overlaps with existing bundle '${overlapBundleName}' (${overlapRangeText}). Please choose a non-overlapping day range.`);
+      return;
     }
 
     hideBundleModalError(errorBox);
@@ -2313,6 +2380,38 @@
           errorMessages.push(`End date cannot be earlier than start date for "${titleInput ? titleInput.value : 'Assignment'}".`);
         }
       }
+
+      // Validate that no bundles in this category have overlapping day ranges
+      const bundleContainers = card.querySelectorAll(`.cat-bundle-hidden-inputs-${catId}`);
+      const bundlesList = [];
+      bundleContainers.forEach(container => {
+        const bId = container.dataset.bundleId;
+        const fInput = document.getElementById(`bundle_input_from_${catId}_${bId}`);
+        const tInput = document.getElementById(`bundle_input_to_${catId}_${bId}`);
+        const nInput = document.getElementById(`bundle_input_name_${catId}_${bId}`);
+        if (fInput && tInput) {
+          bundlesList.push({
+            id: bId,
+            name: (nInput && nInput.value.trim()) ? nInput.value.trim() : `Bundle #${bId}`,
+            from: parseInt(fInput.value, 10) || 1,
+            to: parseInt(tInput.value, 10) || 30
+          });
+        }
+      });
+
+      for (let i = 0; i < bundlesList.length; i++) {
+        for (let j = i + 1; j < bundlesList.length; j++) {
+          const bA = bundlesList[i];
+          const bB = bundlesList[j];
+          if (bA.from <= bB.to && bA.to >= bB.from) {
+            hasError = true;
+            const catTitle = titleInput ? titleInput.value : `Category #${catId}`;
+            const bARange = (bA.from === bA.to) ? `Day ${bA.from}` : `Day ${bA.from} - ${bA.to}`;
+            const bBRange = (bB.from === bB.to) ? `Day ${bB.from}` : `Day ${bB.from} - ${bB.to}`;
+            errorMessages.push(`In "${catTitle}": Bundle '${bA.name}' (${bARange}) overlaps with bundle '${bB.name}' (${bBRange}). Please ensure bundle day ranges do not overlap.`);
+          }
+        }
+      }
     });
 
     if (hasError) {
@@ -2340,10 +2439,23 @@
     return true;
   }
 
+  function setupNewBundleModalListeners() {
+    document.querySelectorAll('[id^="newBundleModal_"]').forEach(modalEl => {
+      if (!modalEl.dataset.listenerAttached) {
+        modalEl.dataset.listenerAttached = 'true';
+        modalEl.addEventListener('show.bs.modal', function () {
+          const catId = modalEl.id.replace('newBundleModal_', '');
+          prepareNewBundleModal(catId);
+        });
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     setupFlatpickrInstances();
     initBundleSortables();
     setupGlobalCollapseIconListener();
+    setupNewBundleModalListeners();
     const catCards = document.querySelectorAll('.category-assignment-card');
     catCards.forEach(card => {
       const catId = card.id.replace('category_card_', '');
@@ -2355,5 +2467,6 @@
     setupFlatpickrInstances();
     initBundleSortables();
     setupGlobalCollapseIconListener();
+    setupNewBundleModalListeners();
   });
 </script>
