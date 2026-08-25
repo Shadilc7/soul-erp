@@ -1,4 +1,4 @@
-<%= form_with(model: [:institute_admin, @assignment], local: true, data: { controller: "assignment-form" }) do |f| %>
+<%= form_with(model: [:institute_admin, @assignment], local: true, html: { novalidate: true }, data: { controller: "assignment-form" }) do |f| %>
   <!-- Hidden default fields -->
   <%= hidden_field_tag "assignment[question_ids][]", nil %>
 
@@ -974,9 +974,10 @@
       </div>
       <form id="newFormBundleForm" onsubmit="submitNewFormBundle(event)">
         <div class="modal-body p-4">
+          <div id="new_form_bundle_error" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3"></div>
           <div class="mb-3">
             <label class="form-label small fw-bold text-dark">Bundle Name <span class="text-danger">*</span></label>
-            <input type="text" id="new_form_bundle_name" class="form-control rounded-3" placeholder="e.g. Part 3 - Reflection" required>
+            <input type="text" id="new_form_bundle_name" class="form-control rounded-3" placeholder="e.g. Part 3 - Reflection">
           </div>
           <div class="row g-3">
             <div class="col-6">
@@ -1011,9 +1012,10 @@
       <form id="editFormBundleForm" onsubmit="submitEditFormBundle(event)">
         <input type="hidden" id="edit_form_bundle_id">
         <div class="modal-body p-4">
+          <div id="edit_form_bundle_error" class="alert alert-danger d-none py-2 px-3 rounded-3 small mb-3"></div>
           <div class="mb-3">
             <label class="form-label small fw-bold text-dark">Bundle Name <span class="text-danger">*</span></label>
-            <input type="text" id="edit_form_bundle_name" class="form-control rounded-3" required>
+            <input type="text" id="edit_form_bundle_name" class="form-control rounded-3">
           </div>
           <div class="row g-3">
             <div class="col-6">
@@ -1052,7 +1054,7 @@
           <div class="row g-3 mb-3">
             <div class="col-md-8">
               <label class="form-label small fw-bold text-dark">Question Title <span class="text-danger">*</span></label>
-              <input type="text" id="new_form_q_title" class="form-control rounded-3" placeholder="Enter question title..." required>
+              <input type="text" id="new_form_q_title" class="form-control rounded-3" placeholder="Enter question title...">
             </div>
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
@@ -1125,7 +1127,7 @@
           <div class="row g-3 mb-3">
             <div class="col-md-8">
               <label class="form-label small fw-bold text-dark">Question Title <span class="text-danger">*</span></label>
-              <input type="text" id="edit_form_q_title" class="form-control rounded-3" required>
+              <input type="text" id="edit_form_q_title" class="form-control rounded-3">
             </div>
             <div class="col-md-4">
               <label class="form-label small fw-bold text-dark">Question Type</label>
@@ -1179,12 +1181,52 @@
     const nameInput = document.getElementById('new_form_bundle_name');
     const fromInput = document.getElementById('new_form_bundle_from_day');
     const toInput = document.getElementById('new_form_bundle_to_day');
+    const errBox = document.getElementById('new_form_bundle_error');
+
+    if (errBox) errBox.classList.add('d-none');
 
     const name = nameInput.value.trim();
-    if (!name) return;
+    if (!name) {
+      if (errBox) { errBox.textContent = 'Bundle name is required.'; errBox.classList.remove('d-none'); }
+      return;
+    }
 
     const fromDay = parseInt(fromInput.value, 10) || 1;
     const toDay = parseInt(toInput.value, 10) || 30;
+
+    if (fromDay < 1) {
+      if (errBox) { errBox.textContent = 'From Day must be at least 1.'; errBox.classList.remove('d-none'); }
+      return;
+    }
+
+    if (toDay < fromDay) {
+      if (errBox) { errBox.textContent = `To Day (${toDay}) must be greater than or equal to From Day (${fromDay}).`; errBox.classList.remove('d-none'); }
+      return;
+    }
+
+    // Check overlap with existing bundles
+    let overlapFound = false;
+    let overlapName = '';
+    let overlapRange = '';
+    document.querySelectorAll('.form-bundle-card').forEach(card => {
+      const oFrom = parseInt(card.dataset.bundleFrom, 10) || 1;
+      const oTo = parseInt(card.dataset.bundleTo, 10) || 30;
+      if (fromDay <= oTo && toDay >= oFrom) {
+        overlapFound = true;
+        const nameEl = card.querySelector(`[id^="form_bundle_name_display_"]`);
+        overlapName = nameEl ? nameEl.textContent.trim() : 'Existing Bundle';
+        overlapRange = (oFrom === oTo) ? `Day ${oFrom}` : `Day ${oFrom} - ${oTo}`;
+      }
+    });
+
+    if (overlapFound) {
+      if (errBox) {
+        errBox.textContent = `Bundle day range (Day ${fromDay} - ${toDay}) overlaps with existing bundle '${overlapName}' (${overlapRange}). Please choose non-overlapping days.`;
+        errBox.classList.remove('d-none');
+      }
+      return;
+    }
+
     const dayText = (fromDay === toDay) ? `Day ${fromDay}` : `Day ${fromDay}-${toDay}`;
     const bundleId = `custom_${Date.now()}`;
 
@@ -1253,6 +1295,8 @@
     document.getElementById('edit_form_bundle_name').value = name;
     document.getElementById('edit_form_bundle_from_day').value = fromDay;
     document.getElementById('edit_form_bundle_to_day').value = toDay;
+    const errBox = document.getElementById('edit_form_bundle_error');
+    if (errBox) errBox.classList.add('d-none');
 
     const modalEl = document.getElementById('editFormBundleModal');
     const modal = new bootstrap.Modal(modalEl);
@@ -1265,9 +1309,51 @@
     const name = document.getElementById('edit_form_bundle_name').value.trim();
     const fromDay = parseInt(document.getElementById('edit_form_bundle_from_day').value, 10) || 1;
     const toDay = parseInt(document.getElementById('edit_form_bundle_to_day').value, 10) || 30;
-    const dayText = (fromDay === toDay) ? `Day ${fromDay}` : `Day ${fromDay}-${toDay}`;
+    const errBox = document.getElementById('edit_form_bundle_error');
 
-    if (!bundleId || !name) return;
+    if (errBox) errBox.classList.add('d-none');
+
+    if (!name) {
+      if (errBox) { errBox.textContent = 'Bundle name is required.'; errBox.classList.remove('d-none'); }
+      return;
+    }
+
+    if (fromDay < 1) {
+      if (errBox) { errBox.textContent = 'From Day must be at least 1.'; errBox.classList.remove('d-none'); }
+      return;
+    }
+
+    if (toDay < fromDay) {
+      if (errBox) { errBox.textContent = `To Day (${toDay}) must be greater than or equal to From Day (${fromDay}).`; errBox.classList.remove('d-none'); }
+      return;
+    }
+
+    // Check overlap with other bundles
+    let overlapFound = false;
+    let overlapName = '';
+    let overlapRange = '';
+    document.querySelectorAll('.form-bundle-card').forEach(card => {
+      if (card.dataset.bundleId !== bundleId) {
+        const oFrom = parseInt(card.dataset.bundleFrom, 10) || 1;
+        const oTo = parseInt(card.dataset.bundleTo, 10) || 30;
+        if (fromDay <= oTo && toDay >= oFrom) {
+          overlapFound = true;
+          const nameEl = card.querySelector(`[id^="form_bundle_name_display_"]`);
+          overlapName = nameEl ? nameEl.textContent.trim() : 'Existing Bundle';
+          overlapRange = (oFrom === oTo) ? `Day ${oFrom}` : `Day ${oFrom} - ${oTo}`;
+        }
+      }
+    });
+
+    if (overlapFound) {
+      if (errBox) {
+        errBox.textContent = `Bundle day range (Day ${fromDay} - ${toDay}) overlaps with existing bundle '${overlapName}' (${overlapRange}). Please choose non-overlapping days.`;
+        errBox.classList.remove('d-none');
+      }
+      return;
+    }
+
+    const dayText = (fromDay === toDay) ? `Day ${fromDay}` : `Day ${fromDay}-${toDay}`;
 
     // Update bundle card dataset & UI
     const bundleCard = document.getElementById(`form_bundle_card_${bundleId}`);

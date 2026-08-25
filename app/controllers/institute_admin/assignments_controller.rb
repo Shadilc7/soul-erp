@@ -109,31 +109,34 @@ module InstituteAdmin
 
           # Clone bundles for the institution category with custom overrides
           bundle_map = {} # client_bundle_id_or_master_id => inst_bundle
+          has_bundles_param = data[:custom_setup] == "1" || data["custom_setup"] == "1" || data.key?(:bundles) || data.key?("bundles")
           bundles_param = data[:bundles] || data["bundles"]
 
-          if bundles_param.present?
-            pos = 0
-            bundles_param.each do |b_key, b_data|
-              b_hash = b_data.respond_to?(:to_unsafe_h) ? b_data.to_unsafe_h : b_data
-              b_name = (b_hash[:name] || b_hash["name"]).to_s.strip
-              next if b_name.blank?
+          if has_bundles_param
+            if bundles_param.present?
+              pos = 0
+              bundles_param.each do |b_key, b_data|
+                b_hash = b_data.respond_to?(:to_unsafe_h) ? b_data.to_unsafe_h : b_data
+                b_name = (b_hash[:name] || b_hash["name"]).to_s.strip
+                next if b_name.blank?
 
-              b_from = (b_hash[:from_day] || b_hash["from_day"]).to_i
-              b_to = (b_hash[:to_day] || b_hash["to_day"]).to_i
-              b_desc = (b_hash[:description] || b_hash["description"]).to_s.presence
+                b_from = (b_hash[:from_day] || b_hash["from_day"]).to_i
+                b_to = (b_hash[:to_day] || b_hash["to_day"]).to_i
+                b_desc = (b_hash[:description] || b_hash["description"]).to_s.presence
 
-              m_bundle = category.question_bundles.find_by(id: b_key)
+                m_bundle = category.question_bundles.find_by(id: b_key)
 
-              inst_bundle = inst_category.question_bundles.create!(
-                name: b_name,
-                description: b_desc || m_bundle&.description,
-                position: pos += 1,
-                from_day: b_from > 0 ? b_from : (m_bundle&.from_day || 1),
-                to_day: b_to > 0 ? b_to : (m_bundle&.to_day || duration)
-              )
-              bundle_map[b_key.to_s] = inst_bundle
-              bundle_map[m_bundle.id.to_s] = inst_bundle if m_bundle
-              bundle_map[m_bundle.id] = inst_bundle if m_bundle
+                inst_bundle = inst_category.question_bundles.create!(
+                  name: b_name,
+                  description: b_desc || m_bundle&.description,
+                  position: pos += 1,
+                  from_day: b_from > 0 ? b_from : (m_bundle&.from_day || 1),
+                  to_day: b_to > 0 ? b_to : (m_bundle&.to_day || duration)
+                )
+                bundle_map[b_key.to_s] = inst_bundle
+                bundle_map[m_bundle.id.to_s] = inst_bundle if m_bundle
+                bundle_map[m_bundle.id] = inst_bundle if m_bundle
+              end
             end
           else
             category.question_bundles.order(:position).each do |m_bundle|
@@ -151,13 +154,27 @@ module InstituteAdmin
 
           # Clone master questions for current institute under inst_category
           question_map = {} # master_q.id => inst_q
+          questions_override_param = data[:questions] || data["questions"] || {}
+
           category.questions.each do |m_q|
+            q_override = questions_override_param[m_q.id.to_s] || questions_override_param[m_q.id]
             if m_q.institute_id == current_institute.id
-              question_map[m_q.id] = m_q
+              inst_q = m_q
             else
               inst_q = m_q.deep_clone_for_institute(current_institute, inst_category)
-              question_map[m_q.id] = inst_q
             end
+
+            if q_override.present?
+              q_hash = q_override.respond_to?(:to_unsafe_h) ? q_override.to_unsafe_h : q_override
+              inst_q.title = q_hash[:title] if q_hash[:title].present?
+              inst_q.display_name = q_hash[:display_name] if q_hash.key?(:display_name)
+              inst_q.from_day = q_hash[:from_day].to_i if q_hash[:from_day].to_i > 0
+              inst_q.to_day = q_hash[:to_day].to_i if q_hash[:to_day].to_i > 0
+              inst_q.description = q_hash[:description] if q_hash.key?(:description)
+              inst_q.save!
+            end
+
+            question_map[m_q.id] = inst_q
           end
 
           # Reconnect QuestionBundleItems for institute bundles and cloned questions
@@ -179,12 +196,27 @@ module InstituteAdmin
               next unless inst_q
               next if added_bundle_question_ids.include?([inst_bundle.id, inst_q.id])
 
+              # Ensure question day range covers the assigned bundle range
+              q_f = inst_q.from_day || 1
+              q_t = inst_q.to_day || duration
+              b_f = inst_bundle.from_day || 1
+              b_t = inst_bundle.to_day || duration
+
+              if [q_f, b_f].max > [q_t, b_t].min
+                inst_q.from_day = [q_f, b_f].min
+                inst_q.to_day = [q_t, b_t].max
+                inst_q.save!
+              end
+
+              eff_from = [inst_q.from_day || 1, b_f].max
+              eff_to = [inst_q.to_day || duration, b_t].min
+
               item_positions[inst_bundle.id] += 1
               inst_bundle.question_bundle_items.create!(
                 question: inst_q,
                 position: item_positions[inst_bundle.id],
-                effective_from_day: inst_bundle.from_day || 1,
-                effective_to_day: inst_bundle.to_day || duration
+                effective_from_day: eff_from,
+                effective_to_day: eff_to
               )
               added_bundle_question_ids.add([inst_bundle.id, inst_q.id])
             end
