@@ -35,6 +35,32 @@ module Admin
     def update
       begin
         question_parameters = sanitize_question_params(question_params)
+
+        if question_parameters[:options_attributes].present?
+          active_passed_ids = []
+          if question_parameters[:options_attributes].is_a?(Array)
+            question_parameters[:options_attributes].each do |opt|
+              opt_id = (opt[:id] || opt["id"])&.to_s
+              is_destroy = (opt[:_destroy] == "1" || opt["_destroy"] == "1" || opt[:_destroy] == true || opt["_destroy"] == true)
+              active_passed_ids << opt_id if opt_id.present? && !is_destroy
+            end
+          elsif question_parameters[:options_attributes].is_a?(Hash) || question_parameters[:options_attributes].is_a?(ActionController::Parameters)
+            question_parameters[:options_attributes].each do |_k, opt|
+              opt_id = (opt[:id] || opt["id"])&.to_s
+              is_destroy = (opt[:_destroy] == "1" || opt["_destroy"] == "1" || opt[:_destroy] == true || opt["_destroy"] == true)
+              active_passed_ids << opt_id if opt_id.present? && !is_destroy
+            end
+          end
+
+          @question.options.each do |opt|
+            if opt.persisted? && !active_passed_ids.include?(opt.id.to_s)
+              opt.mark_for_destruction
+            end
+          end
+        elsif !@question.requires_options? && @question.options.any?
+          @question.options.destroy_all
+        end
+
         @question.assign_attributes(question_parameters)
 
         ensure_options_have_text(@question) if @question.requires_options?

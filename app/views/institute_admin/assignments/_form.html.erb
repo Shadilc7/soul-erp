@@ -575,10 +575,20 @@
                               <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="<%= bundle.name %>" class="form-bundle-item-name-input-<%= bundle.id %>">
 
                               <div class="d-flex align-items-start gap-2">
-                                <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+                                <div class="d-flex align-items-center gap-1 flex-shrink-0 pt-0.5">
                                   <input type="hidden" name="assignment[question_ids][]" value="<%= q.id %>">
-                                  <i class="bi bi-list fs-5 text-secondary drag-handle me-1" style="cursor: grab;"></i>
-                                  <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold form-bundle-item-serial me-1" style="font-size: 0.75rem;">
+                                  <i class="bi bi-list fs-5 text-secondary drag-handle me-0.5" style="cursor: grab;" title="Drag to reorder"></i>
+
+                                  <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-0.5">
+                                    <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" onclick="moveFormBundleItemUp(this, '<%= bundle.id %>')">
+                                      <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" onclick="moveFormBundleItemDown(this, '<%= bundle.id %>')">
+                                      <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                    </button>
+                                  </div>
+
+                                  <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold form-bundle-item-serial" style="font-size: 0.75rem;">
                                     #<%= q_idx + 1 %>
                                   </span>
                                 </div>
@@ -827,10 +837,18 @@
         <input type="hidden" name="assignment[question_bundle_items][][question_id]" value="${qId}">
         <input type="hidden" name="assignment[question_bundle_items][][bundle_name]" value="${bundleName}">
         <div class="d-flex align-items-start gap-2">
-          <div class="d-flex align-items-center gap-2 flex-shrink-0 pt-0.5">
+          <div class="d-flex align-items-center gap-1 flex-shrink-0 pt-0.5">
             <input type="hidden" name="assignment[question_ids][]" value="${qId}">
-            <i class="bi bi-list fs-5 text-secondary drag-handle me-1" style="cursor: grab;"></i>
-            <span class="badge bg-dark text-white rounded-pill px-2.5 py-1.5 fw-bold form-bundle-item-serial me-1" style="font-size: 0.75rem;">#1</span>
+            <i class="bi bi-list fs-5 text-secondary drag-handle me-0.5" style="cursor: grab;" title="Drag to reorder"></i>
+            <div class="btn-group btn-group-sm rounded-2 bg-light border p-0.5 me-0.5">
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Up" onclick="moveFormBundleItemUp(this, '${bundleId}')">
+                <i class="bi bi-chevron-up" style="font-size: 0.75rem;"></i>
+              </button>
+              <button type="button" class="btn btn-xs btn-link text-secondary p-0 px-1 border-0" title="Move Down" onclick="moveFormBundleItemDown(this, '${bundleId}')">
+                <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+              </button>
+            </div>
+            <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold form-bundle-item-serial" style="font-size: 0.75rem;">#1</span>
           </div>
           <div class="flex-grow-1 min-w-0">
             <div class="fw-bold text-dark mb-0 text-break pe-1 q-title-display-${qId}" style="font-size: 0.925rem;">${title}</div>
@@ -853,6 +871,7 @@
       `;
       container.appendChild(itemCard);
       updateFormBundleItemSerials(bundleId);
+      initFormBundleSortables();
       opt.disabled = true;
       selectEl.value = '';
     }
@@ -872,6 +891,45 @@
           }
         }
       }
+    }
+  }
+
+  function moveFormBundleItemUp(btn, bundleId) {
+    const itemCard = btn.closest('.bundle-question-item');
+    if (!itemCard) return;
+    const prev = itemCard.previousElementSibling;
+    if (prev && prev.classList.contains('bundle-question-item')) {
+      itemCard.parentNode.insertBefore(itemCard, prev);
+      updateFormBundleItemSerials(bundleId);
+    }
+  }
+
+  function moveFormBundleItemDown(btn, bundleId) {
+    const itemCard = btn.closest('.bundle-question-item');
+    if (!itemCard) return;
+    const next = itemCard.nextElementSibling;
+    if (next && next.classList.contains('bundle-question-item')) {
+      itemCard.parentNode.insertBefore(next, itemCard);
+      updateFormBundleItemSerials(bundleId);
+    }
+  }
+
+  function initFormBundleSortables() {
+    if (typeof Sortable !== "undefined") {
+      const containers = document.querySelectorAll('.form-bundle-items-container');
+      containers.forEach(container => {
+        if (container._sortable) container._sortable.destroy();
+        container._sortable = new Sortable(container, {
+          handle: '.drag-handle',
+          filter: 'button, button *, a, a *, select, input, .dropdown, .dropdown-menu, .dropdown-item',
+          preventOnFilter: false,
+          animation: 150,
+          onEnd: function(evt) {
+            const bundleId = evt.to.id.replace('form_bundle_items_', '');
+            updateFormBundleItemSerials(bundleId);
+          }
+        });
+      });
     }
   }
 
@@ -1468,9 +1526,21 @@
     row.innerHTML = `
       ${id ? `<input type="hidden" class="${prefix}-q-opt-id" value="${id}">` : ''}
       <input type="text" class="form-control ${prefix}-q-opt-text" value="${text ? text.replace(/"/g, '&quot;') : ''}" placeholder="Option ${count}">
-      <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove(); updateFormQuestionOptionPlaceholders('${prefix}');"><i class="bi bi-trash"></i></button>
+      <button type="button" class="btn btn-outline-danger" onclick="removeFormQuestionOptionRow(this, '${prefix}');"><i class="bi bi-trash"></i></button>
     `;
     container.appendChild(row);
+  }
+
+  function removeFormQuestionOptionRow(btn, prefix) {
+    const row = btn.closest('.input-group');
+    if (!row) return;
+    const idInput = row.querySelector(`.${prefix}-q-opt-id`);
+    if (idInput && idInput.value) {
+      if (!window[`_${prefix}_deleted_opt_ids`]) window[`_${prefix}_deleted_opt_ids`] = [];
+      window[`_${prefix}_deleted_opt_ids`].push(idInput.value);
+    }
+    row.remove();
+    updateFormQuestionOptionPlaceholders(prefix);
   }
 
   function updateFormQuestionOptionPlaceholders(prefix) {
@@ -1714,6 +1784,7 @@
   }
 
   function openFormEditQuestionModal(qId) {
+    window._edit_deleted_opt_ids = [];
     const card = document.getElementById(`form_pool_card_${qId}`);
     if (!card) return;
 
@@ -1824,12 +1895,30 @@
         }
       });
 
-      if (optionsData.length < 2) {
+      if (window._edit_deleted_opt_ids && window._edit_deleted_opt_ids.length > 0) {
+        window._edit_deleted_opt_ids.forEach(delId => {
+          optionsData.push({ id: delId, _destroy: '1' });
+        });
+      }
+
+      const activeOptions = optionsData.filter(o => o._destroy !== '1');
+      if (activeOptions.length < 2) {
         if (errorEl) {
           errorEl.textContent = 'Questions requiring options must have at least 2 options.';
           errorEl.classList.remove('d-none');
         }
         return;
+      }
+    } else {
+      const card = document.getElementById(`form_pool_card_${qId}`);
+      const optAttr = card ? (card.getAttribute('data-q-options') || card.dataset.qOptions) : null;
+      if (optAttr) {
+        try {
+          const existingOpts = JSON.parse(optAttr);
+          existingOpts.forEach(opt => {
+            if (opt && opt.id) optionsData.push({ id: opt.id, _destroy: '1' });
+          });
+        } catch (e) {}
       }
     }
 
@@ -1894,6 +1983,23 @@
         document.querySelectorAll(`.q-title-display-${qId}, .q-title-display-${newId}`).forEach(el => el.textContent = q.title);
         document.querySelectorAll(`.q-type-badge-${qId}, .q-type-badge-${newId}`).forEach(el => el.textContent = q.question_type.replace(/_/g, ' '));
         document.querySelectorAll(`.q-day-badge-${qId}, .q-day-badge-${newId}`).forEach(el => el.innerHTML = `<i class="bi bi-clock-history me-1"></i>${dayText}`);
+
+        // Update View Details modal if present in DOM
+        const viewModal = document.getElementById(`viewFormQuestionModal_${qId}`) || document.getElementById(`viewFormQuestionModal_${newId}`);
+        if (viewModal) {
+          if (newId != qId) viewModal.id = `viewFormQuestionModal_${newId}`;
+          const optionsList = viewModal.querySelector('.list-group');
+          if (optionsList && q.options) {
+            optionsList.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+              const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+              const itemDiv = document.createElement('div');
+              itemDiv.className = 'list-group-item d-flex align-items-center justify-content-between';
+              itemDiv.innerHTML = `<span>${idx + 1}. ${optText}</span>`;
+              optionsList.appendChild(itemDiv);
+            });
+          }
+        }
 
         // Recalculate schedule badges for any bundle items holding this question
         document.querySelectorAll(`.bundle-question-item input[name="assignment[question_bundle_items][][question_id]"][value="${newId}"]`).forEach(input => {
@@ -1996,8 +2102,8 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); });
-  document.addEventListener('turbo:load', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); });
+  document.addEventListener('DOMContentLoaded', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); initFormBundleSortables(); });
+  document.addEventListener('turbo:load', function() { updateAssignmentSelectedDaysCount(); updateFormRecipientCount(); initFormBundleSortables(); });
 </script>
 
 <% content_for :styles do %>

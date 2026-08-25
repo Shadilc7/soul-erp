@@ -251,9 +251,9 @@
               </div>
             <% end %>
 
-            <% if @assignment.participants.any? %>
+            <% if @participants.present? && @participants.any? %>
               <div class="list-group list-group-flush border rounded-3 overflow-auto" style="max-height: 400px;">
-                <% @assignment.participants.includes(:user).each do |participant| %>
+                <% @participants.each do |participant| %>
                   <div class="list-group-item p-2.5 border-bottom-0">
                     <div class="d-flex align-items-center gap-2.5">
                       <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">

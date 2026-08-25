@@ -530,6 +530,126 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert_equal @institute.id, json_response.dig("question", "institute_id")
   end
 
+  test "should remove option when updating an existing institute question via JSON" do
+    # Create an institute question with 3 options
+    inst_q = Question.new(
+      title: "How do you feel?",
+      question_type: :multiple_choice,
+      from_day: 1,
+      to_day: 7,
+      institute: @institute,
+      question_category: @category_a
+    )
+    opt1 = inst_q.options.build(text: "Good", value: "good")
+    opt2 = inst_q.options.build(text: "Neutral", value: "neutral")
+    opt3 = inst_q.options.build(text: "Bad", value: "bad")
+    inst_q.save!
+
+    assert_equal 3, inst_q.options.count
+
+    # Update question keeping only opt1 and opt2, omitting opt3
+    patch institute_admin_question_path(inst_q, format: :json), params: {
+      question: {
+        title: "How do you feel today?",
+        question_type: "multiple_choice",
+        from_day: 1,
+        to_day: 7,
+        options_attributes: [
+          { id: opt1.id, text: "Very Good" },
+          { id: opt2.id, text: "Neutral" }
+        ]
+      }
+    }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal "success", json_response["status"]
+    assert_equal 2, json_response.dig("question", "options").size
+
+    inst_q.reload
+    assert_equal 2, inst_q.options.count
+    assert_equal [opt1.id, opt2.id].sort, inst_q.options.pluck(:id).sort
+    assert_not Option.exists?(opt3.id)
+  end
+
+  test "should remove option when updating an existing institute question with explicit _destroy" do
+    inst_q = Question.new(
+      title: "Pick one",
+      question_type: :multiple_choice,
+      from_day: 1,
+      to_day: 7,
+      institute: @institute,
+      question_category: @category_a
+    )
+    opt1 = inst_q.options.build(text: "Alpha", value: "alpha")
+    opt2 = inst_q.options.build(text: "Beta", value: "beta")
+    opt3 = inst_q.options.build(text: "Gamma", value: "gamma")
+    inst_q.save!
+
+    patch institute_admin_question_path(inst_q, format: :json), params: {
+      question: {
+        title: "Pick one updated",
+        question_type: "multiple_choice",
+        from_day: 1,
+        to_day: 7,
+        options_attributes: [
+          { id: opt1.id, text: "Alpha" },
+          { id: opt2.id, text: "Beta" },
+          { id: opt3.id, _destroy: "1" }
+        ]
+      }
+    }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal "success", json_response["status"]
+    assert_equal 2, json_response.dig("question", "options").size
+
+    inst_q.reload
+    assert_equal 2, inst_q.options.count
+    assert_not Option.exists?(opt3.id)
+  end
+
+  test "should place newly created options at the end in question options ordering" do
+    inst_q = Question.new(
+      title: "Emotions question",
+      question_type: :multiple_choice,
+      from_day: 1,
+      to_day: 7,
+      institute: @institute,
+      question_category: @category_a
+    )
+    opt1 = inst_q.options.build(text: "Emotion 1", value: "e1")
+    opt2 = inst_q.options.build(text: "Emotion 2", value: "e2")
+    inst_q.save!
+
+    patch institute_admin_question_path(inst_q, format: :json), params: {
+      question: {
+        title: "Emotions question",
+        question_type: "multiple_choice",
+        from_day: 1,
+        to_day: 7,
+        options_attributes: [
+          { id: opt1.id, text: "Emotion 1" },
+          { id: opt2.id, text: "Emotion 2" },
+          { text: "Emotion 3 (New)" }
+        ]
+      }
+    }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal "success", json_response["status"]
+    options = json_response.dig("question", "options")
+    assert_equal 3, options.size
+    assert_equal "Emotion 1", options[0]["text"]
+    assert_equal "Emotion 2", options[1]["text"]
+    assert_equal "Emotion 3 (New)", options[2]["text"]
+
+    inst_q.reload
+    assert_equal ["Emotion 1", "Emotion 2", "Emotion 3 (New)"], inst_q.options.map(&:text)
+  end
+
   test "edit assignment view renders question pool edit button and excludes edit button inside bundle items" do
     post finalize_import_institute_admin_assignments_path, params: {
       assignments: {
@@ -548,6 +668,9 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     # Bundle item container id contains form_bundle_items_
     assert_select ".form-bundle-items-container" do
       assert_select "button[title='Edit Question']", count: 0
+      assert_select "button[title='Move Up']"
+      assert_select "button[title='Move Down']"
+      assert_select ".drag-handle"
     end
   end
 
@@ -597,5 +720,39 @@ class InstituteAdmin::AssignmentsControllerTest < ActionDispatch::IntegrationTes
     assert aaron_pos, "Aaron Smith should be in response"
     assert zara_pos, "Zara Alvarez should be in response"
     assert aaron_pos < zara_pos, "Aaron should appear before Zara in import_setup"
+  end
+
+  test "should list participants in alphabetical order in show page" do
+    section = Section.create!(name: "Batch Show", code: "BS1", capacity: 30, institute: @institute)
+    u_z = User.create!(first_name: "Zara", last_name: "Alvarez", email: "zara_show@example.com", password: "Password123!", institute: @institute)
+    p_z = Participant.create!(user: u_z, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    u_a = User.create!(first_name: "Aaron", last_name: "Smith", email: "aaron_show@example.com", password: "Password123!", institute: @institute)
+    p_a = Participant.create!(user: u_a, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    u_m = User.create!(first_name: "Maya", last_name: "Lin", email: "maya_show@example.com", password: "Password123!", institute: @institute)
+    p_m = Participant.create!(user: u_m, institute: @institute, section_id: section.id, date_of_birth: 20.years.ago, participant_type: :student)
+
+    assignment = @institute.assignments.create!(
+      title: "Alphabetical Show Test",
+      start_date: Date.current,
+      end_date: Date.current + 7.days,
+      assignment_type: "individual",
+      question_category: @category_a
+    )
+    assignment.participants << [p_z, p_a, p_m]
+
+    get institute_admin_assignment_path(assignment)
+    assert_response :success
+
+    aaron_pos = response.body.index("Aaron Smith")
+    maya_pos = response.body.index("Maya Lin")
+    zara_pos = response.body.index("Zara Alvarez")
+
+    assert aaron_pos, "Aaron Smith should be in response"
+    assert maya_pos, "Maya Lin should be in response"
+    assert zara_pos, "Zara Alvarez should be in response"
+    assert aaron_pos < maya_pos, "Aaron should appear before Maya on show page"
+    assert maya_pos < zara_pos, "Maya should appear before Zara on show page"
   end
 end

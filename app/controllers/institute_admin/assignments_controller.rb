@@ -363,6 +363,7 @@ module InstituteAdmin
 
     def show
       @grouped_questions = @assignment.questions_grouped_by_bundle
+      @participants = @assignment.participants.includes(:user).ordered_by_name
     end
 
     def new

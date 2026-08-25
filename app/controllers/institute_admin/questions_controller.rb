@@ -72,6 +72,7 @@ module InstituteAdmin
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
+          @question.reload
           respond_to do |format|
             format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully created." }
             format.json { render json: { status: "success", question: @question.as_json(include: :options) } }
@@ -105,17 +106,65 @@ module InstituteAdmin
     def update
       begin
         if @question.institute_id.nil?
-          @question = @question.deep_clone_for_institute(current_institute, @question.question_category)
-        end
+          # Cloning a master question for current_institute
+          cloned = @question.dup
+          cloned.institute = current_institute
+          cloned.question_category = @question.question_category
+          cloned.save!(validate: false)
+          @question = cloned
 
-        # Get the parameters first
-        question_parameters = sanitize_question_params(question_params)
+          # Strip master option IDs so remaining options are cleanly created for this new question
+          raw_options = question_params[:options_attributes]
+          if raw_options.is_a?(Array)
+            cleaned_attrs = raw_options.reject { |o| o[:_destroy] == "1" || o["_destroy"] == "1" }.map { |o| o.to_h.except("id", :id, "_destroy", :_destroy) }
+            question_parameters = sanitize_question_params(question_params).merge(options_attributes: cleaned_attrs)
+          elsif raw_options.is_a?(Hash) || raw_options.is_a?(ActionController::Parameters)
+            cleaned_attrs = {}
+            raw_options.each do |k, v|
+              next if v[:_destroy] == "1" || v["_destroy"] == "1"
+              cleaned_attrs[k] = v.to_h.except("id", :id, "_destroy", :_destroy)
+            end
+            question_parameters = sanitize_question_params(question_params).merge(options_attributes: cleaned_attrs)
+          else
+            question_parameters = sanitize_question_params(question_params)
+          end
+        else
+          question_parameters = sanitize_question_params(question_params)
+
+          if question_parameters[:options_attributes].present?
+            # Collect option IDs that are kept active
+            active_passed_ids = []
+            if question_parameters[:options_attributes].is_a?(Array)
+              question_parameters[:options_attributes].each do |opt|
+                opt_id = (opt[:id] || opt["id"])&.to_s
+                is_destroy = (opt[:_destroy] == "1" || opt["_destroy"] == "1" || opt[:_destroy] == true || opt["_destroy"] == true)
+                active_passed_ids << opt_id if opt_id.present? && !is_destroy
+              end
+            elsif question_parameters[:options_attributes].is_a?(Hash) || question_parameters[:options_attributes].is_a?(ActionController::Parameters)
+              question_parameters[:options_attributes].each do |_k, opt|
+                opt_id = (opt[:id] || opt["id"])&.to_s
+                is_destroy = (opt[:_destroy] == "1" || opt["_destroy"] == "1" || opt[:_destroy] == true || opt["_destroy"] == true)
+                active_passed_ids << opt_id if opt_id.present? && !is_destroy
+              end
+            end
+
+            # Mark any existing persisted options not in active_passed_ids for destruction
+            @question.options.each do |opt|
+              if opt.persisted? && !active_passed_ids.include?(opt.id.to_s)
+                opt.mark_for_destruction
+              end
+            end
+          elsif !@question.requires_options? && @question.options.any?
+            @question.options.destroy_all
+          end
+        end
 
         # Final safety check before updating
         @question.assign_attributes(question_parameters)
         ensure_options_have_text(@question) if @question.requires_options?
 
         if @question.save
+          @question.reload
           respond_to do |format|
             format.html { redirect_to institute_admin_question_path(@question), notice: "Question was successfully updated." }
             format.json { render json: { status: "success", question: @question.as_json(include: :options) } }

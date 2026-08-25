@@ -6,7 +6,7 @@ class Question < ApplicationRecord
   has_many :question_bundles, through: :question_bundle_items
   has_many :question_set_items, dependent: :destroy
   has_many :question_sets, through: :question_set_items
-  has_many :options, dependent: :destroy
+  has_many :options, -> { order(created_at: :asc, id: :asc) }, dependent: :destroy
   accepts_nested_attributes_for :options, allow_destroy: true, reject_if: proc { |attributes|
     attributes["text"].blank? && attributes["_destroy"] != "1"
   }
