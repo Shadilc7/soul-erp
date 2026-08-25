@@ -18,7 +18,8 @@ export default class extends Controller {
 
     // 1. Question Pool Sortable for Touch & Mobile
     const poolContainer = this.element.querySelector("#question-pool-container")
-    if (poolContainer && !poolContainer._sortable) {
+    if (poolContainer) {
+      if (poolContainer._sortable) poolContainer._sortable.destroy()
       poolContainer._sortable = Sortable.create(poolContainer, {
         group: {
           name: "question_pool",
@@ -28,6 +29,8 @@ export default class extends Controller {
         animation: 150,
         sort: true,
         handle: ".drag-handle",
+        filter: "button, a, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, i, svg",
+        preventOnFilter: false,
         onEnd: async (evt) => {
           this.updatePoolSerialNumbers()
           await this.saveQuestionOrder()
@@ -54,7 +57,8 @@ export default class extends Controller {
   }
 
   initBundleContainerSortable(container) {
-    if (typeof Sortable === "undefined" || !container || container._sortable) return
+    if (typeof Sortable === "undefined" || !container) return
+    if (container._sortable) container._sortable.destroy()
 
     container._sortable = Sortable.create(container, {
       group: {
@@ -64,6 +68,8 @@ export default class extends Controller {
       },
       animation: 150,
       handle: ".drag-handle",
+      filter: "button, a, select, input, .dropdown, .dropdown-menu, .dropdown-item, .gradient-action-btn, i, svg",
+      preventOnFilter: false,
       onAdd: async (evt) => {
         const itemEl = evt.item
         const questionId = itemEl.dataset.questionId

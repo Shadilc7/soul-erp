@@ -58,6 +58,10 @@ class QuestionTest < ActiveSupport::TestCase
     q2 = category.questions.create!(title: "Second Question", question_type: "short_answer", created_at: 1.hour.ago)
     q3 = category.questions.create!(title: "Third Question", question_type: "short_answer", created_at: Time.current)
 
+    assert_equal 1, q1.position
+    assert_equal 2, q2.position
+    assert_equal 3, q3.position
+
     assert_equal [ q1.id, q2.id, q3.id ], category.questions.pluck(:id)
     assert_equal [ q1.id, q2.id, q3.id ], Question.where(id: [ q1.id, q2.id, q3.id ]).ordered.pluck(:id)
   end

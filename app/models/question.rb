@@ -80,6 +80,7 @@ class Question < ApplicationRecord
   scope :ordered, -> { order(position: :asc, created_at: :asc, id: :asc) }
   scope :master, -> { where(institute_id: nil) }
 
+  before_create :set_default_position, if: -> { position.blank? || position.to_i <= 0 }
   before_destroy :check_assignment_associations, prepend: true
   after_save :sync_question_bundle_items
 
@@ -98,6 +99,18 @@ class Question < ApplicationRecord
   end
 
   private
+
+  def set_default_position
+    scope = if question_category_id.present?
+              Question.where(question_category_id: question_category_id)
+            elsif institute_id.present?
+              Question.where(institute_id: institute_id)
+            else
+              Question.master.where(question_category_id: nil)
+            end
+    max_pos = scope.maximum(:position) || 0
+    self.position = max_pos + 1
+  end
 
   def validate_day_range
     return if from_day.blank? && to_day.blank?
