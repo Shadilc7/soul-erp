@@ -69,7 +69,7 @@ module Admin
 
     def builder
       @questions = @category.questions.includes(:question_bundles).order(position: :asc, created_at: :asc, id: :asc)
-      @bundles = @category.question_bundles.includes(:question_bundle_items).ordered
+      @bundles = @category.question_bundles.includes(question_bundle_items: :question).ordered
       @new_question = @category.questions.build(duration_days: 1)
       @new_bundle = @category.question_bundles.build
     end
@@ -78,7 +78,7 @@ module Admin
       assigned_count = 0
 
       ActiveRecord::Base.transaction do
-        questions = @category.questions
+        questions = @category.questions.order(position: :asc, created_at: :asc, id: :asc)
         bundles = @category.question_bundles
 
         questions.each do |q|
@@ -94,6 +94,9 @@ module Admin
 
             if overlap_from <= overlap_to
               item = QuestionBundleItem.find_or_initialize_by(question_bundle: b, question: q)
+              if item.new_record? && (item.position.blank? || item.position.to_i <= 0)
+                item.position = (b.question_bundle_items.maximum(:position) || 0) + 1
+              end
               item.effective_from_day = overlap_from
               item.effective_to_day = overlap_to
               item.save!
