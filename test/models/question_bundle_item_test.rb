@@ -79,4 +79,22 @@ class QuestionBundleItemTest < ActiveSupport::TestCase
     question.update!(from_day: 10, to_day: 14)
     assert_not QuestionBundleItem.exists?(id: item.id)
   end
+
+  test "automatically sets sequential position on create" do
+    q1 = @category.questions.create!(title: "Q1", question_type: "short_answer", from_day: 1, to_day: 7)
+    q2 = @category.questions.create!(title: "Q2", question_type: "short_answer", from_day: 1, to_day: 7)
+    q3 = @category.questions.create!(title: "Q3", question_type: "short_answer", from_day: 1, to_day: 7)
+
+    item1 = QuestionBundleItem.create!(question_bundle: @bundle1, question: q1)
+    item2 = QuestionBundleItem.create!(question_bundle: @bundle1, question: q2)
+    item3 = QuestionBundleItem.create!(question_bundle: @bundle1, question: q3)
+
+    assert_equal 1, item1.position
+    assert_equal 2, item2.position
+    assert_equal 3, item3.position
+
+    @bundle1.reload
+    assert_equal [item1, item2, item3], @bundle1.question_bundle_items.to_a
+    assert_equal [q1, q2, q3], @bundle1.questions.to_a
+  end
 end

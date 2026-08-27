@@ -4,7 +4,10 @@ class QuestionBundleItem < ApplicationRecord
 
   validates :question_id, uniqueness: { scope: :question_bundle_id, message: "is already in this bundle" }
 
+  scope :ordered, -> { order(position: :asc, created_at: :asc, id: :asc) }
+
   validate :validate_day_range_overlap
+  before_create :set_default_position, if: -> { position.blank? || position.to_i <= 0 }
   before_save :calculate_effective_days
 
   def days_in_bundle
@@ -62,5 +65,12 @@ class QuestionBundleItem < ApplicationRecord
 
     self.effective_from_day = [q_from, b_from].max
     self.effective_to_day = [q_to, b_to].min
+  end
+
+  def set_default_position
+    b_id = question_bundle_id || question_bundle&.id
+    return unless b_id.present?
+    max_pos = QuestionBundleItem.where(question_bundle_id: b_id).maximum(:position) || 0
+    self.position = max_pos + 1
   end
 end

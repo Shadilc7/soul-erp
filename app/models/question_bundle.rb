@@ -1,7 +1,7 @@
 class QuestionBundle < ApplicationRecord
   belongs_to :question_category
-  has_many :question_bundle_items, -> { order(position: :asc) }, dependent: :destroy
-  has_many :questions, through: :question_bundle_items
+  has_many :question_bundle_items, -> { order(position: :asc, created_at: :asc, id: :asc) }, dependent: :destroy
+  has_many :questions, -> { order("question_bundle_items.position ASC, question_bundle_items.created_at ASC, question_bundle_items.id ASC") }, through: :question_bundle_items
 
   validates :name, presence: true
   validates :from_day, numericality: { greater_than_or_equal_to: 1 }, allow_nil: true
@@ -10,7 +10,7 @@ class QuestionBundle < ApplicationRecord
 
   after_save :sync_question_bundle_items
 
-  scope :ordered, -> { order(position: :asc, created_at: :asc) }
+  scope :ordered, -> { order(position: :asc, created_at: :asc, id: :asc) }
 
   def day_range_text
     f_day = from_day || 1
