@@ -1104,6 +1104,118 @@ nav[aria-label="breadcrumb"] {
   transform: none !important;
 }
 
+/* Vibrant Colorful Action Button (e.g. Import Questions) */
+.btn-import-colorful {
+  background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #9333ea 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-import-colorful:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #4338ca 50%, #7e22ce 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55) !important;
+}
+
+.btn-import-colorful:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Template Download Action Buttons (with vibrant hover fill) */
+.btn-template-solid-excel {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-template-solid-excel:hover,
+.btn-template-solid-excel:focus {
+  background-color: #047857 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4) !important;
+}
+
+.btn-template-download {
+  background-color: #ffffff !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+}
+
+.btn-template-download.btn-outline-success {
+  color: #059669 !important;
+  border-color: #10b981 !important;
+}
+.btn-template-download.btn-outline-success i {
+  color: #059669 !important;
+  transition: color 0.2s ease !important;
+}
+.btn-template-download.btn-outline-success:hover,
+.btn-template-download.btn-outline-success:active,
+.btn-template-download.btn-outline-success:focus {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+.btn-template-download.btn-outline-success:hover i,
+.btn-template-download.btn-outline-success:active i,
+.btn-template-download.btn-outline-success:focus i {
+  color: #ffffff !important;
+}
+
+.btn-template-download.btn-outline-primary {
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+}
+.btn-template-download.btn-outline-primary i {
+  color: #2563eb !important;
+  transition: color 0.2s ease !important;
+}
+.btn-template-download.btn-outline-primary:hover,
+.btn-template-download.btn-outline-primary:active,
+.btn-template-download.btn-outline-primary:focus {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
+.btn-template-download.btn-outline-primary:hover i,
+.btn-template-download.btn-outline-primary:active i,
+.btn-template-download.btn-outline-primary:focus i {
+  color: #ffffff !important;
+}
+
+.btn-template-download.btn-outline-secondary {
+  color: #475569 !important;
+  border-color: #94a3b8 !important;
+}
+.btn-template-download.btn-outline-secondary i {
+  color: #475569 !important;
+  transition: color 0.2s ease !important;
+}
+.btn-template-download.btn-outline-secondary:hover,
+.btn-template-download.btn-outline-secondary:active,
+.btn-template-download.btn-outline-secondary:focus {
+  background-color: #475569 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3) !important;
+}
+.btn-template-download.btn-outline-secondary:hover i,
+.btn-template-download.btn-outline-secondary:active i,
+.btn-template-download.btn-outline-secondary:focus i {
+  color: #ffffff !important;
+}
+
 
 
 

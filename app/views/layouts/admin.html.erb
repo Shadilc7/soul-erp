@@ -562,12 +562,11 @@
       }
 
       .table tbody tr {
-        transition: all 0.2s ease;
+        transition: background-color 0.15s ease;
       }
 
       .table tbody tr:hover {
         background-color: rgba(99, 102, 241, 0.04);
-        transform: scale(1.001);
       }
 
       /* Badge Styles */
@@ -750,6 +749,11 @@
             <%= link_to admin_question_categories_path, class: "nav-link #{'active' if active_link?('question_categories') || active_link?('category_questions')}" do %>
               <i class="bi bi-journal-bookmark"></i>
               <span>Question Categories</span>
+            <% end %>
+
+            <%= link_to admin_question_imports_path, class: "nav-link #{'active' if active_link?('question_imports')}" do %>
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span>Import Logs</span>
             <% end %>
 
             <%= link_to edit_admin_registration_setting_path, class: "nav-link #{'active' if active_link?('registration_settings')}" do %>
