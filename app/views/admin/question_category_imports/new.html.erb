@@ -1,0 +1,308 @@
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4" data-controller="question-import">
+  <!-- Top Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to admin_question_categories_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Categories
+          <% end %>
+        </li>
+        <li class="breadcrumb-item">
+          <%= link_to builder_admin_question_category_path(@category), class: "text-decoration-none text-muted fw-medium" do %>
+            <%= @category.name %>
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          Bulk Question Import
+        </li>
+      </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to builder_admin_question_category_path(@category), class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-kanban"></i> Return to Builder
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Header Banner (Subtle Multi-tone Gradient Header) -->
+  <div class="card border rounded-4 p-3 p-md-4 mb-4 position-relative overflow-hidden"
+       style="background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 50%, #f3e8ff 100%); border-color: #c7d2fe !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);">
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-xl-6">
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+          <span class="badge bg-primary text-white rounded-pill px-3 py-1 small fw-semibold shadow-sm">
+            <i class="bi bi-cloud-arrow-up me-1"></i> Bulk Question Uploader
+          </span>
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1 small fw-medium shadow-sm">
+            <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name.presence || "Master Question Bank" %>
+          </span>
+          <span class="badge bg-white text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1 small fw-medium shadow-sm">
+            <i class="bi bi-clock-history me-1 text-info"></i> Max <%= @category.duration_days %> Days
+          </span>
+        </div>
+        <h2 class="fw-bold text-dark mb-1 fs-4 fs-md-3 d-flex align-items-center gap-2">
+          <i class="bi bi-cloud-arrow-up-fill text-primary"></i>
+          <span>Import Questions into <%= @category.name %></span>
+        </h2>
+        <p class="mb-0 small" style="color: #475569;">
+          Upload spreadsheets to instantly create dozens of questions with automatic type detection, choice options, and bundle schedule matching.
+        </p>
+      </div>
+
+      <div class="col-12 col-xl-6 text-xl-end">
+        <div class="d-inline-flex flex-wrap gap-2 justify-content-xl-end" data-turbo="false">
+          <%= link_to sample_excel_template_admin_question_category_imports_path(@category), class: "btn btn-success btn-template-solid-excel rounded-3 px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold small", data: { turbo: false }, download: "" do %>
+            <i class="bi bi-file-earmark-excel fs-6"></i> Excel Template (.xls)
+          <% end %>
+          <%= link_to sample_template_admin_question_category_imports_path(@category), class: "btn btn-outline-success btn-template-download rounded-3 px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold small", data: { turbo: false }, download: "" do %>
+            <i class="bi bi-file-earmark-spreadsheet fs-6"></i> CSV Template
+          <% end %>
+          <%= link_to blank_excel_template_admin_question_category_imports_path(@category), class: "btn btn-outline-primary btn-template-download rounded-3 px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold small", data: { turbo: false }, download: "" do %>
+            <i class="bi bi-file-earmark-excel fs-6"></i> Blank Excel
+          <% end %>
+          <%= link_to blank_template_admin_question_category_imports_path(@category), class: "btn btn-outline-secondary btn-template-download rounded-3 px-3 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold small", data: { turbo: false }, download: "" do %>
+            <i class="bi bi-download fs-6"></i> Blank CSV
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Upload Form & Options -->
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3 p-md-4">
+          <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-arrow-up text-primary"></i> Upload Question Spreadsheet
+          </h5>
+          <p class="text-muted small mb-4">
+            Accepts CSV (<code>.csv</code>) and Excel (<code>.xls</code>, <code>.xlsx</code>) files. Options for multiple-choice questions can be pipe-separated (e.g. <code>Option 1 | Option 2</code>).
+          </p>
+
+          <%= form_with(url: admin_question_category_imports_path(@category), method: :post, multipart: true, data: { turbo: false }) do |f| %>
+            <!-- Drag & Drop Zone -->
+            <div class="border border-2 border-dashed rounded-4 p-4 p-md-5 text-center position-relative mb-3 transition"
+                 data-question-import-target="dropzone"
+                 data-action="dragover->question-import#dragOver dragleave->question-import#dragLeave drop->question-import#drop click->question-import#triggerFileInput"
+                 style="cursor: pointer; background: #f8fafc; border-color: #cbd5e1 !important;">
+              <input type="file"
+                     name="file"
+                     accept=".csv,text/csv,text/plain,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                     class="d-none"
+                     data-question-import-target="fileInput"
+                     data-action="change->question-import#handleFileSelected" />
+
+              <div class="py-2">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3 shadow-sm" style="width: 58px; height: 58px;">
+                  <i class="bi bi-cloud-arrow-up fs-2"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Click to browse or drag and drop your spreadsheet here</h6>
+                <p class="text-muted small mb-0">Supports .csv, .xls, and .xlsx spreadsheets up to 15 MB</p>
+              </div>
+
+              <!-- Selected File Pill -->
+              <div class="mt-3 d-none" data-question-import-target="fileInfo">
+                <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border">
+                  <i class="bi bi-file-earmark-spreadsheet text-success fs-5"></i>
+                  <span class="fw-semibold text-dark small" data-question-import-target="fileName">filename.csv</span>
+                  <span class="badge bg-secondary-subtle text-secondary rounded-pill small" data-question-import-target="fileSize">0 KB</span>
+                  <button type="button" class="btn btn-sm text-danger p-0 ms-1" data-action="click->question-import#clearFile" title="Remove file">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Client-side CSV Preview Table Container (Auto-revealed) -->
+            <div class="mb-4 d-none" data-question-import-target="previewContainer">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+                    <i class="bi bi-eye me-1"></i> Preview
+                  </span>
+                  <span class="text-muted small fw-medium" data-question-import-target="previewRowCount">Showing preview rows</span>
+                </div>
+              </div>
+              <div class="table-responsive border rounded-3 bg-white shadow-xs" style="max-height: 240px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0">
+                  <thead data-question-import-target="previewTableHead" class="table-light"></thead>
+                  <tbody data-question-import-target="previewTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Import Settings & Options -->
+            <div class="card bg-light border-0 rounded-3 p-3 mb-4">
+              <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+                <i class="bi bi-sliders text-secondary"></i> Import Configuration & Safeguards
+              </h6>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <div class="form-check form-switch d-flex align-items-center ps-0">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" name="question_import[dry_run]" id="dryRunSwitch" value="1">
+                    <label class="form-check-label fw-semibold text-dark small" for="dryRunSwitch">
+                      Dry-Run / Preview Mode Only
+                    </label>
+                  </div>
+                  <div class="text-muted small ps-4 mt-0.5" style="font-size: 0.78rem;">
+                    Validate headers, types, and day ranges without saving records.
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <div class="form-check form-switch d-flex align-items-center ps-0">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" name="question_import[rollback_on_error]" id="rollbackSwitch" value="1">
+                    <label class="form-check-label fw-semibold text-dark small" for="rollbackSwitch">
+                      All-or-Nothing Mode (Rollback on error)
+                    </label>
+                  </div>
+                  <div class="text-muted small ps-4 mt-0.5" style="font-size: 0.78rem;">
+                    If disabled, valid rows are imported while failed rows are isolated for review.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button Bar -->
+            <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+              <%= link_to "Cancel", builder_admin_question_category_path(@category), class: "btn btn-outline-secondary rounded-3 px-3 py-2 fw-semibold" %>
+              <button type="submit" class="btn btn-primary rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2" data-question-import-target="submitBtn" disabled>
+                <i class="bi bi-cloud-arrow-up fs-6"></i> <span>Start Question Import</span>
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Format Guide & Tips -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom p-3 rounded-top-4">
+          <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle text-primary"></i> Column Specification
+          </h6>
+        </div>
+        <div class="card-body p-3">
+          <ul class="list-unstyled mb-0 d-flex flex-column gap-3 small">
+            <li class="d-flex align-items-start gap-2">
+              <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.7rem;">REQUIRED</span>
+              <div>
+                <span class="fw-semibold text-dark">Question Title / Statement:</span>
+                <div class="text-muted">The main prompt or statement for the participant.</div>
+              </div>
+            </li>
+
+            <li class="d-flex align-items-start gap-2">
+              <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.7rem;">REQUIRED</span>
+              <div>
+                <span class="fw-semibold text-dark">Question Type:</span>
+                <div class="text-muted">
+                  <code>short_answer</code>, <code>paragraph</code>, <code>multiple_choice</code>, <code>checkboxes</code>, <code>dropdown</code>, <code>date</code>, <code>time</code>, <code>rating</code>, <code>number</code>, <code>yes_or_no</code>.
+                </div>
+              </div>
+            </li>
+
+            <li class="d-flex align-items-start gap-2">
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">OPTIONAL</span>
+              <div>
+                <span class="fw-semibold text-dark">From Day / To Day:</span>
+                <div class="text-muted">
+                  Positive integer (e.g. 1 to <%= @category.duration_days %>). If blank, defaults to Day 1 through Day <%= @category.duration_days %>.
+                </div>
+              </div>
+            </li>
+
+            <li class="d-flex align-items-start gap-2">
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">OPTIONAL</span>
+              <div>
+                <span class="fw-semibold text-dark">Options (Pipe Separated):</span>
+                <div class="text-muted">
+                  For <code>multiple_choice</code>, <code>checkboxes</code>, or <code>dropdown</code>, supply at least 2 choices separated by <code>|</code> (e.g. <code>High | Med | Low</code>). For <code>yes_or_no</code>, auto-defaults to <code>Yes | No</code> if omitted.
+                </div>
+              </div>
+            </li>
+
+            <li class="d-flex align-items-start gap-2">
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">OPTIONAL</span>
+              <div>
+                <span class="fw-semibold text-dark">Required / Active:</span>
+                <div class="text-muted">
+                  <code>Yes</code> or <code>No</code> (defaults to Required: No, Active: Yes).
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past Imports History -->
+  <% if @recent_imports.any? %>
+    <div class="card border-0 shadow-sm rounded-4 mt-2">
+      <div class="card-header bg-white border-bottom p-3 rounded-top-4 d-flex align-items-center justify-content-between">
+        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-secondary"></i> Recent Imports for <%= @category.name %>
+        </h6>
+        <%= link_to "View All Imports", admin_question_category_imports_path(@category), class: "text-decoration-none small fw-semibold text-primary" %>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small">
+            <tr>
+              <th class="ps-3">Date & Time</th>
+              <th>Status</th>
+              <th>Success Rate</th>
+              <th>Imported / Total</th>
+              <th class="text-end pe-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="small">
+            <% @recent_imports.each do |imp| %>
+              <tr>
+                <td class="ps-3 fw-medium text-dark">
+                  <%= imp.created_at.strftime("%b %d, %Y - %H:%M") %>
+                </td>
+                <td>
+                  <% if imp.completed? %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">Completed</span>
+                  <% elsif imp.partially_completed? %>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">Partial Errors</span>
+                  <% elsif imp.failed? %>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">Failed</span>
+                  <% else %>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">Processing</span>
+                  <% end %>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2" style="width: 120px;">
+                    <div class="progress flex-grow-1" style="height: 6px;">
+                      <div class="progress-bar bg-<%= imp.completed? ? 'success' : (imp.failed? ? 'danger' : 'warning') %>" style="width: <%= imp.success_rate %>%;"></div>
+                    </div>
+                    <span class="fw-semibold text-muted" style="font-size: 0.75rem;"><%= imp.success_rate %>%</span>
+                  </div>
+                </td>
+                <td class="text-muted">
+                  <span class="text-success fw-bold"><%= imp.successful_rows %></span> / <%= imp.total_rows %>
+                  <% if imp.failed_rows.positive? %>
+                    <span class="text-danger fw-semibold ms-1">(<%= imp.failed_rows %> failed)</span>
+                  <% end %>
+                </td>
+                <td class="text-end pe-3">
+                  <%= link_to admin_question_category_import_path(@category, imp), class: "btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1" do %>
+                    <i class="bi bi-journal-text"></i> View Logs
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</div>

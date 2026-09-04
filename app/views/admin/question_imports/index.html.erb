@@ -1,0 +1,418 @@
+<style>
+  .table tbody tr,
+  .table tbody tr:hover,
+  .table tbody td {
+    transform: none !important;
+  }
+</style>
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
+  <!-- Top Navigation & Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to admin_root_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-speedometer2 fs-6"></i> Dashboard
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          Import Logs
+        </li>
+      </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to admin_question_categories_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-journal-bookmark"></i> Question Categories
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Header Banner (Subtle Multi-tone Gradient Header) -->
+  <div class="card border rounded-4 p-3 p-md-4 mb-4 position-relative overflow-hidden"
+       style="background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 50%, #f3e8ff 100%); border-color: #c7d2fe !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);">
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-md-7">
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+          <span class="badge bg-primary text-white rounded-pill px-3 py-1 small fw-semibold shadow-sm">
+            <i class="bi bi-cloud-arrow-up me-1"></i> Global Audit Trail
+          </span>
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1 small fw-medium shadow-sm">
+            <i class="bi bi-folder2-open me-1 text-info"></i> Across All Categories
+          </span>
+        </div>
+        <h2 class="fw-bold text-dark mb-1 fs-4 fs-md-3 d-flex align-items-center gap-2">
+          <i class="bi bi-journal-text text-primary"></i>
+          <span>Question Import Logs</span>
+        </h2>
+        <p class="mb-0 small" style="color: #475569;">
+          Monitor spreadsheet import batches, execution logs, itemized validation failures, and question creation history.
+        </p>
+      </div>
+
+      <div class="col-12 col-md-5 text-md-end">
+        <div class="d-inline-flex flex-wrap gap-2 justify-content-md-end">
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-3 py-2 small shadow-sm">
+            <i class="bi bi-database-check me-1 text-success"></i> <strong><%= @total_live_questions_count %></strong> Questions Created in DB
+          </span>
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-3 py-2 small shadow-sm">
+            <i class="bi bi-flask me-1 text-warning"></i> <strong><%= @total_dry_runs_count %></strong> Dry Run Tests
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Cards (Separating Live DB Imports from Dry Runs) -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="text-muted small fw-semibold text-uppercase">Live Import Batches</span>
+          <i class="bi bi-cloud-arrow-up text-primary fs-5"></i>
+        </div>
+        <div class="fs-3 fw-bold text-dark"><%= @total_live_imports_count %></div>
+        <div class="text-muted small mt-1">Created database records</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="text-muted small fw-semibold text-uppercase">Questions Created</span>
+          <i class="bi bi-database-check text-success fs-5"></i>
+        </div>
+        <div class="fs-3 fw-bold text-success"><%= @total_live_questions_count %></div>
+        <div class="text-muted small mt-1">Saved across categories</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="text-muted small fw-semibold text-uppercase">Dry Run Validations</span>
+          <i class="bi bi-flask text-warning fs-5"></i>
+        </div>
+        <div class="fs-3 fw-bold text-dark"><%= @total_dry_runs_count %></div>
+        <div class="text-muted small mt-1">Simulation tests (0 DB writes)</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="text-muted small fw-semibold text-uppercase">Batches with Errors</span>
+          <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+        </div>
+        <div class="fs-3 fw-bold text-danger"><%= @total_failed_count %></div>
+        <div class="text-muted small mt-1">Failed or partial rows</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Bar -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <%= form_with(url: admin_question_imports_path, method: :get, local: true, class: "row g-2 align-items-center") do |f| %>
+      <%= f.hidden_field :mode, value: @view_mode if @view_mode.present? %>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label text-muted small fw-semibold mb-1">Filter by Bank</label>
+        <%= f.select :question_bank_id,
+            options_for_select([["All Question Banks", ""]] + @question_banks.map { |b| [b.name, b.id] }, params[:question_bank_id]),
+            {},
+            class: "form-select form-select-sm rounded-3" %>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label text-muted small fw-semibold mb-1">Filter by Category</label>
+        <%= f.select :question_category_id,
+            options_for_select([["All Categories", ""]] + @categories.map { |c| ["#{c.name} (#{c.question_bank&.name || 'Master Bank'})", c.id] }, params[:question_category_id]),
+            {},
+            class: "form-select form-select-sm rounded-3" %>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label text-muted small fw-semibold mb-1">Filter by Status</label>
+        <%= f.select :status,
+            options_for_select([
+              ["All Statuses", ""],
+              ["Completed", "completed"],
+              ["Partial Errors", "partially_completed"],
+              ["Failed", "failed"],
+              ["Processing", "processing"]
+            ], params[:status]),
+            {},
+            class: "form-select form-select-sm rounded-3" %>
+      </div>
+
+      <div class="col-12 col-md-2 d-flex align-items-end gap-1.5 pt-md-4">
+        <button type="submit" class="btn btn-primary btn-sm rounded-3 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1">
+          <i class="bi bi-funnel"></i> Filter
+        </button>
+        <% if params[:question_bank_id].present? || params[:question_category_id].present? || params[:status].present? %>
+          <%= link_to admin_question_imports_path(mode: @view_mode), class: "btn btn-outline-secondary btn-sm rounded-3 px-2 py-1.5 fw-semibold", title: "Clear Filters" do %>
+            <i class="bi bi-x-circle"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Mode Toggle Tabs (Separate Live from Dry Run) -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div class="btn-group p-1 bg-white rounded-3 border shadow-sm" role="group">
+      <%= link_to admin_question_imports_path(request.query_parameters.merge(mode: "all")), class: "btn btn-sm rounded-2 fw-semibold px-3 py-1.5 #{(@view_mode == 'all') ? 'btn-dark text-white shadow-sm' : 'btn-light text-dark'}" do %>
+        <i class="bi bi-view-stacked me-1"></i> Show Both Separated
+        <span class="badge bg-<%= (@view_mode == 'all') ? 'light text-dark' : 'secondary-subtle text-secondary' %> rounded-pill ms-1"><%= @live_imports.size + @dry_run_imports.size %></span>
+      <% end %>
+
+      <%= link_to admin_question_imports_path(request.query_parameters.merge(mode: "live")), class: "btn btn-sm rounded-2 fw-semibold px-3 py-1.5 #{(@view_mode == 'live') ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'}" do %>
+        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Live Imports Only
+        <span class="badge bg-<%= (@view_mode == 'live') ? 'light text-primary' : 'secondary-subtle text-secondary' %> rounded-pill ms-1"><%= @live_imports.size %></span>
+      <% end %>
+
+      <%= link_to admin_question_imports_path(request.query_parameters.merge(mode: "dry_run")), class: "btn btn-sm rounded-2 fw-semibold px-3 py-1.5 #{(@view_mode == 'dry_run') ? 'btn-warning text-dark shadow-sm' : 'btn-light text-dark'}" do %>
+        <i class="bi bi-flask-fill me-1"></i> Dry Runs Only
+        <span class="badge bg-<%= (@view_mode == 'dry_run') ? 'dark text-white' : 'secondary-subtle text-secondary' %> rounded-pill ms-1"><%= @dry_run_imports.size %></span>
+      <% end %>
+    </div>
+
+    <div class="text-muted small fw-medium">
+      <% if @view_mode == 'live' %>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+          <i class="bi bi-info-circle me-1"></i> Showing Live Imports Only
+        </span>
+      <% elsif @view_mode == 'dry_run' %>
+        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+          <i class="bi bi-info-circle me-1"></i> Showing Dry Run Validations Only
+        </span>
+      <% else %>
+        <span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1">
+          <i class="bi bi-info-circle me-1"></i> Showing Live Imports & Dry Runs in Separate Tables
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Live Question Imports Table -->
+  <% if @view_mode.in?(["all", "live"]) %>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Live
+          </span>
+          <h5 class="fw-bold text-dark mb-0 fs-6">Live Question Imports</h5>
+          <span class="badge bg-light text-secondary border rounded-pill small"><%= @live_imports.size %> batches</span>
+        </div>
+        <span class="text-muted small">Actual spreadsheet imports that created questions in categories</span>
+      </div>
+
+      <% if @live_imports.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small">
+              <tr>
+                <th class="ps-3">#</th>
+                <th>Question Bank</th>
+                <th>Category</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Success Rate</th>
+                <th>Imported / Total</th>
+                <th class="text-end pe-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="small">
+              <% @live_imports.each_with_index do |imp, idx| %>
+                <tr>
+                  <td class="ps-3 fw-bold text-primary" title="Import ID #<%= imp.id %>">#<%= idx + 1 %></td>
+                  <td>
+                    <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-medium">
+                      <i class="bi bi-bank me-1 text-primary"></i> <%= imp.question_category.question_bank&.name.presence || "Master Question Bank" %>
+                    </span>
+                  </td>
+                  <td>
+                    <%= link_to builder_admin_question_category_path(imp.question_category), class: "text-decoration-none fw-semibold text-dark d-inline-flex align-items-center gap-1" do %>
+                      <i class="bi bi-folder2 text-primary"></i> <%= imp.question_category.name %>
+                    <% end %>
+                  </td>
+                  <td class="text-muted">
+                    <%= imp.created_at.strftime("%b %d, %Y - %H:%M") %>
+                  </td>
+                  <td>
+                    <% if imp.completed? %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">Completed</span>
+                    <% elsif imp.partially_completed? %>
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">Partial Errors</span>
+                    <% elsif imp.failed? %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">Failed</span>
+                    <% else %>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">Processing</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2" style="width: 120px;">
+                      <div class="progress flex-grow-1" style="height: 6px;">
+                        <div class="progress-bar bg-<%= imp.completed? ? 'success' : (imp.failed? ? 'danger' : 'warning') %>" style="width: <%= imp.success_rate %>%;"></div>
+                      </div>
+                      <span class="fw-semibold text-muted" style="font-size: 0.75rem;"><%= imp.success_rate %>%</span>
+                    </div>
+                  </td>
+                  <td class="text-muted">
+                    <span class="text-success fw-bold"><%= imp.successful_rows %></span> / <%= imp.total_rows %>
+                    <% if imp.failed_rows.positive? %>
+                      <span class="text-danger fw-semibold ms-1">(<%= imp.failed_rows %> failed)</span>
+                    <% end %>
+                  </td>
+                  <td class="text-end pe-3">
+                    <div class="d-inline-flex align-items-center gap-1">
+                      <%= link_to admin_question_category_import_path(imp.question_category, imp), class: "btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1", title: "View Live Logs & Errors" do %>
+                        <i class="bi bi-journal-text"></i> Logs
+                      <% end %>
+
+                      <% if imp.has_errors? %>
+                        <%= link_to failed_rows_admin_question_category_import_path(imp.question_category, imp), class: "btn btn-sm btn-outline-danger rounded-3 px-2 py-1", title: "Download Failed Rows CSV", data: { turbo: false }, download: "" do %>
+                          <i class="bi bi-download"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-cloud-arrow-up fs-3 text-secondary opacity-50 mb-1 d-block"></i>
+          <p class="small text-muted mb-0">No live question imports found matching your filters.</p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- SECTION 2: Dry Run Validations Table -->
+  <% if @view_mode.in?(["all", "dry_run"]) %>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+            <i class="bi bi-flask-fill me-1"></i> Dry Run
+          </span>
+          <h5 class="fw-bold text-dark mb-0 fs-6">Dry Run Validations & Simulations</h5>
+          <span class="badge bg-light text-secondary border rounded-pill small"><%= @dry_run_imports.size %> simulations</span>
+        </div>
+        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 small">
+          <i class="bi bi-shield-check me-1"></i> 0 DB writes &bull; Pre-import validation only
+        </span>
+      </div>
+
+     
+      <% if @dry_run_imports.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small">
+              <tr>
+                <th class="ps-3">#</th>
+                <th>Question Bank</th>
+                <th>Category</th>
+                <th>Date & Time</th>
+                <th>Simulation Status</th>
+                <th>Validation Rate</th>
+                <th>Validated / Total</th>
+                <th class="text-end pe-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="small">
+              <% @dry_run_imports.each_with_index do |imp, idx| %>
+                <tr>
+                  <td class="ps-3 fw-bold text-dark" title="Import ID #<%= imp.id %>">
+                    #<%= idx + 1 %>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small fw-medium">
+                      <i class="bi bi-bank me-1 text-primary"></i> <%= imp.question_category.question_bank&.name.presence || "Master Question Bank" %>
+                    </span>
+                  </td>
+                  <td>
+                    <%= link_to builder_admin_question_category_path(imp.question_category), class: "text-decoration-none fw-semibold text-dark d-inline-flex align-items-center gap-1" do %>
+                      <i class="bi bi-folder2 text-primary"></i> <%= imp.question_category.name %>
+                    <% end %>
+                  </td>
+                  <td class="text-muted">
+                    <%= imp.created_at.strftime("%b %d, %Y - %H:%M") %>
+                  </td>
+                  <td>
+                    <% if imp.completed? %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                        <i class="bi bi-check2-circle me-1"></i>Passed (Ready)
+                      </span>
+                    <% elsif imp.partially_completed? %>
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Warnings
+                      </span>
+                    <% elsif imp.failed? %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">
+                        <i class="bi bi-x-circle me-1"></i>Validation Failed
+                      </span>
+                    <% else %>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">Validating...</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2" style="width: 120px;">
+                      <div class="progress flex-grow-1" style="height: 6px;">
+                        <div class="progress-bar bg-<%= imp.completed? ? 'success' : (imp.failed? ? 'danger' : 'warning') %>" style="width: <%= imp.success_rate %>%;"></div>
+                      </div>
+                      <span class="fw-semibold text-muted" style="font-size: 0.75rem;"><%= imp.success_rate %>%</span>
+                    </div>
+                  </td>
+                  <td class="text-muted">
+                    <span class="text-info fw-bold"><%= imp.successful_rows %></span> / <%= imp.total_rows %> validated
+                    <span class="badge bg-light text-secondary border rounded-pill px-1.5 py-0.5 ms-1" style="font-size: 0.68rem;">0 saved to DB</span>
+                    <% if imp.failed_rows.positive? %>
+                      <div class="text-danger fw-semibold mt-0.5" style="font-size: 0.75rem;"><%= imp.failed_rows %> invalid</div>
+                    <% end %>
+                  </td>
+                  <td class="text-end pe-3">
+                    <div class="d-inline-flex align-items-center gap-1">
+                      <%= link_to admin_question_category_import_path(imp.question_category, imp), class: "btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1", title: "View Simulation Logs & Errors" do %>
+                        <i class="bi bi-journal-text"></i> Logs
+                      <% end %>
+
+                      <% if imp.has_errors? %>
+                        <%= link_to failed_rows_admin_question_category_import_path(imp.question_category, imp), class: "btn btn-sm btn-outline-danger rounded-3 px-2 py-1", title: "Download Failed Rows CSV", data: { turbo: false }, download: "" do %>
+                          <i class="bi bi-download"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-flask fs-3 text-secondary opacity-50 mb-1 d-block"></i>
+          <p class="small text-muted mb-0">No dry run simulations found matching your filters.</p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @live_imports.empty? && @dry_run_imports.empty? %>
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-5 text-center text-muted">
+      <div class="d-inline-flex align-items-center justify-content-center bg-light text-secondary rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px;">
+        <i class="bi bi-cloud-arrow-up fs-2 opacity-50"></i>
+      </div>
+      <h6 class="fw-semibold text-dark">No question import logs found</h6>
+      <p class="small text-muted mb-3">Spreadsheets uploaded to any category will appear here with live logs and error breakdowns.</p>
+      <%= link_to admin_question_categories_path, class: "btn btn-primary rounded-3 px-3 py-1.5 fw-semibold small shadow-sm d-inline-flex align-items-center gap-1 mx-auto" do %>
+        <i class="bi bi-journal-bookmark"></i> Go to Question Categories
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -3,6 +3,7 @@ class QuestionCategory < ApplicationRecord
   belongs_to :institute, optional: true
   has_many :questions, -> { order(position: :asc, created_at: :asc, id: :asc) }, dependent: :destroy
   has_many :question_bundles, -> { order(position: :asc) }, dependent: :destroy
+  has_many :question_imports, dependent: :destroy
   has_many :assignments, dependent: :nullify
 
   validates :name, presence: true

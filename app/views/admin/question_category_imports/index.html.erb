@@ -1,0 +1,136 @@
+<style>
+  .table tbody tr,
+  .table tbody tr:hover,
+  .table tbody td {
+    transform: none !important;
+  }
+</style>
+
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
+  <!-- Top Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to admin_question_categories_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Categories
+          <% end %>
+        </li>
+        <li class="breadcrumb-item">
+          <%= link_to builder_admin_question_category_path(@category), class: "text-decoration-none text-muted fw-medium" do %>
+            <%= @category.name %>
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          Import History
+        </li>
+      </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to admin_question_imports_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-journal-text"></i> Global Import Logs
+      <% end %>
+      <%= link_to new_admin_question_category_import_path(@category), class: "btn btn-primary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold shadow-sm" do %>
+        <i class="bi bi-cloud-arrow-up"></i> New Question Import
+      <% end %>
+      <%= link_to builder_admin_question_category_path(@category), class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-kanban"></i> Builder
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Header Banner (Subtle Multi-tone Gradient Header) -->
+  <div class="card border rounded-4 p-3 p-md-4 mb-4 position-relative overflow-hidden"
+       style="background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 50%, #f3e8ff 100%); border-color: #c7d2fe !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1 small fw-medium shadow-sm">
+            <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name.presence || "Master Question Bank" %>
+          </span>
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1 small fw-medium shadow-sm">
+            <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
+          </span>
+        </div>
+        <h2 class="fw-bold text-dark mb-1 fs-4 fs-md-3 d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-primary"></i>
+          <span>Import History: <%= @category.name %></span>
+        </h2>
+        <p class="mb-0 small" style="color: #475569;">Audit trail of all bulk question spreadsheet uploads and validations for this category.</p>
+      </div>
+      <div>
+        <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-3 py-2 small fw-medium shadow-sm">
+          <i class="bi bi-archive me-1 text-info"></i> <strong><%= @imports.size %></strong> Total Batches
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Imports Table -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <% if @imports.any? %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small">
+            <tr>
+              <th class="ps-3">Serial Number</th>
+              <th>Date & Time</th>
+              <th>Status</th>
+              <th>Success Rate</th>
+              <th>Processed</th>
+              <th class="text-end pe-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="small">
+            <% @imports.each_with_index do |imp, idx| %>
+              <tr>
+                <td class="ps-3 fw-bold text-primary" title="Import ID #<%= imp.id %>">#<%= idx + 1 %></td>
+                <td class="fw-medium text-dark"><%= imp.created_at.strftime("%b %d, %Y - %H:%M") %></td>
+                <td>
+                  <% if imp.completed? %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">Completed</span>
+                  <% elsif imp.partially_completed? %>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">Partial Errors</span>
+                  <% elsif imp.failed? %>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">Failed</span>
+                  <% else %>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">Processing</span>
+                  <% end %>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2" style="width: 120px;">
+                    <div class="progress flex-grow-1" style="height: 6px;">
+                      <div class="progress-bar bg-<%= imp.completed? ? 'success' : (imp.failed? ? 'danger' : 'warning') %>" style="width: <%= imp.success_rate %>%;"></div>
+                    </div>
+                    <span class="fw-semibold text-muted" style="font-size: 0.75rem;"><%= imp.success_rate %>%</span>
+                  </div>
+                </td>
+                <td class="text-muted">
+                  <span class="text-success fw-bold"><%= imp.successful_rows %></span> / <%= imp.total_rows %>
+                  <% if imp.failed_rows.positive? %>
+                    <span class="text-danger fw-semibold ms-1">(<%= imp.failed_rows %> failed)</span>
+                  <% end %>
+                </td>
+                <td class="text-end pe-3">
+                  <%= link_to admin_question_category_import_path(@category, imp), class: "btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1" do %>
+                    <i class="bi bi-journal-text"></i> View Details & Logs
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-cloud-arrow-up fs-1 text-secondary opacity-50 mb-2"></i>
+        <h6 class="fw-semibold text-dark">No question imports yet</h6>
+        <p class="small text-muted mb-3">Upload your first spreadsheet to bulk create questions for this category.</p>
+        <%= link_to new_admin_question_category_import_path(@category), class: "btn btn-primary rounded-3 px-3 py-2 fw-semibold small shadow-sm" do %>
+          <i class="bi bi-cloud-arrow-up me-1"></i> Start Question Import
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

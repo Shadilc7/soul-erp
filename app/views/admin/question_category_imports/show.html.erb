@@ -1,0 +1,298 @@
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4"
+     data-controller="question-import"
+     data-question-import-status-url-value="<%= status_admin_question_category_import_path(@category, @import) %>"
+     data-question-import-current-status-value="<%= @import.status %>">
+
+  <!-- Top Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.875rem;">
+        <li class="breadcrumb-item">
+          <%= link_to admin_question_categories_path, class: "text-decoration-none text-muted d-inline-flex align-items-center gap-1.5 fw-medium" do %>
+            <i class="bi bi-arrow-left fs-6"></i> Categories
+          <% end %>
+        </li>
+        <li class="breadcrumb-item">
+          <%= link_to builder_admin_question_category_path(@category), class: "text-decoration-none text-muted fw-medium" do %>
+            <%= @category.name %>
+          <% end %>
+        </li>
+        <li class="breadcrumb-item">
+          <%= link_to admin_question_category_imports_path(@category), class: "text-decoration-none text-muted fw-medium" do %>
+            Imports
+          <% end %>
+        </li>
+        <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+          Batch #<%= @import.id %>
+        </li>
+      </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <%= link_to admin_question_imports_path, class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-journal-text"></i> All Import Logs
+      <% end %>
+      <%= link_to new_admin_question_category_import_path(@category), class: "btn btn-outline-secondary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold" do %>
+        <i class="bi bi-cloud-arrow-up"></i> Import Another File
+      <% end %>
+      <%= link_to builder_admin_question_category_path(@category), class: "btn btn-primary btn-sm rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 fw-semibold shadow-sm" do %>
+        <i class="bi bi-kanban"></i> Return to Builder
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Header Banner (Subtle Multi-tone Gradient Header) -->
+  <div class="card border rounded-4 p-3 p-md-4 mb-4 position-relative overflow-hidden"
+       style="background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 50%, #f3e8ff 100%); border-color: #c7d2fe !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);">
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-md-8">
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+          <!-- Live Status Pill -->
+          <span data-question-import-target="statusPill" class="badge bg-<%= @import.completed? ? 'success-subtle text-success border border-success-subtle' : (@import.partially_completed? ? 'warning-subtle text-warning-emphasis border border-warning-subtle' : (@import.failed? ? 'danger-subtle text-danger border border-danger-subtle' : 'primary-subtle text-primary border border-primary-subtle')) %> rounded-pill px-3 py-1.5 fw-semibold shadow-sm">
+            <% if @import.processing? || @import.pending? %>
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...
+            <% elsif @import.completed? %>
+              <i class="bi bi-check-circle-fill me-1"></i> Completed
+            <% elsif @import.partially_completed? %>
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> Completed with Errors
+            <% else %>
+              <i class="bi bi-x-circle-fill me-1"></i> Failed
+            <% end %>
+          </span>
+
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1.5 small fw-medium shadow-sm">
+            <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name.presence || "Master Question Bank" %>
+          </span>
+
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1.5 small fw-medium shadow-sm">
+            <i class="bi bi-folder2 me-1 text-warning"></i> <%= @category.name %>
+          </span>
+
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-2.5 py-1.5 small fw-medium shadow-sm">
+            <i class="bi bi-filetype-csv me-1 text-info"></i> <%= @import.filename.presence || "import_#{@import.id}.csv" %>
+          </span>
+
+          <% if @import.dry_run? %>
+            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1.5 fw-semibold shadow-sm">
+              <i class="bi bi-eye me-1"></i> Dry-Run Mode
+            </span>
+          <% end %>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-1 fs-4 fs-md-3 d-flex align-items-center gap-2">
+          <i class="bi bi-journal-text text-primary"></i>
+          <span>Import Details & Execution Log</span>
+        </h2>
+        <p class="mb-0 small" style="color: #475569;">
+          Initiated on <%= @import.created_at.strftime("%B %d, %Y at %H:%M") %> by <%= @import.user&.email.presence || "System Administrator" %>.
+        </p>
+      </div>
+
+      <div class="col-12 col-md-4 text-md-end">
+        <%= link_to failed_rows_admin_question_category_import_path(@category, @import),
+            class: "btn btn-outline-danger btn-sm rounded-3 px-3 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-1.5 #{@import.has_errors? ? '' : 'd-none'}",
+            data: { question_import_target: "downloadFailedBtn", turbo: false },
+            download: "" do %>
+          <i class="bi bi-download"></i> Download Failed Rows CSV
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Data Rows</div>
+        <div class="fs-3 fw-bold text-dark" data-question-import-target="statsTotal"><%= @import.total_rows %></div>
+        <div class="text-muted small mt-1">Processed from CSV</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold text-uppercase mb-1">Successfully Imported</div>
+        <div class="fs-3 fw-bold text-success" data-question-import-target="statsSuccess"><%= @import.successful_rows %></div>
+        <div class="text-muted small mt-1">Saved to category pool</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold text-uppercase mb-1">Failed Rows</div>
+        <div class="fs-3 fw-bold text-danger" data-question-import-target="statsFailed"><%= @import.failed_rows %></div>
+        <div class="text-muted small mt-1">Validation errors</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold text-uppercase mb-1">Duration</div>
+        <div class="fs-3 fw-bold text-info"><%= @import.duration_seconds %>s</div>
+        <div class="text-muted small mt-1">Processing time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar Card -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <span class="fw-semibold text-dark small d-flex align-items-center gap-2">
+        <i class="bi bi-activity text-primary"></i> Progress Status
+      </span>
+      <span class="fw-bold text-muted small" data-question-import-target="progressText">
+        <%= @import.completed_or_failed? ? '100%' : 'Processing...' %>
+      </span>
+    </div>
+
+    <div class="progress rounded-pill shadow-xs" style="height: 12px;">
+      <div class="progress-bar <%= @import.completed? ? 'bg-success progress-bar-striped' : (@import.partially_completed? ? 'bg-warning progress-bar-striped' : (@import.failed? ? 'bg-danger' : 'progress-bar-striped progress-bar-animated bg-primary')) %>"
+           role="progressbar"
+           style="width: <%= @import.completed_or_failed? ? '100' : '50' %>%;"
+           aria-valuenow="<%= @import.completed_or_failed? ? '100' : '50' %>"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           data-question-import-target="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Error Breakdown Section (if any errors exist) -->
+  <div class="<%= @import.has_errors? ? '' : 'd-none' %> mb-4" data-question-import-target="errorSection">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden border-start border-4 border-danger">
+      <div class="card-header bg-danger-subtle p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <h6 class="fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i> Row Validation Failures & Errors
+          </h6>
+          <div class="text-danger small opacity-75">Review the issues below, correct them in your spreadsheet, and re-import.</div>
+        </div>
+        <%= link_to failed_rows_admin_question_category_import_path(@category, @import), class: "btn btn-danger btn-sm rounded-3 px-3 py-1.5 fw-semibold shadow-sm d-inline-flex align-items-center gap-1.5", data: { turbo: false }, download: "" do %>
+          <i class="bi bi-file-earmark-arrow-down"></i> Export Failed Rows CSV
+        <% end %>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small">
+            <tr>
+              <th class="ps-3" style="width: 80px;">Row #</th>
+              <th>Question Title</th>
+              <th>Errors & Reasons</th>
+            </tr>
+          </thead>
+          <tbody class="small" data-question-import-target="errorRows">
+            <% (@import.error_log || []).each do |err| %>
+              <tr>
+                <td class="ps-3 fw-bold text-danger">Row <%= err["row"] %></td>
+                <td class="fw-semibold text-dark"><%= err["title"] %></td>
+                <td>
+                  <ul class="mb-0 ps-3 text-danger">
+                    <% (err["errors"] || []).each do |msg| %>
+                      <li><%= msg %></li>
+                    <% end %>
+                  </ul>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .timeline-sequence {
+      position: relative;
+      padding-left: 0.25rem;
+    }
+    .timeline-step {
+      position: relative;
+      padding-left: 2.75rem;
+      padding-bottom: 1.25rem;
+    }
+    .timeline-step:last-child {
+      padding-bottom: 0.25rem;
+    }
+    /* Vertical connecting track line */
+    .timeline-step::before {
+      content: "";
+      position: absolute;
+      left: 1.05rem;
+      top: 2.15rem;
+      bottom: -0.25rem;
+      width: 2px;
+      background-color: #cbd5e1;
+      z-index: 1;
+    }
+    .timeline-step:last-child::before {
+      display: none;
+    }
+    /* Node circle */
+    .timeline-node {
+      position: absolute;
+      left: 0;
+      top: 0.2rem;
+      width: 2.15rem;
+      height: 2.15rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 0 0 4px #ffffff, 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .timeline-content-card {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.85rem 1.15rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      transition: all 0.15s ease-in-out;
+    }
+    .timeline-content-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    }
+  </style>
+
+  <!-- User-Friendly Activity Timeline Card -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="card-header bg-white border-bottom p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2 fs-6">
+          <i class="bi bi-clock-history text-primary"></i> Import Activity & Progress Timeline
+        </h6>
+        <p class="text-muted small mb-0 mt-0.5">Live audit record of spreadsheet validation, question extraction, and status updates.</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-secondary border rounded-pill px-3 py-1.5 small fw-semibold" data-question-import-target="logCounter">
+          <%= (@import.process_log || []).size %> Events
+        </span>
+
+        <span class="badge <%= @import.completed? ? 'bg-success-subtle text-success border border-success-subtle' : (@import.failed? ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle') %> rounded-pill px-3 py-1.5 small fw-semibold">
+          <% if @import.processing? || @import.pending? %>
+            <span class="spinner-grow spinner-grow-sm me-1" style="width: 8px; height: 8px;"></span> Live Feed
+          <% else %>
+            <i class="bi bi-check-all me-1"></i> Recorded
+          <% end %>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body p-3 p-md-4 bg-light bg-opacity-25" style="max-height: 520px; overflow-y: auto;">
+      <div class="timeline-sequence" data-question-import-target="logEntries">
+        <% if (@import.process_log || []).any? %>
+          <% (@import.process_log || []).each do |item| %>
+            <%= format_import_log_item(item) %>
+          <% end %>
+        <% else %>
+          <div class="text-center py-4 text-muted">
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Waiting for background worker to begin processing...
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_27_113500) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_04_180500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -305,6 +305,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_113500) do
     t.bigint "institute_id"
     t.index ["institute_id"], name: "index_question_categories_on_institute_id"
     t.index ["question_bank_id"], name: "index_question_categories_on_question_bank_id"
+  end
+
+  create_table "question_imports", force: :cascade do |t|
+    t.bigint "question_category_id", null: false
+    t.bigint "user_id"
+    t.string "filename"
+    t.integer "file_size"
+    t.integer "status", default: 0, null: false
+    t.integer "total_rows", default: 0, null: false
+    t.integer "successful_rows", default: 0, null: false
+    t.integer "failed_rows", default: 0, null: false
+    t.jsonb "error_log", default: []
+    t.jsonb "process_log", default: []
+    t.jsonb "imported_question_ids", default: []
+    t.boolean "auto_assign_bundles", default: true, null: false
+    t.boolean "dry_run", default: false, null: false
+    t.boolean "rollback_on_error", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_category_id"], name: "index_question_imports_on_question_category_id"
+    t.index ["status"], name: "index_question_imports_on_status"
+    t.index ["user_id"], name: "index_question_imports_on_user_id"
   end
 
   create_table "question_set_items", force: :cascade do |t|
@@ -654,6 +676,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_113500) do
   add_foreign_key "question_bundles", "question_categories"
   add_foreign_key "question_categories", "institutes"
   add_foreign_key "question_categories", "question_banks"
+  add_foreign_key "question_imports", "question_categories"
+  add_foreign_key "question_imports", "users"
   add_foreign_key "question_set_items", "question_sets"
   add_foreign_key "question_set_items", "questions"
   add_foreign_key "question_sets", "institutes"

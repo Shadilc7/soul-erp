@@ -16,6 +16,22 @@
   .min-w-0 {
     min-width: 0 !important;
   }
+  .btn-import-colorful {
+    background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #9333ea 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .btn-import-colorful:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #4338ca 50%, #7e22ce 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55) !important;
+  }
+  .btn-import-colorful:active {
+    transform: translateY(0) scale(0.98) !important;
+  }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3 py-md-4" data-controller="bundle-builder" data-bundle-builder-category-id-value="<%= @category.id %>">
@@ -39,24 +55,31 @@
     </span>
   </div>
 
-  <!-- Header Banner -->
-  <div class="card border-0 shadow-sm rounded-4 text-white p-3 p-md-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+  <!-- Header Banner (Subtle Multi-tone Gradient Header) -->
+  <div class="card border rounded-4 p-3 p-md-4 mb-4 position-relative overflow-hidden"
+       style="background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 50%, #f3e8ff 100%); border-color: #c7d2fe !important; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);">
     <div class="row align-items-center g-3">
-      <div class="col-12 col-md-8 col-lg-9">
-        <h2 class="fw-bold text-white mb-1 fs-4 fs-md-3"><%= @category.name %></h2>
-        <p class="text-white-50 mb-2 small"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
+      <div class="col-12 col-md-8 col-lg-7">
+        <h2 class="fw-bold text-dark mb-1 fs-4 fs-md-3 d-flex align-items-center gap-2">
+          <i class="bi bi-folder2-open text-primary"></i>
+          <span><%= @category.name %></span>
+        </h2>
+        <p class="mb-2 small" style="color: #475569;"><%= @category.description.presence || "Manage questions and split them into custom bundle sections." %></p>
         <div class="d-flex align-items-center flex-wrap gap-2">
-          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5">
+          <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-3 py-1.5 shadow-sm">
             <i class="bi bi-bank me-1 text-primary"></i> <%= @category.question_bank&.name || "Master Question Bank" %>
           </span>
-          <span class="badge bg-dark bg-opacity-50 border border-secondary text-white rounded-pill px-3 py-1.5 text-nowrap">
+          <span class="badge bg-white text-secondary border border-secondary-subtle rounded-pill px-3 py-1.5 text-nowrap shadow-sm">
             <i class="bi bi-clock-history me-1 text-info"></i> <%= @category.duration_days %> Days
           </span>
         </div>
       </div>
 
-      <div class="col-12 col-md-4 col-lg-3 text-md-end">
-        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm text-nowrap w-100 w-md-auto fw-semibold" do %>
+      <div class="col-12 col-md-4 col-lg-5 text-md-end d-flex align-items-center justify-content-md-end flex-wrap gap-2">
+        <%= link_to new_admin_question_category_import_path(@category), class: "btn btn-import-colorful rounded-3 px-3 py-2 d-inline-flex align-items-center justify-content-center gap-1.5 shadow-sm text-nowrap fw-semibold small w-100 w-sm-auto" do %>
+          <i class="bi bi-cloud-arrow-up fs-6"></i> <span>Import Questions</span>
+        <% end %>
+        <%= link_to new_admin_question_category_question_path(@category), class: "btn btn-success rounded-3 px-3 py-2 d-inline-flex align-items-center justify-content-center gap-1.5 shadow-sm text-nowrap fw-semibold small w-100 w-sm-auto" do %>
           <i class="bi bi-plus-lg fs-6"></i> <span>Add New Question</span>
         <% end %>
       </div>
@@ -87,9 +110,15 @@
               </span>
             </h5>
 
-            <%= button_to auto_assign_bundles_admin_question_category_path(@category), method: :post, form: { class: "d-inline" }, class: "btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold text-nowrap", data: { turbo_confirm: "Auto-assign questions to matching bundles based on schedule day ranges?" } do %>
-              <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
-            <% end %>
+            <div class="d-flex align-items-center gap-2">
+              <%= link_to new_admin_question_category_import_path(@category), class: "btn btn-sm btn-import-colorful rounded-3 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold text-nowrap", title: "Bulk import questions via spreadsheet" do %>
+                <i class="bi bi-cloud-arrow-up me-1"></i> <span>Import</span>
+              <% end %>
+
+              <%= button_to auto_assign_bundles_admin_question_category_path(@category), method: :post, form: { class: "d-inline m-0 p-0" }, class: "btn btn-sm btn-primary rounded-3 d-inline-flex align-items-center shadow-sm fw-semibold text-nowrap", data: { turbo_confirm: "Auto-assign questions to matching bundles based on schedule day ranges?" } do %>
+                <i class="bi bi-magic me-1"></i> Auto Assign to Bundles
+              <% end %>
+            </div>
           </div>
 
           <!-- Search Filter -->
@@ -539,6 +568,22 @@
       background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
       transform: translateY(-1px) scale(1.02);
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+    }
+    .btn-import-colorful {
+      background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #9333ea 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4) !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .btn-import-colorful:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #4338ca 50%, #7e22ce 100%) !important;
+      color: #ffffff !important;
+      transform: translateY(-2px) scale(1.02) !important;
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55) !important;
+    }
+    .btn-import-colorful:active {
+      transform: translateY(0) scale(0.98) !important;
     }
   </style>
 <% end %>

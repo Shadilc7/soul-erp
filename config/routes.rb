@@ -74,6 +74,18 @@ Rails.application.routes.draw do
           get :builder
           post :auto_assign_bundles
         end
+        resources :imports, controller: "question_category_imports", only: [ :index, :new, :create, :show ] do
+          collection do
+            get :sample_template
+            get :sample_excel_template
+            get :blank_template
+            get :blank_excel_template
+          end
+          member do
+            get :status
+            get :failed_rows
+          end
+        end
         resources :questions, controller: "category_questions" do
           collection do
             post :reorder
@@ -90,6 +102,8 @@ Rails.application.routes.draw do
           end
         end
       end
+
+      resources :question_imports, only: [ :index, :show ]
     end
   end
 
