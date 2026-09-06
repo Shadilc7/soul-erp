@@ -558,7 +558,7 @@ class QuestionImporter
     end
 
     [headers, data_rows]
-  rescue => e
+  rescue LoadError, StandardError => e
     log_event("error", "XLSX parsing failed: #{e.message}")
     [[], []]
   ensure

@@ -481,6 +481,7 @@ DEPENDENCIES
   reek
   rubocop
   rubocop-rails-omakase
+  rubyzip (~> 2.4)
   selenium-webdriver
   simple_calendar (~> 2.4)
   solid_cable
