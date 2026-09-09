@@ -118,8 +118,7 @@
                     </div>
                     <%= p.date_field :date_of_birth, 
                         class: "form-control icon-input #{p.object.errors[:date_of_birth].any? ? 'is-invalid' : ''}", 
-                        placeholder: "Date of Birth",
-                        required: true %>
+                        placeholder: "Date of Birth" %>
                     <%= p.label :date_of_birth, "Date of Birth" %>
                     <% if p.object.errors[:date_of_birth].any? %>
                       <div class="invalid-feedback"><%= p.object.errors[:date_of_birth].first %></div>

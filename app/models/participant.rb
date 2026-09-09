@@ -45,7 +45,6 @@ class Participant < ApplicationRecord
                            if: :phone_required?
   validates :phone_number, format: { with: /\A\d{10}\z/, message: "must be a valid 10-digit number" },
                            allow_blank: true
-  validates :date_of_birth, presence: true
   validates :institute_id, presence: true
   validates :section_id, presence: true
   validates :user, presence: true
